@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Video Playback</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { Video } = next2d.media;
+        const { Shape, Sprite, BlendMode } = next2d.display;
+        const { GlowFilter, BlurFilter } = next2d.filters;
+
+        // ===== 基本的なVideo表示 =====
+        // 注: 実際のテストではダミービデオまたはテストパターンを使用
+
+        // Video用のプレースホルダー（実際のビデオがない場合の代替表示）
+        const createVideoPlaceholder = (width, height, label) => {
+            const container = new Sprite();
+
+            // 背景
+            const bg = new Shape();
+            bg.graphics
+                .beginFill(0x1a1a1a, 1.0)
+                .drawRect(0, 0, width, height)
+                .endFill();
+            container.addChild(bg);
+
+            // 再生ボタン風のアイコン
+            const playIcon = new Shape();
+            const cx = width / 2;
+            const cy = height / 2;
+            playIcon.graphics
+                .beginFill(0xFFFFFF, 0.3)
+                .drawCircle(cx, cy, 30)
+                .endFill()
+                .beginFill(0xFFFFFF, 0.8)
+                .moveTo(cx - 10, cy - 15)
+                .lineTo(cx + 15, cy)
+                .lineTo(cx - 10, cy + 15)
+                .lineTo(cx - 10, cy - 15)
+                .endFill();
+            container.addChild(playIcon);
+
+            // 枠線
+            const border = new Shape();
+            border.graphics
+                .lineStyle(2, 0x666666, 1.0)
+                .drawRect(0, 0, width, height);
+            container.addChild(border);
+
+            return container;
+        };
+
+        // ===== 通常サイズのビデオ =====
+        const video1 = createVideoPlaceholder(200, 150, "Video 1");
+        video1.x = 20;
+        video1.y = 20;
+        root.addChild(video1);
+
+        // ===== スケールされたビデオ =====
+        const video2 = createVideoPlaceholder(200, 150, "Scaled Video");
+        video2.x = 250;
+        video2.y = 20;
+        video2.scaleX = 0.75;
+        video2.scaleY = 0.75;
+        root.addChild(video2);
+
+        // ===== 回転されたビデオ =====
+        const video3 = createVideoPlaceholder(150, 100, "Rotated Video");
+        video3.x = 450;
+        video3.y = 80;
+        video3.rotation = 15;
+        root.addChild(video3);
+
+        // ===== BlendMode: ADD =====
+        const addContainer = new Sprite();
+        addContainer.x = 20;
+        addContainer.y = 200;
+        root.addChild(addContainer);
+
+        const addBg = new Shape();
+        addBg.graphics
+            .beginFill(0x003366, 1.0)
+            .drawRect(0, 0, 150, 100)
+            .endFill();
+        addContainer.addChild(addBg);
+
+        const videoAdd = createVideoPlaceholder(100, 70, "ADD");
+        videoAdd.x = 25;
+        videoAdd.y = 15;
+        videoAdd.blendMode = BlendMode.ADD;
+        addContainer.addChild(videoAdd);
+
+        // ===== BlendMode: MULTIPLY =====
+        const multiplyContainer = new Sprite();
+        multiplyContainer.x = 190;
+        multiplyContainer.y = 200;
+        root.addChild(multiplyContainer);
+
+        const multiplyBg = new Shape();
+        multiplyBg.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawRect(0, 0, 150, 100)
+            .endFill();
+        multiplyContainer.addChild(multiplyBg);
+
+        const videoMultiply = createVideoPlaceholder(100, 70, "MULTIPLY");
+        videoMultiply.x = 25;
+        videoMultiply.y = 15;
+        videoMultiply.blendMode = BlendMode.MULTIPLY;
+        multiplyContainer.addChild(videoMultiply);
+
+        // ===== BlendMode: SCREEN =====
+        const screenContainer = new Sprite();
+        screenContainer.x = 360;
+        screenContainer.y = 200;
+        root.addChild(screenContainer);
+
+        const screenBg = new Shape();
+        screenBg.graphics
+            .beginFill(0x660066, 1.0)
+            .drawRect(0, 0, 150, 100)
+            .endFill();
+        screenContainer.addChild(screenBg);
+
+        const videoScreen = createVideoPlaceholder(100, 70, "SCREEN");
+        videoScreen.x = 25;
+        videoScreen.y = 15;
+        videoScreen.blendMode = BlendMode.SCREEN;
+        screenContainer.addChild(videoScreen);
+
+        // ===== フィルター: BlurFilter =====
+        const videoBlur = createVideoPlaceholder(150, 100, "Blur");
+        videoBlur.x = 20;
+        videoBlur.y = 320;
+        videoBlur.filters = [new BlurFilter(6, 6, 1)];
+        root.addChild(videoBlur);
+
+        // ===== フィルター: GlowFilter =====
+        const videoGlow = createVideoPlaceholder(150, 100, "Glow");
+        videoGlow.x = 200;
+        videoGlow.y = 320;
+        videoGlow.filters = [new GlowFilter(0x00FFFF, 1, 10, 10, 2, 1)];
+        root.addChild(videoGlow);
+
+        // ===== 複合: BlendMode + Filter =====
+        const compositeContainer = new Sprite();
+        compositeContainer.x = 380;
+        compositeContainer.y = 320;
+        root.addChild(compositeContainer);
+
+        const compositeBg = new Shape();
+        compositeBg.graphics
+            .beginFill(0x333300, 1.0)
+            .drawRect(0, 0, 180, 120)
+            .endFill();
+        compositeContainer.addChild(compositeBg);
+
+        const videoComposite = createVideoPlaceholder(130, 80, "Composite");
+        videoComposite.x = 25;
+        videoComposite.y = 20;
+        videoComposite.blendMode = BlendMode.ADD;
+        videoComposite.filters = [new GlowFilter(0xFF8800, 1, 8, 8, 1.5, 1)];
+        compositeContainer.addChild(videoComposite);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

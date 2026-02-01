@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Paths</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape } = next2d.display;
+
+        // ===== moveTo + lineTo =====
+
+        // 単純な直線
+        const line1 = new Shape();
+        line1.graphics
+            .lineStyle(3, 0xFF0000, 1.0)
+            .moveTo(20, 30)
+            .lineTo(180, 30);
+        root.addChild(line1);
+
+        // 三角形
+        const triangle = new Shape();
+        triangle.graphics
+            .lineStyle(2, 0x00FF00, 1.0)
+            .beginFill(0x00FF00, 0.5)
+            .moveTo(220, 50)
+            .lineTo(280, 10)
+            .lineTo(340, 50)
+            .lineTo(220, 50)
+            .endFill();
+        root.addChild(triangle);
+
+        // ジグザグ
+        const zigzag = new Shape();
+        zigzag.graphics
+            .lineStyle(3, 0x0000FF, 1.0)
+            .moveTo(360, 20)
+            .lineTo(400, 50)
+            .lineTo(440, 20)
+            .lineTo(480, 50)
+            .lineTo(520, 20)
+            .lineTo(560, 50);
+        root.addChild(zigzag);
+
+        // 複雑な多角形（星形）
+        const star = new Shape();
+        star.graphics
+            .lineStyle(2, 0xFFFF00, 1.0)
+            .beginFill(0xFFFF00, 0.7);
+
+        const cx = 100, cy = 120, outerR = 45, innerR = 20;
+        for (let i = 0; i < 10; i++) {
+            const angle = (i * 36 - 90) * Math.PI / 180;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            if (i === 0) {
+                star.graphics.moveTo(x, y);
+            } else {
+                star.graphics.lineTo(x, y);
+            }
+        }
+        star.graphics.lineTo(cx + outerR * Math.cos(-90 * Math.PI / 180), cy + outerR * Math.sin(-90 * Math.PI / 180));
+        star.graphics.endFill();
+        root.addChild(star);
+
+        // ===== curveTo（2次ベジェ曲線）=====
+
+        // 単純な曲線
+        const curve1 = new Shape();
+        curve1.graphics
+            .lineStyle(3, 0xFF00FF, 1.0)
+            .moveTo(200, 100)
+            .curveTo(250, 50, 300, 100);
+        root.addChild(curve1);
+
+        // S字曲線
+        const curveS = new Shape();
+        curveS.graphics
+            .lineStyle(3, 0x00FFFF, 1.0)
+            .moveTo(320, 80)
+            .curveTo(360, 60, 400, 100)
+            .curveTo(440, 140, 480, 100);
+        root.addChild(curveS);
+
+        // 塗りつぶし曲線
+        const curveFill = new Shape();
+        curveFill.graphics
+            .beginFill(0xFF8800, 0.8)
+            .moveTo(500, 150)
+            .curveTo(550, 80, 580, 150)
+            .lineTo(500, 150)
+            .endFill();
+        root.addChild(curveFill);
+
+        // 波形
+        const wave = new Shape();
+        wave.graphics
+            .lineStyle(2, 0xFFFFFF, 1.0)
+            .moveTo(20, 200);
+        for (let i = 0; i < 5; i++) {
+            wave.graphics
+                .curveTo(40 + i * 60, 170, 50 + i * 60, 200)
+                .curveTo(60 + i * 60, 230, 80 + i * 60, 200);
+        }
+        root.addChild(wave);
+
+        // ===== cubicCurveTo（3次ベジェ曲線）=====
+
+        // 単純な3次曲線
+        const cubic1 = new Shape();
+        cubic1.graphics
+            .lineStyle(3, 0xFF0000, 1.0)
+            .moveTo(350, 200)
+            .cubicCurveTo(380, 150, 450, 250, 500, 200);
+        root.addChild(cubic1);
+
+        // ループ曲線
+        const cubicLoop = new Shape();
+        cubicLoop.graphics
+            .lineStyle(3, 0x00FF00, 1.0)
+            .moveTo(520, 180)
+            .cubicCurveTo(600, 160, 520, 240, 580, 220);
+        root.addChild(cubicLoop);
+
+        // 塗りつぶし3次曲線
+        const cubicFill = new Shape();
+        cubicFill.graphics
+            .beginFill(0x8800FF, 0.8)
+            .moveTo(20, 300)
+            .cubicCurveTo(60, 250, 140, 350, 180, 300)
+            .lineTo(180, 350)
+            .lineTo(20, 350)
+            .lineTo(20, 300)
+            .endFill();
+        root.addChild(cubicFill);
+
+        // ===== 複合パス =====
+
+        // ハート形
+        const heart = new Shape();
+        heart.graphics
+            .beginFill(0xFF0000, 1.0)
+            .moveTo(250, 320)
+            .curveTo(250, 280, 290, 280)
+            .curveTo(330, 280, 330, 320)
+            .curveTo(330, 350, 290, 380)
+            .lineTo(250, 410)
+            .lineTo(210, 380)
+            .curveTo(170, 350, 170, 320)
+            .curveTo(170, 280, 210, 280)
+            .curveTo(250, 280, 250, 320)
+            .endFill();
+        root.addChild(heart);
+
+        // 葉っぱ形
+        const leaf = new Shape();
+        leaf.graphics
+            .beginFill(0x00AA00, 0.9)
+            .moveTo(400, 320)
+            .cubicCurveTo(450, 280, 500, 340, 450, 400)
+            .cubicCurveTo(400, 340, 350, 280, 400, 320)
+            .endFill();
+        root.addChild(leaf);
+
+        // 吹き出し形
+        const bubble = new Shape();
+        bubble.graphics
+            .lineStyle(2, 0xFFFFFF, 1.0)
+            .beginFill(0xFFFFFF, 0.9)
+            .moveTo(80, 430)
+            .lineTo(250, 430)
+            .curveTo(270, 430, 270, 450)
+            .lineTo(270, 470)
+            .curveTo(270, 490, 250, 490)
+            .lineTo(100, 490)
+            .lineTo(80, 520)
+            .lineTo(90, 490)
+            .lineTo(80, 490)
+            .curveTo(60, 490, 60, 470)
+            .lineTo(60, 450)
+            .curveTo(60, 430, 80, 430)
+            .endFill();
+        root.addChild(bubble);
+
+        // 閉じたスプライン
+        const spline = new Shape();
+        spline.graphics
+            .lineStyle(3, 0xFFFF00, 1.0)
+            .moveTo(350, 450)
+            .curveTo(380, 420, 420, 450)
+            .curveTo(460, 480, 420, 500)
+            .curveTo(380, 520, 350, 490)
+            .curveTo(320, 460, 350, 450);
+        root.addChild(spline);
+
+        // 自由曲線
+        const freeform = new Shape();
+        freeform.graphics
+            .lineStyle(2, 0xFF8800, 1.0)
+            .moveTo(500, 420)
+            .cubicCurveTo(520, 400, 540, 440, 560, 420)
+            .curveTo(580, 400, 590, 450)
+            .cubicCurveTo(580, 500, 540, 480, 520, 490)
+            .curveTo(500, 500, 490, 470);
+        root.addChild(freeform);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

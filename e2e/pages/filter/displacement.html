@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - DisplacementMapFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, Sprite, BitmapData } = next2d.display;
+        const { DisplacementMapFilter } = next2d.filters;
+        const { Matrix } = next2d.geom;
+
+        // テストパターンを作成
+        const createTestPattern = () => {
+            const container = new Sprite();
+
+            // グリッドパターン
+            const grid = new Shape();
+            grid.graphics.lineStyle(1, 0xFFFFFF, 1.0);
+
+            for (let i = 0; i <= 10; i++) {
+                grid.graphics
+                    .moveTo(i * 12, 0)
+                    .lineTo(i * 12, 100);
+            }
+            for (let i = 0; i <= 8; i++) {
+                grid.graphics
+                    .moveTo(0, i * 12)
+                    .lineTo(120, i * 12);
+            }
+            container.addChild(grid);
+
+            // 中央に色付き円
+            const circle = new Shape();
+            circle.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawCircle(60, 50, 30)
+                .endFill();
+            container.addChild(circle);
+
+            return container;
+        };
+
+        // ディスプレースメントマップ用のバッファを作成
+        // 戻り値: { buffer: Uint8Array, width: number, height: number }
+        const createDisplacementMap = (width, height, pattern) => {
+            // RGBA形式のバッファを作成
+            const buffer = new Uint8Array(width * height * 4);
+
+            switch (pattern) {
+                case "horizontal":
+                    // 水平グラデーション
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            const value = Math.floor((x / width) * 255);
+                            buffer[index] = value;     // R
+                            buffer[index + 1] = 128;   // G
+                            buffer[index + 2] = 128;   // B
+                            buffer[index + 3] = 255;   // A
+                        }
+                    }
+                    break;
+
+                case "vertical":
+                    // 垂直グラデーション
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            const value = Math.floor((y / height) * 255);
+                            buffer[index] = 128;       // R
+                            buffer[index + 1] = value; // G
+                            buffer[index + 2] = 128;   // B
+                            buffer[index + 3] = 255;   // A
+                        }
+                    }
+                    break;
+
+                case "radial":
+                    // 放射状パターン
+                    const cx = width / 2;
+                    const cy = height / 2;
+                    const maxDist = Math.sqrt(cx * cx + cy * cy);
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            const dx = x - cx;
+                            const dy = y - cy;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            const value = Math.floor((dist / maxDist) * 255);
+                            buffer[index] = value;     // R
+                            buffer[index + 1] = value; // G
+                            buffer[index + 2] = 128;   // B
+                            buffer[index + 3] = 255;   // A
+                        }
+                    }
+                    break;
+
+                case "wave":
+                    // 波パターン
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            const waveX = Math.floor((Math.sin(x * 0.1) + 1) * 127.5);
+                            const waveY = Math.floor((Math.sin(y * 0.1) + 1) * 127.5);
+                            buffer[index] = waveX;     // R
+                            buffer[index + 1] = waveY; // G
+                            buffer[index + 2] = 128;   // B
+                            buffer[index + 3] = 255;   // A
+                        }
+                    }
+                    break;
+
+                case "checker":
+                    // チェッカーパターン
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            const isEven = (Math.floor(x / 20) + Math.floor(y / 20)) % 2 === 0;
+                            const value = isEven ? 200 : 55;
+                            buffer[index] = value;     // R
+                            buffer[index + 1] = value; // G
+                            buffer[index + 2] = 128;   // B
+                            buffer[index + 3] = 255;   // A
+                        }
+                    }
+                    break;
+
+                case "noise":
+                    // ノイズパターン
+                    for (let y = 0; y < height; y++) {
+                        for (let x = 0; x < width; x++) {
+                            const index = (y * width + x) * 4;
+                            buffer[index] = Math.floor(Math.random() * 256);     // R
+                            buffer[index + 1] = Math.floor(Math.random() * 256); // G
+                            buffer[index + 2] = 128;   // B
+                            buffer[index + 3] = 255;   // A
+                        }
+                    }
+                    break;
+            }
+
+            return { buffer, width, height };
+        };
+
+        // ===== フィルターなし（参照用）=====
+        const noFilter = createTestPattern();
+        noFilter.x = 20;
+        noFilter.y = 20;
+        root.addChild(noFilter);
+
+        // ===== 水平ディスプレースメント =====
+        const horizontal = createTestPattern();
+        horizontal.x = 160;
+        horizontal.y = 20;
+        const hMap = createDisplacementMap(120, 100, "horizontal");
+        // DisplacementMapFilter(buffer, width, height, mapPointX, mapPointY, componentX, componentY, scaleX, scaleY, mode, color, alpha)
+        horizontal.filters = [new DisplacementMapFilter(
+            hMap.buffer, hMap.width, hMap.height, 0, 0, 1, 0, 30, 0, "clamp", 0x000000, 0
+        )];
+        root.addChild(horizontal);
+
+        // ===== 垂直ディスプレースメント =====
+        const vertical = createTestPattern();
+        vertical.x = 300;
+        vertical.y = 20;
+        const vMap = createDisplacementMap(120, 100, "vertical");
+        vertical.filters = [new DisplacementMapFilter(
+            vMap.buffer, vMap.width, vMap.height, 0, 0, 0, 2, 0, 30, "clamp", 0x000000, 0
+        )];
+        root.addChild(vertical);
+
+        // ===== 放射状ディスプレースメント =====
+        const radial = createTestPattern();
+        radial.x = 440;
+        radial.y = 20;
+        const rMap = createDisplacementMap(120, 100, "radial");
+        radial.filters = [new DisplacementMapFilter(
+            rMap.buffer, rMap.width, rMap.height, 0, 0, 1, 2, 20, 20, "clamp", 0x000000, 0
+        )];
+        root.addChild(radial);
+
+        // ===== 波ディスプレースメント =====
+        const wave = createTestPattern();
+        wave.x = 20;
+        wave.y = 140;
+        const wMap = createDisplacementMap(120, 100, "wave");
+        wave.filters = [new DisplacementMapFilter(
+            wMap.buffer, wMap.width, wMap.height, 0, 0, 1, 2, 15, 15, "clamp", 0x000000, 0
+        )];
+        root.addChild(wave);
+
+        // ===== チェッカーディスプレースメント =====
+        const checker = createTestPattern();
+        checker.x = 160;
+        checker.y = 140;
+        const cMap = createDisplacementMap(120, 100, "checker");
+        checker.filters = [new DisplacementMapFilter(
+            cMap.buffer, cMap.width, cMap.height, 0, 0, 1, 2, 10, 10, "clamp", 0x000000, 0
+        )];
+        root.addChild(checker);
+
+        // ===== mode: wrap =====
+        const wrapMode = createTestPattern();
+        wrapMode.x = 300;
+        wrapMode.y = 140;
+        const wrapMap = createDisplacementMap(120, 100, "horizontal");
+        wrapMode.filters = [new DisplacementMapFilter(
+            wrapMap.buffer, wrapMap.width, wrapMap.height, 0, 0, 1, 0, 50, 0, "wrap", 0x000000, 0
+        )];
+        root.addChild(wrapMode);
+
+        // ===== mode: ignore =====
+        const ignoreMode = createTestPattern();
+        ignoreMode.x = 440;
+        ignoreMode.y = 140;
+        const ignoreMap = createDisplacementMap(120, 100, "horizontal");
+        ignoreMode.filters = [new DisplacementMapFilter(
+            ignoreMap.buffer, ignoreMap.width, ignoreMap.height, 0, 0, 1, 0, 50, 0, "ignore", 0x000000, 0
+        )];
+        root.addChild(ignoreMode);
+
+        // ===== mode: color =====
+        const colorMode = createTestPattern();
+        colorMode.x = 20;
+        colorMode.y = 260;
+        const colorMap = createDisplacementMap(120, 100, "horizontal");
+        colorMode.filters = [new DisplacementMapFilter(
+            colorMap.buffer, colorMap.width, colorMap.height, 0, 0, 1, 0, 50, 0, "color", 0xFF0000, 1
+        )];
+        root.addChild(colorMode);
+
+        // ===== 強いディスプレースメント =====
+        const strong = createTestPattern();
+        strong.x = 160;
+        strong.y = 260;
+        const strongMap = createDisplacementMap(120, 100, "radial");
+        strong.filters = [new DisplacementMapFilter(
+            strongMap.buffer, strongMap.width, strongMap.height, 0, 0, 1, 2, 50, 50, "clamp", 0x000000, 0
+        )];
+        root.addChild(strong);
+
+        // ===== マップオフセット =====
+        const offset = createTestPattern();
+        offset.x = 300;
+        offset.y = 260;
+        const offsetMap = createDisplacementMap(120, 100, "radial");
+        offset.filters = [new DisplacementMapFilter(
+            offsetMap.buffer, offsetMap.width, offsetMap.height, -30, -20, 1, 2, 30, 30, "clamp", 0x000000, 0
+        )];
+        root.addChild(offset);
+
+        // ===== 円への適用 =====
+        const circleShape = new Shape();
+        circleShape.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(60, 50, 45)
+            .endFill();
+        circleShape.x = 440;
+        circleShape.y = 260;
+        const circleMap = createDisplacementMap(120, 100, "wave");
+        circleShape.filters = [new DisplacementMapFilter(
+            circleMap.buffer, circleMap.width, circleMap.height, 0, 0, 1, 2, 20, 20, "clamp", 0x000000, 0
+        )];
+        root.addChild(circleShape);
+
+        // ===== グラデーションへの適用 =====
+        const gradShape = new Shape();
+        const gradMatrix = new Matrix();
+        gradMatrix.createGradientBox(120, 100, 0, 0, 0);
+        gradShape.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x00FF00, 0x0000FF],
+                [1, 1, 1],
+                [0, 127, 255],
+                gradMatrix
+            )
+            .drawRect(0, 0, 120, 100)
+            .endFill();
+        gradShape.x = 20;
+        gradShape.y = 380;
+        const gradMap = createDisplacementMap(120, 100, "wave");
+        gradShape.filters = [new DisplacementMapFilter(
+            gradMap.buffer, gradMap.width, gradMap.height, 0, 0, 1, 2, 15, 15, "clamp", 0x000000, 0
+        )];
+        root.addChild(gradShape);
+
+        // ===== X軸のみディスプレースメント =====
+        const xOnly = createTestPattern();
+        xOnly.x = 160;
+        xOnly.y = 380;
+        const xMap = createDisplacementMap(120, 100, "wave");
+        xOnly.filters = [new DisplacementMapFilter(
+            xMap.buffer, xMap.width, xMap.height, 0, 0, 1, 0, 30, 0, "clamp", 0x000000, 0
+        )];
+        root.addChild(xOnly);
+
+        // ===== Y軸のみディスプレースメント =====
+        const yOnly = createTestPattern();
+        yOnly.x = 300;
+        yOnly.y = 380;
+        const yMap = createDisplacementMap(120, 100, "wave");
+        yOnly.filters = [new DisplacementMapFilter(
+            yMap.buffer, yMap.width, yMap.height, 0, 0, 0, 2, 0, 30, "clamp", 0x000000, 0
+        )];
+        root.addChild(yOnly);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

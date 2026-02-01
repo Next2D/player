@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Fill Solid</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(400, 300, 60);
+        const { Shape } = next2d.display;
+
+        // 単色塗り - 赤
+        const shape1 = new Shape();
+        shape1.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(20, 20, 80, 60)
+            .endFill();
+        root.addChild(shape1);
+
+        // 単色塗り - 緑（alpha: 0.5）
+        const shape2 = new Shape();
+        shape2.graphics
+            .beginFill(0x00FF00, 0.5)
+            .drawRect(120, 20, 80, 60)
+            .endFill();
+        root.addChild(shape2);
+
+        // 単色塗り - 青
+        const shape3 = new Shape();
+        shape3.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(220, 20, 80, 60)
+            .endFill();
+        root.addChild(shape3);
+
+        // 単色塗り - 白（alpha: 0.8）
+        const shape4 = new Shape();
+        shape4.graphics
+            .beginFill(0xFFFFFF, 0.8)
+            .drawRect(320, 20, 60, 60)
+            .endFill();
+        root.addChild(shape4);
+
+        // 黒の矩形
+        const shape5 = new Shape();
+        shape5.graphics
+            .beginFill(0x000000, 1.0)
+            .drawRect(20, 100, 80, 60)
+            .endFill();
+        root.addChild(shape5);
+
+        // 黄色の矩形
+        const shape6 = new Shape();
+        shape6.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawRect(120, 100, 80, 60)
+            .endFill();
+        root.addChild(shape6);
+
+        // シアンの矩形
+        const shape7 = new Shape();
+        shape7.graphics
+            .beginFill(0x00FFFF, 1.0)
+            .drawRect(220, 100, 80, 60)
+            .endFill();
+        root.addChild(shape7);
+
+        // マゼンタの矩形（alpha: 0.3）
+        const shape8 = new Shape();
+        shape8.graphics
+            .beginFill(0xFF00FF, 0.3)
+            .drawRect(320, 100, 60, 60)
+            .endFill();
+        root.addChild(shape8);
+
+        // 重なり合う矩形（透明度テスト）
+        const shapeOverlap1 = new Shape();
+        shapeOverlap1.graphics
+            .beginFill(0xFF0000, 0.7)
+            .drawRect(50, 200, 100, 80)
+            .endFill();
+        root.addChild(shapeOverlap1);
+
+        const shapeOverlap2 = new Shape();
+        shapeOverlap2.graphics
+            .beginFill(0x0000FF, 0.7)
+            .drawRect(100, 220, 100, 60)
+            .endFill();
+        root.addChild(shapeOverlap2);
+
+        // テスト完了マーカー
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

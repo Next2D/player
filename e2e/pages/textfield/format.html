@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField Format</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 600, 60);
+        const { TextField, TextFormat } = next2d.text;
+
+        // ===== フォントサイズ =====
+
+        // サイズ 10
+        const size10 = new TextField();
+        size10.autoSize = "left";
+        size10.x = 20;
+        size10.y = 20;
+        const format10 = new TextFormat();
+        format10.size = 10;
+        format10.color = 0xFFFFFF;
+        size10.defaultTextFormat = format10;
+        size10.text = "Font Size 10";
+        root.addChild(size10);
+
+        // サイズ 16
+        const size16 = new TextField();
+        size16.autoSize = "left";
+        size16.x = 150;
+        size16.y = 20;
+        const format16 = new TextFormat();
+        format16.size = 16;
+        format16.color = 0xFFFFFF;
+        size16.defaultTextFormat = format16;
+        size16.text = "Font Size 16";
+        root.addChild(size16);
+
+        // サイズ 24
+        const size24 = new TextField();
+        size24.autoSize = "left";
+        size24.x = 300;
+        size24.y = 20;
+        const format24 = new TextFormat();
+        format24.size = 24;
+        format24.color = 0xFFFFFF;
+        size24.defaultTextFormat = format24;
+        size24.text = "Font Size 24";
+        root.addChild(size24);
+
+        // サイズ 36
+        const size36 = new TextField();
+        size36.autoSize = "left";
+        size36.x = 470;
+        size36.y = 15;
+        const format36 = new TextFormat();
+        format36.size = 36;
+        format36.color = 0xFFFFFF;
+        size36.defaultTextFormat = format36;
+        size36.text = "Size 36";
+        root.addChild(size36);
+
+        // ===== フォントカラー =====
+
+        const colors = [
+            { color: 0xFF0000, name: "Red" },
+            { color: 0x00FF00, name: "Green" },
+            { color: 0x0000FF, name: "Blue" },
+            { color: 0xFFFF00, name: "Yellow" },
+            { color: 0xFF00FF, name: "Magenta" },
+            { color: 0x00FFFF, name: "Cyan" }
+        ];
+
+        colors.forEach((item, index) => {
+            const tf = new TextField();
+            tf.autoSize = "left";
+            tf.x = 20 + (index % 3) * 100;
+            tf.y = 70 + Math.floor(index / 3) * 30;
+            const format = new TextFormat();
+            format.size = 16;
+            format.color = item.color;
+            tf.defaultTextFormat = format;
+            tf.text = item.name;
+            root.addChild(tf);
+        });
+
+        // ===== Bold =====
+        const boldText = new TextField();
+        boldText.autoSize = "left";
+        boldText.x = 320;
+        boldText.y = 70;
+        const boldFormat = new TextFormat();
+        boldFormat.size = 18;
+        boldFormat.color = 0xFFFFFF;
+        boldFormat.bold = true;
+        boldText.defaultTextFormat = boldFormat;
+        boldText.text = "Bold Text";
+        root.addChild(boldText);
+
+        // ===== Italic =====
+        const italicText = new TextField();
+        italicText.autoSize = "left";
+        italicText.x = 450;
+        italicText.y = 70;
+        const italicFormat = new TextFormat();
+        italicFormat.size = 18;
+        italicFormat.color = 0xFFFFFF;
+        italicFormat.italic = true;
+        italicText.defaultTextFormat = italicFormat;
+        italicText.text = "Italic Text";
+        root.addChild(italicText);
+
+        // ===== Underline =====
+        const underlineText = new TextField();
+        underlineText.autoSize = "left";
+        underlineText.x = 320;
+        underlineText.y = 100;
+        const underlineFormat = new TextFormat();
+        underlineFormat.size = 18;
+        underlineFormat.color = 0xFFFFFF;
+        underlineFormat.underline = true;
+        underlineText.defaultTextFormat = underlineFormat;
+        underlineText.text = "Underline Text";
+        root.addChild(underlineText);
+
+        // ===== Bold + Italic =====
+        const boldItalic = new TextField();
+        boldItalic.autoSize = "left";
+        boldItalic.x = 480;
+        boldItalic.y = 100;
+        const boldItalicFormat = new TextFormat();
+        boldItalicFormat.size = 18;
+        boldItalicFormat.color = 0xFFFFFF;
+        boldItalicFormat.bold = true;
+        boldItalicFormat.italic = true;
+        boldItalic.defaultTextFormat = boldItalicFormat;
+        boldItalic.text = "Bold Italic";
+        root.addChild(boldItalic);
+
+        // ===== Align LEFT =====
+        const alignLeft = new TextField();
+        alignLeft.x = 20;
+        alignLeft.y = 150;
+        alignLeft.width = 150;
+        alignLeft.height = 30;
+        alignLeft.border = true;
+        alignLeft.borderColor = 0x888888;
+        const leftFormat = new TextFormat();
+        leftFormat.size = 14;
+        leftFormat.color = 0xFFFFFF;
+        leftFormat.align = "left";
+        alignLeft.defaultTextFormat = leftFormat;
+        alignLeft.text = "Left Align";
+        root.addChild(alignLeft);
+
+        // ===== Align CENTER =====
+        const alignCenter = new TextField();
+        alignCenter.x = 190;
+        alignCenter.y = 150;
+        alignCenter.width = 150;
+        alignCenter.height = 30;
+        alignCenter.border = true;
+        alignCenter.borderColor = 0x888888;
+        const centerFormat = new TextFormat();
+        centerFormat.size = 14;
+        centerFormat.color = 0xFFFFFF;
+        centerFormat.align = "center";
+        alignCenter.defaultTextFormat = centerFormat;
+        alignCenter.text = "Center Align";
+        root.addChild(alignCenter);
+
+        // ===== Align RIGHT =====
+        const alignRight = new TextField();
+        alignRight.x = 360;
+        alignRight.y = 150;
+        alignRight.width = 150;
+        alignRight.height = 30;
+        alignRight.border = true;
+        alignRight.borderColor = 0x888888;
+        const rightFormat = new TextFormat();
+        rightFormat.size = 14;
+        rightFormat.color = 0xFFFFFF;
+        rightFormat.align = "right";
+        alignRight.defaultTextFormat = rightFormat;
+        alignRight.text = "Right Align";
+        root.addChild(alignRight);
+
+        // ===== Leading (行間) =====
+        const leadingSmall = new TextField();
+        leadingSmall.x = 20;
+        leadingSmall.y = 200;
+        leadingSmall.width = 100;
+        leadingSmall.height = 80;
+        leadingSmall.multiline = true;
+        leadingSmall.border = true;
+        leadingSmall.borderColor = 0x888888;
+        const smallLeadingFormat = new TextFormat();
+        smallLeadingFormat.size = 14;
+        smallLeadingFormat.color = 0xFFFFFF;
+        smallLeadingFormat.leading = 0;
+        leadingSmall.defaultTextFormat = smallLeadingFormat;
+        leadingSmall.text = "Line 1\nLine 2\nLine 3";
+        root.addChild(leadingSmall);
+
+        const leadingMedium = new TextField();
+        leadingMedium.x = 140;
+        leadingMedium.y = 200;
+        leadingMedium.width = 100;
+        leadingMedium.height = 100;
+        leadingMedium.multiline = true;
+        leadingMedium.border = true;
+        leadingMedium.borderColor = 0x888888;
+        const mediumLeadingFormat = new TextFormat();
+        mediumLeadingFormat.size = 14;
+        mediumLeadingFormat.color = 0xFFFFFF;
+        mediumLeadingFormat.leading = 8;
+        leadingMedium.defaultTextFormat = mediumLeadingFormat;
+        leadingMedium.text = "Line 1\nLine 2\nLine 3";
+        root.addChild(leadingMedium);
+
+        const leadingLarge = new TextField();
+        leadingLarge.x = 260;
+        leadingLarge.y = 200;
+        leadingLarge.width = 100;
+        leadingLarge.height = 120;
+        leadingLarge.multiline = true;
+        leadingLarge.border = true;
+        leadingLarge.borderColor = 0x888888;
+        const largeLeadingFormat = new TextFormat();
+        largeLeadingFormat.size = 14;
+        largeLeadingFormat.color = 0xFFFFFF;
+        largeLeadingFormat.leading = 16;
+        leadingLarge.defaultTextFormat = largeLeadingFormat;
+        leadingLarge.text = "Line 1\nLine 2\nLine 3";
+        root.addChild(leadingLarge);
+
+        // ===== Letter Spacing =====
+        const letterSpacingNormal = new TextField();
+        letterSpacingNormal.autoSize = "left";
+        letterSpacingNormal.x = 380;
+        letterSpacingNormal.y = 200;
+        const normalSpacingFormat = new TextFormat();
+        normalSpacingFormat.size = 14;
+        normalSpacingFormat.color = 0xFFFFFF;
+        normalSpacingFormat.letterSpacing = 0;
+        letterSpacingNormal.defaultTextFormat = normalSpacingFormat;
+        letterSpacingNormal.text = "Normal Spacing";
+        root.addChild(letterSpacingNormal);
+
+        const letterSpacingWide = new TextField();
+        letterSpacingWide.autoSize = "left";
+        letterSpacingWide.x = 380;
+        letterSpacingWide.y = 230;
+        const wideSpacingFormat = new TextFormat();
+        wideSpacingFormat.size = 14;
+        wideSpacingFormat.color = 0xFFFFFF;
+        wideSpacingFormat.letterSpacing = 5;
+        letterSpacingWide.defaultTextFormat = wideSpacingFormat;
+        letterSpacingWide.text = "Wide Spacing";
+        root.addChild(letterSpacingWide);
+
+        const letterSpacingNegative = new TextField();
+        letterSpacingNegative.autoSize = "left";
+        letterSpacingNegative.x = 380;
+        letterSpacingNegative.y = 260;
+        const negativeSpacingFormat = new TextFormat();
+        negativeSpacingFormat.size = 14;
+        negativeSpacingFormat.color = 0xFFFFFF;
+        negativeSpacingFormat.letterSpacing = -2;
+        letterSpacingNegative.defaultTextFormat = negativeSpacingFormat;
+        letterSpacingNegative.text = "Tight Spacing";
+        root.addChild(letterSpacingNegative);
+
+        // ===== Left Margin =====
+        const indentText = new TextField();
+        indentText.x = 20;
+        indentText.y = 340;
+        indentText.width = 200;
+        indentText.height = 60;
+        indentText.multiline = true;
+        indentText.wordWrap = true;
+        indentText.border = true;
+        indentText.borderColor = 0x888888;
+        const indentFormat = new TextFormat();
+        indentFormat.size = 14;
+        indentFormat.color = 0xFFFFFF;
+        indentFormat.leftMargin = 20;
+        indentText.defaultTextFormat = indentFormat;
+        indentText.text = "Left margin text that wraps to multiple lines.";
+        root.addChild(indentText);
+
+        // ===== Left/Right Margin =====
+        const marginText = new TextField();
+        marginText.x = 250;
+        marginText.y = 340;
+        marginText.width = 200;
+        marginText.height = 60;
+        marginText.multiline = true;
+        marginText.wordWrap = true;
+        marginText.border = true;
+        marginText.borderColor = 0x888888;
+        const marginFormat = new TextFormat();
+        marginFormat.size = 14;
+        marginFormat.color = 0xFFFFFF;
+        marginFormat.leftMargin = 15;
+        marginFormat.rightMargin = 15;
+        marginText.defaultTextFormat = marginFormat;
+        marginText.text = "Text with margins on both sides.";
+        root.addChild(marginText);
+
+        // ===== 複合フォーマット =====
+        const complexFormat = new TextField();
+        complexFormat.x = 20;
+        complexFormat.y = 420;
+        complexFormat.width = 250;
+        complexFormat.height = 40;
+        complexFormat.border = true;
+        complexFormat.borderColor = 0xFFFF00;
+        complexFormat.background = true;
+        complexFormat.backgroundColor = 0x222222;
+        const complexTextFormat = new TextFormat();
+        complexTextFormat.size = 18;
+        complexTextFormat.color = 0xFFFF00;
+        complexTextFormat.bold = true;
+        complexTextFormat.italic = true;
+        complexTextFormat.align = "center";
+        complexTextFormat.letterSpacing = 2;
+        complexFormat.defaultTextFormat = complexTextFormat;
+        complexFormat.text = "Complex Formatted Text";
+        root.addChild(complexFormat);
+
+        // ===== htmlTextでの部分フォーマット =====
+        const partialFormat = new TextField();
+        partialFormat.autoSize = "left";
+        partialFormat.x = 300;
+        partialFormat.y = 420;
+        partialFormat.htmlText = "<font color='#FF0000'>Red</font> <font color='#00FF00'>Green</font> <font color='#0000FF'>Blue</font>";
+        root.addChild(partialFormat);
+
+        // ===== 日本語フォーマット =====
+        const japaneseFormat = new TextField();
+        japaneseFormat.x = 20;
+        japaneseFormat.y = 480;
+        japaneseFormat.width = 200;
+        japaneseFormat.height = 40;
+        const jpFormat = new TextFormat();
+        jpFormat.size = 20;
+        jpFormat.color = 0xFFFFFF;
+        jpFormat.bold = true;
+        japaneseFormat.defaultTextFormat = jpFormat;
+        japaneseFormat.text = "日本語テキスト";
+        root.addChild(japaneseFormat);
+
+        // ===== 混合言語 =====
+        const mixedLang = new TextField();
+        mixedLang.x = 250;
+        mixedLang.y = 480;
+        mixedLang.width = 250;
+        mixedLang.height = 40;
+        const mixedFormat = new TextFormat();
+        mixedFormat.size = 18;
+        mixedFormat.color = 0x00FFFF;
+        mixedLang.defaultTextFormat = mixedFormat;
+        mixedLang.text = "English と 日本語 mixed";
+        root.addChild(mixedLang);
+
+        // ===== 大きいテキスト =====
+        const kerningText = new TextField();
+        kerningText.autoSize = "left";
+        kerningText.x = 20;
+        kerningText.y = 540;
+        const kerningFormat = new TextFormat();
+        kerningFormat.size = 24;
+        kerningFormat.color = 0xFFFFFF;
+        kerningText.defaultTextFormat = kerningFormat;
+        kerningText.text = "AVATAR";
+        root.addChild(kerningText);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - DropShadowFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { DropShadowFilter } = next2d.filters;
+
+        // テスト用シェイプを作成
+        const createTestShape = (color = 0xFF0000) => {
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(color, 1.0)
+                .drawRoundRect(0, 0, 80, 50, 8)
+                .endFill();
+            return shape;
+        };
+
+        // ===== フィルターなし（参照用）=====
+        const noFilter = createTestShape();
+        noFilter.x = 30;
+        noFilter.y = 30;
+        root.addChild(noFilter);
+
+        // ===== 基本的な影 =====
+        const basic = createTestShape();
+        basic.x = 140;
+        basic.y = 30;
+        basic.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(basic);
+
+        // ===== 距離が大きい影 =====
+        const farShadow = createTestShape();
+        farShadow.x = 250;
+        farShadow.y = 30;
+        farShadow.filters = [new DropShadowFilter(15, 45, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(farShadow);
+
+        // ===== 角度0度（右方向）=====
+        const angle0 = createTestShape();
+        angle0.x = 360;
+        angle0.y = 30;
+        angle0.filters = [new DropShadowFilter(8, 0, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(angle0);
+
+        // ===== 角度90度（下方向）=====
+        const angle90 = createTestShape();
+        angle90.x = 470;
+        angle90.y = 30;
+        angle90.filters = [new DropShadowFilter(8, 90, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(angle90);
+
+        // ===== 角度180度（左方向）=====
+        const angle180 = createTestShape();
+        angle180.x = 30;
+        angle180.y = 110;
+        angle180.filters = [new DropShadowFilter(8, 180, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(angle180);
+
+        // ===== 角度270度（上方向）=====
+        const angle270 = createTestShape();
+        angle270.x = 140;
+        angle270.y = 110;
+        angle270.filters = [new DropShadowFilter(8, 270, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(angle270);
+
+        // ===== 色付き影（赤）=====
+        const redShadow = createTestShape(0x00FF00);
+        redShadow.x = 250;
+        redShadow.y = 110;
+        redShadow.filters = [new DropShadowFilter(6, 45, 0xFF0000, 1, 6, 6, 1, 1)];
+        root.addChild(redShadow);
+
+        // ===== 色付き影（青）=====
+        const blueShadow = createTestShape(0xFFFF00);
+        blueShadow.x = 360;
+        blueShadow.y = 110;
+        blueShadow.filters = [new DropShadowFilter(6, 45, 0x0000FF, 1, 6, 6, 1, 1)];
+        root.addChild(blueShadow);
+
+        // ===== 半透明影 =====
+        const alphaShadow = createTestShape();
+        alphaShadow.x = 470;
+        alphaShadow.y = 110;
+        alphaShadow.filters = [new DropShadowFilter(6, 45, 0x000000, 0.4, 6, 6, 1, 1)];
+        root.addChild(alphaShadow);
+
+        // ===== ぼかし量が大きい =====
+        const bigBlur = createTestShape();
+        bigBlur.x = 30;
+        bigBlur.y = 190;
+        bigBlur.filters = [new DropShadowFilter(8, 45, 0x000000, 1, 16, 16, 1, 1)];
+        root.addChild(bigBlur);
+
+        // ===== ぼかし量が小さい（シャープ）=====
+        const sharpShadow = createTestShape();
+        sharpShadow.x = 140;
+        sharpShadow.y = 190;
+        sharpShadow.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 1, 1, 1, 1)];
+        root.addChild(sharpShadow);
+
+        // ===== strength が強い =====
+        const strongShadow = createTestShape();
+        strongShadow.x = 250;
+        strongShadow.y = 190;
+        strongShadow.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 6, 6, 3, 1)];
+        root.addChild(strongShadow);
+
+        // ===== quality 高 =====
+        const highQuality = createTestShape();
+        highQuality.x = 360;
+        highQuality.y = 190;
+        highQuality.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 8, 8, 1, 3)];
+        root.addChild(highQuality);
+
+        // ===== inner = true（内側影）=====
+        const innerShadow = createTestShape(0x00FFFF);
+        innerShadow.x = 470;
+        innerShadow.y = 190;
+        innerShadow.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1, true)];
+        root.addChild(innerShadow);
+
+        // ===== knockout = true =====
+        const knockoutShadow = createTestShape();
+        knockoutShadow.x = 30;
+        knockoutShadow.y = 270;
+        knockoutShadow.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 4, 4, 1, 1, false, true)];
+        root.addChild(knockoutShadow);
+
+        // ===== hideObject = true =====
+        const hideObject = createTestShape();
+        hideObject.x = 140;
+        hideObject.y = 270;
+        hideObject.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 4, 4, 1, 1, false, false, true)];
+        root.addChild(hideObject);
+
+        // ===== 円への適用 =====
+        const circleShape = new Shape();
+        circleShape.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawCircle(40, 30, 30)
+            .endFill();
+        circleShape.x = 250;
+        circleShape.y = 270;
+        circleShape.filters = [new DropShadowFilter(8, 45, 0x000000, 0.8, 6, 6, 1, 1)];
+        root.addChild(circleShape);
+
+        // ===== テキスト風への適用 =====
+        const textShape = new Shape();
+        textShape.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(0, 0, 60, 10)
+            .drawRect(25, 0, 10, 40)
+            .endFill();
+        textShape.x = 360;
+        textShape.y = 280;
+        textShape.filters = [new DropShadowFilter(3, 45, 0x000000, 1, 2, 2, 1, 1)];
+        root.addChild(textShape);
+
+        // ===== 複雑な形状への適用 =====
+        const starShape = new Shape();
+        starShape.graphics.beginFill(0xFFFF00, 1.0);
+        const cx = 40, cy = 30, outerR = 30, innerR = 12;
+        for (let i = 0; i < 10; i++) {
+            const angle = (i * 36 - 90) * Math.PI / 180;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            if (i === 0) {
+                starShape.graphics.moveTo(x, y);
+            } else {
+                starShape.graphics.lineTo(x, y);
+            }
+        }
+        starShape.graphics.endFill();
+        starShape.x = 460;
+        starShape.y = 270;
+        starShape.filters = [new DropShadowFilter(5, 135, 0x000000, 0.8, 4, 4, 1, 2)];
+        root.addChild(starShape);
+
+        // ===== 非対称ブラー =====
+        const asymBlur = createTestShape();
+        asymBlur.x = 30;
+        asymBlur.y = 360;
+        asymBlur.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 12, 2, 1, 1)];
+        root.addChild(asymBlur);
+
+        // ===== 複数影 =====
+        const multiShadow = createTestShape(0x00FF00);
+        multiShadow.x = 140;
+        multiShadow.y = 360;
+        multiShadow.filters = [
+            new DropShadowFilter(3, 45, 0x000000, 0.5, 3, 3, 1, 1),
+            new DropShadowFilter(8, 45, 0x000000, 0.3, 8, 8, 1, 1)
+        ];
+        root.addChild(multiShadow);
+
+        // ===== カラフルな複数影 =====
+        const colorMulti = createTestShape(0xFFFFFF);
+        colorMulti.x = 260;
+        colorMulti.y = 360;
+        colorMulti.filters = [
+            new DropShadowFilter(4, 0, 0xFF0000, 0.8, 4, 4, 1, 1),
+            new DropShadowFilter(4, 120, 0x00FF00, 0.8, 4, 4, 1, 1),
+            new DropShadowFilter(4, 240, 0x0000FF, 0.8, 4, 4, 1, 1)
+        ];
+        root.addChild(colorMulti);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

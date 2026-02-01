@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField Basic</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { TextField, TextFormat } = next2d.text;
+
+        // ===== 基本テキスト =====
+        const basic = new TextField();
+        basic.text = "Hello, Next2D!";
+        basic.x = 20;
+        basic.y = 20;
+        basic.width = 200;
+        basic.height = 30;
+        basic.textColor = 0xFFFFFF;
+        root.addChild(basic);
+
+        // ===== 複数行テキスト =====
+        const multiline = new TextField();
+        multiline.text = "This is line 1\nThis is line 2\nThis is line 3";
+        multiline.x = 20;
+        multiline.y = 60;
+        multiline.width = 200;
+        multiline.height = 80;
+        multiline.multiline = true;
+        multiline.wordWrap = true;
+        multiline.textColor = 0xFFFFFF;
+        root.addChild(multiline);
+
+        // ===== wordWrap有効 =====
+        const wordWrap = new TextField();
+        wordWrap.text = "This is a long text that should wrap to multiple lines automatically when wordWrap is enabled.";
+        wordWrap.x = 20;
+        wordWrap.y = 160;
+        wordWrap.width = 180;
+        wordWrap.height = 80;
+        wordWrap.multiline = true;
+        wordWrap.wordWrap = true;
+        wordWrap.textColor = 0xFFFFFF;
+        root.addChild(wordWrap);
+
+        // ===== autoSize: LEFT =====
+        const autoSizeLeft = new TextField();
+        autoSizeLeft.text = "AutoSize LEFT";
+        autoSizeLeft.x = 250;
+        autoSizeLeft.y = 20;
+        autoSizeLeft.autoSize = "left";
+        autoSizeLeft.textColor = 0x00FF00;
+        root.addChild(autoSizeLeft);
+
+        // ===== autoSize: CENTER =====
+        const autoSizeCenter = new TextField();
+        autoSizeCenter.text = "AutoSize CENTER";
+        autoSizeCenter.x = 350;
+        autoSizeCenter.y = 20;
+        autoSizeCenter.autoSize = "center";
+        autoSizeCenter.textColor = 0x00FFFF;
+        root.addChild(autoSizeCenter);
+
+        // ===== autoSize: RIGHT =====
+        const autoSizeRight = new TextField();
+        autoSizeRight.text = "AutoSize RIGHT";
+        autoSizeRight.x = 550;
+        autoSizeRight.y = 20;
+        autoSizeRight.autoSize = "right";
+        autoSizeRight.textColor = 0xFF00FF;
+        root.addChild(autoSizeRight);
+
+        // ===== 背景色付き =====
+        const withBackground = new TextField();
+        withBackground.text = "With Background";
+        withBackground.x = 250;
+        withBackground.y = 60;
+        withBackground.width = 150;
+        withBackground.height = 30;
+        withBackground.background = true;
+        withBackground.backgroundColor = 0x0000FF;
+        withBackground.textColor = 0xFFFFFF;
+        root.addChild(withBackground);
+
+        // ===== 枠線付き =====
+        const withBorder = new TextField();
+        withBorder.text = "With Border";
+        withBorder.x = 420;
+        withBorder.y = 60;
+        withBorder.width = 150;
+        withBorder.height = 30;
+        withBorder.border = true;
+        withBorder.borderColor = 0xFF0000;
+        withBorder.textColor = 0xFFFFFF;
+        root.addChild(withBorder);
+
+        // ===== 背景と枠線両方 =====
+        const bgAndBorder = new TextField();
+        bgAndBorder.text = "Background + Border";
+        bgAndBorder.x = 250;
+        bgAndBorder.y = 100;
+        bgAndBorder.width = 180;
+        bgAndBorder.height = 30;
+        bgAndBorder.background = true;
+        bgAndBorder.backgroundColor = 0x003300;
+        bgAndBorder.border = true;
+        bgAndBorder.borderColor = 0x00FF00;
+        bgAndBorder.textColor = 0x00FF00;
+        root.addChild(bgAndBorder);
+
+        // ===== selectable: false =====
+        const notSelectable = new TextField();
+        notSelectable.text = "Not Selectable";
+        notSelectable.x = 450;
+        notSelectable.y = 100;
+        notSelectable.width = 130;
+        notSelectable.height = 30;
+        notSelectable.selectable = false;
+        notSelectable.textColor = 0xFFFF00;
+        root.addChild(notSelectable);
+
+        // ===== htmlText基本 =====
+        const htmlBasic = new TextField();
+        htmlBasic.htmlText = "<font color='#FF0000'>Red</font> <font color='#00FF00'>Green</font> <font color='#0000FF'>Blue</font>";
+        htmlBasic.x = 250;
+        htmlBasic.y = 150;
+        htmlBasic.width = 300;
+        htmlBasic.height = 30;
+        htmlBasic.multiline = true;
+        root.addChild(htmlBasic);
+
+        // ===== htmlText太字・斜体 =====
+        const htmlStyles = new TextField();
+        htmlStyles.htmlText = "<b>Bold</b> <i>Italic</i> <u>Underline</u>";
+        htmlStyles.x = 250;
+        htmlStyles.y = 190;
+        htmlStyles.width = 300;
+        htmlStyles.height = 30;
+        htmlStyles.textColor = 0xFFFFFF;
+        root.addChild(htmlStyles);
+
+        // ===== htmlTextフォントサイズ =====
+        const htmlFontSize = new TextField();
+        htmlFontSize.htmlText = "<font size='10'>Small</font> <font size='14'>Medium</font> <font size='20'>Large</font>";
+        htmlFontSize.x = 250;
+        htmlFontSize.y = 230;
+        htmlFontSize.width = 300;
+        htmlFontSize.height = 40;
+        htmlFontSize.textColor = 0xFFFFFF;
+        root.addChild(htmlFontSize);
+
+        // ===== 日本語テキスト =====
+        const japanese = new TextField();
+        japanese.text = "日本語テキスト表示テスト";
+        japanese.x = 20;
+        japanese.y = 260;
+        japanese.width = 200;
+        japanese.height = 30;
+        japanese.textColor = 0xFFFFFF;
+        root.addChild(japanese);
+
+        // ===== 絵文字を含むテキスト =====
+        const emoji = new TextField();
+        emoji.text = "Emoji: 🎮 🎯 🎨";
+        emoji.x = 20;
+        emoji.y = 300;
+        emoji.width = 200;
+        emoji.height = 30;
+        emoji.textColor = 0xFFFFFF;
+        root.addChild(emoji);
+
+        // ===== 特殊文字 =====
+        const special = new TextField();
+        special.text = "Special: <>&\"'©®™";
+        special.x = 20;
+        special.y = 340;
+        special.width = 200;
+        special.height = 30;
+        special.textColor = 0xFFFFFF;
+        root.addChild(special);
+
+        // ===== 長いテキスト（スクロール用）=====
+        const longText = new TextField();
+        longText.text = "This is a very long text that exceeds the visible area and would normally require scrolling to see all content.";
+        longText.x = 250;
+        longText.y = 290;
+        longText.width = 200;
+        longText.height = 60;
+        longText.multiline = true;
+        longText.wordWrap = true;
+        longText.border = true;
+        longText.borderColor = 0x888888;
+        longText.textColor = 0xFFFFFF;
+        root.addChild(longText);
+
+        // ===== INPUT タイプ（視覚的にはDYNAMICと同じ）=====
+        const inputField = new TextField();
+        inputField.type = "input";
+        inputField.text = "Input Field";
+        inputField.x = 250;
+        inputField.y = 370;
+        inputField.width = 200;
+        inputField.height = 30;
+        inputField.border = true;
+        inputField.borderColor = 0xFFFFFF;
+        inputField.background = true;
+        inputField.backgroundColor = 0x222222;
+        inputField.textColor = 0xFFFFFF;
+        root.addChild(inputField);
+
+        // ===== password タイプ =====
+        const passwordField = new TextField();
+        passwordField.type = "input";
+        passwordField.displayAsPassword = true;
+        passwordField.text = "secret";
+        passwordField.x = 250;
+        passwordField.y = 410;
+        passwordField.width = 200;
+        passwordField.height = 30;
+        passwordField.border = true;
+        passwordField.borderColor = 0xFFFFFF;
+        passwordField.background = true;
+        passwordField.backgroundColor = 0x222222;
+        passwordField.textColor = 0xFFFFFF;
+        root.addChild(passwordField);
+
+        // ===== maxChars制限 =====
+        const maxChars = new TextField();
+        maxChars.type = "input";
+        maxChars.maxChars = 10;
+        maxChars.text = "Max 10 chars";
+        maxChars.x = 250;
+        maxChars.y = 450;
+        maxChars.width = 200;
+        maxChars.height = 30;
+        maxChars.border = true;
+        maxChars.borderColor = 0xFFFF00;
+        maxChars.textColor = 0xFFFFFF;
+        root.addChild(maxChars);
+
+        // ===== 透明度 =====
+        const alphaText = new TextField();
+        alphaText.text = "Alpha 0.5";
+        alphaText.x = 480;
+        alphaText.y = 370;
+        alphaText.width = 100;
+        alphaText.height = 30;
+        alphaText.alpha = 0.5;
+        alphaText.textColor = 0xFFFFFF;
+        root.addChild(alphaText);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

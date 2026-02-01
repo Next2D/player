@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Line Bitmap</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(500, 400, 60);
+        const { Shape, BitmapData } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // チェッカーパターン作成（Canvas経由）
+        const createCheckerPattern = (size, color1, color2) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = size * 2;
+            canvas.height = size * 2;
+            const ctx = canvas.getContext("2d");
+
+            for (let y = 0; y < 2; y++) {
+                for (let x = 0; x < 2; x++) {
+                    const isEven = ((x + y) % 2) === 0;
+                    const color = isEven ? color1 : color2;
+                    ctx.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
+                    ctx.fillRect(x * size, y * size, size, size);
+                }
+            }
+
+            const bitmapData = new BitmapData(canvas.width, canvas.height);
+            bitmapData.canvas = canvas;
+            return bitmapData;
+        };
+
+        // ストライプパターン作成（Canvas経由）
+        const createStripePattern = (width, height, color1, color2, stripeWidth) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+
+            for (let x = 0; x < width; x += stripeWidth) {
+                const isStripe = (Math.floor(x / stripeWidth) % 2) === 0;
+                const color = isStripe ? color1 : color2;
+                ctx.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
+                ctx.fillRect(x, 0, stripeWidth, height);
+            }
+
+            const bitmapData = new BitmapData(width, height);
+            bitmapData.canvas = canvas;
+            return bitmapData;
+        };
+
+        const checkerBitmap = createCheckerPattern(8, 0xFF0000, 0xFFFFFF);
+        const stripeBitmap = createStripePattern(32, 32, 0x0000FF, 0xFFFF00, 4);
+
+        // ===== 基本的なビットマップ線 =====
+
+        // チェッカーパターン線
+        const line1 = new Shape();
+        line1.graphics
+            .lineStyle(15)
+            .lineBitmapStyle(checkerBitmap, null, true, false)
+            .moveTo(20, 40)
+            .lineTo(220, 40);
+        root.addChild(line1);
+
+        // ストライプパターン線
+        const line2 = new Shape();
+        line2.graphics
+            .lineStyle(15)
+            .lineBitmapStyle(stripeBitmap, null, true, false)
+            .moveTo(250, 40)
+            .lineTo(450, 40);
+        root.addChild(line2);
+
+        // ===== Matrix変換付きビットマップ線 =====
+
+        // スケール変換
+        const matrixScale = new Matrix();
+        matrixScale.scale(2, 2);
+        const lineScale = new Shape();
+        lineScale.graphics
+            .lineStyle(20)
+            .lineBitmapStyle(checkerBitmap, matrixScale, true, false)
+            .moveTo(20, 100)
+            .lineTo(220, 100);
+        root.addChild(lineScale);
+
+        // 回転変換
+        const matrixRotate = new Matrix();
+        matrixRotate.rotate(Math.PI / 4);
+        const lineRotate = new Shape();
+        lineRotate.graphics
+            .lineStyle(20)
+            .lineBitmapStyle(stripeBitmap, matrixRotate, true, false)
+            .moveTo(250, 100)
+            .lineTo(450, 100);
+        root.addChild(lineRotate);
+
+        // ===== 折れ線パス =====
+
+        const zigzag1 = new Shape();
+        zigzag1.graphics
+            .lineStyle(12)
+            .lineBitmapStyle(checkerBitmap, null, true, false)
+            .moveTo(20, 160)
+            .lineTo(80, 200)
+            .lineTo(140, 160)
+            .lineTo(200, 200)
+            .lineTo(260, 160);
+        root.addChild(zigzag1);
+
+        // ===== 矩形 =====
+
+        const rect = new Shape();
+        rect.graphics
+            .lineStyle(10)
+            .lineBitmapStyle(stripeBitmap, null, true, false)
+            .drawRect(300, 140, 150, 80);
+        root.addChild(rect);
+
+        // ===== 円形 =====
+
+        const circle = new Shape();
+        circle.graphics
+            .lineStyle(12)
+            .lineBitmapStyle(checkerBitmap, null, true, false)
+            .drawCircle(100, 300, 60);
+        root.addChild(circle);
+
+        // ===== smooth: true =====
+
+        const lineSmooth = new Shape();
+        lineSmooth.graphics
+            .lineStyle(25)
+            .lineBitmapStyle(checkerBitmap, null, true, true)
+            .moveTo(200, 280)
+            .lineTo(350, 280);
+        root.addChild(lineSmooth);
+
+        // ===== 複合変換パス =====
+
+        const matrixComplex = new Matrix();
+        matrixComplex.scale(0.5, 0.5);
+        matrixComplex.rotate(Math.PI / 6);
+        const complexPath = new Shape();
+        complexPath.graphics
+            .lineStyle(15)
+            .lineBitmapStyle(stripeBitmap, matrixComplex, true, true)
+            .moveTo(200, 340)
+            .lineTo(280, 360)
+            .lineTo(360, 340)
+            .lineTo(440, 360);
+        root.addChild(complexPath);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

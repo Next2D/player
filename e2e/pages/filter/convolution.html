@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - ConvolutionFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 300, 60);
+        const { Shape } = next2d.display;
+        const { ConvolutionFilter } = next2d.filters;
+
+        // テストパターンを作成
+        const createTestShape = () => {
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 120, 100)
+                .endFill()
+                .beginFill(0x00FF00, 1.0)
+                .drawCircle(60, 50, 35)
+                .endFill();
+            return shape;
+        };
+
+        // ===== フィルターなし（参照用）=====
+        const noFilter = createTestShape();
+        noFilter.x = 50;
+        noFilter.y = 50;
+        root.addChild(noFilter);
+
+        // ===== シャープン =====
+        const sharpen = createTestShape();
+        sharpen.x = 230;
+        sharpen.y = 50;
+        sharpen.filters = [new ConvolutionFilter(
+            3, 3,
+            [0, -1, 0, -1, 5, -1, 0, -1, 0],
+            1, 0, true, true, 0x000000, 0
+        )];
+        root.addChild(sharpen);
+
+        // ===== ぼかし（Box Blur）=====
+        const boxBlur = createTestShape();
+        boxBlur.x = 410;
+        boxBlur.y = 50;
+        boxBlur.filters = [new ConvolutionFilter(
+            3, 3,
+            [1, 1, 1, 1, 1, 1, 1, 1, 1],
+            9, 0, true, true, 0x000000, 0
+        )];
+        root.addChild(boxBlur);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

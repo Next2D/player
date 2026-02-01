@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - GlowFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { Shape } = next2d.display;
+        const { GlowFilter } = next2d.filters;
+
+        // テスト用シェイプを作成
+        const createTestShape = (color = 0xFF0000) => {
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(color, 1.0)
+                .drawRoundRect(0, 0, 80, 50, 8)
+                .endFill();
+            return shape;
+        };
+
+        // ===== フィルターなし（参照用）=====
+        const noFilter = createTestShape();
+        noFilter.x = 30;
+        noFilter.y = 30;
+        root.addChild(noFilter);
+
+        // ===== 基本的なグロー =====
+        const basic = createTestShape();
+        basic.x = 150;
+        basic.y = 30;
+        basic.filters = [new GlowFilter(0xFFFF00, 1, 8, 8, 2, 1)];
+        root.addChild(basic);
+
+        // ===== 赤いグロー =====
+        const redGlow = createTestShape(0x00FF00);
+        redGlow.x = 280;
+        redGlow.y = 30;
+        redGlow.filters = [new GlowFilter(0xFF0000, 1, 8, 8, 2, 1)];
+        root.addChild(redGlow);
+
+        // ===== 青いグロー =====
+        const blueGlow = createTestShape(0xFFFF00);
+        blueGlow.x = 410;
+        blueGlow.y = 30;
+        blueGlow.filters = [new GlowFilter(0x0000FF, 1, 8, 8, 2, 1)];
+        root.addChild(blueGlow);
+
+        // ===== ブラー大 =====
+        const bigBlur = createTestShape();
+        bigBlur.x = 30;
+        bigBlur.y = 120;
+        bigBlur.filters = [new GlowFilter(0xFFFF00, 1, 20, 20, 2, 1)];
+        root.addChild(bigBlur);
+
+        // ===== strength 強 =====
+        const strongStr = createTestShape();
+        strongStr.x = 150;
+        strongStr.y = 120;
+        strongStr.filters = [new GlowFilter(0xFFFF00, 1, 8, 8, 4, 1)];
+        root.addChild(strongStr);
+
+        // ===== alpha 低 =====
+        const lowAlpha = createTestShape();
+        lowAlpha.x = 280;
+        lowAlpha.y = 120;
+        lowAlpha.filters = [new GlowFilter(0xFFFF00, 0.5, 10, 10, 2, 1)];
+        root.addChild(lowAlpha);
+
+        // ===== inner = true =====
+        const innerGlow = createTestShape(0x00FFFF);
+        innerGlow.x = 410;
+        innerGlow.y = 120;
+        innerGlow.filters = [new GlowFilter(0x000000, 1, 8, 8, 2, 1, true)];
+        root.addChild(innerGlow);
+
+        // ===== knockout = true =====
+        const knockout = createTestShape();
+        knockout.x = 30;
+        knockout.y = 210;
+        knockout.filters = [new GlowFilter(0xFFFF00, 1, 10, 10, 2, 1, false, true)];
+        root.addChild(knockout);
+
+        // ===== 円への適用 =====
+        const circleShape = new Shape();
+        circleShape.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawCircle(45, 30, 30)
+            .endFill();
+        circleShape.x = 150;
+        circleShape.y = 210;
+        circleShape.filters = [new GlowFilter(0x00FF00, 1, 8, 8, 2, 1)];
+        root.addChild(circleShape);
+
+        // ===== quality 3 =====
+        const q3 = createTestShape();
+        q3.x = 280;
+        q3.y = 210;
+        q3.filters = [new GlowFilter(0xFFFF00, 1, 12, 12, 2, 3)];
+        root.addChild(q3);
+
+        // ===== 白いグロー =====
+        const whiteGlow = createTestShape(0x000000);
+        whiteGlow.x = 410;
+        whiteGlow.y = 210;
+        whiteGlow.filters = [new GlowFilter(0xFFFFFF, 1, 10, 10, 2, 1)];
+        root.addChild(whiteGlow);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>
