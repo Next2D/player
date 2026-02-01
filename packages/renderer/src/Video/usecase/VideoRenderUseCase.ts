@@ -46,9 +46,6 @@ export const execute = (
     const hasCache = render_queue[index++];
     if (!hasCache) {
 
-        // 個別の描画があったので、フラグを立てる
-        $context.newDrawState = true;
-
         const width  = Math.abs(xMax - xMin);
         const height = Math.abs(yMax - yMin);
 

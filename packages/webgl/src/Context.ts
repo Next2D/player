@@ -878,6 +878,8 @@ export class Context
      */
     beginNodeRendering (node: Node): void
     {
+        this.newDrawState = true;
+        contextUpdateTransferBoundsService(node);
         contextBeginNodeRenderingService(node.x, node.y, node.w, node.h);
     }
 
