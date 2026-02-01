@@ -34,7 +34,8 @@ export const execute = (
     const key3 = is_glow ? "y" : "n";
     const key4 = knockout ? "y" : "n";
     const key5 = applies_strength ? "y" : "n";
-    const key  = `f${key1}${key2}${key3}${type}${key4}${key5}`;
+    const key6 = is_gradient ? "y" : "n";
+    const key  = `f${key1}${key2}${key3}${type}${key4}${key5}${key6}`;
 
     if ($collection.has(key)) {
         return $collection.get(key) as NonNullable<ShaderManager>;
