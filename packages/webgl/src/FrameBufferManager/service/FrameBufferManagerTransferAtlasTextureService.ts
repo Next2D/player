@@ -40,7 +40,7 @@ export const execute = (): void =>
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(
         bounds[0], bounds[1],
-        bounds[2], bounds[3]
+        bounds[2] - bounds[0], bounds[3] - bounds[1]
     );
 
     $gl.blitFramebuffer(
