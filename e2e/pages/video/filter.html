@@ -30,6 +30,9 @@
 
         const videoPath = "/e2e/fixtures/videos/movie.mp4";
 
+        // 全ビデオを追跡
+        const allVideos = [];
+
         const titleFormat = new TextFormat();
         titleFormat.size = 11;
         titleFormat.color = 0xFFFFFF;
@@ -474,6 +477,44 @@
         cacheTest5.filters = [new BevelFilter(4, 135, 0xFF0000, 1, 0x0000FF, 1, 4, 4, 1, 1)];
         cacheTest5.src = videoPath;
         root.addChild(cacheTest5);
+
+        // 全ビデオを配列に追加
+        allVideos.push(
+            blur1, blur2,
+            dropShadow1, dropShadow2,
+            glow1, glow2,
+            bevel1, bevel2, bevel3,
+            colorMatrix1, colorMatrix2, colorMatrix3,
+            convolution1, convolution2, convolution3,
+            gradGlow1, gradBevel1,
+            composite1, composite2, composite3,
+            cacheTest1, cacheTest2, cacheTest3, cacheTest4, cacheTest5
+        );
+
+        // 各ビデオのCOMPLETEイベントを待機
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (video.loaded && !video.paused) {
+                    resolve();
+                } else {
+                    video.addEventListener("complete", () => resolve());
+                }
+            });
+        }));
+
+        // フレーム描画を待つために複数フレーム待機
+        await new Promise((resolve) => {
+            let frameCount = 0;
+            const waitFrames = () => {
+                frameCount++;
+                if (frameCount >= 30) {
+                    setTimeout(resolve, 500);
+                } else {
+                    requestAnimationFrame(waitFrames);
+                }
+            };
+            requestAnimationFrame(waitFrames);
+        });
 
         window.__E2E_RENDER_COMPLETE__ = true;
     });

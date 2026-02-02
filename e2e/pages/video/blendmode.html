@@ -19,6 +19,9 @@
 
         const videoPath = "/e2e/fixtures/videos/movie.mp4";
 
+        // 全ビデオを追跡
+        const allVideos = [];
+
         // 背景
         const bgFill = new Shape();
         bgFill.graphics
@@ -55,6 +58,7 @@
             video.blendMode = blendMode;
             video.src = videoPath;
             container.addChild(video);
+            allVideos.push(video);
 
             // ラベル
             const labelText = new TextField();
@@ -152,6 +156,7 @@
         videoMultiply.blendMode = BlendMode.MULTIPLY;
         videoMultiply.src = videoPath;
         testContainer.addChild(videoMultiply);
+        allVideos.push(videoMultiply);
 
         // SCREEN
         const videoScreen = new Video(80, 60);
@@ -160,6 +165,7 @@
         videoScreen.blendMode = BlendMode.SCREEN;
         videoScreen.src = videoPath;
         testContainer.addChild(videoScreen);
+        allVideos.push(videoScreen);
 
         // OVERLAY
         const videoOverlay = new Video(80, 60);
@@ -168,6 +174,7 @@
         videoOverlay.blendMode = BlendMode.OVERLAY;
         videoOverlay.src = videoPath;
         testContainer.addChild(videoOverlay);
+        allVideos.push(videoOverlay);
 
         // ADD
         const videoAdd = new Video(80, 60);
@@ -176,6 +183,7 @@
         videoAdd.blendMode = BlendMode.ADD;
         videoAdd.src = videoPath;
         testContainer.addChild(videoAdd);
+        allVideos.push(videoAdd);
 
         // ===== 放射グラデーション =====
         const sectionTitle2 = new TextField();
@@ -214,6 +222,7 @@
         videoRadialAdd.blendMode = BlendMode.ADD;
         videoRadialAdd.src = videoPath;
         radialContainer.addChild(videoRadialAdd);
+        allVideos.push(videoRadialAdd);
 
         // SUBTRACT
         const videoRadialSub = new Video(60, 50);
@@ -222,6 +231,7 @@
         videoRadialSub.blendMode = BlendMode.SUBTRACT;
         videoRadialSub.src = videoPath;
         radialContainer.addChild(videoRadialSub);
+        allVideos.push(videoRadialSub);
 
         // DIFFERENCE
         const videoRadialDiff = new Video(60, 50);
@@ -230,6 +240,7 @@
         videoRadialDiff.blendMode = BlendMode.DIFFERENCE;
         videoRadialDiff.src = videoPath;
         radialContainer.addChild(videoRadialDiff);
+        allVideos.push(videoRadialDiff);
 
         // ===== LAYER BlendMode =====
         const sectionTitle3 = new TextField();
@@ -260,6 +271,7 @@
         videoLayer1.alpha = 0.7;
         videoLayer1.src = videoPath;
         layerContainer.addChild(videoLayer1);
+        allVideos.push(videoLayer1);
 
         const videoLayer2 = new Video(80, 60);
         videoLayer2.x = 60;
@@ -267,6 +279,7 @@
         videoLayer2.alpha = 0.7;
         videoLayer2.src = videoPath;
         layerContainer.addChild(videoLayer2);
+        allVideos.push(videoLayer2);
 
         // ===== ERASE Test =====
         const sectionTitle4 = new TextField();
@@ -297,6 +310,7 @@
         videoErase.blendMode = BlendMode.ERASE;
         videoErase.src = videoPath;
         eraseContainer.addChild(videoErase);
+        allVideos.push(videoErase);
 
         // ===== INVERT Test =====
         const sectionTitle5 = new TextField();
@@ -326,6 +340,7 @@
         videoInvert.blendMode = BlendMode.INVERT;
         videoInvert.src = videoPath;
         invertContainer.addChild(videoInvert);
+        allVideos.push(videoInvert);
 
         // ===== HARDLIGHT Test =====
         const sectionTitle6 = new TextField();
@@ -355,6 +370,7 @@
         videoHardlight.blendMode = BlendMode.HARDLIGHT;
         videoHardlight.src = videoPath;
         hardlightContainer.addChild(videoHardlight);
+        allVideos.push(videoHardlight);
 
         // ===== DARKEN/LIGHTEN Test =====
         const sectionTitle7 = new TextField();
@@ -384,6 +400,7 @@
         videoDarken.blendMode = BlendMode.DARKEN;
         videoDarken.src = videoPath;
         darkenLightenContainer.addChild(videoDarken);
+        allVideos.push(videoDarken);
 
         const videoLighten = new Video(70, 50);
         videoLighten.x = 110;
@@ -391,6 +408,32 @@
         videoLighten.blendMode = BlendMode.LIGHTEN;
         videoLighten.src = videoPath;
         darkenLightenContainer.addChild(videoLighten);
+        allVideos.push(videoLighten);
+
+        // 各ビデオのCOMPLETEイベントを待機
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (video.loaded && !video.paused) {
+                    resolve();
+                } else {
+                    video.addEventListener("complete", () => resolve());
+                }
+            });
+        }));
+
+        // フレーム描画を待つために複数フレーム待機
+        await new Promise((resolve) => {
+            let frameCount = 0;
+            const waitFrames = () => {
+                frameCount++;
+                if (frameCount >= 30) {
+                    setTimeout(resolve, 500);
+                } else {
+                    requestAnimationFrame(waitFrames);
+                }
+            };
+            requestAnimationFrame(waitFrames);
+        });
 
         window.__E2E_RENDER_COMPLETE__ = true;
     });

@@ -47,7 +47,8 @@ export default defineConfig({
                 "launchOptions": {
                     "args": [
                         "--use-gl=angle",
-                        "--use-angle=default"
+                        "--use-angle=default",
+                        "--autoplay-policy=no-user-gesture-required"
                     ]
                 }
             },
@@ -62,7 +63,8 @@ export default defineConfig({
                 "launchOptions": {
                     "args": [
                         "--enable-unsafe-webgpu",
-                        "--enable-features=Vulkan"
+                        "--enable-features=Vulkan",
+                        "--autoplay-policy=no-user-gesture-required"
                     ]
                 }
             },

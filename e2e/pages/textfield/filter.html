@@ -602,6 +602,252 @@
         cacheTest5.filters = [new BevelFilter(4, 135, 0xFF0000, 1, 0x0000FF, 1, 4, 4, 1, 1)];
         root.addChild(cacheTest5);
 
+        // ===== 背景なし・ボーダーなしのテスト =====
+        const noBgTitle = new TextField();
+        noBgTitle.x = 20;
+        noBgTitle.y = 470;
+        noBgTitle.width = 600;
+        noBgTitle.height = 20;
+        noBgTitle.defaultTextFormat = bigFormat;
+        noBgTitle.text = "No Background / No Border (Text Only)";
+        root.addChild(noBgTitle);
+
+        // BlurFilter（背景なし）
+        const noBgBlur = new TextField();
+        noBgBlur.x = 20;
+        noBgBlur.y = 500;
+        noBgBlur.width = 120;
+        noBgBlur.height = 50;
+        noBgBlur.defaultTextFormat = textStyle;
+        noBgBlur.text = "Blur";
+        noBgBlur.filters = [new BlurFilter(4, 4, 1)];
+        root.addChild(noBgBlur);
+
+        const noBgBlurLabel = new TextField();
+        noBgBlurLabel.x = 20;
+        noBgBlurLabel.y = 552;
+        noBgBlurLabel.width = 120;
+        noBgBlurLabel.height = 16;
+        noBgBlurLabel.defaultTextFormat = titleFormat;
+        noBgBlurLabel.text = "Blur (No BG)";
+        root.addChild(noBgBlurLabel);
+
+        // DropShadowFilter（背景なし）
+        const noBgShadow = new TextField();
+        noBgShadow.x = 160;
+        noBgShadow.y = 500;
+        noBgShadow.width = 120;
+        noBgShadow.height = 50;
+        noBgShadow.defaultTextFormat = textStyle;
+        noBgShadow.text = "Shadow";
+        noBgShadow.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(noBgShadow);
+
+        const noBgShadowLabel = new TextField();
+        noBgShadowLabel.x = 160;
+        noBgShadowLabel.y = 552;
+        noBgShadowLabel.width = 120;
+        noBgShadowLabel.height = 16;
+        noBgShadowLabel.defaultTextFormat = titleFormat;
+        noBgShadowLabel.text = "Shadow (No BG)";
+        root.addChild(noBgShadowLabel);
+
+        // GlowFilter（背景なし）
+        const noBgGlow = new TextField();
+        noBgGlow.x = 300;
+        noBgGlow.y = 500;
+        noBgGlow.width = 120;
+        noBgGlow.height = 50;
+        noBgGlow.defaultTextFormat = textStyle;
+        noBgGlow.text = "Glow";
+        noBgGlow.filters = [new GlowFilter(0x00FF00, 1, 8, 8, 2, 1)];
+        root.addChild(noBgGlow);
+
+        const noBgGlowLabel = new TextField();
+        noBgGlowLabel.x = 300;
+        noBgGlowLabel.y = 552;
+        noBgGlowLabel.width = 120;
+        noBgGlowLabel.height = 16;
+        noBgGlowLabel.defaultTextFormat = titleFormat;
+        noBgGlowLabel.text = "Glow (No BG)";
+        root.addChild(noBgGlowLabel);
+
+        // BevelFilter（背景なし）
+        const noBgBevel = new TextField();
+        noBgBevel.x = 440;
+        noBgBevel.y = 500;
+        noBgBevel.width = 120;
+        noBgBevel.height = 50;
+        noBgBevel.defaultTextFormat = textStyle;
+        noBgBevel.text = "Bevel";
+        noBgBevel.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(noBgBevel);
+
+        const noBgBevelLabel = new TextField();
+        noBgBevelLabel.x = 440;
+        noBgBevelLabel.y = 552;
+        noBgBevelLabel.width = 120;
+        noBgBevelLabel.height = 16;
+        noBgBevelLabel.defaultTextFormat = titleFormat;
+        noBgBevelLabel.text = "Bevel (No BG)";
+        root.addChild(noBgBevelLabel);
+
+        // GradientGlowFilter（背景なし）
+        const noBgGradGlow = new TextField();
+        noBgGradGlow.x = 580;
+        noBgGradGlow.y = 500;
+        noBgGradGlow.width = 120;
+        noBgGradGlow.height = 50;
+        noBgGradGlow.defaultTextFormat = textStyle;
+        noBgGradGlow.text = "GGlow";
+        noBgGradGlow.filters = [new GradientGlowFilter(
+            4, 45,
+            [0xFF0000, 0xFFFF00, 0x00FF00],
+            [1, 1, 1],
+            [0, 127, 255],
+            8, 8, 2, 1
+        )];
+        root.addChild(noBgGradGlow);
+
+        const noBgGradGlowLabel = new TextField();
+        noBgGradGlowLabel.x = 580;
+        noBgGradGlowLabel.y = 552;
+        noBgGradGlowLabel.width = 120;
+        noBgGradGlowLabel.height = 16;
+        noBgGradGlowLabel.defaultTextFormat = titleFormat;
+        noBgGradGlowLabel.text = "GradGlow (No BG)";
+        root.addChild(noBgGradGlowLabel);
+
+        // 複合フィルター（背景なし）
+        const noBgComposite = new TextField();
+        noBgComposite.x = 720;
+        noBgComposite.y = 500;
+        noBgComposite.width = 120;
+        noBgComposite.height = 50;
+        noBgComposite.defaultTextFormat = textStyle;
+        noBgComposite.text = "Multi";
+        noBgComposite.filters = [
+            new DropShadowFilter(6, 45, 0x000000, 0.8, 6, 6, 1, 1),
+            new GlowFilter(0xFF00FF, 1, 6, 6, 2, 1)
+        ];
+        root.addChild(noBgComposite);
+
+        const noBgCompositeLabel = new TextField();
+        noBgCompositeLabel.x = 720;
+        noBgCompositeLabel.y = 552;
+        noBgCompositeLabel.width = 120;
+        noBgCompositeLabel.height = 16;
+        noBgCompositeLabel.defaultTextFormat = titleFormat;
+        noBgCompositeLabel.text = "Shadow+Glow";
+        root.addChild(noBgCompositeLabel);
+
+        // ===== 背景なし 2行目 =====
+        // ColorMatrixFilter（背景なし）
+        const noBgColor = new TextField();
+        noBgColor.x = 20;
+        noBgColor.y = 590;
+        noBgColor.width = 120;
+        noBgColor.height = 50;
+        noBgColor.defaultTextFormat = textStyle;
+        noBgColor.text = "Invert";
+        noBgColor.filters = [new ColorMatrixFilter(invertMatrix)];
+        root.addChild(noBgColor);
+
+        const noBgColorLabel = new TextField();
+        noBgColorLabel.x = 20;
+        noBgColorLabel.y = 642;
+        noBgColorLabel.width = 120;
+        noBgColorLabel.height = 16;
+        noBgColorLabel.defaultTextFormat = titleFormat;
+        noBgColorLabel.text = "Invert (No BG)";
+        root.addChild(noBgColorLabel);
+
+        // ConvolutionFilter（背景なし）
+        const noBgConv = new TextField();
+        noBgConv.x = 160;
+        noBgConv.y = 590;
+        noBgConv.width = 120;
+        noBgConv.height = 50;
+        noBgConv.defaultTextFormat = textStyle;
+        noBgConv.text = "Sharp";
+        noBgConv.filters = [new ConvolutionFilter(3, 3, sharpMatrix, 1)];
+        root.addChild(noBgConv);
+
+        const noBgConvLabel = new TextField();
+        noBgConvLabel.x = 160;
+        noBgConvLabel.y = 642;
+        noBgConvLabel.width = 120;
+        noBgConvLabel.height = 16;
+        noBgConvLabel.defaultTextFormat = titleFormat;
+        noBgConvLabel.text = "Sharp (No BG)";
+        root.addChild(noBgConvLabel);
+
+        // GradientBevelFilter（背景なし）
+        const noBgGradBevel = new TextField();
+        noBgGradBevel.x = 300;
+        noBgGradBevel.y = 590;
+        noBgGradBevel.width = 120;
+        noBgGradBevel.height = 50;
+        noBgGradBevel.defaultTextFormat = textStyle;
+        noBgGradBevel.text = "GBevel";
+        noBgGradBevel.filters = [new GradientBevelFilter(
+            4, 45,
+            [0xFFFFFF, 0x888888, 0x000000],
+            [1, 1, 1],
+            [0, 127, 255],
+            6, 6, 1, 1
+        )];
+        root.addChild(noBgGradBevel);
+
+        const noBgGradBevelLabel = new TextField();
+        noBgGradBevelLabel.x = 300;
+        noBgGradBevelLabel.y = 642;
+        noBgGradBevelLabel.width = 120;
+        noBgGradBevelLabel.height = 16;
+        noBgGradBevelLabel.defaultTextFormat = titleFormat;
+        noBgGradBevelLabel.text = "GradBevel (No BG)";
+        root.addChild(noBgGradBevelLabel);
+
+        // Inner Glow（背景なし）
+        const noBgInnerGlow = new TextField();
+        noBgInnerGlow.x = 440;
+        noBgInnerGlow.y = 590;
+        noBgInnerGlow.width = 120;
+        noBgInnerGlow.height = 50;
+        noBgInnerGlow.defaultTextFormat = textStyle;
+        noBgInnerGlow.text = "Inner";
+        noBgInnerGlow.filters = [new GlowFilter(0x0000FF, 1, 12, 12, 3, 1, true)];
+        root.addChild(noBgInnerGlow);
+
+        const noBgInnerGlowLabel = new TextField();
+        noBgInnerGlowLabel.x = 440;
+        noBgInnerGlowLabel.y = 642;
+        noBgInnerGlowLabel.width = 120;
+        noBgInnerGlowLabel.height = 16;
+        noBgInnerGlowLabel.defaultTextFormat = titleFormat;
+        noBgInnerGlowLabel.text = "InnerGlow (No BG)";
+        root.addChild(noBgInnerGlowLabel);
+
+        // Inner DropShadow（背景なし）
+        const noBgInnerShadow = new TextField();
+        noBgInnerShadow.x = 580;
+        noBgInnerShadow.y = 590;
+        noBgInnerShadow.width = 120;
+        noBgInnerShadow.height = 50;
+        noBgInnerShadow.defaultTextFormat = textStyle;
+        noBgInnerShadow.text = "InnerS";
+        noBgInnerShadow.filters = [new DropShadowFilter(8, 135, 0xFF0000, 0.8, 8, 8, 2, 1, false, false, true)];
+        root.addChild(noBgInnerShadow);
+
+        const noBgInnerShadowLabel = new TextField();
+        noBgInnerShadowLabel.x = 580;
+        noBgInnerShadowLabel.y = 642;
+        noBgInnerShadowLabel.width = 120;
+        noBgInnerShadowLabel.height = 16;
+        noBgInnerShadowLabel.defaultTextFormat = titleFormat;
+        noBgInnerShadowLabel.text = "InnerShadow";
+        root.addChild(noBgInnerShadowLabel);
+
         window.__E2E_RENDER_COMPLETE__ = true;
     });
 </script>
