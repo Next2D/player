@@ -200,17 +200,23 @@ export const execute = <P extends DisplayObjectContainer>(
     for (let idx = 0; idx < children.length; ++idx) {
 
         const child = children[idx] as DisplayObject;
+
+        renderQueue.push(child.placeId, child.clipDepth);
+
+        // マスクオブジェクトは描画しない（hidden=0）
         if (child.isMask) {
+            renderQueue.push(0);
+            child.changed = false;
             continue;
         }
 
-        renderQueue.push(child.placeId, child.clipDepth);
         if (clipDepth && child.placeId > clipDepth) {
             clipDepth = 0;
             canRenderMask = true;
         }
 
         if (!canRenderMask) {
+            renderQueue.push(0);
             child.changed = false;
             continue;
         }
