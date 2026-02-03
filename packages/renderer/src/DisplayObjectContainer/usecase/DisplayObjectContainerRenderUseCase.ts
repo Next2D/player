@@ -74,6 +74,17 @@ export const execute = (
         // todo
     }
 
+    // フィルターデータをスキップ
+    if (useFilter) {
+        // updated
+        index++;
+        // filterBounds (4 values)
+        index += 4;
+        // params.length + params
+        const paramsLength = render_queue[index++];
+        index += paramsLength;
+    }
+
     const length = render_queue[index++];
     for (let idx = 0; length > idx; idx++) {
 

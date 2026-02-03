@@ -14,7 +14,8 @@ import {
  */
 export const execute = (stroke: boolean = false): void =>
 {
-    const minVertices = stroke ? 4 : 10;
+    // stroke: 最低2頂点(6要素)が必要、fill: 最低3頂点(9要素)が必要
+    const minVertices = stroke ? 6 : 9;
     if ($currentPath.length < minVertices) {
         $currentPath.length = 0;
         return ;
