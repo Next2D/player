@@ -119,6 +119,23 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+// Bitmap同期用fragment shader
+// vertex shaderで計算されたUV座標をそのまま使用
+export const BitmapSyncFragment = /* wgsl */`
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texCoord: vec2<f32>,
+}
+
+@group(0) @binding(1) var textureSampler: sampler;
+@group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+@fragment
+fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+    return textureSample(inputTexture, textureSampler, input.texCoord);
+}
+`;
+
 export const BlendGenericFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

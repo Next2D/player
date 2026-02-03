@@ -24,7 +24,7 @@ flowchart TD
 頻繁に生成・破棄されるオブジェクトはプールして再利用します。
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
 class ObjectPool<T> {
   private _pool: T[] = [];
@@ -57,7 +57,7 @@ class ObjectPool<T> {
 
 // 弾のプール
 const bulletPool = new ObjectPool<Bullet>(() => {
-  const sprite: Sprite = new next2d.display.Sprite();
+  const sprite: Sprite = new Sprite();
   sprite.graphics.beginFill(0xFFFF00);
   sprite.graphics.drawCircle(0, 0, 5);
   sprite.graphics.endFill();
@@ -88,10 +88,11 @@ function deactivateBullet(bullet: Bullet): void {
 複雑なベクター描画をビットマップとしてキャッシュします。
 
 ```typescript
-import type { Sprite, Shape } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Sprite } from "@next2d/player";
 
 // 複雑な背景
-const background: Shape = new next2d.display.Shape();
+const background: Shape = new Shape();
 // 多数の描画コマンド...
 background.graphics.beginFill(0x001122);
 for (let i = 0; i < 100; i++) {
@@ -183,6 +184,8 @@ container.addChild(spriteB2);  // テクスチャB
 ## フィルターの最適化
 
 ```typescript
+import { GlowFilter, BlurFilter, DropShadowFilter } from "@next2d/player";
+
 // フィルターは負荷が高い
 // 必要な時だけ適用
 
@@ -190,7 +193,7 @@ container.addChild(spriteB2);  // テクスチャB
 function setDamageEffect(sprite: Sprite, enabled: boolean): void {
   if (enabled) {
     sprite.filters = [
-      new next2d.filters.GlowFilter(0xFF0000, 1, 10, 10)
+      new GlowFilter(0xFF0000, 1, 10, 10)
     ];
   } else {
     sprite.filters = null;  // フィルターを解除
@@ -200,14 +203,14 @@ function setDamageEffect(sprite: Sprite, enabled: boolean): void {
 // 複数のフィルターは避ける
 // 悪い例
 sprite.filters = [
-  new next2d.filters.BlurFilter(4, 4),
-  new next2d.filters.DropShadowFilter(4, 45),
-  new next2d.filters.GlowFilter(0xFF0000)
+  new BlurFilter(4, 4),
+  new DropShadowFilter(4, 45),
+  new GlowFilter(0xFF0000)
 ];
 
 // 良い例：最小限のフィルター
 sprite.filters = [
-  new next2d.filters.DropShadowFilter(4, 45)
+  new DropShadowFilter(4, 45)
 ];
 ```
 
@@ -224,7 +227,7 @@ function update(): void {
 
 // 良い例：事前に生成して再利用
 const position = { x: 0, y: 0 };
-const velocity = new next2d.geom.Point(0, 0);
+const velocity = new Point(0, 0);
 
 function update(): void {
   position.x = player.x;

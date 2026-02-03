@@ -56,11 +56,11 @@ classDiagram
 ### 基本的な音声再生
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Sound, SoundChannel, Event } from "@next2d/player";
+import { Sound, URLRequest } from "@next2d/player";
+import type { SoundChannel, Event } from "@next2d/player";
 
 // Soundオブジェクトを作成
-const sound: Sound = new next2d.media.Sound();
+const sound: Sound = new Sound();
 
 // 読み込み完了イベント
 sound.addEventListener("complete", (event: Event): void => {
@@ -69,23 +69,24 @@ sound.addEventListener("complete", (event: Event): void => {
 });
 
 // 音声ファイルを読み込み
-sound.load(new next2d.net.URLRequest("bgm.mp3"));
+sound.load(new URLRequest("bgm.mp3"));
 ```
 
 ### 効果音の再生
 
 ```typescript
-import type { Sound, SoundChannel } from "@next2d/player";
+import { Sound, URLRequest } from "@next2d/player";
+import type { SoundChannel } from "@next2d/player";
 
 // 効果音をプリロード
-const seJump: Sound = new next2d.media.Sound();
-const seHit: Sound = new next2d.media.Sound();
-const seCoin: Sound = new next2d.media.Sound();
+const seJump: Sound = new Sound();
+const seHit: Sound = new Sound();
+const seCoin: Sound = new Sound();
 
 // 読み込み
-seJump.load(new next2d.net.URLRequest("se/jump.mp3"));
-seHit.load(new next2d.net.URLRequest("se/hit.mp3"));
-seCoin.load(new next2d.net.URLRequest("se/coin.mp3"));
+seJump.load(new URLRequest("se/jump.mp3"));
+seHit.load(new URLRequest("se/hit.mp3"));
+seCoin.load(new URLRequest("se/coin.mp3"));
 
 // 再生関数
 function playSE(sound: Sound): SoundChannel {
@@ -101,21 +102,22 @@ player.addEventListener("jump", (): void => {
 ### BGMのループ再生
 
 ```typescript
-import type { Sound, SoundChannel, SoundTransform } from "@next2d/player";
+import { Sound, SoundTransform, URLRequest } from "@next2d/player";
+import type { SoundChannel } from "@next2d/player";
 
-const bgm: Sound = new next2d.media.Sound();
+const bgm: Sound = new Sound();
 let bgmChannel: SoundChannel | null = null;
 
 bgm.addEventListener("complete", (): void => {
   // 音量を設定してループ再生
-  const transform: SoundTransform = new next2d.media.SoundTransform();
+  const transform: SoundTransform = new SoundTransform();
   transform.volume = 0.7;  // 70%
 
   // 第2引数: ループ回数（9999で実質無限ループ）
   bgmChannel = bgm.play(0, 9999, transform);
 });
 
-bgm.load(new next2d.net.URLRequest("bgm/stage1.mp3"));
+bgm.load(new URLRequest("bgm/stage1.mp3"));
 
 // BGM停止
 function stopBGM(): void {
@@ -129,7 +131,8 @@ function stopBGM(): void {
 ### 音量コントロール
 
 ```typescript
-import type { SoundChannel, SoundTransform } from "@next2d/player";
+import { SoundTransform } from "@next2d/player";
+import type { SoundChannel } from "@next2d/player";
 
 let bgmChannel: SoundChannel;
 let currentVolume: number = 1.0;
@@ -138,7 +141,7 @@ let currentVolume: number = 1.0;
 function setVolume(volume: number): void {
   currentVolume = Math.max(0, Math.min(1, volume));
 
-  const transform: SoundTransform = new next2d.media.SoundTransform();
+  const transform: SoundTransform = new SoundTransform();
   transform.volume = currentVolume;
   bgmChannel.soundTransform = transform;
 }
@@ -165,11 +168,12 @@ function fadeOut(duration: number = 1000): void {
 ### パン（左右バランス）の設定
 
 ```typescript
-import type { SoundChannel, SoundTransform } from "@next2d/player";
+import { SoundTransform } from "@next2d/player";
+import type { SoundChannel } from "@next2d/player";
 
 // パンを設定（-1: 左, 0: 中央, 1: 右）
 function setPan(channel: SoundChannel, pan: number): void {
-  const transform: SoundTransform = new next2d.media.SoundTransform();
+  const transform: SoundTransform = new SoundTransform();
   transform.volume = channel.soundTransform.volume;
   transform.pan = Math.max(-1, Math.min(1, pan));
   channel.soundTransform = transform;
@@ -189,8 +193,8 @@ function playEnemySound(enemyX: number): void {
 ### サウンドマネージャー
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Sound, SoundChannel, SoundTransform } from "@next2d/player";
+import { Sound, SoundTransform, URLRequest } from "@next2d/player";
+import type { SoundChannel } from "@next2d/player";
 
 class SoundManager {
   private _sounds: Map<string, Sound> = new Map();
@@ -203,12 +207,12 @@ class SoundManager {
   // サウンドをプリロード
   async preload(id: string, url: string): Promise<void> {
     return new Promise((resolve) => {
-      const sound: Sound = new next2d.media.Sound();
+      const sound: Sound = new Sound();
       sound.addEventListener("complete", (): void => {
         this._sounds.set(id, sound);
         resolve();
       });
-      sound.load(new next2d.net.URLRequest(url));
+      sound.load(new URLRequest(url));
     });
   }
 
@@ -218,7 +222,7 @@ class SoundManager {
 
     const sound: Sound | undefined = this._sounds.get(id);
     if (sound) {
-      const transform: SoundTransform = new next2d.media.SoundTransform();
+      const transform: SoundTransform = new SoundTransform();
       transform.volume = this._isMuted ? 0 : this._bgmVolume;
       this._bgmChannel = sound.play(0, loops, transform);
     }
@@ -236,7 +240,7 @@ class SoundManager {
   playSE(id: string): SoundChannel | null {
     const sound: Sound | undefined = this._sounds.get(id);
     if (sound) {
-      const transform: SoundTransform = new next2d.media.SoundTransform();
+      const transform: SoundTransform = new SoundTransform();
       transform.volume = this._isMuted ? 0 : this._seVolume;
       const channel: SoundChannel = sound.play(0, 0, transform);
       this._seChannels.push(channel);
@@ -265,7 +269,7 @@ class SoundManager {
 
   private _updateVolumes(): void {
     if (this._bgmChannel) {
-      const transform: SoundTransform = new next2d.media.SoundTransform();
+      const transform: SoundTransform = new SoundTransform();
       transform.volume = this._isMuted ? 0 : this._bgmVolume;
       this._bgmChannel.soundTransform = transform;
     }
@@ -294,16 +298,15 @@ soundManager.playSE("se_jump");
 全体のサウンドを制御するクラスです。
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { SoundTransform } from "@next2d/player";
+import { SoundMixer, SoundTransform } from "@next2d/player";
 
 // 全ての音声を停止
-next2d.media.SoundMixer.stopAll();
+SoundMixer.stopAll();
 
 // 全体の音量を変更
-const globalTransform: SoundTransform = new next2d.media.SoundTransform();
+const globalTransform: SoundTransform = new SoundTransform();
 globalTransform.volume = 0.5;
-next2d.media.SoundMixer.soundTransform = globalTransform;
+SoundMixer.soundTransform = globalTransform;
 ```
 
 ## サポートフォーマット

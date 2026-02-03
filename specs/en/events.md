@@ -47,9 +47,9 @@ if (displayObject.hasEventListener("click")) {
 Dispatches an event.
 
 ```typescript
-import type { Event } from "@next2d/player";
+import { Event } from "@next2d/player";
 
-const event: Event = new next2d.events.Event("customEvent");
+const event: Event = new Event("customEvent");
 displayObject.dispatchEvent(event);
 ```
 
@@ -206,10 +206,10 @@ stage.addEventListener("keyDown", (event: KeyboardEvent): void => {
 ## Custom Events
 
 ```typescript
-import type { Event } from "@next2d/player";
+import { Event } from "@next2d/player";
 
 // Define custom event
-const customEvent: Event = new next2d.events.Event("gameOver", true, true);
+const customEvent: Event = new Event("gameOver", true, true);
 
 // Dispatch event
 gameManager.dispatchEvent(customEvent);

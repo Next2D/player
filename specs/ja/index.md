@@ -141,14 +141,13 @@ DisplayObject (基底クラス)
 ## 基本的な使い方
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { MovieClip } from "@next2d/player";
+import { next2d, MovieClip, DropShadowFilter } from "@next2d/player";
 
 // ステージの初期化
 const root: MovieClip = next2d.createRootMovieClip();
 
 // MovieClipの作成
-const mc: MovieClip = new next2d.display.MovieClip();
+const mc: MovieClip = new MovieClip();
 root.addChild(mc);
 
 // 位置とサイズの設定
@@ -160,7 +159,7 @@ mc.rotation = 45;
 
 // フィルターの適用
 mc.filters = [
-  new next2d.filters.DropShadowFilter(4, 45, 0x000000, 0.5)
+  new DropShadowFilter(4, 45, 0x000000, 0.5)
 ];
 ```
 
@@ -169,15 +168,16 @@ mc.filters = [
 Open Animation Toolで作成したJSONファイルを読み込んで描画：
 
 ```typescript
-import type { Loader, LoaderInfo, Event, MovieClip, Stage } from "@next2d/player";
+import { Loader, URLRequest } from "@next2d/player";
+import type { LoaderInfo, Event, MovieClip, Stage } from "@next2d/player";
 
-const loader: Loader = new next2d.display.Loader();
+const loader: Loader = new Loader();
 loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
   const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
   const mc: MovieClip = loaderInfo.content as MovieClip;
   stage.addChild(mc);
 });
-loader.load(new next2d.net.URLRequest("animation.json"));
+loader.load(new URLRequest("animation.json"));
 ```
 
 ## 関連ドキュメント

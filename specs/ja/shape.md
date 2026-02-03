@@ -33,10 +33,9 @@ classDiagram
 ### 基本的な描画
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Shape } from "@next2d/player";
+import { Shape } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 
 // 塗りつぶし矩形
 shape.graphics.beginFill(0x3498db);
@@ -49,9 +48,10 @@ stage.addChild(shape);
 ### 複合図形の描画
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 // 背景
@@ -74,9 +74,10 @@ stage.addChild(shape);
 ### パスの描画
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 g.beginFill(0x9b59b6);
@@ -102,9 +103,10 @@ stage.addChild(shape);
 ### ベジェ曲線
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 g.lineStyle(3, 0x1abc9c);
@@ -121,13 +123,14 @@ stage.addChild(shape);
 ### グラデーション背景
 
 ```typescript
-import type { Shape, Graphics, Matrix } from "@next2d/player";
+import { Shape, Matrix } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 // グラデーション用マトリックス
-const matrix: Matrix = new next2d.geom.Matrix();
+const matrix: Matrix = new Matrix();
 matrix.createGradientBox(
   stage.stageWidth,
   stage.stageHeight,
@@ -153,9 +156,10 @@ stage.addChildAt(shape, 0);
 ### 動的な再描画
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 stage.addChild(shape);
 
 let angle: number = 0;
@@ -182,23 +186,23 @@ stage.addEventListener("enterFrame", (): void => {
 ### 複数のShapeで構成
 
 ```typescript
-import type { Shape } from "@next2d/player";
+import { Shape } from "@next2d/player";
 
 // 背景レイヤー
-const bgShape: Shape = new next2d.display.Shape();
+const bgShape: Shape = new Shape();
 bgShape.graphics.beginFill(0x2c3e50);
 bgShape.graphics.drawRect(0, 0, 400, 300);
 bgShape.graphics.endFill();
 
 // 装飾レイヤー
-const decorShape: Shape = new next2d.display.Shape();
+const decorShape: Shape = new Shape();
 decorShape.graphics.beginFill(0x3498db, 0.5);
 decorShape.graphics.drawCircle(100, 100, 80);
 decorShape.graphics.drawCircle(300, 200, 60);
 decorShape.graphics.endFill();
 
 // 前面レイヤー
-const frontShape: Shape = new next2d.display.Shape();
+const frontShape: Shape = new Shape();
 frontShape.graphics.lineStyle(2, 0xecf0f1);
 frontShape.graphics.drawRect(50, 50, 300, 200);
 

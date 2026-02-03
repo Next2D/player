@@ -17,7 +17,8 @@ import {
     $getActiveAtlasIndex,
     $setActiveAtlasIndex,
     $setAtlasCreator,
-    $getAtlasAttachmentObject
+    $getAtlasAttachmentObject,
+    $getAtlasAttachmentObjectByIndex
 } from "./AtlasManager";
 import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
 // Note: MeshStrokeGenerateUseCase is now used via ContextStrokeUseCase
@@ -705,17 +706,35 @@ export class Context
                 }
             } else if (!this.currentRenderTarget && this.$mainAttachmentObject) {
                 // メインアタッチメントへの通常描画（MSAA対応）
+                // 2パスステンシルフィルを使用するため、常にステンシル付きレンダーパスを作成
                 const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
                 const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
                 const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
 
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    mainColorView,
-                    0, 0, 0, 0,
-                    "load",
-                    mainResolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                if (this.$mainAttachmentObject.stencil?.view) {
+                    // ステンシル付きレンダーパス（2パスステンシルフィル用）
+                    const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
+                        ? this.$mainAttachmentObject.msaaStencil.view
+                        : this.$mainAttachmentObject.stencil.view;
+
+                    const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                        mainColorView,
+                        mainStencilView,
+                        "load",
+                        "clear",  // ステンシルをクリア（各描画でステンシルを0からスタート）
+                        mainResolveTarget
+                    );
+                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                } else {
+                    // ステンシルなし（フォールバック）
+                    const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                        mainColorView,
+                        0, 0, 0, 0,
+                        "load",
+                        mainResolveTarget
+                    );
+                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                }
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                     colorView,
@@ -990,17 +1009,35 @@ export class Context
                 }
             } else if (!this.currentRenderTarget && this.$mainAttachmentObject) {
                 // メインアタッチメントへの通常描画（MSAA対応）
+                // 2パスステンシルフィルを使用するため、常にステンシル付きレンダーパスを作成
                 const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
                 const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
                 const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
 
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    mainColorView,
-                    0, 0, 0, 0,
-                    "load",
-                    mainResolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                if (this.$mainAttachmentObject.stencil?.view) {
+                    // ステンシル付きレンダーパス（2パスステンシルフィル用）
+                    const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
+                        ? this.$mainAttachmentObject.msaaStencil.view
+                        : this.$mainAttachmentObject.stencil.view;
+
+                    const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                        mainColorView,
+                        mainStencilView,
+                        "load",
+                        "clear",  // ステンシルをクリア（各描画でステンシルを0からスタート）
+                        mainResolveTarget
+                    );
+                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                } else {
+                    // ステンシルなし（フォールバック）
+                    const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                        mainColorView,
+                        0, 0, 0, 0,
+                        "load",
+                        mainResolveTarget
+                    );
+                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                }
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                     colorView,
@@ -1994,7 +2031,8 @@ export class Context
         }
 
         // アトラステクスチャの該当箇所をレンダーターゲットに設定
-        const attachment = $getAtlasAttachmentObject();
+        // ノードのインデックスを使用して正しいアトラスを取得
+        const attachment = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
         if (attachment && attachment.texture) {
             this.currentRenderTarget = attachment.texture.view;
 
@@ -2037,9 +2075,6 @@ export class Context
             }
 
             // シザーレクトで描画範囲を制限
-            // シェーダーでY軸反転(-ndc.y)しているため、描画結果はWebGPU座標系でnode.y位置になる
-            // WebGPUのシザーは左上原点なのでnode.yをそのまま使用
-
             // WebGL版と同じ: 描画範囲は (x, y, w, h)
             let scissorX = Math.max(0, node.x);
             let scissorY = Math.max(0, node.y);
@@ -2340,18 +2375,16 @@ export class Context
     drawPixels (node: Node, pixels: Uint8Array): void
     {
         // WebGPU draw pixels
-        // アトラステクスチャの指定位置にピクセルデータを書き込む
-        const attachment = $getAtlasAttachmentObject();
-        if (!attachment) { return }
+        // アトラステクスチャの指定位置にピクセルデータを描画
+        // ノードのインデックスを使用して正しいアトラスを取得
+        const attachment = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
+        if (!attachment || !attachment.texture) { return }
 
-        // ピクセルデータをテクスチャにコピー
-        if (!attachment.texture) { return }
+        const width = node.w;
+        const height = node.h;
 
-        // レンダーパスがアクティブな場合は、まずノード領域をクリアしてから終了
-        // queue.writeTextureはレンダーパスと同時に同じテクスチャに書き込めない
+        // レンダーパスがアクティブな場合は終了
         if (this.renderPassEncoder) {
-            // WebGL版と同じ: +1px領域をクリア（残像防止）
-            this.ensureNodeAreaCleared();
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
@@ -2360,40 +2393,236 @@ export class Context
             this.commandEncoder = null;
         }
 
-        // ピクセルデータを上下反転してコピー（Shapeの描画方向と一致させる）
-        // Shapeはシェーダーで-ndc.yにより上下反転されるため、
-        // Bitmapも同様に上下反転して書き込む
-        const width = node.w;
-        const height = node.h;
-        const rowBytes = width * 4;
-        const flippedPixels = new Uint8Array(pixels.length);
-
-        for (let y = 0; y < height; y++) {
-            const srcOffset = pixels.byteOffset + y * rowBytes;
-            const dstOffset = (height - 1 - y) * rowBytes;
-            flippedPixels.set(
-                new Uint8Array(pixels.buffer, srcOffset, rowBytes),
-                dstOffset
+        // MSAAが有効な場合は一時テクスチャ経由でMSAAテクスチャに直接描画
+        // MSAAが無効な場合は従来通りresolve targetに直接書き込み
+        if (attachment.msaa && attachment.msaaTexture?.view) {
+            this.drawPixelsToMsaa(attachment, node, pixels, width, height);
+        } else {
+            const rowBytes = width * 4;
+            this.device.queue.writeTexture(
+                {
+                    "texture": attachment.texture.resource,
+                    "origin": { "x": node.x, "y": node.y, "z": 0 }
+                },
+                pixels,
+                {
+                    "bytesPerRow": rowBytes,
+                    "rowsPerImage": height,
+                    "offset": 0
+                },
+                {
+                    "width": width,
+                    "height": height,
+                    "depthOrArrayLayers": 1
+                }
             );
         }
+    }
 
+    /**
+     * @description 一時テクスチャ経由でピクセルデータをMSAAテクスチャに描画
+     * @param {IAttachmentObject} attachment
+     * @param {Node} node
+     * @param {Uint8Array} pixels
+     * @param {number} width
+     * @param {number} height
+     * @return {void}
+     */
+    private drawPixelsToMsaa (
+        attachment: IAttachmentObject,
+        node: Node,
+        pixels: Uint8Array,
+        width: number,
+        height: number
+    ): void
+    {
+        // 一時テクスチャを作成
+        const tempTexture = this.device.createTexture({
+            "size": { "width": width, "height": height },
+            "format": "rgba8unorm",
+            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+        });
+
+        // ピクセルデータを一時テクスチャに書き込む
+        const rowBytes = width * 4;
         this.device.queue.writeTexture(
-            {
-                "texture": attachment.texture.resource,
-                "origin": { "x": node.x, "y": node.y, "z": 0 }
-            },
-            flippedPixels.buffer,
+            { "texture": tempTexture },
+            pixels,
             {
                 "bytesPerRow": rowBytes,
-                "rowsPerImage": height,
-                "offset": 0
+                "rowsPerImage": height
             },
             {
                 "width": width,
-                "height": height,
-                "depthOrArrayLayers": 1
+                "height": height
             }
         );
+
+        // bitmap_render_msaaパイプラインを取得
+        const pipeline = this.pipelineManager.getPipeline("bitmap_render_msaa");
+        if (!pipeline) {
+            tempTexture.destroy();
+            return;
+        }
+
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("positioned_texture");
+        if (!bindGroupLayout) {
+            tempTexture.destroy();
+            return;
+        }
+
+        // PositionUniforms: offset, size, viewport, padding
+        const uniformData = new Float32Array([
+            node.x, node.y,
+            width, height,
+            attachment.width, attachment.height,
+            0.0, 0.0
+        ]);
+        const uniformBuffer = this.device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+        const sampler = this.device.createSampler({
+            "magFilter": "linear",
+            "minFilter": "linear"
+        });
+
+        const tempTextureView = tempTexture.createView();
+
+        const bindGroup = this.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": tempTextureView }
+            ]
+        });
+
+        // MSAAテクスチャに直接描画
+        const commandEncoder = this.device.createCommandEncoder();
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            "colorAttachments": [{
+                "view": attachment.msaaTexture!.view,
+                "resolveTarget": attachment.texture!.view,
+                "loadOp": "load" as GPULoadOp,
+                "storeOp": "store" as GPUStoreOp
+            }]
+        };
+
+        const stencilView = attachment.msaaStencil?.view;
+        if (stencilView) {
+            renderPassDescriptor.depthStencilAttachment = {
+                "view": stencilView,
+                "stencilLoadOp": "load" as GPULoadOp,
+                "stencilStoreOp": "store" as GPUStoreOp
+            };
+        }
+
+        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+        renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
+        renderPass.setPipeline(pipeline);
+        renderPass.setBindGroup(0, bindGroup);
+        renderPass.draw(6);
+        renderPass.end();
+
+        this.device.queue.submit([commandEncoder.finish()]);
+
+        // リソースを解放
+        uniformBuffer.destroy();
+        tempTexture.destroy();
+    }
+
+    /**
+     * @description resolve target（シングルサンプル）の内容をMSAAテクスチャに同期する
+     *              writeTextureで書き込んだbitmap領域をMSAAテクスチャに反映
+     * @param {IAttachmentObject} attachment
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @return {void}
+     */
+    private syncBitmapToMsaaTexture (
+        attachment: IAttachmentObject,
+        x: number,
+        y: number,
+        width: number,
+        height: number
+    ): void
+    {
+        if (!attachment.texture || !attachment.msaaTexture) { return }
+
+        // bitmap_syncパイプラインを使用
+        const pipeline = this.pipelineManager.getPipeline("bitmap_sync");
+        if (!pipeline) { return }
+
+        // bitmap_sync専用のbind group layoutを使用
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("bitmap_sync");
+        if (!bindGroupLayout) { return }
+
+        // uniform buffer: nodeRect (x, y, width, height), textureSize (w, h), padding
+        const uniformData = new Float32Array([
+            x, y, width, height,                    // nodeRect
+            attachment.width, attachment.height,   // textureSize
+            0.0, 0.0                                // padding
+        ]);
+        const uniformBuffer = this.device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+        const sampler = this.device.createSampler({
+            "magFilter": "linear",
+            "minFilter": "linear"
+        });
+
+        const bindGroup = this.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": attachment.texture.view }
+            ]
+        });
+
+        // コマンドエンコーダーを作成
+        const commandEncoder = this.device.createCommandEncoder();
+
+        // MSAAステンシルを使用（MSAAテクスチャに描画するため）
+        const stencilView = attachment.msaaStencil?.view;
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            "colorAttachments": [{
+                "view": attachment.msaaTexture.view,
+                "loadOp": "load" as GPULoadOp,
+                "storeOp": "store" as GPUStoreOp
+                // resolveTargetを設定しないことで、この時点でのMSAA resolveを防ぐ
+            }]
+        };
+
+        if (stencilView) {
+            renderPassDescriptor.depthStencilAttachment = {
+                "view": stencilView,
+                "stencilLoadOp": "load" as GPULoadOp,
+                "stencilStoreOp": "store" as GPUStoreOp
+            };
+        }
+
+        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+
+        renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
+
+        renderPass.setPipeline(pipeline);
+        renderPass.setBindGroup(0, bindGroup);
+        renderPass.draw(6); // node領域のみを描画（シェーダーで座標計算）
+
+        renderPass.end();
+        this.device.queue.submit([commandEncoder.finish()]);
+
+        // uniform bufferを解放
+        uniformBuffer.destroy();
     }
 
     /**
@@ -2407,14 +2636,16 @@ export class Context
     drawElement (node: Node, element: OffscreenCanvas | ImageBitmap): void
     {
         // WebGPU draw element
-        // OffscreenCanvasまたはImageBitmapをアトラステクスチャにコピー
-        const attachment = $getAtlasAttachmentObject();
+        // OffscreenCanvasまたはImageBitmapをアトラステクスチャに描画
+        // ノードのインデックスを使用して正しいアトラスを取得
+        const attachment = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
         if (!attachment || !attachment.texture) { return }
 
-        // レンダーパスがアクティブな場合は、まずノード領域をクリアしてから終了
-        // queue.copyExternalImageToTextureはレンダーパスと同時に同じテクスチャに書き込めない
+        const width = element.width || node.w;
+        const height = element.height || node.h;
+
+        // レンダーパスがアクティブな場合は終了
         if (this.renderPassEncoder) {
-            // WebGL版と同じ: +1px領域をクリア（残像防止）
             this.ensureNodeAreaCleared();
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
@@ -2424,26 +2655,149 @@ export class Context
             this.commandEncoder = null;
         }
 
-        try {
-            this.device.queue.copyExternalImageToTexture(
-                {
-                    "source": element as ImageBitmap,
-                    "flipY": true  // 画像を上下反転してShapeの描画方向と一致させる
-                },
-                {
-                    "texture": attachment.texture.resource,
-                    "origin": { "x": node.x, "y": node.y, "z": 0 },
-                    "premultipliedAlpha": true
-                },
-                {
-                    "width": element.width || node.w,
-                    "height": element.height || node.h,
-                    "depthOrArrayLayers": 1
-                }
-            );
-        } catch (e) {
-            console.error("[WebGPU] Failed to copy external image to texture:", e);
+        // MSAAが有効な場合は一時テクスチャ経由でMSAAテクスチャに直接描画
+        // MSAAが無効な場合は従来通りresolve targetに直接コピー
+        if (attachment.msaa && attachment.msaaTexture?.view) {
+            this.drawElementToMsaa(attachment, node, element, width, height);
+        } else {
+            try {
+                this.device.queue.copyExternalImageToTexture(
+                    {
+                        "source": element as ImageBitmap,
+                        "flipY": true
+                    },
+                    {
+                        "texture": attachment.texture.resource,
+                        "origin": { "x": node.x, "y": node.y, "z": 0 },
+                        "premultipliedAlpha": true
+                    },
+                    {
+                        "width": width,
+                        "height": height,
+                        "depthOrArrayLayers": 1
+                    }
+                );
+            } catch (e) {
+                console.error("[WebGPU] Failed to copy external image to texture:", e);
+            }
         }
+    }
+
+    /**
+     * @description 一時テクスチャ経由でMSAAテクスチャに直接描画
+     * @param {IAttachmentObject} attachment
+     * @param {Node} node
+     * @param {OffscreenCanvas | ImageBitmap} element
+     * @param {number} width
+     * @param {number} height
+     * @return {void}
+     */
+    private drawElementToMsaa (
+        attachment: IAttachmentObject,
+        node: Node,
+        element: OffscreenCanvas | ImageBitmap,
+        width: number,
+        height: number
+    ): void
+    {
+        // 一時テクスチャを作成
+        const tempTexture = this.device.createTexture({
+            "size": { "width": width, "height": height },
+            "format": "rgba8unorm",
+            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+        });
+
+        // ImageBitmapを一時テクスチャにコピー
+        // PositionedTextureVertexシェーダーがY軸反転するので、ここではflipY: false
+        this.device.queue.copyExternalImageToTexture(
+            {
+                "source": element as ImageBitmap,
+                "flipY": false
+            },
+            {
+                "texture": tempTexture,
+                "premultipliedAlpha": true
+            },
+            {
+                "width": width,
+                "height": height
+            }
+        );
+
+        // bitmap_render_msaaパイプラインを取得
+        const pipeline = this.pipelineManager.getPipeline("bitmap_render_msaa");
+        if (!pipeline) {
+            tempTexture.destroy();
+            return;
+        }
+
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("positioned_texture");
+        if (!bindGroupLayout) {
+            tempTexture.destroy();
+            return;
+        }
+
+        // PositionUniforms: offset, size, viewport, padding
+        const uniformData = new Float32Array([
+            node.x, node.y,                           // offset
+            width, height,                            // size
+            attachment.width, attachment.height,      // viewport
+            0.0, 0.0                                  // padding
+        ]);
+        const uniformBuffer = this.device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+        const sampler = this.device.createSampler({
+            "magFilter": "linear",
+            "minFilter": "linear"
+        });
+
+        const tempTextureView = tempTexture.createView();
+
+        const bindGroup = this.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": tempTextureView }
+            ]
+        });
+
+        // MSAAテクスチャに直接描画（resolveTargetも設定してresolve targetも更新）
+        const commandEncoder = this.device.createCommandEncoder();
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            "colorAttachments": [{
+                "view": attachment.msaaTexture!.view,
+                "resolveTarget": attachment.texture!.view,
+                "loadOp": "load" as GPULoadOp,
+                "storeOp": "store" as GPUStoreOp
+            }]
+        };
+
+        const stencilView = attachment.msaaStencil?.view;
+        if (stencilView) {
+            renderPassDescriptor.depthStencilAttachment = {
+                "view": stencilView,
+                "stencilLoadOp": "load" as GPULoadOp,
+                "stencilStoreOp": "store" as GPUStoreOp
+            };
+        }
+
+        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+        renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
+        renderPass.setPipeline(pipeline);
+        renderPass.setBindGroup(0, bindGroup);
+        renderPass.draw(6);
+        renderPass.end();
+
+        this.device.queue.submit([commandEncoder.finish()]);
+
+        // リソースを解放
+        uniformBuffer.destroy();
+        tempTexture.destroy();
     }
 
     /**

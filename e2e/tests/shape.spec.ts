@@ -82,5 +82,12 @@ test.describe("Shape描画テスト", () => {
 
             await expect(page).toHaveScreenshot("load-image.png");
         });
+
+        test("Shape.load - 複数画像のY軸反転チェック", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/load-image-flip.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("load-image-flip.png");
+        });
     });
 });

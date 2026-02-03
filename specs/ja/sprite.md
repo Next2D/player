@@ -33,9 +33,9 @@ Spriteのgraphicsプロパティを使用して、動的にベクター描画を
 ### 線と塗りの設定
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // 線のスタイル設定
 sprite.graphics.lineStyle(2, 0xFF0000, 1.0);  // 太さ, 色, 透明度
@@ -63,10 +63,9 @@ sprite.graphics.beginFill(0x00FF00, 0.8);  // 色, 透明度
 ### 基本的な描画
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // 赤い矩形を描画
 sprite.graphics.beginFill(0xFF0000);
@@ -84,9 +83,9 @@ stage.addChild(sprite);
 ### 線の描画
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // 線のスタイルを設定
 sprite.graphics.lineStyle(3, 0x000000, 1.0);
@@ -102,12 +101,12 @@ stage.addChild(sprite);
 ### グラデーション塗り
 
 ```typescript
-import type { Sprite, Matrix } from "@next2d/player";
+import { Sprite, Matrix } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // グラデーションマトリックスを作成
-const matrix: Matrix = new next2d.geom.Matrix();
+const matrix: Matrix = new Matrix();
 matrix.createGradientBox(200, 200, 0, 0, 0);
 
 // 線形グラデーション
@@ -127,9 +126,9 @@ stage.addChild(sprite);
 ### ボタンとして使用
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const button: Sprite = new next2d.display.Sprite();
+const button: Sprite = new Sprite();
 
 // ボタンモードを有効化
 button.buttonMode = true;
@@ -151,15 +150,15 @@ stage.addChild(button);
 ### マスクとして使用
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const content: Sprite = new next2d.display.Sprite();
+const content: Sprite = new Sprite();
 content.graphics.beginFill(0xFF0000);
 content.graphics.drawRect(0, 0, 200, 200);
 content.graphics.endFill();
 
 // マスク用のSprite
-const maskSprite: Sprite = new next2d.display.Sprite();
+const maskSprite: Sprite = new Sprite();
 maskSprite.graphics.beginFill(0xFFFFFF);
 maskSprite.graphics.drawCircle(100, 100, 50);
 maskSprite.graphics.endFill();

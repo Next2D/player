@@ -22,7 +22,6 @@ flowchart TD
 ## Basic Game Loop
 
 ```typescript
-import { next2d } from "@next2d/player";
 import type { Stage, Event } from "@next2d/player";
 
 class Game {
@@ -122,7 +121,8 @@ function processInput(): void {
 ### Touch/Mouse Input
 
 ```typescript
-import type { MouseEvent, TouchEvent, Point } from "@next2d/player";
+import { Point } from "@next2d/player";
+import type { MouseEvent, TouchEvent } from "@next2d/player";
 
 // Touch position
 let touchPosition: Point | null = null;
@@ -130,12 +130,12 @@ let isTouching: boolean = false;
 
 stage.addEventListener("mouseDown", (event: MouseEvent): void => {
   isTouching = true;
-  touchPosition = new next2d.geom.Point(event.stageX, event.stageY);
+  touchPosition = new Point(event.stageX, event.stageY);
 });
 
 stage.addEventListener("mouseMove", (event: MouseEvent): void => {
   if (isTouching) {
-    touchPosition = new next2d.geom.Point(event.stageX, event.stageY);
+    touchPosition = new Point(event.stageX, event.stageY);
   }
 });
 
@@ -244,6 +244,8 @@ function updateEnemies(enemies: Enemy[]): void {
 ### Bullet Update
 
 ```typescript
+import { Sprite } from "@next2d/player";
+
 interface Bullet {
   x: number;
   y: number;
@@ -260,7 +262,7 @@ function fireBullet(startX: number, startY: number, dirX: number, dirY: number):
   let bullet: Bullet | undefined = bulletPool.find(b => !b.isActive);
 
   if (!bullet) {
-    const sprite: Sprite = new next2d.display.Sprite();
+    const sprite: Sprite = new Sprite();
     sprite.graphics.beginFill(0xFFFF00);
     sprite.graphics.drawCircle(0, 0, 5);
     sprite.graphics.endFill();
@@ -403,8 +405,8 @@ function gameLoop(event: Event): void {
 ## Complete Game Loop Example
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Stage, Event, Sprite, KeyboardEvent } from "@next2d/player";
+import { Sprite } from "@next2d/player";
+import type { Stage, Event, KeyboardEvent } from "@next2d/player";
 
 class SimpleGame {
   private _stage: Stage;
@@ -432,7 +434,7 @@ class SimpleGame {
   }
 
   private _createPlayer(): void {
-    this._player = new next2d.display.Sprite();
+    this._player = new Sprite();
     this._player.graphics.beginFill(0x00FF00);
     this._player.graphics.drawRect(-20, -20, 40, 40);
     this._player.graphics.endFill();
@@ -494,7 +496,7 @@ class SimpleGame {
   }
 
   private _spawnEnemy(): void {
-    const enemy: Sprite = new next2d.display.Sprite();
+    const enemy: Sprite = new Sprite();
     enemy.graphics.beginFill(0xFF0000);
     enemy.graphics.drawCircle(0, 0, 15);
     enemy.graphics.endFill();

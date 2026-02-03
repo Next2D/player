@@ -33,10 +33,9 @@ classDiagram
 ### Basic Drawing
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Shape } from "@next2d/player";
+import { Shape } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 
 // Filled rectangle
 shape.graphics.beginFill(0x3498db);
@@ -49,9 +48,10 @@ stage.addChild(shape);
 ### Compound Shape Drawing
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 // Background
@@ -74,9 +74,10 @@ stage.addChild(shape);
 ### Path Drawing
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 g.beginFill(0x9b59b6);
@@ -102,9 +103,10 @@ stage.addChild(shape);
 ### Bezier Curves
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 g.lineStyle(3, 0x1abc9c);
@@ -121,13 +123,14 @@ stage.addChild(shape);
 ### Gradient Background
 
 ```typescript
-import type { Shape, Graphics, Matrix } from "@next2d/player";
+import { Shape, Matrix } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 const g: Graphics = shape.graphics;
 
 // Matrix for gradient
-const matrix: Matrix = new next2d.geom.Matrix();
+const matrix: Matrix = new Matrix();
 matrix.createGradientBox(
   stage.stageWidth,
   stage.stageHeight,
@@ -153,9 +156,10 @@ stage.addChildAt(shape, 0);
 ### Dynamic Redrawing
 
 ```typescript
-import type { Shape, Graphics } from "@next2d/player";
+import { Shape } from "@next2d/player";
+import type { Graphics } from "@next2d/player";
 
-const shape: Shape = new next2d.display.Shape();
+const shape: Shape = new Shape();
 stage.addChild(shape);
 
 let angle: number = 0;
@@ -182,23 +186,23 @@ stage.addEventListener("enterFrame", (): void => {
 ### Composed of Multiple Shapes
 
 ```typescript
-import type { Shape } from "@next2d/player";
+import { Shape } from "@next2d/player";
 
 // Background layer
-const bgShape: Shape = new next2d.display.Shape();
+const bgShape: Shape = new Shape();
 bgShape.graphics.beginFill(0x2c3e50);
 bgShape.graphics.drawRect(0, 0, 400, 300);
 bgShape.graphics.endFill();
 
 // Decoration layer
-const decorShape: Shape = new next2d.display.Shape();
+const decorShape: Shape = new Shape();
 decorShape.graphics.beginFill(0x3498db, 0.5);
 decorShape.graphics.drawCircle(100, 100, 80);
 decorShape.graphics.drawCircle(300, 200, 60);
 decorShape.graphics.endFill();
 
 // Front layer
-const frontShape: Shape = new next2d.display.Shape();
+const frontShape: Shape = new Shape();
 frontShape.graphics.lineStyle(2, 0xecf0f1);
 frontShape.graphics.drawRect(50, 50, 300, 200);
 

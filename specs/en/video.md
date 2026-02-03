@@ -51,18 +51,17 @@ The Video class works with NetStream to play videos.
 ### Basic Video Playback
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Video, NetConnection, NetStream } from "@next2d/player";
+import { Video, NetConnection, NetStream } from "@next2d/player";
 
 // Create Video object
-const video: Video = new next2d.media.Video(640, 360);
+const video: Video = new Video(640, 360);
 
 // Create NetConnection
-const nc: NetConnection = new next2d.net.NetConnection();
+const nc: NetConnection = new NetConnection();
 nc.connect(null);
 
 // Create NetStream
-const ns: NetStream = new next2d.net.NetStream(nc);
+const ns: NetStream = new NetStream(nc);
 
 // Attach NetStream to Video
 video.attachNetStream(ns);
@@ -77,12 +76,12 @@ ns.play("video.mp4");
 ### Playback Control
 
 ```typescript
-import type { Video, NetConnection, NetStream } from "@next2d/player";
+import { Video, NetConnection, NetStream } from "@next2d/player";
 
-const video: Video = new next2d.media.Video(640, 360);
-const nc: NetConnection = new next2d.net.NetConnection();
+const video: Video = new Video(640, 360);
+const nc: NetConnection = new NetConnection();
 nc.connect(null);
-const ns: NetStream = new next2d.net.NetStream(nc);
+const ns: NetStream = new NetStream(nc);
 
 video.attachNetStream(ns);
 stage.addChild(video);
@@ -119,7 +118,7 @@ ns.play("video.mp4");
 ### Getting Metadata
 
 ```typescript
-import type { NetStream } from "@next2d/player";
+import { NetConnection, NetStream } from "@next2d/player";
 
 interface MetaData {
   duration: number;
@@ -128,7 +127,9 @@ interface MetaData {
   framerate: number;
 }
 
-const ns: NetStream = new next2d.net.NetStream(nc);
+const nc: NetConnection = new NetConnection();
+nc.connect(null);
+const ns: NetStream = new NetStream(nc);
 
 // Metadata event handler
 ns.client = {
@@ -151,14 +152,16 @@ ns.play("video.mp4");
 ### Displaying Playback Progress
 
 ```typescript
-import type { Video, NetStream } from "@next2d/player";
+import { Video, NetConnection, NetStream } from "@next2d/player";
 
 interface MetaData {
   duration: number;
 }
 
-const video: Video = new next2d.media.Video(640, 360);
-const ns: NetStream = new next2d.net.NetStream(nc);
+const video: Video = new Video(640, 360);
+const nc: NetConnection = new NetConnection();
+nc.connect(null);
+const ns: NetStream = new NetStream(nc);
 
 let duration: number = 0;
 
@@ -192,18 +195,21 @@ ns.play("video.mp4");
 ### Volume Control
 
 ```typescript
-import type { NetStream, SoundTransform, Event } from "@next2d/player";
+import { NetConnection, NetStream, SoundTransform } from "@next2d/player";
+import type { Event } from "@next2d/player";
 
-const ns: NetStream = new next2d.net.NetStream(nc);
+const nc: NetConnection = new NetConnection();
+nc.connect(null);
+const ns: NetStream = new NetStream(nc);
 
 // Control volume with SoundTransform
-const soundTransform: SoundTransform = new next2d.media.SoundTransform();
+const soundTransform: SoundTransform = new SoundTransform();
 soundTransform.volume = 0.5;  // 50%
 ns.soundTransform = soundTransform;
 
 // Volume slider
 volumeSlider.addEventListener("change", (event: Event): void => {
-  const st: SoundTransform = new next2d.media.SoundTransform();
+  const st: SoundTransform = new SoundTransform();
   st.volume = (event.target as any).value;  // 0.0 ~ 1.0
   ns.soundTransform = st;
 });
@@ -211,7 +217,7 @@ volumeSlider.addEventListener("change", (event: Event): void => {
 // Mute toggle
 let isMuted: boolean = false;
 muteButton.addEventListener("click", (): void => {
-  const st: SoundTransform = new next2d.media.SoundTransform();
+  const st: SoundTransform = new SoundTransform();
   isMuted = !isMuted;
   st.volume = isMuted ? 0 : 1;
   ns.soundTransform = st;
@@ -221,9 +227,9 @@ muteButton.addEventListener("click", (): void => {
 ### Fullscreen Support
 
 ```typescript
-import type { Video } from "@next2d/player";
+import { Video } from "@next2d/player";
 
-const video: Video = new next2d.media.Video(640, 360);
+const video: Video = new Video(640, 360);
 
 // Fullscreen toggle
 fullscreenButton.addEventListener("click", (): void => {
@@ -244,7 +250,7 @@ fullscreenButton.addEventListener("click", (): void => {
 ### Detecting Video Completion
 
 ```typescript
-import type { NetStream } from "@next2d/player";
+import { NetConnection, NetStream } from "@next2d/player";
 
 interface MetaData {
   duration: number;
@@ -254,7 +260,9 @@ interface PlayStatus {
   code: string;
 }
 
-const ns: NetStream = new next2d.net.NetStream(nc);
+const nc: NetConnection = new NetConnection();
+nc.connect(null);
+const ns: NetStream = new NetStream(nc);
 
 ns.client = {
   onMetaData: (info: MetaData): void => {
@@ -274,14 +282,13 @@ ns.client = {
 ### Video Player Component
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Video, NetConnection, NetStream, SoundTransform, Sprite } from "@next2d/player";
+import { Sprite, Video, NetConnection, NetStream, SoundTransform } from "@next2d/player";
 
 interface MetaData {
   duration: number;
 }
 
-class VideoPlayer extends (next2d.display.Sprite as typeof Sprite) {
+class VideoPlayer extends Sprite {
   private _width: number;
   private _height: number;
   private _video: Video;
@@ -295,10 +302,10 @@ class VideoPlayer extends (next2d.display.Sprite as typeof Sprite) {
     this._width = width;
     this._height = height;
 
-    this._video = new next2d.media.Video(width, height);
-    this._nc = new next2d.net.NetConnection();
+    this._video = new Video(width, height);
+    this._nc = new NetConnection();
     this._nc.connect(null);
-    this._ns = new next2d.net.NetStream(this._nc);
+    this._ns = new NetStream(this._nc);
 
     this._video.attachNetStream(this._ns);
     this.addChild(this._video);
@@ -338,7 +345,7 @@ class VideoPlayer extends (next2d.display.Sprite as typeof Sprite) {
   }
 
   set volume(value: number) {
-    const st: SoundTransform = new next2d.media.SoundTransform();
+    const st: SoundTransform = new SoundTransform();
     st.volume = value;
     this._ns.soundTransform = st;
   }

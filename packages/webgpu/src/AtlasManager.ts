@@ -137,6 +137,23 @@ export const $getAtlasAttachmentObject = (): IAttachmentObject | null =>
 };
 
 /**
+ * @description 指定インデックスのアトラステクスチャオブジェクトを返却
+ *              Return the atlas texture object by index
+ *
+ * @param  {number} index
+ * @returns {IAttachmentObject | null}
+ * @method
+ * @protected
+ */
+export const $getAtlasAttachmentObjectByIndex = (index: number): IAttachmentObject | null =>
+{
+    if (!(index in $atlasAttachmentObjects)) {
+        return null;
+    }
+    return $atlasAttachmentObjects[index];
+};
+
+/**
  * @description アトラステクスチャオブジェクトが存在するか
  *              Does the atlas texture object exist?
  *

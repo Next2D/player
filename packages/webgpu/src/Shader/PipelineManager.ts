@@ -48,6 +48,7 @@ export class PipelineManager
         this.createBlendPipeline();
         this.createBlurFilterPipeline(); // ブラーフィルター用
         this.createTextureCopyPipeline(); // テクスチャコピー用
+        this.createBitmapSyncPipeline(); // Bitmap同期用（MSAA対応）
         this.createColorMatrixFilterPipeline(); // カラーマトリックスフィルター用
         this.createGlowFilterPipeline(); // グローフィルター用
         this.createDropShadowFilterPipeline(); // ドロップシャドウフィルター用
@@ -2790,6 +2791,144 @@ export class PipelineManager
             }
         });
         this.pipelines.set("positioned_texture_rgba", pipelineRGBA);
+
+        // RGBA形式 + MSAA対応（アトラステクスチャへのbitmap/TextField描画用）
+        // ノード再利用時に以前の内容が透けないよう、完全上書き（dstFactor: zero）を使用
+        const pipelineMsaa = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "multisample": {
+                "count": 4
+            },
+            // アトラステクスチャにはステンシルバッファがあるため
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
+                },
+                "stencilBack": {
+                    "compare": "always",
+                    "failOp": "keep",
+                    "depthFailOp": "keep",
+                    "passOp": "keep"
+                }
+            }
+        });
+        this.pipelines.set("bitmap_render_msaa", pipelineMsaa);
+    }
+
+    /**
+     * @description Bitmap同期用パイプラインを作成
+     *              writeTextureで書き込んだ内容をMSAAテクスチャにコピーするために使用
+     *              特定のnode領域のみをコピーするためにuniformで座標を指定
+     * @return {void}
+     */
+    private createBitmapSyncPipeline(): void
+    {
+        // bitmap_sync専用のbind group layoutを作成
+        // uniformはvertex shaderで使用（座標計算用）
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            "entries": [
+                {
+                    "binding": 0,
+                    "visibility": GPUShaderStage.VERTEX,
+                    "buffer": { "type": "uniform" }
+                },
+                {
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": { "type": "filtering" }
+                },
+                {
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": { "sampleType": "float" }
+                }
+            ]
+        });
+        this.bindGroupLayouts.set("bitmap_sync", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            "bindGroupLayouts": [bindGroupLayout]
+        });
+
+        // BitmapSync用vertex shader（node領域の座標計算）
+        const vertexShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getBitmapSyncVertexShader()
+        });
+
+        // BitmapSync用fragment shader（uniformsなしでシンプルにサンプリング）
+        const fragmentShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getBitmapSyncFragmentShader()
+        });
+
+        // RGBA8形式（アトラステクスチャ用）- MSAAサンプルカウント対応
+        const pipeline = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            // MSAAテクスチャに描画するためsampleCountを設定
+            "multisample": {
+                "count": 4 // $samplesと同じ値
+            }
+        });
+        this.pipelines.set("bitmap_sync", pipeline);
     }
 
     /**

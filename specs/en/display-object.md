@@ -53,9 +53,9 @@ console.log(bounds.x, bounds.y, bounds.width, bounds.height);
 Converts global coordinates to local coordinates.
 
 ```typescript
-import type { Point } from "@next2d/player";
+import { Point } from "@next2d/player";
 
-const globalPoint: Point = new next2d.geom.Point(100, 100);
+const globalPoint: Point = new Point(100, 100);
 const localPoint: Point = displayObject.globalToLocal(globalPoint);
 ```
 
@@ -64,9 +64,9 @@ const localPoint: Point = displayObject.globalToLocal(globalPoint);
 Converts local coordinates to global coordinates.
 
 ```typescript
-import type { Point } from "@next2d/player";
+import { Point } from "@next2d/player";
 
-const localPoint: Point = new next2d.geom.Point(0, 0);
+const localPoint: Point = new Point(0, 0);
 const globalPoint: Point = displayObject.localToGlobal(localPoint);
 ```
 
@@ -112,10 +112,10 @@ if (obj1.hitTestObject(obj2)) {
 ## Usage Example
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Sprite, Stage, BlurFilter } from "@next2d/player";
+import { Sprite, BlurFilter } from "@next2d/player";
+import type { Stage } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // Position and size
 sprite.x = 100;
@@ -131,7 +131,7 @@ sprite.blendMode = "add";
 
 // Filters
 sprite.filters = [
-  new next2d.filters.BlurFilter(4, 4)
+  new BlurFilter(4, 4)
 ];
 
 // Add to stage

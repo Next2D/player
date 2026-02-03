@@ -79,10 +79,9 @@ classDiagram
 ### 基本的なテキスト表示
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.text = "Hello, Next2D!";
 textField.x = 100;
 textField.y = 100;
@@ -93,13 +92,13 @@ stage.addChild(textField);
 ### TextFormatの適用
 
 ```typescript
-import type { TextField, TextFormat } from "@next2d/player";
+import { TextField, TextFormat } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.text = "スタイル付きテキスト";
 
 // TextFormatを作成
-const format: TextFormat = new next2d.text.TextFormat();
+const format: TextFormat = new TextFormat();
 format.font = "Arial";
 format.size = 24;
 format.color = 0x3498db;
@@ -117,9 +116,9 @@ stage.addChild(textField);
 ### 自動サイズ調整
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.autoSize = "left";  // テキストに合わせて自動拡張
 textField.text = "このテキストに合わせてサイズが調整されます";
 
@@ -129,9 +128,9 @@ stage.addChild(textField);
 ### 複数行テキスト
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.width = 200;
 textField.multiline = true;
 textField.wordWrap = true;
@@ -143,9 +142,10 @@ stage.addChild(textField);
 ### 入力フィールド
 
 ```typescript
-import type { TextField, Event } from "@next2d/player";
+import { TextField } from "@next2d/player";
+import type { Event } from "@next2d/player";
 
-const inputField: TextField = new next2d.text.TextField();
+const inputField: TextField = new TextField();
 inputField.type = "input";
 inputField.width = 200;
 inputField.height = 30;
@@ -172,9 +172,9 @@ stage.addChild(inputField);
 ### パスワードフィールド
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const passwordField: TextField = new next2d.text.TextField();
+const passwordField: TextField = new TextField();
 passwordField.type = "input";
 passwordField.displayAsPassword = true;
 passwordField.width = 200;
@@ -188,9 +188,9 @@ stage.addChild(passwordField);
 ### HTMLテキスト
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.width = 300;
 textField.multiline = true;
 textField.htmlText = `
@@ -207,9 +207,9 @@ stage.addChild(textField);
 ### スクロール可能なテキスト
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.width = 200;
 textField.height = 100;
 textField.multiline = true;
@@ -236,12 +236,12 @@ stage.addChild(textField);
 ### 動的なテキスト更新
 
 ```typescript
-import type { TextField, TextFormat } from "@next2d/player";
+import { TextField, TextFormat } from "@next2d/player";
 
-const scoreField: TextField = new next2d.text.TextField();
+const scoreField: TextField = new TextField();
 scoreField.autoSize = "left";
 
-const format: TextFormat = new next2d.text.TextFormat();
+const format: TextFormat = new TextFormat();
 format.font = "Arial";
 format.size = 32;
 format.color = 0xffffff;
@@ -269,9 +269,10 @@ stage.addChild(scoreField);
 | `keyUp` | キーが離されたとき |
 
 ```typescript
-import type { TextField, KeyboardEvent } from "@next2d/player";
+import { TextField } from "@next2d/player";
+import type { KeyboardEvent } from "@next2d/player";
 
-const inputField: TextField = new next2d.text.TextField();
+const inputField: TextField = new TextField();
 inputField.type = "input";
 
 // Enterキーでフォーム送信

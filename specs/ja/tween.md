@@ -20,7 +20,6 @@ flowchart LR
 ## 基本的なTweenクラス
 
 ```typescript
-import { next2d } from "@next2d/player";
 import type { DisplayObject } from "@next2d/player";
 
 type EasingFunction = (t: number) => number;
@@ -156,9 +155,9 @@ const Easing = {
 ### 基本的な移動アニメーション
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 sprite.x = 0;
 sprite.y = 100;
 stage.addChild(sprite);

@@ -140,11 +140,11 @@ movieClip.addEventListener("exitFrame", (event: Event): void => {
 ### Basic Animation Control
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Loader, LoaderInfo, Event, MovieClip, Sprite } from "@next2d/player";
+import { Loader, URLRequest } from "@next2d/player";
+import type { LoaderInfo, Event, MovieClip } from "@next2d/player";
 
 // Load MovieClip from JSON
-const loader: Loader = new next2d.display.Loader();
+const loader: Loader = new Loader();
 loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
   const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
   const mc: MovieClip = loaderInfo.content as MovieClip;
@@ -162,7 +162,7 @@ loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
     }
   });
 });
-loader.load(new next2d.net.URLRequest("animation.json"));
+loader.load(new URLRequest("animation.json"));
 ```
 
 ### Control with Frame Labels

@@ -141,15 +141,14 @@ DisplayObject with timeline animation:
 ## Basic Usage
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { MovieClip } from "@next2d/player";
+import { next2d, MovieClip, DropShadowFilter } from "@next2d/player";
 
 // Initialize stage
-const stage: MovieClip = next2d.createRootMovieClip();
+const root: MovieClip = next2d.createRootMovieClip();
 
 // Create MovieClip
-const mc: MovieClip = new next2d.display.MovieClip();
-stage.addChild(mc);
+const mc: MovieClip = new MovieClip();
+root.addChild(mc);
 
 // Set position and size
 mc.x = 100;
@@ -160,7 +159,7 @@ mc.rotation = 45;
 
 // Apply filters
 mc.filters = [
-  new next2d.filters.DropShadowFilter(4, 45, 0x000000, 0.5)
+  new DropShadowFilter(4, 45, 0x000000, 0.5)
 ];
 ```
 
@@ -169,15 +168,16 @@ mc.filters = [
 Load and render JSON files created with Open Animation Tool:
 
 ```typescript
-import type { Loader, LoaderInfo, Event, MovieClip } from "@next2d/player";
+import { Loader, URLRequest } from "@next2d/player";
+import type { LoaderInfo, Event, MovieClip, Stage } from "@next2d/player";
 
-const loader: Loader = new next2d.display.Loader();
+const loader: Loader = new Loader();
 loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
   const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
   const mc: MovieClip = loaderInfo.content as MovieClip;
   stage.addChild(mc);
 });
-loader.load(new next2d.net.URLRequest("animation.json"));
+loader.load(new URLRequest("animation.json"));
 ```
 
 ## Related Documentation

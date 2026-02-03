@@ -29,4 +29,11 @@ test.describe("TextFieldテスト", () => {
 
         await expect(page).toHaveScreenshot("textfield-filter.png");
     });
+
+    test("複数TextField - 全て表示されることを確認", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/multiple-textfields.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-multiple.png");
+    });
 });

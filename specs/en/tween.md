@@ -20,7 +20,6 @@ flowchart LR
 ## Basic Tween Class
 
 ```typescript
-import { next2d } from "@next2d/player";
 import type { DisplayObject } from "@next2d/player";
 
 type EasingFunction = (t: number) => number;
@@ -156,9 +155,9 @@ const Easing = {
 ### Basic Movement Animation
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 sprite.x = 0;
 sprite.y = 100;
 stage.addChild(sprite);

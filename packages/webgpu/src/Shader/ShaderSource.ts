@@ -5,7 +5,7 @@ import { BasicVertex, BasicMainVertex } from "./wgsl/vertex/BasicVertex";
 import { InstancedVertex } from "./wgsl/vertex/InstancedVertex";
 import { GradientFillVertex, GradientFillMainVertex } from "./wgsl/vertex/GradientVertex";
 import { BitmapFillVertex, BitmapFillMainVertex } from "./wgsl/vertex/BitmapVertex";
-import { BlurFilterVertex, NodeClearVertex, PositionedTextureVertex } from "./wgsl/vertex/FilterVertex";
+import { BlurFilterVertex, NodeClearVertex, PositionedTextureVertex, BitmapSyncVertex } from "./wgsl/vertex/FilterVertex";
 
 import { FillFragment } from "./wgsl/fragment/FillFragment";
 import { StencilWriteFragment, StencilFillFragment } from "./wgsl/fragment/StencilFragment";
@@ -21,7 +21,8 @@ import {
     ColorMatrixFilterFragment,
     NodeClearFragment,
     PositionedTextureFragment,
-    BlendGenericFragment
+    BlendGenericFragment,
+    BitmapSyncFragment
 } from "./wgsl/fragment/FilterFragment";
 import {
     GlowFilterFragment,
@@ -279,6 +280,24 @@ export class ShaderSource
     static getBlurFilterVertexShader (): string
     {
         return BlurFilterVertex;
+    }
+
+    /**
+     * @description Bitmap同期用頂点シェーダー（UV Y反転なし）
+     * @return {string}
+     */
+    static getBitmapSyncVertexShader (): string
+    {
+        return BitmapSyncVertex;
+    }
+
+    /**
+     * @description Bitmap同期用フラグメントシェーダー
+     * @return {string}
+     */
+    static getBitmapSyncFragmentShader (): string
+    {
+        return BitmapSyncFragment;
     }
 
     /**

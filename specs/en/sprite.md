@@ -33,9 +33,9 @@ Use the Sprite's graphics property for dynamic vector drawing.
 ### Line and Fill Settings
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // Set line style
 sprite.graphics.lineStyle(2, 0xFF0000, 1.0);  // thickness, color, alpha
@@ -63,10 +63,9 @@ sprite.graphics.beginFill(0x00FF00, 0.8);  // color, alpha
 ### Basic Drawing
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // Draw red rectangle
 sprite.graphics.beginFill(0xFF0000);
@@ -84,9 +83,9 @@ stage.addChild(sprite);
 ### Line Drawing
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // Set line style
 sprite.graphics.lineStyle(3, 0x000000, 1.0);
@@ -102,12 +101,12 @@ stage.addChild(sprite);
 ### Gradient Fill
 
 ```typescript
-import type { Sprite, Matrix } from "@next2d/player";
+import { Sprite, Matrix } from "@next2d/player";
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite: Sprite = new Sprite();
 
 // Create gradient matrix
-const matrix: Matrix = new next2d.geom.Matrix();
+const matrix: Matrix = new Matrix();
 matrix.createGradientBox(200, 200, 0, 0, 0);
 
 // Linear gradient
@@ -127,9 +126,9 @@ stage.addChild(sprite);
 ### Use as Button
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const button: Sprite = new next2d.display.Sprite();
+const button: Sprite = new Sprite();
 
 // Enable button mode
 button.buttonMode = true;
@@ -151,15 +150,15 @@ stage.addChild(button);
 ### Use as Mask
 
 ```typescript
-import type { Sprite } from "@next2d/player";
+import { Sprite } from "@next2d/player";
 
-const content: Sprite = new next2d.display.Sprite();
+const content: Sprite = new Sprite();
 content.graphics.beginFill(0xFF0000);
 content.graphics.drawRect(0, 0, 200, 200);
 content.graphics.endFill();
 
 // Mask sprite
-const maskSprite: Sprite = new next2d.display.Sprite();
+const maskSprite: Sprite = new Sprite();
 maskSprite.graphics.beginFill(0xFFFFFF);
 maskSprite.graphics.drawCircle(100, 100, 50);
 maskSprite.graphics.endFill();

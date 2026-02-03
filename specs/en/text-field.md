@@ -79,10 +79,9 @@ A class for setting text styles.
 ### Basic Text Display
 
 ```typescript
-import { next2d } from "@next2d/player";
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.text = "Hello, Next2D!";
 textField.x = 100;
 textField.y = 100;
@@ -93,13 +92,13 @@ stage.addChild(textField);
 ### Applying TextFormat
 
 ```typescript
-import type { TextField, TextFormat } from "@next2d/player";
+import { TextField, TextFormat } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.text = "Styled Text";
 
 // Create TextFormat
-const format: TextFormat = new next2d.text.TextFormat();
+const format: TextFormat = new TextFormat();
 format.font = "Arial";
 format.size = 24;
 format.color = 0x3498db;
@@ -117,9 +116,9 @@ stage.addChild(textField);
 ### Auto Size
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.autoSize = "left";  // Auto expand to fit text
 textField.text = "This text will auto-size the field";
 
@@ -129,9 +128,9 @@ stage.addChild(textField);
 ### Multiline Text
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.width = 200;
 textField.multiline = true;
 textField.wordWrap = true;
@@ -143,9 +142,10 @@ stage.addChild(textField);
 ### Input Field
 
 ```typescript
-import type { TextField, Event } from "@next2d/player";
+import { TextField } from "@next2d/player";
+import type { Event } from "@next2d/player";
 
-const inputField: TextField = new next2d.text.TextField();
+const inputField: TextField = new TextField();
 inputField.type = "input";
 inputField.width = 200;
 inputField.height = 30;
@@ -172,9 +172,9 @@ stage.addChild(inputField);
 ### Password Field
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const passwordField: TextField = new next2d.text.TextField();
+const passwordField: TextField = new TextField();
 passwordField.type = "input";
 passwordField.displayAsPassword = true;
 passwordField.width = 200;
@@ -188,9 +188,9 @@ stage.addChild(passwordField);
 ### HTML Text
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.width = 300;
 textField.multiline = true;
 textField.htmlText = `
@@ -207,9 +207,9 @@ stage.addChild(textField);
 ### Scrollable Text
 
 ```typescript
-import type { TextField } from "@next2d/player";
+import { TextField } from "@next2d/player";
 
-const textField: TextField = new next2d.text.TextField();
+const textField: TextField = new TextField();
 textField.width = 200;
 textField.height = 100;
 textField.multiline = true;
@@ -236,12 +236,12 @@ stage.addChild(textField);
 ### Dynamic Text Update
 
 ```typescript
-import type { TextField, TextFormat } from "@next2d/player";
+import { TextField, TextFormat } from "@next2d/player";
 
-const scoreField: TextField = new next2d.text.TextField();
+const scoreField: TextField = new TextField();
 scoreField.autoSize = "left";
 
-const format: TextFormat = new next2d.text.TextFormat();
+const format: TextFormat = new TextFormat();
 format.font = "Arial";
 format.size = 32;
 format.color = 0xffffff;
@@ -269,9 +269,10 @@ stage.addChild(scoreField);
 | `keyUp` | When key is released |
 
 ```typescript
-import type { TextField, KeyboardEvent } from "@next2d/player";
+import { TextField } from "@next2d/player";
+import type { KeyboardEvent } from "@next2d/player";
 
-const inputField: TextField = new next2d.text.TextField();
+const inputField: TextField = new TextField();
 inputField.type = "input";
 
 // Submit form on Enter key

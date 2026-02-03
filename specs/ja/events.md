@@ -47,9 +47,9 @@ if (displayObject.hasEventListener("click")) {
 イベントを発行します。
 
 ```typescript
-import type { Event } from "@next2d/player";
+import { Event } from "@next2d/player";
 
-const event: Event = new next2d.events.Event("customEvent");
+const event: Event = new Event("customEvent");
 displayObject.dispatchEvent(event);
 ```
 
@@ -206,10 +206,10 @@ stage.addEventListener("keyDown", (event: KeyboardEvent): void => {
 ## カスタムイベント
 
 ```typescript
-import type { Event } from "@next2d/player";
+import { Event } from "@next2d/player";
 
 // カスタムイベントの定義
-const customEvent: Event = new next2d.events.Event("gameOver", true, true);
+const customEvent: Event = new Event("gameOver", true, true);
 
 // イベントの発行
 gameManager.dispatchEvent(customEvent);
