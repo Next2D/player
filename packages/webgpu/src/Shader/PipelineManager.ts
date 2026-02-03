@@ -178,7 +178,8 @@ export class PipelineManager
                 "stencilWriteMask": 0x00
             },
             "multisample": {
-                "count": this.sampleCount
+                "count": this.sampleCount,
+                "alphaToCoverageEnabled": true // WebGL版のSAMPLE_ALPHA_TO_COVERAGEに相当
             }
         });
 
@@ -205,6 +206,10 @@ export class PipelineManager
             "primitive": {
                 "topology": "triangle-list",
                 "cullMode": "none"
+            },
+            "multisample": {
+                "count": this.sampleCount,
+                "alphaToCoverageEnabled": true // WebGL版のSAMPLE_ALPHA_TO_COVERAGEに相当
             }
         });
 
@@ -249,6 +254,10 @@ export class PipelineManager
                 },
                 "stencilReadMask": 0xFF,
                 "stencilWriteMask": 0x00
+            },
+            "multisample": {
+                "count": this.sampleCount,
+                "alphaToCoverageEnabled": true // WebGL版のSAMPLE_ALPHA_TO_COVERAGEに相当
             }
         });
         this.pipelines.set("fill_bgra_stencil", pipelineBGRAStencil); // マスク付きキャンバス用
@@ -323,7 +332,7 @@ export class PipelineManager
                 "entryPoint": "main",
                 "targets": [{
                     "format": "rgba8unorm",
-                    "writeMask": 0 // カラー書き込み無効
+                    "writeMask": 0 // カラー書き込み無効（alphaToCoverageはアルファ値を読み取るのみ）
                 }]
             },
             "primitive": {
@@ -349,7 +358,8 @@ export class PipelineManager
                 "stencilWriteMask": 0xFF
             },
             "multisample": {
-                "count": this.sampleCount
+                "count": this.sampleCount,
+                "alphaToCoverageEnabled": true // WebGL版のSAMPLE_ALPHA_TO_COVERAGEに相当
             }
         });
         this.pipelines.set("stencil_write", stencilWritePipeline);
@@ -432,7 +442,7 @@ export class PipelineManager
                 "entryPoint": "main",
                 "targets": [{
                     "format": "rgba8unorm",
-                    "writeMask": 0
+                    "writeMask": 0 // カラー書き込み無効（alphaToCoverageはアルファ値を読み取るのみ）
                 }]
             },
             "primitive": {
@@ -458,7 +468,8 @@ export class PipelineManager
                 "stencilWriteMask": 0xFF
             },
             "multisample": {
-                "count": 1 // アトラス用は常に1
+                "count": this.sampleCount,
+                "alphaToCoverageEnabled": true // WebGL版のSAMPLE_ALPHA_TO_COVERAGEに相当
             }
         });
         this.pipelines.set("stencil_write_atlas", stencilWritePipelineAtlas);
@@ -507,7 +518,8 @@ export class PipelineManager
                 "stencilWriteMask": 0xFF
             },
             "multisample": {
-                "count": 1 // メインキャンバス用
+                "count": this.sampleCount,
+                "alphaToCoverageEnabled": true // WebGL版のSAMPLE_ALPHA_TO_COVERAGEに相当
             }
         });
         this.pipelines.set("stencil_write_main", stencilWritePipelineMain);
@@ -566,10 +578,69 @@ export class PipelineManager
                 "stencilWriteMask": 0xFF
             },
             "multisample": {
-                "count": 1 // アトラス用は常に1
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("stencil_fill_atlas", stencilFillPipelineAtlas);
+
+        // === メインキャンバス用ステンシルフィル（bgra8unorm、Y軸反転あり） ===
+        // 中抜き描画（hollow shape）のPass 2で使用
+        const stencilFillPipelineMain = this.device.createRenderPipeline({
+            "layout": "auto",
+            "vertex": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillMainVertexShader() // Y軸反転あり
+                }),
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": this.device.createShaderModule({
+                    "code": ShaderSource.getStencilFillFragmentShader()
+                }),
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format, // bgra8unorm
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one",
+                            "operation": "max"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": {
+                "format": "stencil8",
+                "stencilFront": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
+                },
+                "stencilBack": {
+                    "compare": "not-equal",
+                    "failOp": "keep",
+                    "depthFailOp": "zero",
+                    "passOp": "zero"
+                },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            },
+            "multisample": {
+                "count": this.sampleCount
+            }
+        });
+        this.pipelines.set("stencil_fill_main", stencilFillPipelineMain);
 
         // === Pass 2 (Masked): マスク領域内のみ描画 ===
         // マスクモード時の2パスフィル:
@@ -1688,7 +1759,7 @@ export class PipelineManager
             }
         };
 
-        // アトラステクスチャ用（rgba8unorm）- ステンシルなし - sampleCount: 1（アトラスはMSAAなし）
+        // アトラステクスチャ用（rgba8unorm）- ステンシルなし
         const pipelineRGBA = this.device.createRenderPipeline({
             "label": "gradient_fill_no_stencil_pipeline",
             "layout": pipelineLayout,
@@ -1710,7 +1781,7 @@ export class PipelineManager
                 "cullMode": "none"
             },
             "multisample": {
-                "count": 1  // アトラスはMSAAを使用しない
+                "count": this.sampleCount
             }
         });
 
@@ -1820,7 +1891,7 @@ export class PipelineManager
         });
         this.pipelines.set("gradient_fill_stencil", pipelineRGBAStencil);
 
-        // === アトラス用ステンシルテスト付きグラデーション（sampleCount: 1） ===
+        // === アトラス用ステンシルテスト付きグラデーション ===
         // 2パスフィル処理のPass 2で使用:
         // Pass 1: stencil_write_atlas でステンシルに書き込み（INCR/DECR）
         // Pass 2: このパイプラインでステンシル != 0 の部分にグラデーションを描画
@@ -1863,7 +1934,7 @@ export class PipelineManager
                 "stencilWriteMask": 0xFF
             },
             "multisample": {
-                "count": 1 // アトラス用は常に1
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("gradient_fill_stencil_atlas", pipelineRGBAStencilAtlas);

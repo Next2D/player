@@ -31,10 +31,7 @@ fn applySpread(t: f32, spread: f32) -> f32 {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let f = input.bezier.x * input.bezier.x - input.bezier.y;
-    if (f >= 0.0) {
-        discard;
-    }
+    // WebGL版と同じ: bezierチェックなし
     var t: f32;
     let p = input.v_uv;
     if (gradient.gradientType < 0.5) {

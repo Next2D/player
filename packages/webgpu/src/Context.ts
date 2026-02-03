@@ -32,6 +32,7 @@ import {
     $resetMaskState
 } from "./Mask";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
+import { generateStrokeMesh } from "./Mesh/usecase/MeshStrokeGenerateUseCase";
 // Note: MeshGradientStrokeGenerateUseCase and MeshBitmapStrokeGenerateUseCase
 // are now used via ContextGradientStrokeUseCase and ContextBitmapStrokeUseCase
 // Note: Filter usecases are now used via ContextApplyFilterUseCase
@@ -53,6 +54,7 @@ import {
 
 // Context services
 import { execute as contextFillWithStencilService } from "./Context/service/ContextFillWithStencilService";
+import { execute as contextFillWithStencilMainService } from "./Context/service/ContextFillWithStencilMainService";
 import { execute as contextFillSimpleService } from "./Context/service/ContextFillSimpleService";
 // Note: contextComputeGradientMatrixService and contextComputeBitmapMatrixService
 // are now used via ContextGradientFillUseCase and ContextBitmapFillUseCase
@@ -409,12 +411,13 @@ export class Context
         this.mainTexture = null;
         this.mainTextureView = null;
 
-        // メインアタッチメントを作成（ステンシル付き、マスク描画用）
+        // メインアタッチメントを作成（MSAA + ステンシル付き、マスク描画用）
         // WebGL版と同じ: $mainAttachmentObject = frameBufferManagerGetAttachmentObjectUseCase(width, height, true)
-        // 最後のパラメータ(mask=true)でステンシルバッファを有効化
+        // msaa=true でMSAAを有効化（曲線のアンチエイリアス品質向上のため）
+        // mask=true でステンシルバッファを有効化
         // グラデーション塗りつぶしの中抜き描画（hollow shape）にも必要
         this.$mainAttachmentObject = this.frameBufferManager.createAttachment(
-            "main", width, height, false, true
+            "main", width, height, true, true
         );
 
         // メインアタッチメントをバインド
@@ -681,17 +684,38 @@ export class Context
                 // マスク描画時またはマスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
                 // マスク描画時: ステンシルバッファにマスク形状を書き込む
                 // マスクテスト時: ステンシル値をテストしてマスク領域のみ描画
+                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
+                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
+                const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
+                    ? this.$mainAttachmentObject.msaaStencil.view
+                    : this.$mainAttachmentObject.stencil.view;
+                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    this.$mainAttachmentObject.texture!.view,
-                    this.$mainAttachmentObject.stencil.view,
+                    mainColorView,
+                    mainStencilView,
                     "load",
-                    "load"  // ステンシルは既存の値を保持（マスク情報）
+                    "load",  // ステンシルは既存の値を保持（マスク情報）
+                    mainResolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
                 // マスクテスト時はステンシル参照値を設定
                 if ($isMaskTestEnabled()) {
                     this.renderPassEncoder.setStencilReference($getMaskStencilReference());
                 }
+            } else if (!this.currentRenderTarget && this.$mainAttachmentObject) {
+                // メインアタッチメントへの通常描画（MSAA対応）
+                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
+                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
+                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+
+                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                    mainColorView,
+                    0, 0, 0, 0,
+                    "load",
+                    mainResolveTarget
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                     colorView,
@@ -748,11 +772,15 @@ export class Context
         // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
         const attachment = $getAtlasAttachmentObject();
         if (this.currentRenderTarget && attachment?.stencil?.view) {
-            // 2パスステンシルフィル（WebGL版と同じアルゴリズム）
+            // 2パスステンシルフィル（WebGL版と同じアルゴリズム、アトラス用）
             this.fillWithStencil(vertexBuffer, mesh.indexCount);
+        } else if (!this.currentRenderTarget && !this.inMaskMode && !$isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
+            // メインキャンバスへの描画（マスクなし）で2パスステンシルフィル
+            // WebGL版と同じアルゴリズム: MSAA + alphaToCoverageでアンチエイリアスを実現
+            this.fillWithStencilMain(vertexBuffer, mesh.indexCount);
         } else {
-            // キャンバスへの描画またはステンシルなしの場合は単純なフィル
-            // マスクモード時またはマスクテスト有効時はステンシル付きパイプラインを使用
+            // マスクモード時またはマスクテスト有効時は1パスフィル
+            // （ステンシルがマスク用に使用されているため2パスは使用不可）
             const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
             this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
         }
@@ -761,7 +789,7 @@ export class Context
     }
 
     /**
-     * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム）
+     * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム、アトラス用）
      *              Pass 1: Front面でインクリメント、Back面でデクリメント（1回の描画で両面処理）
      *              Pass 2: ステンシル値 != 0 の部分に色を描画
      *
@@ -775,6 +803,28 @@ export class Context
     ): void
     {
         contextFillWithStencilService(
+            this.renderPassEncoder!,
+            this.pipelineManager,
+            vertexBuffer,
+            vertexCount
+        );
+    }
+
+    /**
+     * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム、メインキャンバス用）
+     *              Pass 1: Front面でインクリメント、Back面でデクリメント（alphaToCoverageでAA）
+     *              Pass 2: ステンシル値 != 0 の部分に色を描画
+     *
+     * @param {GPUBuffer} vertexBuffer
+     * @param {number} vertexCount
+     * @return {void}
+     */
+    private fillWithStencilMain(
+        vertexBuffer: GPUBuffer,
+        vertexCount: number
+    ): void
+    {
+        contextFillWithStencilMainService(
             this.renderPassEncoder!,
             this.pipelineManager,
             vertexBuffer,
@@ -919,17 +969,38 @@ export class Context
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else if (!this.currentRenderTarget && ($isMaskTestEnabled() || $isMaskDrawing()) && this.$mainAttachmentObject?.stencil?.view) {
                 // マスク描画時またはマスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
+                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
+                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
+                const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
+                    ? this.$mainAttachmentObject.msaaStencil.view
+                    : this.$mainAttachmentObject.stencil.view;
+                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    this.$mainAttachmentObject.texture!.view,
-                    this.$mainAttachmentObject.stencil.view,
+                    mainColorView,
+                    mainStencilView,
                     "load",
-                    "load"  // ステンシルは既存の値を保持（マスク情報）
+                    "load",  // ステンシルは既存の値を保持（マスク情報）
+                    mainResolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
                 // マスクテスト時はステンシル参照値を設定
                 if ($isMaskTestEnabled()) {
                     this.renderPassEncoder.setStencilReference($getMaskStencilReference());
                 }
+            } else if (!this.currentRenderTarget && this.$mainAttachmentObject) {
+                // メインアタッチメントへの通常描画（MSAA対応）
+                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
+                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
+                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+
+                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                    mainColorView,
+                    0, 0, 0, 0,
+                    "load",
+                    mainResolveTarget
+                );
+                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                     colorView,
@@ -965,12 +1036,12 @@ export class Context
         const tx = this.$matrix[6];
         const ty = this.$matrix[7];
 
-        // WebGL版と同じ: ストロークの輪郭を塗りとして生成
-        // thickness/2はここで行う（generateStrokeOutlinesに半分の太さを渡す）
-        const strokeOutlines = this.generateStrokeOutlines(vertices, this.thickness / 2);
+        // WebGL版と同じ: MeshStrokeGenerateUseCaseを使用してストロークの輪郭を生成
+        // generateStrokeMeshはthickness（フル値）を受け取り、内部で/2する
+        const strokeOutlines = generateStrokeMesh(vertices, this.thickness);
         if (strokeOutlines.length === 0) { return }
 
-        // WebGL版と同じ: MeshFillGenerateUseCaseで頂点データを生成
+        // WebGL版と同じ: meshFillGenerateUseCaseを使用（曲線フラグに応じたbezier座標を設定）
         const mesh = meshFillGenerateUseCase(
             strokeOutlines,
             a, b, c, d, tx, ty,
@@ -985,11 +1056,21 @@ export class Context
         // 頂点バッファを取得（プールから再利用）
         const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
-        // ストロークは常に単純なfillで描画（ステンシルフィルは使用しない）
-        // 理由: ストロークは複数の重なり合う矩形として生成され、
-        // 2パスステンシルフィルでは重なり部分のステンシル値が相殺されて描画されないため
-        const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
-        this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
+        // WebGL版と同じ: ストロークも2パスステンシルフィルで描画（非凸多角形対応）
+        // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
+        const attachment = $getAtlasAttachmentObject();
+        if (this.currentRenderTarget && attachment?.stencil?.view) {
+            // 2パスステンシルフィル（WebGL版と同じアルゴリズム、アトラス用）
+            this.fillWithStencil(vertexBuffer, mesh.indexCount);
+        } else if (!this.currentRenderTarget && !this.inMaskMode && !$isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
+            // メインキャンバスへの描画（マスクなし）で2パスステンシルフィル
+            // WebGL版と同じアルゴリズム: MSAA + alphaToCoverageでアンチエイリアスを実現
+            this.fillWithStencilMain(vertexBuffer, mesh.indexCount);
+        } else {
+            // マスクモード時またはマスクテスト有効時は1パスフィル
+            const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
+            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
+        }
 
         // ストローク描画後はpathCommandをクリアする
         // 理由: drawFill()がfill()を呼び出すため、クリアしないと同じパスが白で塗りつぶされる

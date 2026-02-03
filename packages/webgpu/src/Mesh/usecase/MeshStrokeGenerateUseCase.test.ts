@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { IPath } from "../../interface/IPath";
 import type { IPoint } from "../../interface/IPoint";
 import {
@@ -10,7 +10,8 @@ import {
 // Mock $context
 vi.mock("../../WebGPUUtil", () => ({
     "$context": {
-        "joints": 0 // bevel by default
+        "joints": 0, // bevel by default
+        "caps": 0    // none by default
     }
 }));
 
@@ -27,7 +28,7 @@ describe("MeshStrokeGenerateUseCase", () =>
             expect(result).toEqual([]);
         });
 
-        it("should generate rectangle info for simple line segment", () =>
+        it("should generate IPath for simple line segment", () =>
         {
             const vertices: IPath = [
                 0, 0, false,   // start point
@@ -37,11 +38,10 @@ describe("MeshStrokeGenerateUseCase", () =>
             const result = generateStrokeOutline(vertices, 5);
 
             expect(result.length).toBe(1);
-            expect(result[0]).toHaveProperty("path");
-            expect(result[0]).toHaveProperty("startUp");
-            expect(result[0]).toHaveProperty("startDown");
-            expect(result[0]).toHaveProperty("endUp");
-            expect(result[0]).toHaveProperty("endDown");
+            // IPath is an array [x, y, isCurve, ...]
+            expect(Array.isArray(result[0])).toBe(true);
+            // Rectangle has 5 points (15 elements) - closed path
+            expect(result[0].length).toBe(15);
         });
 
         it("should calculate correct normal offset for horizontal line", () =>
@@ -56,9 +56,11 @@ describe("MeshStrokeGenerateUseCase", () =>
             // For horizontal line (direction = (100, 0)), normal is perpendicular:
             // normal.x = -(y / magnitude) * thickness = 0
             // normal.y = (x / magnitude) * thickness = 1 * 10 = 10
-            // So startUp = (0, 0 + 10) = (0, 10), startDown = (0, 0 - 10) = (0, -10)
-            expect(result[0].startUp.y).toBeCloseTo(10, 5);
-            expect(result[0].startDown.y).toBeCloseTo(-10, 5);
+            // Path format: [startUpX, startUpY, false, endUpX, endUpY, false, endDownX, endDownY, false, startDownX, startDownY, false, ...]
+            const startUpY = result[0][1] as number;
+            const startDownY = result[0][10] as number;
+            expect(startUpY).toBeCloseTo(10, 5);
+            expect(startDownY).toBeCloseTo(-10, 5);
         });
 
         it("should calculate correct normal offset for vertical line", () =>
@@ -73,12 +75,13 @@ describe("MeshStrokeGenerateUseCase", () =>
             // For vertical line (direction = (0, 100)), normal is perpendicular:
             // normal.x = -(y / magnitude) * thickness = -(100 / 100) * 10 = -10
             // normal.y = (x / magnitude) * thickness = 0
-            // So startUp = (0 + (-10), 0) = (-10, 0), startDown = (0 - (-10), 0) = (10, 0)
-            expect(result[0].startUp.x).toBeCloseTo(-10, 5);
-            expect(result[0].startDown.x).toBeCloseTo(10, 5);
+            const startUpX = result[0][0] as number;
+            const startDownX = result[0][9] as number;
+            expect(startUpX).toBeCloseTo(-10, 5);
+            expect(startDownX).toBeCloseTo(10, 5);
         });
 
-        it("should generate multiple rectangles for multi-segment path", () =>
+        it("should generate multiple paths for multi-segment path", () =>
         {
             const vertices: IPath = [
                 0, 0, false,
@@ -88,27 +91,30 @@ describe("MeshStrokeGenerateUseCase", () =>
 
             const result = generateStrokeOutline(vertices, 5);
 
-            expect(result.length).toBe(2);
+            // 2 line segments create 2 rectangles, plus 1 join triangle
+            expect(result.length).toBeGreaterThanOrEqual(2);
         });
 
-        it("should skip curve control points", () =>
+        it("should handle curve control points", () =>
         {
             const vertices: IPath = [
                 0, 0, false,
-                50, 50, true,  // control point - should be skipped
+                50, 50, true,  // control point
                 100, 0, false
             ];
 
             const result = generateStrokeOutline(vertices, 5);
 
-            // Should only create one rectangle (direct line from start to end)
+            // Curve generates one outline (more complex than rectangle)
             expect(result.length).toBe(1);
+            // Curve path has more points than a simple rectangle
+            expect(result[0].length).toBeGreaterThan(15);
         });
     });
 
     describe("generateStrokeMesh", () =>
     {
-        it("should return Float32Array", () =>
+        it("should return IPath array", () =>
         {
             const vertices: IPath[] = [[
                 0, 0, false,
@@ -117,10 +123,11 @@ describe("MeshStrokeGenerateUseCase", () =>
 
             const result = generateStrokeMesh(vertices, 10);
 
-            expect(result).toBeInstanceOf(Float32Array);
+            expect(Array.isArray(result)).toBe(true);
+            expect(result.length).toBeGreaterThan(0);
         });
 
-        it("should generate triangles for line segment", () =>
+        it("should generate outline paths for line segment", () =>
         {
             const vertices: IPath[] = [[
                 0, 0, false,
@@ -129,10 +136,9 @@ describe("MeshStrokeGenerateUseCase", () =>
 
             const result = generateStrokeMesh(vertices, 10);
 
-            // Each line segment becomes a rectangle = 2 triangles
-            // Each triangle has 3 vertices, each vertex has 4 floats (x, y, 0, 0)
-            // 2 triangles * 3 vertices * 4 floats = 24
-            expect(result.length).toBe(24);
+            // One line segment creates one rectangle path
+            expect(result.length).toBe(1);
+            expect(result[0].length).toBe(15); // 5 points * 3 = 15
         });
 
         it("should skip paths with insufficient points", () =>
@@ -155,8 +161,8 @@ describe("MeshStrokeGenerateUseCase", () =>
 
             const result = generateStrokeMesh(vertices, 10);
 
-            // 2 line segments * 24 floats each
-            expect(result.length).toBe(48);
+            // 2 line segments create 2 rectangle paths
+            expect(result.length).toBe(2);
         });
 
         it("should use half thickness internally", () =>
@@ -170,8 +176,9 @@ describe("MeshStrokeGenerateUseCase", () =>
             const result = generateStrokeMesh(vertices, 20);
 
             // Check that the y-offset is ±10 (halfThickness)
-            // First triangle vertex should be at (0, -10)
-            expect(Math.abs(result[1])).toBeCloseTo(10, 5);
+            // First vertex Y should be at 10 (startUpY)
+            const startUpY = result[0][1] as number;
+            expect(Math.abs(startUpY)).toBeCloseTo(10, 5);
         });
     });
 

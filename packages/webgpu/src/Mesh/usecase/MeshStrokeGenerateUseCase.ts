@@ -1,7 +1,20 @@
 import type { IPoint } from "../../interface/IPoint";
 import type { IPath } from "../../interface/IPath";
-import type { IRectangleInfo } from "../../interface/IRectangleInfo";
 import { $context } from "../../WebGPUUtil";
+
+/**
+ * @description Canvas 2Dコンテキスト（点が矩形内にあるか判定用）
+ */
+const canvas = new OffscreenCanvas(1, 1);
+const $canvasContext = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
+
+/**
+ * @description 再利用可能なPointオブジェクト（GC回避）
+ */
+const $startPoint: IPoint = { "x": 0, "y": 0 };
+const $controlPoint: IPoint = { "x": 0, "y": 0 };
+const $endPoint: IPoint = { "x": 0, "y": 0 };
+const $prevPoint: IPoint = { "x": 0, "y": 0 };
 
 /**
  * @description 法線ベクトルを計算（WebGL版のMeshCalculateNormalVectorServiceと同じ）
@@ -23,17 +36,176 @@ const calculateNormalVector = (x: number, y: number, thickness: number): IPoint 
 };
 
 /**
+ * @description 線形補間（lerp）
+ */
+const lerp = (p0: IPoint, p1: IPoint, t: number): IPoint => ({
+    "x": p0.x + (p1.x - p0.x) * t,
+    "y": p0.y + (p1.y - p0.y) * t
+});
+
+/**
+ * @description ベクトルの正規化
+ */
+const normalize = (point: IPoint): IPoint => {
+    const length = Math.sqrt(point.x * point.x + point.y * point.y);
+    return length === 0
+        ? { "x": 0, "y": 0 }
+        : { "x": point.x / length, "y": point.y / length };
+};
+
+/**
+ * @description 二次ベジェ曲線上の座標を計算
+ */
+const getQuadraticBezierPoint = (
+    t: number,
+    s0: IPoint,
+    s1: IPoint,
+    s2: IPoint
+): IPoint => ({
+    "x": (1 - t) ** 2 * s0.x + 2 * (1 - t) * t * s1.x + t ** 2 * s2.x,
+    "y": (1 - t) ** 2 * s0.y + 2 * (1 - t) * t * s1.y + t ** 2 * s2.y
+});
+
+/**
+ * @description 二次ベジェ曲線上の接線ベクトルを計算
+ */
+const getQuadraticBezierTangent = (
+    t: number,
+    s0: IPoint,
+    s1: IPoint,
+    s2: IPoint
+): IPoint => ({
+    "x": 2 * (1 - t) * (s1.x - s0.x) + 2 * t * (s2.x - s1.x),
+    "y": 2 * (1 - t) * (s1.y - s0.y) + 2 * t * (s2.y - s1.y)
+});
+
+/**
+ * @description 二次ベジェ曲線を分割
+ */
+const splitQuadraticBezier = (
+    s0: IPoint,
+    s1: IPoint,
+    s2: IPoint,
+    t: number = 0.5
+): Array<IPoint[]> => {
+    const M0 = lerp(s0, s1, t);
+    const M1 = lerp(s1, s2, t);
+    const M01 = lerp(M0, M1, t);
+    return [
+        [s0, M0, M01],
+        [M01, M1, s2]
+    ];
+};
+
+/**
+ * @description ベジェ曲線を複数回分割
+ */
+const splitBezierMultipleTimes = (
+    s0: IPoint,
+    s1: IPoint,
+    s2: IPoint,
+    n: number = 4
+): Array<IPoint[]> => {
+    let segments: Array<IPoint[]> = [[s0, s1, s2]];
+    for (let i = 0; i < n; i++) {
+        const newSegments: Array<IPoint[]> = [];
+        for (const seg of segments) {
+            const splitted = splitQuadraticBezier(seg[0], seg[1], seg[2], 0.5);
+            newSegments.push(splitted[0], splitted[1]);
+        }
+        segments = newSegments;
+    }
+    return segments;
+};
+
+/**
+ * @description 2次ベジェのオフセットを計算
+ */
+const approximateOffsetQuadratic = (
+    s0: IPoint,
+    s1: IPoint,
+    s2: IPoint,
+    offset: number
+): IPoint[] => {
+    const tValues = [0, 0.5, 1];
+    const newPoints: IPoint[] = [];
+
+    for (const t of tValues) {
+        const pos = getQuadraticBezierPoint(t, s0, s1, s2);
+        const tan = getQuadraticBezierTangent(t, s0, s1, s2);
+        const n = normalize({ "x": -tan.y, "y": tan.x });
+        newPoints.push({
+            "x": pos.x + n.x * offset,
+            "y": pos.y + n.y * offset
+        });
+    }
+    return newPoints;
+};
+
+/**
+ * @description カーブの矩形を計算（WebGL版のMeshCalculateCurveRectangleUseCaseと同じ）
+ */
+const calculateCurveRectangle = (
+    startPoint: IPoint,
+    controlPoint: IPoint,
+    endPoint: IPoint,
+    thickness: number
+): IPath => {
+    const segments = splitBezierMultipleTimes(startPoint, controlPoint, endPoint, 5);
+
+    const leftCurves: Array<IPoint[]> = [];
+    const rightCurves: Array<IPoint[]> = [];
+
+    for (const seg of segments) {
+        leftCurves.push(approximateOffsetQuadratic(seg[0], seg[1], seg[2], +thickness));
+        rightCurves.push(approximateOffsetQuadratic(seg[0], seg[1], seg[2], -thickness));
+    }
+
+    const leftStart = leftCurves[0][0];
+    const paths: IPath = [leftStart.x, leftStart.y, false];
+
+    for (const curves of leftCurves) {
+        // WebGL版と同じ: 曲線フラグ(true)を使用
+        // 曲線セグメント（始点、制御点、終点）で三角形を構成することで
+        // 曲線の内側を正しく覆う
+        paths.push(
+            curves[1].x, curves[1].y, true,
+            curves[2].x, curves[2].y, false
+        );
+    }
+
+    const reversedRight = [...rightCurves].reverse();
+    for (let idx = 0; idx < reversedRight.length; idx++) {
+        const [q0, q1, q2] = reversedRight[idx];
+        reversedRight[idx] = [q2, q1, q0];
+    }
+
+    const rightEnd = reversedRight[0][0];
+    paths.push(rightEnd.x, rightEnd.y, false);
+
+    for (const curves of reversedRight) {
+        // WebGL版と同じ: 曲線フラグ(true)を使用
+        paths.push(
+            curves[1].x, curves[1].y, true,
+            curves[2].x, curves[2].y, false
+        );
+    }
+
+    return paths;
+};
+
+/**
  * @description 直線の矩形を計算（WebGL版のMeshCalculateLineRectangleUseCaseと同じ）
  * @param {IPoint} startPoint - 開始点
  * @param {IPoint} endPoint - 終了点
  * @param {number} thickness - 線の太さ（半分の値）
- * @return {IRectangleInfo} 矩形情報
+ * @return {IPath} 矩形パス
  */
 const calculateLineRectangle = (
     startPoint: IPoint,
     endPoint: IPoint,
     thickness: number
-): IRectangleInfo =>
+): IPath =>
 {
     const vector: IPoint = {
         "x": endPoint.x - startPoint.x,
@@ -42,7 +214,6 @@ const calculateLineRectangle = (
 
     const normal = calculateNormalVector(vector.x, vector.y, thickness);
 
-    // 矩形の4頂点を生成（WebGL版と同じ順序）
     const shiftedUpStart: IPoint = {
         "x": startPoint.x + normal.x,
         "y": startPoint.y + normal.y
@@ -63,129 +234,163 @@ const calculateLineRectangle = (
         "y": startPoint.y - normal.y
     };
 
-    // WebGL版と同じフォーマット: [x, y, false, ...]
-    const path: IPath = [
+    return [
         shiftedUpStart.x, shiftedUpStart.y, false,
         shiftedUpEnd.x, shiftedUpEnd.y, false,
         shiftedDownEnd.x, shiftedDownEnd.y, false,
         shiftedDownStart.x, shiftedDownStart.y, false,
-        shiftedUpStart.x, shiftedUpStart.y, false // 閉じる
+        shiftedUpStart.x, shiftedUpStart.y, false
     ];
-
-    return {
-        path,
-        "startUp": shiftedUpStart,
-        "startDown": shiftedDownStart,
-        "endUp": shiftedUpEnd,
-        "endDown": shiftedDownEnd
-    };
 };
 
 /**
- * @description 線の外周を算出（WebGL版のMeshGenerateStrokeOutlineUseCaseと同じ）
- * @param {IPath} vertices - パス頂点 [x, y, isCurve, ...]
- * @param {number} thickness - 線の太さ（半分の値）
- * @return {IRectangleInfo[]} 矩形情報の配列
+ * @description メッシュのパスの中で指定座標が含まれる線を探す
+ *              WebGL版のMeshFindOverlappingPathsServiceと同じ
  */
-export const generateStrokeOutline = (vertices: IPath, thickness: number): IRectangleInfo[] =>
-{
-    if (vertices.length < 6) {
-        return [];
-    }
-
-    const startPoint: IPoint = {
-        "x": vertices[0] as number,
-        "y": vertices[1] as number
-    };
-
-    const endPoint: IPoint = { "x": 0, "y": 0 };
-
-    const rectangles: IRectangleInfo[] = [];
-
-    for (let idx = 3; idx < vertices.length; idx += 3) {
-        const x = vertices[idx] as number;
-        const y = vertices[idx + 1] as number;
-        const isCurve = vertices[idx + 2] as boolean;
-
-        if (isCurve) {
-            // 制御点の場合はスキップ（次の終点で処理）
+const findOverlappingPaths = (
+    x: number,
+    y: number,
+    r: number,
+    paths: IPath
+): number[] => {
+    const points: number[] = [];
+    for (let idx = 0; idx < paths.length; idx += 3) {
+        if (paths[idx + 2] as boolean) {
             continue;
         }
 
-        endPoint.x = x;
-        endPoint.y = y;
+        const dx = paths[idx] as number;
+        const dy = paths[idx + 1] as number;
 
-        // 直線の矩形を生成
-        // 注: 曲線処理は簡略化（直線として処理）
-        rectangles.push(
-            calculateLineRectangle(startPoint, endPoint, thickness)
+        const distance = Math.sqrt(
+            Math.pow(dx - x, 2) + Math.pow(dy - y, 2)
         );
 
-        // 次の線分の開始点を更新
-        startPoint.x = endPoint.x;
-        startPoint.y = endPoint.y;
-    }
+        if (distance !== r) {
+            continue;
+        }
 
-    return rectangles;
+        points.push(dx, dy);
+    }
+    return points;
 };
 
 /**
- * @description ベベル結合を生成（2つの矩形の間の三角形）
- * @param {IRectangleInfo} prevRect - 前の矩形
- * @param {IRectangleInfo} currRect - 現在の矩形
- * @param {number} centerX - 結合点のX座標
- * @param {number} centerY - 結合点のY座標
- * @return {number[]} 三角形の頂点データ
+ * @description 矩形内に含まれてない座標を返却
+ *              WebGL版のMeshIsPointInsideRectangleServiceと同じ
+ */
+const findPointOutsideRectangle = (
+    points: number[],
+    rectangle: IPath
+): number[] | null => {
+    $canvasContext.beginPath();
+    $canvasContext.moveTo(
+        rectangle[0] as number,
+        rectangle[1] as number
+    );
+
+    for (let idx = 3; idx < rectangle.length; idx += 3) {
+        if (rectangle[idx + 2] as boolean) {
+            $canvasContext.quadraticCurveTo(
+                rectangle[idx] as number,
+                rectangle[idx + 1] as number,
+                rectangle[idx + 3] as number,
+                rectangle[idx + 4] as number
+            );
+            idx += 3;
+        } else {
+            $canvasContext.lineTo(
+                rectangle[idx] as number,
+                rectangle[idx + 1] as number
+            );
+        }
+    }
+
+    $canvasContext.closePath();
+
+    for (let idx = 0; idx < points.length; idx += 2) {
+        const px = points[idx];
+        const py = points[idx + 1];
+
+        if ($canvasContext.isPointInPath(px, py)) {
+            continue;
+        }
+
+        return [px, py];
+    }
+
+    return null;
+};
+
+/**
+ * @description ベベル結合を生成（WebGL版のMeshGenerateCalculateBevelJoinUseCaseと同じ）
  */
 const generateBevelJoin = (
-    prevRect: IRectangleInfo,
-    currRect: IRectangleInfo,
-    centerX: number,
-    centerY: number
-): number[] => {
-    const triangles: number[] = [];
+    x: number,
+    y: number,
+    r: number,
+    rectangles: IPath[],
+    isLast: boolean = false
+): void => {
+    const indexA = isLast ? 0 : rectangles.length - 1;
+    const indexB = isLast ? rectangles.length - 1 : rectangles.length - 2;
+    const pathsA = findOverlappingPaths(x, y, r, rectangles[indexA]);
+    const pathsB = findOverlappingPaths(x, y, r, rectangles[indexB]);
 
-    // 前の矩形の終点と現在の矩形の始点で三角形を作成
-    // 上側の三角形
-    triangles.push(
-        centerX, centerY, 0, 0,
-        prevRect.endUp.x, prevRect.endUp.y, 0, 0,
-        currRect.startUp.x, currRect.startUp.y, 0, 0
-    );
+    // パスが並行であれば終了
+    if (pathsA[0] === pathsB[0] && pathsA[1] === pathsB[1]
+        || pathsA[0] === pathsB[2] && pathsA[1] === pathsB[3]
+    ) {
+        return;
+    }
 
-    // 下側の三角形
-    triangles.push(
-        centerX, centerY, 0, 0,
-        currRect.startDown.x, currRect.startDown.y, 0, 0,
-        prevRect.endDown.x, prevRect.endDown.y, 0, 0
-    );
+    const pointA = findPointOutsideRectangle(pathsA, rectangles[indexB]);
+    if (!pointA) {
+        return;
+    }
 
-    return triangles;
+    const pointB = findPointOutsideRectangle(pathsB, rectangles[indexA]);
+    if (!pointB) {
+        return;
+    }
+
+    rectangles.splice(-1, 0, [
+        x, y, false,
+        pointA[0], pointA[1], false,
+        pointB[0], pointB[1], false,
+        x, y, false
+    ]);
 };
 
 /**
  * @description ラウンド結合を生成（WebGL版のMeshGenerateCalculateRoundJoinUseCaseと同じ）
- * @param {IRectangleInfo} prevRect - 前の矩形
- * @param {IRectangleInfo} currRect - 現在の矩形
- * @param {number} centerX - 結合点のX座標
- * @param {number} centerY - 結合点のY座標
- * @param {number} thickness - 線の太さ（半分の値）
- * @return {number[]} 三角形の頂点データ
  */
 const generateRoundJoin = (
-    prevRect: IRectangleInfo,
-    currRect: IRectangleInfo,
-    centerX: number,
-    centerY: number,
-    thickness: number
-): number[] => {
-    const triangles: number[] = [];
+    x: number,
+    y: number,
+    r: number,
+    rectangles: IPath[],
+    isLast: boolean = false
+): void => {
+    const indexA = isLast ? 0 : rectangles.length - 1;
+    const indexB = isLast ? rectangles.length - 1 : rectangles.length - 2;
+    const pathsA = findOverlappingPaths(x, y, r, rectangles[indexA]);
+    const pathsB = findOverlappingPaths(x, y, r, rectangles[indexB]);
 
-    // 前の矩形の終点と現在の矩形の始点の角度を計算
-    const angleA = Math.atan2(prevRect.endUp.y - centerY, prevRect.endUp.x - centerX);
-    const angleB = Math.atan2(currRect.startUp.y - centerY, currRect.startUp.x - centerX);
+    const pointA = findPointOutsideRectangle(pathsA, rectangles[indexB]);
+    if (!pointA) {
+        return;
+    }
 
-    // 角度差を正規化
+    const pointB = findPointOutsideRectangle(pathsB, rectangles[indexA]);
+    if (!pointB) {
+        return;
+    }
+
+    const angleA = Math.atan2(pointA[1] - y, pointA[0] - x);
+    const angleB = Math.atan2(pointB[1] - y, pointB[0] - x);
+
+    // 角度差を正規化して180度以下にする
     let angleDiff = angleB - angleA;
     if (angleDiff > Math.PI) {
         angleDiff -= 2 * Math.PI;
@@ -193,333 +398,385 @@ const generateRoundJoin = (
         angleDiff += 2 * Math.PI;
     }
 
-    // セグメント数を16に増やして滑らかな結合部を生成
-    const segment = 16;
+    const segment = 8;
     const step = angleDiff / segment;
 
-    // 扇形の三角形を生成
-    for (let idx = 0; idx < segment; idx++) {
-        const angle1 = angleA + idx * step;
-        const angle2 = angleA + (idx + 1) * step;
-        const dx1 = centerX + thickness * Math.cos(angle1);
-        const dy1 = centerY + thickness * Math.sin(angle1);
-        const dx2 = centerX + thickness * Math.cos(angle2);
-        const dy2 = centerY + thickness * Math.sin(angle2);
-
-        triangles.push(
-            centerX, centerY, 0, 0,
-            dx1, dy1, 0, 0,
-            dx2, dy2, 0, 0
-        );
+    const points: IPath = [x, y, false];
+    for (let idx = 0; idx <= segment; idx++) {
+        const angle = angleA + idx * step;
+        const dx = x + r * Math.cos(angle);
+        const dy = y + r * Math.sin(angle);
+        points.push(dx, dy, false);
     }
 
-    // 下側も同様に処理
-    const angleC = Math.atan2(prevRect.endDown.y - centerY, prevRect.endDown.x - centerX);
-    const angleD = Math.atan2(currRect.startDown.y - centerY, currRect.startDown.x - centerX);
-
-    let angleDiff2 = angleD - angleC;
-    if (angleDiff2 > Math.PI) {
-        angleDiff2 -= 2 * Math.PI;
-    } else if (angleDiff2 < -Math.PI) {
-        angleDiff2 += 2 * Math.PI;
-    }
-
-    const step2 = angleDiff2 / segment;
-
-    for (let idx = 0; idx < segment; idx++) {
-        const angle1 = angleC + idx * step2;
-        const angle2 = angleC + (idx + 1) * step2;
-        const dx1 = centerX + thickness * Math.cos(angle1);
-        const dy1 = centerY + thickness * Math.sin(angle1);
-        const dx2 = centerX + thickness * Math.cos(angle2);
-        const dy2 = centerY + thickness * Math.sin(angle2);
-
-        triangles.push(
-            centerX, centerY, 0, 0,
-            dx1, dy1, 0, 0,
-            dx2, dy2, 0, 0
-        );
-    }
-
-    return triangles;
+    rectangles.splice(-1, 0, points);
 };
 
 /**
  * @description マイター結合を生成（WebGL版のMeshGenerateCalculateMiterJoinUseCaseと同じ）
- * @param {IRectangleInfo} prevRect - 前の矩形
- * @param {IRectangleInfo} currRect - 現在の矩形
- * @param {number} centerX - 結合点のX座標
- * @param {number} centerY - 結合点のY座標
- * @param {IPoint} prevStart - 前の線分の開始点
- * @param {IPoint} currEnd - 現在の線分の終了点
- * @return {number[]} 三角形の頂点データ
  */
 const generateMiterJoin = (
-    prevRect: IRectangleInfo,
-    currRect: IRectangleInfo,
-    centerX: number,
-    centerY: number,
-    prevStart: IPoint,
-    currEnd: IPoint
-): number[] => {
-    const triangles: number[] = [];
+    startPoint: IPoint,
+    endPoint: IPoint,
+    prevPoint: IPoint,
+    r: number,
+    rectangles: IPath[],
+    isLast: boolean = false
+): void => {
+    const indexA = isLast ? 0 : rectangles.length - 1;
+    const indexB = isLast ? rectangles.length - 1 : rectangles.length - 2;
+    const pathsA = findOverlappingPaths(startPoint.x, startPoint.y, r, rectangles[indexA]);
+    const pathsB = findOverlappingPaths(startPoint.x, startPoint.y, r, rectangles[indexB]);
 
-    // 2つの線分の方向ベクトルを計算
-    const aVx = currEnd.x - centerX;
-    const aVy = currEnd.y - centerY;
+    // パスが並行であれば終了
+    if (pathsA[0] === pathsB[0] && pathsA[1] === pathsB[1]
+        || pathsA[0] === pathsB[2] && pathsA[1] === pathsB[3]
+    ) {
+        return;
+    }
+
+    const pointA = findPointOutsideRectangle(pathsA, rectangles[indexB]);
+    if (!pointA) {
+        return;
+    }
+
+    const pointB = findPointOutsideRectangle(pathsB, rectangles[indexA]);
+    if (!pointB) {
+        return;
+    }
+
+    const aVx = endPoint.x - startPoint.x;
+    const aVy = endPoint.y - startPoint.y;
     const lengthA = Math.hypot(aVx, aVy);
-    const normalizeA = lengthA > 0
-        ? { "x": aVx / lengthA, "y": aVy / lengthA }
-        : { "x": 0, "y": 0 };
+    const normalizeA = {
+        "x": aVx / lengthA,
+        "y": aVy / lengthA
+    };
 
-    const bVx = prevStart.x - centerX;
-    const bVy = prevStart.y - centerY;
+    const bVx = prevPoint.x - startPoint.x;
+    const bVy = prevPoint.y - startPoint.y;
     const lengthB = Math.hypot(bVx, bVy);
-    const normalizeB = lengthB > 0
-        ? { "x": bVx / lengthB, "y": bVy / lengthB }
-        : { "x": 0, "y": 0 };
+    const normalizeB = {
+        "x": bVx / lengthB,
+        "y": bVy / lengthB
+    };
 
     const d1x = normalizeA.x, d1y = normalizeA.y;
     const d2x = normalizeB.x, d2y = normalizeB.y;
 
     const denom = d1x * d2y - d1y * d2x;
-
-    // 線が並行の場合はベベル結合にフォールバック
-    if (Math.abs(denom) < 0.0001) {
-        return generateBevelJoin(prevRect, currRect, centerX, centerY);
+    if (denom === 0) {
+        rectangles.splice(-1, 0, [
+            startPoint.x, startPoint.y, false,
+            pointA[0], pointA[1], false,
+            pointB[0], pointB[1], false
+        ]);
+        return;
     }
 
-    // 上側のマイター点を計算
-    const pointA = [prevRect.endUp.x, prevRect.endUp.y];
-    const pointB = [currRect.startUp.x, currRect.startUp.y];
-
     const t = ((pointB[0] - pointA[0]) * d2y - (pointB[1] - pointA[1]) * d2x) / denom;
+
     const ix = pointA[0] + t * d1x;
     const iy = pointA[1] + t * d1y;
 
-    // 上側の三角形を2つ生成
-    triangles.push(
-        centerX, centerY, 0, 0,
-        pointA[0], pointA[1], 0, 0,
-        ix, iy, 0, 0
-    );
-    triangles.push(
-        centerX, centerY, 0, 0,
-        ix, iy, 0, 0,
-        pointB[0], pointB[1], 0, 0
-    );
+    rectangles.splice(-1, 0, [
+        startPoint.x, startPoint.y, false,
+        pointA[0], pointA[1], false,
+        ix, iy, false,
+        startPoint.x, startPoint.y, false,
+        pointB[0], pointB[1], false,
+        ix, iy, false
+    ]);
+};
 
-    // 下側のマイター点を計算
-    const pointC = [prevRect.endDown.x, prevRect.endDown.y];
-    const pointD = [currRect.startDown.x, currRect.startDown.y];
+/**
+ * @description ラウンドキャップを生成（WebGL版のMeshGenerateCalculateRoundCapServiceと同じ）
+ */
+const generateRoundCap = (
+    vertices: IPath,
+    thickness: number,
+    rectangles: IPath[]
+): void => {
+    // 始点のキャップ
+    const startX = vertices[0] as number;
+    const startY = vertices[1] as number;
+    let nextIdx = 3;
+    while (nextIdx < vertices.length && vertices[nextIdx + 2] as boolean) {
+        nextIdx += 3;
+    }
+    const startNextX = vertices[nextIdx] as number;
+    const startNextY = vertices[nextIdx + 1] as number;
 
-    const t2 = ((pointD[0] - pointC[0]) * d2y - (pointD[1] - pointC[1]) * d2x) / denom;
-    const ix2 = pointC[0] + t2 * d1x;
-    const iy2 = pointC[1] + t2 * d1y;
+    const startAngle = Math.atan2(startY - startNextY, startX - startNextX);
+    const startCapPath: IPath = [startX, startY, false];
+    const segment = 8;
+    for (let i = 0; i <= segment; i++) {
+        const angle = startAngle - Math.PI / 2 + i * Math.PI / segment;
+        startCapPath.push(
+            startX + thickness * Math.cos(angle),
+            startY + thickness * Math.sin(angle),
+            false
+        );
+    }
+    rectangles.unshift(startCapPath);
 
-    // 下側の三角形を2つ生成
-    triangles.push(
-        centerX, centerY, 0, 0,
-        ix2, iy2, 0, 0,
-        pointC[0], pointC[1], 0, 0
-    );
-    triangles.push(
-        centerX, centerY, 0, 0,
-        pointD[0], pointD[1], 0, 0,
-        ix2, iy2, 0, 0
-    );
+    // 終点のキャップ
+    const endX = vertices[vertices.length - 3] as number;
+    const endY = vertices[vertices.length - 2] as number;
+    let prevIdx = vertices.length - 6;
+    while (prevIdx >= 0 && vertices[prevIdx + 2] as boolean) {
+        prevIdx -= 3;
+    }
+    const endPrevX = vertices[prevIdx] as number;
+    const endPrevY = vertices[prevIdx + 1] as number;
 
-    return triangles;
+    const endAngle = Math.atan2(endY - endPrevY, endX - endPrevX);
+    const endCapPath: IPath = [endX, endY, false];
+    for (let i = 0; i <= segment; i++) {
+        const angle = endAngle - Math.PI / 2 + i * Math.PI / segment;
+        endCapPath.push(
+            endX + thickness * Math.cos(angle),
+            endY + thickness * Math.sin(angle),
+            false
+        );
+    }
+    rectangles.push(endCapPath);
+};
+
+/**
+ * @description スクエアキャップを生成（WebGL版のMeshGenerateCalculateSquareCapServiceと同じ）
+ */
+const generateSquareCap = (
+    vertices: IPath,
+    thickness: number,
+    rectangles: IPath[]
+): void => {
+    // 始点のキャップ
+    const startX = vertices[0] as number;
+    const startY = vertices[1] as number;
+    let nextIdx = 3;
+    while (nextIdx < vertices.length && vertices[nextIdx + 2] as boolean) {
+        nextIdx += 3;
+    }
+    const startNextX = vertices[nextIdx] as number;
+    const startNextY = vertices[nextIdx + 1] as number;
+
+    const startDx = startX - startNextX;
+    const startDy = startY - startNextY;
+    const startLen = Math.hypot(startDx, startDy);
+    if (startLen > 0) {
+        const startNx = startDx / startLen;
+        const startNy = startDy / startLen;
+        const startExtX = startX + startNx * thickness;
+        const startExtY = startY + startNy * thickness;
+
+        const startCapPath: IPath = [
+            startX - startNy * thickness, startY + startNx * thickness, false,
+            startExtX - startNy * thickness, startExtY + startNx * thickness, false,
+            startExtX + startNy * thickness, startExtY - startNx * thickness, false,
+            startX + startNy * thickness, startY - startNx * thickness, false,
+            startX - startNy * thickness, startY + startNx * thickness, false
+        ];
+        rectangles.unshift(startCapPath);
+    }
+
+    // 終点のキャップ
+    const endX = vertices[vertices.length - 3] as number;
+    const endY = vertices[vertices.length - 2] as number;
+    let prevIdx = vertices.length - 6;
+    while (prevIdx >= 0 && vertices[prevIdx + 2] as boolean) {
+        prevIdx -= 3;
+    }
+    const endPrevX = vertices[prevIdx] as number;
+    const endPrevY = vertices[prevIdx + 1] as number;
+
+    const endDx = endX - endPrevX;
+    const endDy = endY - endPrevY;
+    const endLen = Math.hypot(endDx, endDy);
+    if (endLen > 0) {
+        const endNx = endDx / endLen;
+        const endNy = endDy / endLen;
+        const endExtX = endX + endNx * thickness;
+        const endExtY = endY + endNy * thickness;
+
+        const endCapPath: IPath = [
+            endX - endNy * thickness, endY + endNx * thickness, false,
+            endExtX - endNy * thickness, endExtY + endNx * thickness, false,
+            endExtX + endNy * thickness, endExtY - endNx * thickness, false,
+            endX + endNy * thickness, endY - endNx * thickness, false,
+            endX - endNy * thickness, endY + endNx * thickness, false
+        ];
+        rectangles.push(endCapPath);
+    }
+};
+
+/**
+ * @description 線の外周を算出して塗りのフォーマットで返却（WebGL版と同じ）
+ *              Calculate the outer circumference of the line and return it in the format of the fill
+ *
+ * @param {IPath} vertices - パス頂点 [x, y, isCurve, ...]
+ * @param {number} thickness - 線の太さ（半分の値）
+ * @return {IPath[]} パス配列
+ */
+export const generateStrokeOutline = (vertices: IPath, thickness: number): IPath[] =>
+{
+    // 再利用可能なオブジェクトを使用
+    const startPoint = $startPoint;
+    startPoint.x = vertices[0] as number;
+    startPoint.y = vertices[1] as number;
+
+    const controlPoint = $controlPoint;
+    controlPoint.x = 0;
+    controlPoint.y = 0;
+
+    const endPoint = $endPoint;
+    endPoint.x = 0;
+    endPoint.y = 0;
+
+    const prevPoint = $prevPoint;
+    prevPoint.x = 0;
+    prevPoint.y = 0;
+
+    const rectangles: IPath[] = [];
+    for (let idx = 3; idx < vertices.length; idx += 3) {
+
+        const x = vertices[idx] as number;
+        const y = vertices[idx + 1] as number;
+
+        if (vertices[idx + 2] as boolean) {
+            controlPoint.x = x;
+            controlPoint.y = y;
+            continue;
+        }
+
+        endPoint.x = x;
+        endPoint.y = y;
+        if (vertices[idx - 1] as boolean) {
+            rectangles.push(
+                calculateCurveRectangle(startPoint, controlPoint, endPoint, thickness)
+            );
+        } else {
+            rectangles.push(
+                calculateLineRectangle(startPoint, endPoint, thickness)
+            );
+        }
+
+        if (rectangles.length > 1) {
+            switch ($context.joints) {
+
+                case 0: // bevel
+                    generateBevelJoin(
+                        startPoint.x, startPoint.y, thickness, rectangles
+                    );
+                    break;
+
+                case 1: // miter
+                    prevPoint.x = vertices[idx - 6] as number;
+                    prevPoint.y = vertices[idx - 5] as number;
+                    generateMiterJoin(
+                        startPoint, endPoint, prevPoint,
+                        thickness, rectangles
+                    );
+                    break;
+
+                case 2: // round
+                    generateRoundJoin(
+                        startPoint.x, startPoint.y, thickness, rectangles
+                    );
+                    break;
+
+            }
+        }
+
+        startPoint.x = endPoint.x;
+        startPoint.y = endPoint.y;
+    }
+
+    if (vertices[0] === vertices[vertices.length - 3]
+        && vertices[1] === vertices[vertices.length - 2]
+        && rectangles.length > 1
+    ) {
+
+        // 始点と終点が繋がっている時はjointsの設定を適用
+        switch ($context.joints) {
+
+            case 0: // bevel
+                generateBevelJoin(
+                    startPoint.x, startPoint.y, thickness, rectangles, true
+                );
+                break;
+
+            case 1: // miter
+                startPoint.x = vertices[0] as number;
+                startPoint.y = vertices[1] as number;
+                endPoint.x   = vertices[3] as number;
+                endPoint.y   = vertices[4] as number;
+                prevPoint.x  = vertices[vertices.length - 6] as number;
+                prevPoint.y  = vertices[vertices.length - 5] as number;
+                generateMiterJoin(
+                    startPoint, endPoint, prevPoint,
+                    thickness, rectangles, true
+                );
+                break;
+
+            case 2: // round
+                generateRoundJoin(
+                    startPoint.x, startPoint.y, thickness, rectangles, true
+                );
+                break;
+
+            default:
+                break;
+
+        }
+    } else if (rectangles.length > 0) {
+
+        // 始点と終点が繋がってない時はcapsの設定を適用
+        switch ($context.caps) {
+
+            case 1: // round
+                generateRoundCap(
+                    vertices, thickness, rectangles
+                );
+                break;
+
+            case 2: // square:
+                generateSquareCap(
+                    vertices, thickness, rectangles
+                );
+                break;
+
+            default:
+                break;
+
+        }
+    }
+
+    return rectangles;
 };
 
 /**
  * @description ストロークメッシュを生成（WebGL版のMeshStrokeGenerateUseCaseと同じ）
  * @param {IPath[]} vertices - パス頂点配列
  * @param {number} thickness - 線の太さ（フル値、内部で/2される）
- * @return {Float32Array}
+ * @return {IPath[]}
  */
-export const generateStrokeMesh = (vertices: IPath[], thickness: number): Float32Array =>
+export const generateStrokeMesh = (vertices: IPath[], thickness: number): IPath[] =>
 {
-    const triangles: number[] = [];
-
     // WebGL版と同じ: 内部で半分にする
     const halfThickness = thickness / 2;
 
-    // WebGL版と同じ: $context.jointsを使用 (0: bevel, 1: miter, 2: round)
-    const joints = $context.joints;
-
+    const fillVertices: IPath[] = [];
     for (const path of vertices) {
         if (path.length < 6) { continue }
 
-        const rectangles = generateStrokeOutline(path, halfThickness);
-
-        // 結合点の座標を追跡するために元のパスから取得
-        const pathPoints: IPoint[] = [];
-        for (let idx = 0; idx < path.length; idx += 3) {
-            if (!(path[idx + 2] as boolean)) {  // カーブ制御点でない場合
-                pathPoints.push({
-                    "x": path[idx] as number,
-                    "y": path[idx + 1] as number
-                });
-            }
-        }
-
-        let prevRect: IRectangleInfo | null = null;
-        let pointIndex = 0;
-
-        for (let i = 0; i < rectangles.length; i++) {
-            const rectInfo = rectangles[i];
-            const rect = rectInfo.path;
-            if (rect.length < 15) { continue } // 最低5点（15要素）必要
-
-            // 矩形の頂点を取得
-            const p0x = rect[0] as number;  // shiftedUpStart
-            const p0y = rect[1] as number;
-            const p1x = rect[3] as number;  // shiftedUpEnd
-            const p1y = rect[4] as number;
-            const p2x = rect[6] as number;  // shiftedDownEnd
-            const p2y = rect[7] as number;
-            const p3x = rect[9] as number;  // shiftedDownStart
-            const p3y = rect[10] as number;
-
-            // 矩形を2つの三角形に分割
-            // Triangle 1: p0, p1, p2
-            triangles.push(
-                p0x, p0y, 0, 0,
-                p1x, p1y, 0, 0,
-                p2x, p2y, 0, 0
-            );
-
-            // Triangle 2: p0, p2, p3
-            triangles.push(
-                p0x, p0y, 0, 0,
-                p2x, p2y, 0, 0,
-                p3x, p3y, 0, 0
-            );
-
-            // 結合処理（前の矩形がある場合）
-            if (prevRect && pointIndex < pathPoints.length) {
-                // 結合点は現在の矩形の始点（=前の矩形の終点）= パスの対応する点
-                const centerX = pathPoints[pointIndex].x;
-                const centerY = pathPoints[pointIndex].y;
-
-                let joinTriangles: number[];
-                switch (joints) {
-                    case 0: // bevel
-                        joinTriangles = generateBevelJoin(
-                            prevRect,
-                            rectInfo,
-                            centerX,
-                            centerY
-                        );
-                        break;
-
-                    case 1: // miter
-                        {
-                            // 前の点と次の点を取得してマイター結合
-                            const prevStart = pointIndex > 0
-                                ? pathPoints[pointIndex - 1]
-                                : pathPoints[0];
-                            const currEnd = pointIndex + 1 < pathPoints.length
-                                ? pathPoints[pointIndex + 1]
-                                : pathPoints[pathPoints.length - 1];
-                            joinTriangles = generateMiterJoin(
-                                prevRect,
-                                rectInfo,
-                                centerX,
-                                centerY,
-                                prevStart,
-                                currEnd
-                            );
-                        }
-                        break;
-
-                    case 2: // round
-                        joinTriangles = generateRoundJoin(
-                            prevRect,
-                            rectInfo,
-                            centerX,
-                            centerY,
-                            halfThickness
-                        );
-                        break;
-
-                    default:
-                        joinTriangles = generateBevelJoin(
-                            prevRect,
-                            rectInfo,
-                            centerX,
-                            centerY
-                        );
-                        break;
-                }
-                triangles.push(...joinTriangles);
-            }
-
-            prevRect = rectInfo;
-            pointIndex++;
-        }
-
-        // パスが閉じている場合は最後と最初の矩形も結合
-        if (path[0] === path[path.length - 3]
-            && path[1] === path[path.length - 2]
-            && rectangles.length > 1
-        ) {
-            const firstRect = rectangles[0];
-            const lastRect = rectangles[rectangles.length - 1];
-            const centerX = path[0] as number;
-            const centerY = path[1] as number;
-
-            let joinTriangles: number[];
-            switch (joints) {
-                case 0: // bevel
-                    joinTriangles = generateBevelJoin(
-                        lastRect,
-                        firstRect,
-                        centerX,
-                        centerY
-                    );
-                    break;
-
-                case 1: // miter
-                    {
-                        const prevStart = pathPoints[pathPoints.length - 2] || pathPoints[0];
-                        const currEnd = pathPoints[1] || pathPoints[0];
-                        joinTriangles = generateMiterJoin(
-                            lastRect,
-                            firstRect,
-                            centerX,
-                            centerY,
-                            prevStart,
-                            currEnd
-                        );
-                    }
-                    break;
-
-                case 2: // round
-                    joinTriangles = generateRoundJoin(
-                        lastRect,
-                        firstRect,
-                        centerX,
-                        centerY,
-                        halfThickness
-                    );
-                    break;
-
-                default:
-                    joinTriangles = generateBevelJoin(
-                        lastRect,
-                        firstRect,
-                        centerX,
-                        centerY
-                    );
-                    break;
-            }
-            triangles.push(...joinTriangles);
+        const outlines = generateStrokeOutline(path, halfThickness);
+        for (const outline of outlines) {
+            fillVertices.push(outline);
         }
     }
 
-    return new Float32Array(triangles);
+    return fillVertices;
 };
 
 /**

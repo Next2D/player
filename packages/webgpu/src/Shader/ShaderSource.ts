@@ -1,5 +1,5 @@
 import { FillVertex, FillMainVertex } from "./wgsl/vertex/FillVertex";
-import { StencilWriteVertex, StencilWriteMainVertex, StencilFillVertex } from "./wgsl/vertex/StencilVertex";
+import { StencilWriteVertex, StencilWriteMainVertex, StencilFillVertex, StencilFillMainVertex } from "./wgsl/vertex/StencilVertex";
 import { MaskVertex } from "./wgsl/vertex/MaskVertex";
 import { BasicVertex, BasicMainVertex } from "./wgsl/vertex/BasicVertex";
 import { InstancedVertex } from "./wgsl/vertex/InstancedVertex";
@@ -98,6 +98,15 @@ export class ShaderSource
     static getStencilFillVertexShader (): string
     {
         return StencilFillVertex;
+    }
+
+    /**
+     * @description ステンシルフィル用頂点シェーダー（メインアタッチメント用、Pass2）
+     * @return {string}
+     */
+    static getStencilFillMainVertexShader (): string
+    {
+        return StencilFillMainVertex;
     }
 
     /**

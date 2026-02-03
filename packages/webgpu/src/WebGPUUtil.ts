@@ -3,14 +3,13 @@
  *              Number of samples for drawing (MSAA)
  *
  * @type {number}
- * @default 1
+ * @default 4
  * @protected
  *
- * @note MSAAはメモリを大量に消費するため、デフォルトは1（無効）
- *       シェーダーでのアンチエイリアス（Loop-Blinn法）が主な手法
- *       必要に応じて$setSamples(4)で有効化可能
+ * @note WebGL版と同じくMSAA 4xをデフォルトで有効化
+ *       曲線のアンチエイリアス品質向上のため
  */
-export let $samples: number = 1;
+export let $samples: number = 4;
 
 /**
  * @description 描画のサンプリング数を変更
