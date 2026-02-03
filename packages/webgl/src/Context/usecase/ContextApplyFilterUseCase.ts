@@ -223,7 +223,7 @@ export const execute = (
                         idx += length;
 
                         textureObject = filterApplyDisplacementMapFilterUseCase(
-                            textureObject, matrix, buffer, params[idx++], params[idx++],
+                            textureObject, buffer, params[idx++], params[idx++],
                             params[idx++], params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
                             params[idx++], params[idx++], params[idx++]
                         );

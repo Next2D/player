@@ -32,14 +32,24 @@ export const $getVertices = (stroke: boolean = false): IPath[] =>
 {
     // stroke: 最低2頂点(6要素)が必要、fill: 最低3頂点(9要素)が必要
     const minVertices = stroke ? 6 : 9;
-    if ($currentPath.length < minVertices) {
-        $currentPath.length = 0;
-    }
 
-    if ($currentPath.length) {
+    // 現在のパスをverticesに追加
+    if ($currentPath.length >= minVertices) {
         $vertices.push($currentPath.slice(0));
-        $currentPath.length = 0;
+    }
+    $currentPath.length = 0;
+
+    // minVertices未満のパスを除外した配列を返す
+    const result: IPath[] = [];
+    for (let idx = 0; idx < $vertices.length; idx++) {
+        const path = $vertices[idx];
+        if (path.length >= minVertices) {
+            result.push(path);
+        }
     }
 
-    return $vertices;
+    // $verticesをクリア（beginPathで再利用される）
+    $vertices.length = 0;
+
+    return result;
 };

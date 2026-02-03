@@ -7,16 +7,14 @@ import {
  * @description 現在操作中のパス配列を全てverticesに統合します
  *              Integrate all path arrays currently being operated into vertices
  *
- * @param  {boolean} [stroke=false]
  * @return {void}
  * @method
  * @protected
  */
-export const execute = (stroke: boolean = false): void =>
+export const execute = (): void =>
 {
-    // stroke: 最低2頂点(6要素)が必要、fill: 最低3頂点(9要素)が必要
-    const minVertices = stroke ? 6 : 9;
-    if ($currentPath.length < minVertices) {
+    // 最低1頂点(3要素)が必要（フィルタリングは$getVerticesで行う）
+    if ($currentPath.length < 3) {
         $currentPath.length = 0;
         return ;
     }

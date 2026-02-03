@@ -37,6 +37,7 @@ describe("PathCommandMoveToUseCase.js method test", () =>
         expect($currentPath[0]).toBe(10);
         expect($currentPath[1]).toBe(10);
         expect($currentPath[2]).toBe(false);
-        expect($vertices.length).toBe(0);
+        // 新しい動作: パスは$verticesに追加され、$getVertices()でフィルタリングされる
+        expect($vertices.length).toBe(1);
     });
 });
