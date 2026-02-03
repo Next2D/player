@@ -12,7 +12,10 @@ classDiagram
         +videoWidth: Number
         +videoHeight: Number
         +smoothing: Boolean
-        +attachNetStream()
+        +src: String
+        +autoPlay: Boolean
+        +loop: Boolean
+        +volume: Number
     }
 ```
 
@@ -23,339 +26,226 @@ classDiagram
 | `videoWidth` | Number | Original video width (read-only) |
 | `videoHeight` | Number | Original video height (read-only) |
 | `smoothing` | Boolean | Enable smoothing |
+| `src` | String | Video source URL |
+| `autoPlay` | Boolean | Auto play on load |
+| `loop` | Boolean | Loop playback |
+| `volume` | Number | Volume (0.0 - 1.0) |
+| `currentTime` | Number | Current playback position (seconds) |
+| `duration` | Number | Video duration (seconds, read-only) |
 
-## NetStream Integration
-
-The Video class works with NetStream to play videos.
-
-### NetStream Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `time` | Number | Current playback position (seconds) |
-| `bytesLoaded` | Number | Bytes loaded |
-| `bytesTotal` | Number | Total bytes |
-
-### NetStream Methods
+## Methods
 
 | Method | Description |
 |--------|-------------|
-| `play(url)` | Start video playback |
+| `play()` | Start video playback (returns Promise) |
 | `pause()` | Pause playback |
-| `resume()` | Resume playback |
-| `close()` | Close stream |
 | `seek(seconds)` | Seek to specified position |
 
 ## Usage Examples
 
 ### Basic Video Playback
 
-```typescript
-import { Video, NetConnection, NetStream } from "@next2d/player";
+```javascript
+const { Video } = next2d.media;
 
 // Create Video object
-const video: Video = new Video(640, 360);
+const video = new Video(640, 360);
 
-// Create NetConnection
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
-
-// Create NetStream
-const ns: NetStream = new NetStream(nc);
-
-// Attach NetStream to Video
-video.attachNetStream(ns);
+// Set video source
+video.src = "video.mp4";
+video.autoPlay = true;
+video.loop = false;
+video.volume = 0.8;
 
 // Add to stage
 stage.addChild(video);
-
-// Play video
-ns.play("video.mp4");
 ```
 
 ### Playback Control
 
-```typescript
-import { Video, NetConnection, NetStream } from "@next2d/player";
+```javascript
+const { Video } = next2d.media;
 
-const video: Video = new Video(640, 360);
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
-const ns: NetStream = new NetStream(nc);
-
-video.attachNetStream(ns);
+const video = new Video(640, 360);
+video.src = "video.mp4";
 stage.addChild(video);
 
 // Play button
-playButton.addEventListener("click", (): void => {
-  ns.resume();
+playButton.addEventListener("click", async function() {
+    await video.play();
 });
 
 // Pause button
-pauseButton.addEventListener("click", (): void => {
-  ns.pause();
+pauseButton.addEventListener("click", function() {
+    video.pause();
 });
 
-// Stop button
-stopButton.addEventListener("click", (): void => {
-  ns.pause();
-  ns.seek(0);
+// Stop button (pause and return to start)
+stopButton.addEventListener("click", function() {
+    video.pause();
+    video.seek(0);
 });
 
 // Forward 10 seconds
-forwardButton.addEventListener("click", (): void => {
-  ns.seek(ns.time + 10);
+forwardButton.addEventListener("click", function() {
+    video.seek(video.currentTime + 10);
 });
 
 // Back 10 seconds
-backButton.addEventListener("click", (): void => {
-  ns.seek(Math.max(0, ns.time - 10));
+backButton.addEventListener("click", function() {
+    video.seek(Math.max(0, video.currentTime - 10));
 });
-
-ns.play("video.mp4");
-```
-
-### Getting Metadata
-
-```typescript
-import { NetConnection, NetStream } from "@next2d/player";
-
-interface MetaData {
-  duration: number;
-  width: number;
-  height: number;
-  framerate: number;
-}
-
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
-const ns: NetStream = new NetStream(nc);
-
-// Metadata event handler
-ns.client = {
-  onMetaData: (info: MetaData): void => {
-    console.log("Duration:", info.duration);
-    console.log("Width:", info.width);
-    console.log("Height:", info.height);
-    console.log("Framerate:", info.framerate);
-
-    // Resize Video to match video size
-    video.width = info.width;
-    video.height = info.height;
-  }
-};
-
-video.attachNetStream(ns);
-ns.play("video.mp4");
 ```
 
 ### Displaying Playback Progress
 
-```typescript
-import { Video, NetConnection, NetStream } from "@next2d/player";
+```javascript
+const { Video } = next2d.media;
 
-interface MetaData {
-  duration: number;
-}
-
-const video: Video = new Video(640, 360);
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
-const ns: NetStream = new NetStream(nc);
-
-let duration: number = 0;
-
-ns.client = {
-  onMetaData: (info: MetaData): void => {
-    duration = info.duration;
-  }
-};
-
-video.attachNetStream(ns);
+const video = new Video(640, 360);
+video.src = "video.mp4";
 stage.addChild(video);
 
 // Update progress each frame
-stage.addEventListener("enterFrame", (): void => {
-  if (duration > 0) {
-    const progress: number = ns.time / duration;
-    progressBar.scaleX = progress;
-    timeLabel.text = formatTime(ns.time) + " / " + formatTime(duration);
-  }
+stage.addEventListener("enterFrame", function() {
+    if (video.duration > 0) {
+        const progress = video.currentTime / video.duration;
+        progressBar.scaleX = progress;
+        timeLabel.text = formatTime(video.currentTime) + " / " + formatTime(video.duration);
+    }
 });
 
-function formatTime(seconds: number): string {
-  const min: number = Math.floor(seconds / 60);
-  const sec: number = Math.floor(seconds % 60);
-  return `${min}:${sec.toString().padStart(2, '0')}`;
+function formatTime(seconds) {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return min + ":" + sec.toString().padStart(2, '0');
 }
-
-ns.play("video.mp4");
 ```
 
 ### Volume Control
 
-```typescript
-import { NetConnection, NetStream, SoundTransform } from "@next2d/player";
-import type { Event } from "@next2d/player";
+```javascript
+const { Video } = next2d.media;
 
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
-const ns: NetStream = new NetStream(nc);
-
-// Control volume with SoundTransform
-const soundTransform: SoundTransform = new SoundTransform();
-soundTransform.volume = 0.5;  // 50%
-ns.soundTransform = soundTransform;
+const video = new Video(640, 360);
+video.src = "video.mp4";
+video.volume = 0.5;  // 50%
+stage.addChild(video);
 
 // Volume slider
-volumeSlider.addEventListener("change", (event: Event): void => {
-  const st: SoundTransform = new SoundTransform();
-  st.volume = (event.target as any).value;  // 0.0 ~ 1.0
-  ns.soundTransform = st;
+volumeSlider.addEventListener("change", function(event) {
+    video.volume = event.target.value;  // 0.0 ~ 1.0
 });
 
 // Mute toggle
-let isMuted: boolean = false;
-muteButton.addEventListener("click", (): void => {
-  const st: SoundTransform = new SoundTransform();
-  isMuted = !isMuted;
-  st.volume = isMuted ? 0 : 1;
-  ns.soundTransform = st;
+let isMuted = false;
+let previousVolume = 0.5;
+
+muteButton.addEventListener("click", function() {
+    isMuted = !isMuted;
+    if (isMuted) {
+        previousVolume = video.volume;
+        video.volume = 0;
+    } else {
+        video.volume = previousVolume;
+    }
 });
 ```
 
 ### Fullscreen Support
 
-```typescript
-import { Video } from "@next2d/player";
+```javascript
+const { Video } = next2d.media;
 
-const video: Video = new Video(640, 360);
+const video = new Video(640, 360);
+video.src = "video.mp4";
+stage.addChild(video);
 
 // Fullscreen toggle
-fullscreenButton.addEventListener("click", (): void => {
-  if (stage.displayState === "normal") {
-    // Switch to fullscreen
-    stage.displayState = "fullScreen";
-    video.width = stage.stageWidth;
-    video.height = stage.stageHeight;
-  } else {
-    // Return to normal display
-    stage.displayState = "normal";
-    video.width = 640;
-    video.height = 360;
-  }
-});
-```
-
-### Detecting Video Completion
-
-```typescript
-import { NetConnection, NetStream } from "@next2d/player";
-
-interface MetaData {
-  duration: number;
-}
-
-interface PlayStatus {
-  code: string;
-}
-
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
-const ns: NetStream = new NetStream(nc);
-
-ns.client = {
-  onMetaData: (info: MetaData): void => {
-    duration = info.duration;
-  },
-  onPlayStatus: (info: PlayStatus): void => {
-    if (info.code === "NetStream.Play.Complete") {
-      console.log("Video playback completed");
-      // Loop playback
-      ns.seek(0);
-      ns.resume();
+fullscreenButton.addEventListener("click", function() {
+    if (stage.displayState === "normal") {
+        // Switch to fullscreen
+        stage.displayState = "fullScreen";
+        video.width = stage.stageWidth;
+        video.height = stage.stageHeight;
+    } else {
+        // Return to normal display
+        stage.displayState = "normal";
+        video.width = 640;
+        video.height = 360;
     }
-  }
-};
+});
 ```
 
 ### Video Player Component
 
-```typescript
-import { Sprite, Video, NetConnection, NetStream, SoundTransform } from "@next2d/player";
-
-interface MetaData {
-  duration: number;
-}
+```javascript
+const { Sprite } = next2d.display;
+const { Video } = next2d.media;
 
 class VideoPlayer extends Sprite {
-  private _width: number;
-  private _height: number;
-  private _video: Video;
-  private _nc: NetConnection;
-  private _ns: NetStream;
-  private _duration: number = 0;
+    constructor(width, height) {
+        super();
 
-  constructor(width: number, height: number) {
-    super();
+        this._width = width;
+        this._height = height;
 
-    this._width = width;
-    this._height = height;
+        this._video = new Video(width, height);
+        this.addChild(this._video);
+    }
 
-    this._video = new Video(width, height);
-    this._nc = new NetConnection();
-    this._nc.connect(null);
-    this._ns = new NetStream(this._nc);
+    load(url) {
+        this._video.src = url;
+    }
 
-    this._video.attachNetStream(this._ns);
-    this.addChild(this._video);
+    async play() {
+        await this._video.play();
+    }
 
-    this._ns.client = {
-      onMetaData: this._onMetaData.bind(this)
-    };
-  }
+    pause() {
+        this._video.pause();
+    }
 
-  private _onMetaData(info: MetaData): void {
-    this._duration = info.duration;
-  }
+    seek(time) {
+        this._video.seek(time);
+    }
 
-  load(url: string): void {
-    this._ns.play(url);
-    this._ns.pause();
-  }
+    get currentTime() {
+        return this._video.currentTime;
+    }
 
-  play(): void {
-    this._ns.resume();
-  }
+    get duration() {
+        return this._video.duration || 0;
+    }
 
-  pause(): void {
-    this._ns.pause();
-  }
+    set volume(value) {
+        this._video.volume = value;
+    }
 
-  seek(time: number): void {
-    this._ns.seek(time);
-  }
-
-  get currentTime(): number {
-    return this._ns.time;
-  }
-
-  get duration(): number {
-    return this._duration || 0;
-  }
-
-  set volume(value: number) {
-    const st: SoundTransform = new SoundTransform();
-    st.volume = value;
-    this._ns.soundTransform = st;
-  }
+    get volume() {
+        return this._video.volume;
+    }
 }
 
 // Usage
-const player: VideoPlayer = new VideoPlayer(640, 360);
+const player = new VideoPlayer(640, 360);
 stage.addChild(player);
 player.load("video.mp4");
 player.play();
+```
+
+### Loop Playback and Auto Play
+
+```javascript
+const { Video } = next2d.media;
+
+const video = new Video(640, 360);
+video.src = "background-video.mp4";
+video.autoPlay = true;
+video.loop = true;
+video.volume = 0;  // Muted background video
+
+stage.addChild(video);
 ```
 
 ## Supported Formats

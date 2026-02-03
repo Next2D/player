@@ -10,11 +10,9 @@ The base class for all event-capable objects.
 
 Registers an event listener.
 
-```typescript
-import type { Event } from "@next2d/player";
-
-displayObject.addEventListener("click", (event: Event): void => {
-  console.log("Clicked");
+```javascript
+displayObject.addEventListener("click", function(event) {
+    console.log("Clicked");
 });
 
 // Receive in capture phase
@@ -28,7 +26,7 @@ displayObject.addEventListener("click", handler, false, 10);
 
 Removes an event listener.
 
-```typescript
+```javascript
 displayObject.removeEventListener("click", handler);
 ```
 
@@ -36,9 +34,9 @@ displayObject.removeEventListener("click", handler);
 
 Checks if a listener of the specified type is registered.
 
-```typescript
+```javascript
 if (displayObject.hasEventListener("click")) {
-  console.log("Click listener is registered");
+    console.log("Click listener is registered");
 }
 ```
 
@@ -46,10 +44,10 @@ if (displayObject.hasEventListener("click")) {
 
 Dispatches an event.
 
-```typescript
-import { Event } from "@next2d/player";
+```javascript
+const { Event } = next2d.events;
 
-const event: Event = new Event("customEvent");
+const event = new Event("customEvent");
 displayObject.dispatchEvent(event);
 ```
 
@@ -85,11 +83,9 @@ displayObject.dispatchEvent(event);
 | `removed` | Removed from DisplayObjectContainer |
 | `removedFromStage` | Removed from Stage |
 
-```typescript
-import type { Event } from "@next2d/player";
-
-sprite.addEventListener("addedToStage", (event: Event): void => {
-  console.log("Added to stage");
+```javascript
+sprite.addEventListener("addedToStage", function(event) {
+    console.log("Added to stage");
 });
 ```
 
@@ -101,12 +97,10 @@ sprite.addEventListener("addedToStage", (event: Event): void => {
 | `frameConstructed` | Frame construction complete |
 | `exitFrame` | When leaving frame |
 
-```typescript
-import type { Event } from "@next2d/player";
-
-movieClip.addEventListener("enterFrame", (event: Event): void => {
-  // Processing executed every frame
-  updatePosition();
+```javascript
+movieClip.addEventListener("enterFrame", function(event) {
+    // Processing executed every frame
+    updatePosition();
 });
 ```
 
@@ -118,19 +112,23 @@ movieClip.addEventListener("enterFrame", (event: Event): void => {
 | `progress` | Load progress |
 | `ioError` | IO error |
 
-```typescript
-import type { Event, LoaderInfo, ProgressEvent, DisplayObject } from "@next2d/player";
+```javascript
+const { Loader } = next2d.display;
+const { URLRequest } = next2d.net;
 
-loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
-  const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
-  const content: DisplayObject = loaderInfo.content;
-  stage.addChild(content);
+const loader = new Loader();
+
+loader.contentLoaderInfo.addEventListener("complete", function(event) {
+    const content = event.currentTarget.content;
+    stage.addChild(content);
 });
 
-loader.contentLoaderInfo.addEventListener("progress", (event: ProgressEvent): void => {
-  const percent: number = (event.bytesLoaded / event.bytesTotal) * 100;
-  console.log(`${percent}% loaded`);
+loader.contentLoaderInfo.addEventListener("progress", function(event) {
+    const percent = (event.bytesLoaded / event.bytesTotal) * 100;
+    console.log(percent + "% loaded");
 });
+
+loader.load(new URLRequest("animation.json"));
 ```
 
 ## Mouse and Touch Events
@@ -149,15 +147,13 @@ loader.contentLoaderInfo.addEventListener("progress", (event: ProgressEvent): vo
 | `rollOver` | Roll over |
 | `rollOut` | Roll out |
 
-```typescript
-import type { MouseEvent } from "@next2d/player";
-
-sprite.addEventListener("click", (event: MouseEvent): void => {
-  console.log("Click position:", event.localX, event.localY);
+```javascript
+sprite.addEventListener("click", function(event) {
+    console.log("Click position:", event.localX, event.localY);
 });
 
-sprite.addEventListener("mouseMove", (event: MouseEvent): void => {
-  console.log("Mouse position:", event.stageX, event.stageY);
+sprite.addEventListener("mouseMove", function(event) {
+    console.log("Mouse position:", event.stageX, event.stageY);
 });
 ```
 
@@ -170,12 +166,10 @@ sprite.addEventListener("mouseMove", (event: MouseEvent): void => {
 | `touchMove` | Touch move |
 | `touchTap` | Tap |
 
-```typescript
-import type { TouchEvent } from "@next2d/player";
-
-sprite.addEventListener("touchTap", (event: TouchEvent): void => {
-  console.log("Touch ID:", event.touchPointID);
-  console.log("Touch position:", event.localX, event.localY);
+```javascript
+sprite.addEventListener("touchTap", function(event) {
+    console.log("Touch ID:", event.touchPointID);
+    console.log("Touch position:", event.localX, event.localY);
 });
 ```
 
@@ -186,37 +180,35 @@ sprite.addEventListener("touchTap", (event: TouchEvent): void => {
 | `keyDown` | Key pressed |
 | `keyUp` | Key released |
 
-```typescript
-import type { KeyboardEvent } from "@next2d/player";
+```javascript
+stage.addEventListener("keyDown", function(event) {
+    console.log("Key code:", event.keyCode);
 
-stage.addEventListener("keyDown", (event: KeyboardEvent): void => {
-  console.log("Key code:", event.keyCode);
-
-  switch (event.keyCode) {
-    case 37: // Left arrow
-      player.x -= 10;
-      break;
-    case 39: // Right arrow
-      player.x += 10;
-      break;
-  }
+    switch (event.keyCode) {
+        case 37: // Left arrow
+            player.x -= 10;
+            break;
+        case 39: // Right arrow
+            player.x += 10;
+            break;
+    }
 });
 ```
 
 ## Custom Events
 
-```typescript
-import { Event } from "@next2d/player";
+```javascript
+const { Event } = next2d.events;
 
 // Define custom event
-const customEvent: Event = new Event("gameOver", true, true);
+const customEvent = new Event("gameOver", true, true);
 
 // Dispatch event
 gameManager.dispatchEvent(customEvent);
 
 // Listen to event
-gameManager.addEventListener("gameOver", (event: Event): void => {
-  showGameOverScreen();
+gameManager.addEventListener("gameOver", function(event) {
+    showGameOverScreen();
 });
 ```
 
@@ -228,7 +220,7 @@ Events propagate in three phases:
 2. **Target phase**: Processed at target
 3. **Bubbling phase**: From target to root
 
-```typescript
+```javascript
 // Process in capture phase
 parent.addEventListener("click", handler, true);
 

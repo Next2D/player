@@ -33,9 +33,9 @@ Spriteのgraphicsプロパティを使用して、動的にベクター描画を
 ### 線と塗りの設定
 
 ```typescript
-import { Sprite } from "@next2d/player";
+const { Sprite } = next2d.display;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // 線のスタイル設定
 sprite.graphics.lineStyle(2, 0xFF0000, 1.0);  // 太さ, 色, 透明度
@@ -63,9 +63,9 @@ sprite.graphics.beginFill(0x00FF00, 0.8);  // 色, 透明度
 ### 基本的な描画
 
 ```typescript
-import { Sprite } from "@next2d/player";
+const { Sprite } = next2d.display;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // 赤い矩形を描画
 sprite.graphics.beginFill(0xFF0000);
@@ -83,9 +83,9 @@ stage.addChild(sprite);
 ### 線の描画
 
 ```typescript
-import { Sprite } from "@next2d/player";
+const { Sprite } = next2d.display;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // 線のスタイルを設定
 sprite.graphics.lineStyle(3, 0x000000, 1.0);
@@ -101,21 +101,22 @@ stage.addChild(sprite);
 ### グラデーション塗り
 
 ```typescript
-import { Sprite, Matrix } from "@next2d/player";
+const { Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // グラデーションマトリックスを作成
-const matrix: Matrix = new Matrix();
+const matrix = new Matrix();
 matrix.createGradientBox(200, 200, 0, 0, 0);
 
 // 線形グラデーション
 sprite.graphics.beginGradientFill(
-  "linear",                    // タイプ
-  [0xFF0000, 0x0000FF],       // 色
-  [1, 1],                      // 透明度
-  [0, 255],                    // 比率
-  matrix                       // マトリックス
+    "linear",                    // タイプ
+    [0xFF0000, 0x0000FF],       // 色
+    [1, 1],                      // 透明度
+    [0, 255],                    // 比率
+    matrix                       // マトリックス
 );
 sprite.graphics.drawRect(0, 0, 200, 200);
 sprite.graphics.endFill();
@@ -126,9 +127,9 @@ stage.addChild(sprite);
 ### ボタンとして使用
 
 ```typescript
-import { Sprite } from "@next2d/player";
+const { Sprite } = next2d.display;
 
-const button: Sprite = new Sprite();
+const button = new Sprite();
 
 // ボタンモードを有効化
 button.buttonMode = true;
@@ -140,8 +141,8 @@ button.graphics.drawRoundRect(0, 0, 120, 40, 8, 8);
 button.graphics.endFill();
 
 // クリックイベント
-button.addEventListener("click", (): void => {
-  console.log("ボタンがクリックされました");
+button.addEventListener("click", () => {
+    console.log("ボタンがクリックされました");
 });
 
 stage.addChild(button);
@@ -150,15 +151,15 @@ stage.addChild(button);
 ### マスクとして使用
 
 ```typescript
-import { Sprite } from "@next2d/player";
+const { Sprite } = next2d.display;
 
-const content: Sprite = new Sprite();
+const content = new Sprite();
 content.graphics.beginFill(0xFF0000);
 content.graphics.drawRect(0, 0, 200, 200);
 content.graphics.endFill();
 
 // マスク用のSprite
-const maskSprite: Sprite = new Sprite();
+const maskSprite = new Sprite();
 maskSprite.graphics.beginFill(0xFFFFFF);
 maskSprite.graphics.drawCircle(100, 100, 50);
 maskSprite.graphics.endFill();

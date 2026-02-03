@@ -103,11 +103,8 @@ movieClip.prevFrame();
 各フレームで発生するイベント：
 
 ```typescript
-import type { Event, MovieClip } from "@next2d/player";
-
-movieClip.addEventListener("enterFrame", (event: Event): void => {
-  const target: MovieClip = event.target as MovieClip;
-  console.log("フレーム:", target.currentFrame);
+movieClip.addEventListener("enterFrame", (event) => {
+    console.log("フレーム:", movieClip.currentFrame);
 });
 ```
 
@@ -116,10 +113,8 @@ movieClip.addEventListener("enterFrame", (event: Event): void => {
 フレームの構築が完了したときに発生：
 
 ```typescript
-import type { Event } from "@next2d/player";
-
-movieClip.addEventListener("frameConstructed", (event: Event): void => {
-  // フレームスクリプトの実行前
+movieClip.addEventListener("frameConstructed", (event) => {
+    // フレームスクリプトの実行前
 });
 ```
 
@@ -128,10 +123,8 @@ movieClip.addEventListener("frameConstructed", (event: Event): void => {
 フレームを離れるときに発生：
 
 ```typescript
-import type { Event } from "@next2d/player";
-
-movieClip.addEventListener("exitFrame", (event: Event): void => {
-  // 次のフレームへ移動する前
+movieClip.addEventListener("exitFrame", (event) => {
+    // 次のフレームへ移動する前
 });
 ```
 
@@ -140,29 +133,27 @@ movieClip.addEventListener("exitFrame", (event: Event): void => {
 ### 基本的なアニメーション制御
 
 ```typescript
-import { Loader, URLRequest } from "@next2d/player";
-import type { LoaderInfo, Event, MovieClip, Sprite } from "@next2d/player";
+const { Loader, Sprite } = next2d.display;
+const { URLRequest } = next2d.net;
 
 // JSONからMovieClipを読み込み
-const loader: Loader = new Loader();
-loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
-  const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
-  const mc: MovieClip = loaderInfo.content as MovieClip;
-  stage.addChild(mc);
+const loader = new Loader();
+await loader.load(new URLRequest("animation.json"));
 
-  // 最初は停止
-  mc.stop();
+const mc = loader.content;
+stage.addChild(mc);
 
-  // ボタンクリックで再生
-  button.addEventListener("click", (): void => {
+// 最初は停止
+mc.stop();
+
+// ボタンクリックで再生
+button.addEventListener("click", () => {
     if (mc.isPlaying) {
-      mc.stop();
+        mc.stop();
     } else {
-      mc.play();
+        mc.play();
     }
-  });
 });
-loader.load(new URLRequest("animation.json"));
 ```
 
 ### フレームラベルを使った制御
@@ -172,32 +163,30 @@ loader.load(new URLRequest("animation.json"));
 mc.gotoAndStop("idle");
 
 // 状態変更
-function changeState(state: string): void {
-  switch (state) {
-    case "idle":
-      mc.gotoAndPlay("idle");
-      break;
-    case "walk":
-      mc.gotoAndPlay("walk_start");
-      break;
-    case "attack":
-      mc.gotoAndPlay("attack");
-      break;
-  }
+function changeState(state) {
+    switch (state) {
+        case "idle":
+            mc.gotoAndPlay("idle");
+            break;
+        case "walk":
+            mc.gotoAndPlay("walk_start");
+            break;
+        case "attack":
+            mc.gotoAndPlay("attack");
+            break;
+    }
 }
 ```
 
 ### ネストしたMovieClipの制御
 
 ```typescript
-import type { MovieClip } from "@next2d/player";
-
 // 子MovieClipへのアクセス
-const childMc: MovieClip = mc.getChildByName("character") as MovieClip;
+const childMc = mc.getChildByName("character");
 childMc.gotoAndPlay("run");
 
 // 孫MovieClipへのアクセス
-const grandChild: MovieClip = (mc as any).character.arm as MovieClip;
+const grandChild = mc.character.arm;
 grandChild.play();
 ```
 
@@ -213,12 +202,10 @@ stage.frameRate = 30;
 フレームラベルの情報を持つクラス：
 
 ```typescript
-import type { FrameLabel } from "@next2d/player";
-
 // 現在のシーンのすべてのラベルを取得
-const labels: FrameLabel[] = mc.currentLabels;
-labels.forEach((label: FrameLabel): void => {
-  console.log(`${label.name}: フレーム ${label.frame}`);
+const labels = mc.currentLabels;
+labels.forEach((label) => {
+    console.log(`${label.name}: フレーム ${label.frame}`);
 });
 ```
 

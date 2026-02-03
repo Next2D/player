@@ -5,17 +5,18 @@ Next2D Playerは、DisplayObjectに適用できる様々なビジュアルフィ
 ## フィルターの適用方法
 
 ```typescript
-import { Sprite, BlurFilter, DropShadowFilter, GlowFilter } from "@next2d/player";
+const { Sprite } = next2d.display;
+const { BlurFilter, DropShadowFilter, GlowFilter } = next2d.filters;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // 単一のフィルター
 sprite.filters = [new BlurFilter(4, 4)];
 
 // 複数のフィルター
 sprite.filters = [
-  new DropShadowFilter(4, 45, 0x000000, 0.5),
-  new GlowFilter(0xff0000, 1, 8, 8)
+    new DropShadowFilter(4, 45, 0x000000, 0.5),
+    new GlowFilter(0xff0000, 1, 8, 8)
 ];
 
 // フィルターの削除
@@ -41,6 +42,8 @@ sprite.filters = null;
 ぼかし効果を適用します。
 
 ```typescript
+const { BlurFilter } = next2d.filters;
+
 new BlurFilter(blurX, blurY, quality);
 ```
 
@@ -55,10 +58,12 @@ new BlurFilter(blurX, blurY, quality);
 ドロップシャドウ効果を適用します。
 
 ```typescript
+const { DropShadowFilter } = next2d.filters;
+
 new DropShadowFilter(
-  distance, angle, color, alpha,
-  blurX, blurY, strength, quality,
-  inner, knockout, hideObject
+    distance, angle, color, alpha,
+    blurX, blurY, strength, quality,
+    inner, knockout, hideObject
 );
 ```
 
@@ -81,9 +86,11 @@ new DropShadowFilter(
 グロー効果を適用します。
 
 ```typescript
+const { GlowFilter } = next2d.filters;
+
 new GlowFilter(
-  color, alpha, blurX, blurY,
-  strength, quality, inner, knockout
+    color, alpha, blurX, blurY,
+    strength, quality, inner, knockout
 );
 ```
 
@@ -103,45 +110,47 @@ new GlowFilter(
 ### ボタンのホバー効果
 
 ```typescript
-import { Sprite, GlowFilter } from "@next2d/player";
+const { Sprite } = next2d.display;
+const { GlowFilter } = next2d.filters;
 
-const button: Sprite = new Sprite();
+const button = new Sprite();
 
-button.addEventListener("rollOver", (): void => {
-  button.filters = [
-    new GlowFilter(0x00ff00, 0.8, 10, 10)
-  ];
+button.addEventListener("rollOver", () => {
+    button.filters = [
+        new GlowFilter(0x00ff00, 0.8, 10, 10)
+    ];
 });
 
-button.addEventListener("rollOut", (): void => {
-  button.filters = null;
+button.addEventListener("rollOut", () => {
+    button.filters = null;
 });
 ```
 
 ### 影付きテキスト
 
 ```typescript
-import { TextField, DropShadowFilter } from "@next2d/player";
+const { TextField } = next2d.text;
+const { DropShadowFilter } = next2d.filters;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.text = "Hello World";
 textField.filters = [
-  new DropShadowFilter(2, 45, 0x000000, 0.5, 2, 2)
+    new DropShadowFilter(2, 45, 0x000000, 0.5, 2, 2)
 ];
 ```
 
 ### 複合フィルター
 
 ```typescript
-import { GlowFilter, DropShadowFilter, BlurFilter } from "@next2d/player";
+const { GlowFilter, DropShadowFilter, BlurFilter } = next2d.filters;
 
 sprite.filters = [
-  // 外側のグロー
-  new GlowFilter(0x0088ff, 0.8, 15, 15, 2, 1, false),
-  // ドロップシャドウ
-  new DropShadowFilter(4, 45, 0x000000, 0.6, 4, 4),
-  // 軽いぼかし
-  new BlurFilter(1, 1, 1)
+    // 外側のグロー
+    new GlowFilter(0x0088ff, 0.8, 15, 15, 2, 1, false),
+    // ドロップシャドウ
+    new DropShadowFilter(4, 45, 0x000000, 0.6, 4, 4),
+    // 軽いぼかし
+    new BlurFilter(1, 1, 1)
 ];
 ```
 

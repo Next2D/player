@@ -78,10 +78,10 @@ A class for setting text styles.
 
 ### Basic Text Display
 
-```typescript
-import { TextField } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.text = "Hello, Next2D!";
 textField.x = 100;
 textField.y = 100;
@@ -91,14 +91,14 @@ stage.addChild(textField);
 
 ### Applying TextFormat
 
-```typescript
-import { TextField, TextFormat } from "@next2d/player";
+```javascript
+const { TextField, TextFormat } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.text = "Styled Text";
 
 // Create TextFormat
-const format: TextFormat = new TextFormat();
+const format = new TextFormat();
 format.font = "Arial";
 format.size = 24;
 format.color = 0x3498db;
@@ -115,10 +115,10 @@ stage.addChild(textField);
 
 ### Auto Size
 
-```typescript
-import { TextField } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.autoSize = "left";  // Auto expand to fit text
 textField.text = "This text will auto-size the field";
 
@@ -127,10 +127,10 @@ stage.addChild(textField);
 
 ### Multiline Text
 
-```typescript
-import { TextField } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.width = 200;
 textField.multiline = true;
 textField.wordWrap = true;
@@ -141,11 +141,10 @@ stage.addChild(textField);
 
 ### Input Field
 
-```typescript
-import { TextField } from "@next2d/player";
-import type { Event } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const inputField: TextField = new TextField();
+const inputField = new TextField();
 inputField.type = "input";
 inputField.width = 200;
 inputField.height = 30;
@@ -161,9 +160,8 @@ inputField.text = "";
 inputField.restrict = "0-9";
 
 // Input event
-inputField.addEventListener("change", (event: Event): void => {
-  const target: TextField = event.target as TextField;
-  console.log("Input value:", target.text);
+inputField.addEventListener("change", function(event) {
+    console.log("Input value:", event.target.text);
 });
 
 stage.addChild(inputField);
@@ -171,10 +169,10 @@ stage.addChild(inputField);
 
 ### Password Field
 
-```typescript
-import { TextField } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const passwordField: TextField = new TextField();
+const passwordField = new TextField();
 passwordField.type = "input";
 passwordField.displayAsPassword = true;
 passwordField.width = 200;
@@ -187,29 +185,27 @@ stage.addChild(passwordField);
 
 ### HTML Text
 
-```typescript
-import { TextField } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.width = 300;
 textField.multiline = true;
-textField.htmlText = `
-<font face="Arial" size="20" color="#3498db">
-  <b>Bold Text</b><br/>
-  <i>Italic Text</i><br/>
-  <font color="#e74c3c">Red Text</font>
-</font>
-`;
+textField.htmlText = '<font face="Arial" size="20" color="#3498db">' +
+    '<b>Bold Text</b><br/>' +
+    '<i>Italic Text</i><br/>' +
+    '<font color="#e74c3c">Red Text</font>' +
+    '</font>';
 
 stage.addChild(textField);
 ```
 
 ### Scrollable Text
 
-```typescript
-import { TextField } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.width = 200;
 textField.height = 100;
 textField.multiline = true;
@@ -218,16 +214,16 @@ textField.border = true;
 textField.text = "Long text...\n".repeat(20);
 
 // Scroll operations
-function scrollUp(): void {
-  if (textField.scrollV > 1) {
-    textField.scrollV--;
-  }
+function scrollUp() {
+    if (textField.scrollV > 1) {
+        textField.scrollV--;
+    }
 }
 
-function scrollDown(): void {
-  if (textField.scrollV < textField.maxScrollV) {
-    textField.scrollV++;
-  }
+function scrollDown() {
+    if (textField.scrollV < textField.maxScrollV) {
+        textField.scrollV++;
+    }
 }
 
 stage.addChild(textField);
@@ -235,23 +231,23 @@ stage.addChild(textField);
 
 ### Dynamic Text Update
 
-```typescript
-import { TextField, TextFormat } from "@next2d/player";
+```javascript
+const { TextField, TextFormat } = next2d.text;
 
-const scoreField: TextField = new TextField();
+const scoreField = new TextField();
 scoreField.autoSize = "left";
 
-const format: TextFormat = new TextFormat();
+const format = new TextFormat();
 format.font = "Arial";
 format.size = 32;
 format.color = 0xffffff;
 scoreField.defaultTextFormat = format;
 
-let score: number = 0;
+let score = 0;
 
-function updateScore(points: number): void {
-  score += points;
-  scoreField.text = `Score: ${score}`;
+function updateScore(points) {
+    score += points;
+    scoreField.text = "Score: " + score;
 }
 
 updateScore(0);
@@ -268,18 +264,17 @@ stage.addChild(scoreField);
 | `keyDown` | When key is pressed |
 | `keyUp` | When key is released |
 
-```typescript
-import { TextField } from "@next2d/player";
-import type { KeyboardEvent } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
 
-const inputField: TextField = new TextField();
+const inputField = new TextField();
 inputField.type = "input";
 
 // Submit form on Enter key
-inputField.addEventListener("keyDown", (event: KeyboardEvent): void => {
-  if (event.keyCode === 13) {  // Enter
-    submitForm(inputField.text);
-  }
+inputField.addEventListener("keyDown", function(event) {
+    if (event.keyCode === 13) {  // Enter
+        submitForm(inputField.text);
+    }
 });
 
 stage.addChild(inputField);

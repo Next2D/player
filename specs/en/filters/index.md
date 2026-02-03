@@ -4,19 +4,19 @@ Next2D Player provides various visual filters that can be applied to DisplayObje
 
 ## Applying Filters
 
-```typescript
-import { next2d } from "@next2d/player";
-import type { Sprite } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
+const { BlurFilter, DropShadowFilter, GlowFilter } = next2d.filters;
 
-const sprite: Sprite = new next2d.display.Sprite();
+const sprite = new Sprite();
 
 // Single filter
-sprite.filters = [new next2d.filters.BlurFilter(4, 4)];
+sprite.filters = [new BlurFilter(4, 4)];
 
 // Multiple filters
 sprite.filters = [
-  new next2d.filters.DropShadowFilter(4, 45, 0x000000, 0.5),
-  new next2d.filters.GlowFilter(0xff0000, 1, 8, 8)
+    new DropShadowFilter(4, 45, 0x000000, 0.5),
+    new GlowFilter(0xff0000, 1, 8, 8)
 ];
 
 // Remove filters
@@ -41,8 +41,10 @@ sprite.filters = null;
 
 Applies a blur effect.
 
-```typescript
-new next2d.filters.BlurFilter(blurX, blurY, quality);
+```javascript
+const { BlurFilter } = next2d.filters;
+
+new BlurFilter(blurX, blurY, quality);
 ```
 
 | Parameter | Type | Default | Description |
@@ -55,11 +57,13 @@ new next2d.filters.BlurFilter(blurX, blurY, quality);
 
 Applies a drop shadow effect.
 
-```typescript
-new next2d.filters.DropShadowFilter(
-  distance, angle, color, alpha,
-  blurX, blurY, strength, quality,
-  inner, knockout, hideObject
+```javascript
+const { DropShadowFilter } = next2d.filters;
+
+new DropShadowFilter(
+    distance, angle, color, alpha,
+    blurX, blurY, strength, quality,
+    inner, knockout, hideObject
 );
 ```
 
@@ -81,10 +85,12 @@ new next2d.filters.DropShadowFilter(
 
 Applies a glow effect.
 
-```typescript
-new next2d.filters.GlowFilter(
-  color, alpha, blurX, blurY,
-  strength, quality, inner, knockout
+```javascript
+const { GlowFilter } = next2d.filters;
+
+new GlowFilter(
+    color, alpha, blurX, blurY,
+    strength, quality, inner, knockout
 );
 ```
 
@@ -103,44 +109,48 @@ new next2d.filters.GlowFilter(
 
 ### Button Hover Effect
 
-```typescript
-import type { Sprite } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
+const { GlowFilter } = next2d.filters;
 
-const button: Sprite = new next2d.display.Sprite();
+const button = new Sprite();
 
-button.addEventListener("rollOver", (): void => {
-  button.filters = [
-    new next2d.filters.GlowFilter(0x00ff00, 0.8, 10, 10)
-  ];
+button.addEventListener("rollOver", function() {
+    button.filters = [
+        new GlowFilter(0x00ff00, 0.8, 10, 10)
+    ];
 });
 
-button.addEventListener("rollOut", (): void => {
-  button.filters = null;
+button.addEventListener("rollOut", function() {
+    button.filters = null;
 });
 ```
 
 ### Text with Shadow
 
-```typescript
-import type { TextField } from "@next2d/player";
+```javascript
+const { TextField } = next2d.text;
+const { DropShadowFilter } = next2d.filters;
 
-const textField: TextField = new next2d.text.TextField();
+const textField = new TextField();
 textField.text = "Hello World";
 textField.filters = [
-  new next2d.filters.DropShadowFilter(2, 45, 0x000000, 0.5, 2, 2)
+    new DropShadowFilter(2, 45, 0x000000, 0.5, 2, 2)
 ];
 ```
 
 ### Combined Filters
 
-```typescript
+```javascript
+const { GlowFilter, DropShadowFilter, BlurFilter } = next2d.filters;
+
 sprite.filters = [
-  // Outer glow
-  new next2d.filters.GlowFilter(0x0088ff, 0.8, 15, 15, 2, 1, false),
-  // Drop shadow
-  new next2d.filters.DropShadowFilter(4, 45, 0x000000, 0.6, 4, 4),
-  // Slight blur
-  new next2d.filters.BlurFilter(1, 1, 1)
+    // Outer glow
+    new GlowFilter(0x0088ff, 0.8, 15, 15, 2, 1, false),
+    // Drop shadow
+    new DropShadowFilter(4, 45, 0x000000, 0.6, 4, 4),
+    // Slight blur
+    new BlurFilter(1, 1, 1)
 ];
 ```
 

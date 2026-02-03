@@ -41,10 +41,8 @@ DisplayObject is the base class for all display objects in Next2D Player.
 
 Gets the bounding rectangle in the specified coordinate system.
 
-```typescript
-import type { Rectangle, Stage } from "@next2d/player";
-
-const bounds: Rectangle = displayObject.getBounds(stage);
+```javascript
+const bounds = displayObject.getBounds(stage);
 console.log(bounds.x, bounds.y, bounds.width, bounds.height);
 ```
 
@@ -52,43 +50,43 @@ console.log(bounds.x, bounds.y, bounds.width, bounds.height);
 
 Converts global coordinates to local coordinates.
 
-```typescript
-import { Point } from "@next2d/player";
+```javascript
+const { Point } = next2d.geom;
 
-const globalPoint: Point = new Point(100, 100);
-const localPoint: Point = displayObject.globalToLocal(globalPoint);
+const globalPoint = new Point(100, 100);
+const localPoint = displayObject.globalToLocal(globalPoint);
 ```
 
 ### localToGlobal(point)
 
 Converts local coordinates to global coordinates.
 
-```typescript
-import { Point } from "@next2d/player";
+```javascript
+const { Point } = next2d.geom;
 
-const localPoint: Point = new Point(0, 0);
-const globalPoint: Point = displayObject.localToGlobal(localPoint);
+const localPoint = new Point(0, 0);
+const globalPoint = displayObject.localToGlobal(localPoint);
 ```
 
 ### hitTestPoint(x, y, shapeFlag)
 
 Performs collision detection with specified coordinates.
 
-```typescript
+```javascript
 // Detection with bounding box
-const hit1: boolean = displayObject.hitTestPoint(100, 100, false);
+const hit1 = displayObject.hitTestPoint(100, 100, false);
 
 // Detection with actual shape
-const hit2: boolean = displayObject.hitTestPoint(100, 100, true);
+const hit2 = displayObject.hitTestPoint(100, 100, true);
 ```
 
 ### hitTestObject(obj)
 
 Performs collision detection with another DisplayObject.
 
-```typescript
+```javascript
 if (obj1.hitTestObject(obj2)) {
-  console.log("Collision detected");
+    console.log("Collision detected");
 }
 ```
 
@@ -111,11 +109,11 @@ if (obj1.hitTestObject(obj2)) {
 
 ## Usage Example
 
-```typescript
-import { Sprite, BlurFilter } from "@next2d/player";
-import type { Stage } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
+const { BlurFilter } = next2d.filters;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // Position and size
 sprite.x = 100;
@@ -131,7 +129,7 @@ sprite.blendMode = "add";
 
 // Filters
 sprite.filters = [
-  new BlurFilter(4, 4)
+    new BlurFilter(4, 4)
 ];
 
 // Add to stage

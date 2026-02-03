@@ -9,346 +9,212 @@ classDiagram
     DisplayObject <|-- Video
 
     class Video {
+        +src: String
         +videoWidth: Number
         +videoHeight: Number
+        +duration: Number
+        +currentTime: Number
+        +volume: Number
+        +loop: Boolean
+        +autoPlay: Boolean
         +smoothing: Boolean
-        +attachNetStream()
+        +paused: Boolean
+        +muted: Boolean
+        +play()
+        +pause()
+        +seek()
     }
 ```
 
 ## プロパティ
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `videoWidth` | Number | 動画の元の幅（読み取り専用） |
-| `videoHeight` | Number | 動画の元の高さ（読み取り専用） |
-| `smoothing` | Boolean | スムージング処理の有効化 |
+| プロパティ | 型 | デフォルト | 説明 |
+|-----------|------|----------|------|
+| `src` | String | "" | 動画ファイルのURL |
+| `videoWidth` | Number | 0 | 動画の幅（読み取り専用） |
+| `videoHeight` | Number | 0 | 動画の高さ（読み取り専用） |
+| `duration` | Number | 0 | 動画の長さ（秒） |
+| `currentTime` | Number | 0 | 現在の再生位置（秒） |
+| `volume` | Number | 1 | 音量（0.0～1.0） |
+| `loop` | Boolean | false | ループ再生 |
+| `autoPlay` | Boolean | true | 自動再生 |
+| `smoothing` | Boolean | true | スムージング処理 |
+| `paused` | Boolean | true | 一時停止状態 |
+| `muted` | Boolean | false | ミュート状態 |
 
-## NetStreamとの連携
-
-VideoクラスはNetStreamと連携して動画を再生します。
-
-### NetStreamプロパティ
-
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `time` | Number | 現在の再生位置（秒） |
-| `bytesLoaded` | Number | ロード済みバイト数 |
-| `bytesTotal` | Number | 総バイト数 |
-
-### NetStreamメソッド
+## メソッド
 
 | メソッド | 説明 |
 |---------|------|
-| `play(url)` | 動画の再生を開始 |
-| `pause()` | 再生を一時停止 |
-| `resume()` | 再生を再開 |
-| `close()` | ストリームを閉じる |
-| `seek(seconds)` | 指定位置にシーク |
+| `play()` | 動画を再生（Promiseを返す） |
+| `pause()` | 動画を一時停止 |
+| `seek(offset)` | 指定位置にシーク |
 
 ## 使用例
 
 ### 基本的な動画再生
 
 ```typescript
-import { Video, NetConnection, NetStream } from "@next2d/player";
+const { Video } = next2d.media;
 
-// Videoオブジェクトを作成
-const video: Video = new Video(640, 360);
+// Videoオブジェクトを作成（幅、高さを指定）
+const video = new Video(640, 360);
 
-// NetConnectionを作成
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
+// 動画のURLを設定（設定すると自動的に読み込み開始）
+video.src = "video.mp4";
 
-// NetStreamを作成
-const ns: NetStream = new NetStream(nc);
-
-// VideoにNetStreamをアタッチ
-video.attachNetStream(ns);
+// プロパティ設定
+video.autoPlay = true;   // 自動再生
+video.loop = false;      // ループしない
+video.smoothing = true;  // スムージング有効
 
 // ステージに追加
 stage.addChild(video);
-
-// 動画を再生
-ns.play("video.mp4");
 ```
 
 ### 再生コントロール
 
 ```typescript
-import { Video, NetConnection, NetStream } from "@next2d/player";
+const { Video, VideoEvent } = next2d.media;
 
-const video: Video = new Video(640, 360);
-const nc: NetConnection = new NetConnection();
-nc.connect(null);
-const ns: NetStream = new NetStream(nc);
+const video = new Video(640, 360);
+video.autoPlay = false;  // 自動再生を無効化
+video.src = "video.mp4";
 
-video.attachNetStream(ns);
 stage.addChild(video);
 
 // 再生ボタン
-playButton.addEventListener("click", (): void => {
-  ns.resume();
+playButton.addEventListener("click", async () => {
+    await video.play();
 });
 
 // 一時停止ボタン
-pauseButton.addEventListener("click", (): void => {
-  ns.pause();
+pauseButton.addEventListener("click", () => {
+    video.pause();
 });
 
-// 停止ボタン
-stopButton.addEventListener("click", (): void => {
-  ns.pause();
-  ns.seek(0);
+// 停止ボタン（先頭に戻って停止）
+stopButton.addEventListener("click", () => {
+    video.pause();
+    video.seek(0);
 });
 
 // 10秒進む
-forwardButton.addEventListener("click", (): void => {
-  ns.seek(ns.time + 10);
+forwardButton.addEventListener("click", () => {
+    video.seek(video.currentTime + 10);
 });
 
 // 10秒戻る
-backButton.addEventListener("click", (): void => {
-  ns.seek(Math.max(0, ns.time - 10));
+backButton.addEventListener("click", () => {
+    video.seek(Math.max(0, video.currentTime - 10));
 });
-
-ns.play("video.mp4");
 ```
 
-### メタデータの取得
+### イベントリスニング
 
 ```typescript
-import { NetStream } from "@next2d/player";
+const { Video, VideoEvent } = next2d.media;
 
-interface MetaData {
-  duration: number;
-  width: number;
-  height: number;
-  framerate: number;
-}
+const video = new Video(640, 360);
 
-const ns: NetStream = new NetStream(nc);
+// メタデータ受信イベント
+video.addEventListener(VideoEvent.METADATA_RECEIVED, () => {
+    console.log("Duration:", video.duration);
+    console.log("Size:", video.videoWidth, "x", video.videoHeight);
+});
 
-// メタデータイベントハンドラ
-ns.client = {
-  onMetaData: (info: MetaData): void => {
-    console.log("Duration:", info.duration);
-    console.log("Width:", info.width);
-    console.log("Height:", info.height);
-    console.log("Framerate:", info.framerate);
+// 再生イベント
+video.addEventListener(VideoEvent.PLAY, () => {
+    console.log("再生開始");
+});
 
-    // 動画サイズに合わせてVideoをリサイズ
-    video.width = info.width;
-    video.height = info.height;
-  }
-};
+// 一時停止イベント
+video.addEventListener(VideoEvent.PAUSE, () => {
+    console.log("一時停止");
+});
 
-video.attachNetStream(ns);
-ns.play("video.mp4");
+// シークイベント
+video.addEventListener(VideoEvent.SEEK, () => {
+    console.log("シーク:", video.currentTime);
+});
+
+// 終了イベント
+video.addEventListener(VideoEvent.ENDED, () => {
+    console.log("再生終了");
+});
+
+video.src = "video.mp4";
+stage.addChild(video);
 ```
 
 ### 再生進捗の表示
 
 ```typescript
-import { Video, NetStream } from "@next2d/player";
+const { Video, VideoEvent } = next2d.media;
 
-interface MetaData {
-  duration: number;
-}
-
-const video: Video = new Video(640, 360);
-const ns: NetStream = new NetStream(nc);
-
-let duration: number = 0;
-
-ns.client = {
-  onMetaData: (info: MetaData): void => {
-    duration = info.duration;
-  }
-};
-
-video.attachNetStream(ns);
+const video = new Video(640, 360);
+video.src = "video.mp4";
 stage.addChild(video);
 
 // フレームごとに進捗を更新
-stage.addEventListener("enterFrame", (): void => {
-  if (duration > 0) {
-    const progress: number = ns.time / duration;
-    progressBar.scaleX = progress;
-    timeLabel.text = formatTime(ns.time) + " / " + formatTime(duration);
-  }
+stage.addEventListener("enterFrame", () => {
+    if (video.duration > 0) {
+        const progress = video.currentTime / video.duration;
+        progressBar.scaleX = progress;
+        timeLabel.text = formatTime(video.currentTime) + " / " + formatTime(video.duration);
+    }
 });
 
-function formatTime(seconds: number): string {
-  const min: number = Math.floor(seconds / 60);
-  const sec: number = Math.floor(seconds % 60);
-  return `${min}:${sec.toString().padStart(2, '0')}`;
+function formatTime(seconds) {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec.toString().padStart(2, '0')}`;
 }
-
-ns.play("video.mp4");
 ```
 
 ### 音量コントロール
 
 ```typescript
-import { NetStream, SoundTransform } from "@next2d/player";
-import type { Event } from "@next2d/player";
+const { Video } = next2d.media;
 
-const ns: NetStream = new NetStream(nc);
+const video = new Video(640, 360);
+video.src = "video.mp4";
+video.volume = 0.5;  // 50%
 
-// SoundTransformで音量を制御
-const soundTransform: SoundTransform = new SoundTransform();
-soundTransform.volume = 0.5;  // 50%
-ns.soundTransform = soundTransform;
+stage.addChild(video);
 
 // 音量スライダー
-volumeSlider.addEventListener("change", (event: Event): void => {
-  const st: SoundTransform = new SoundTransform();
-  st.volume = (event.target as any).value;  // 0.0 ~ 1.0
-  ns.soundTransform = st;
+volumeSlider.addEventListener("change", (event) => {
+    video.volume = event.target.value;  // 0.0 ~ 1.0
 });
 
 // ミュートトグル
-let isMuted: boolean = false;
-muteButton.addEventListener("click", (): void => {
-  const st: SoundTransform = new SoundTransform();
-  isMuted = !isMuted;
-  st.volume = isMuted ? 0 : 1;
-  ns.soundTransform = st;
+muteButton.addEventListener("click", () => {
+    video.muted = !video.muted;
 });
 ```
 
-### フルスクリーン対応
+### ループ再生
 
 ```typescript
-import { Video } from "@next2d/player";
+const { Video } = next2d.media;
 
-const video: Video = new Video(640, 360);
+const video = new Video(640, 360);
+video.loop = true;  // ループ有効
+video.src = "video.mp4";
 
-// フルスクリーントグル
-fullscreenButton.addEventListener("click", (): void => {
-  if (stage.displayState === "normal") {
-    // フルスクリーンに切り替え
-    stage.displayState = "fullScreen";
-    video.width = stage.stageWidth;
-    video.height = stage.stageHeight;
-  } else {
-    // 通常表示に戻す
-    stage.displayState = "normal";
-    video.width = 640;
-    video.height = 360;
-  }
-});
+stage.addChild(video);
 ```
 
-### 動画の完了検知
+## VideoEvent
 
-```typescript
-import { NetStream } from "@next2d/player";
-
-interface MetaData {
-  duration: number;
-}
-
-interface PlayStatus {
-  code: string;
-}
-
-const ns: NetStream = new NetStream(nc);
-
-ns.client = {
-  onMetaData: (info: MetaData): void => {
-    duration = info.duration;
-  },
-  onPlayStatus: (info: PlayStatus): void => {
-    if (info.code === "NetStream.Play.Complete") {
-      console.log("動画の再生が完了しました");
-      // ループ再生
-      ns.seek(0);
-      ns.resume();
-    }
-  }
-};
-```
-
-### 動画プレイヤーコンポーネント
-
-```typescript
-import { Video, NetConnection, NetStream, SoundTransform, Sprite } from "@next2d/player";
-
-interface MetaData {
-  duration: number;
-}
-
-class VideoPlayer extends Sprite {
-  private _width: number;
-  private _height: number;
-  private _video: Video;
-  private _nc: NetConnection;
-  private _ns: NetStream;
-  private _duration: number = 0;
-
-  constructor(width: number, height: number) {
-    super();
-
-    this._width = width;
-    this._height = height;
-
-    this._video = new Video(width, height);
-    this._nc = new NetConnection();
-    this._nc.connect(null);
-    this._ns = new NetStream(this._nc);
-
-    this._video.attachNetStream(this._ns);
-    this.addChild(this._video);
-
-    this._ns.client = {
-      onMetaData: this._onMetaData.bind(this)
-    };
-  }
-
-  private _onMetaData(info: MetaData): void {
-    this._duration = info.duration;
-  }
-
-  load(url: string): void {
-    this._ns.play(url);
-    this._ns.pause();
-  }
-
-  play(): void {
-    this._ns.resume();
-  }
-
-  pause(): void {
-    this._ns.pause();
-  }
-
-  seek(time: number): void {
-    this._ns.seek(time);
-  }
-
-  get currentTime(): number {
-    return this._ns.time;
-  }
-
-  get duration(): number {
-    return this._duration || 0;
-  }
-
-  set volume(value: number) {
-    const st: SoundTransform = new SoundTransform();
-    st.volume = value;
-    this._ns.soundTransform = st;
-  }
-}
-
-// 使用例
-const player: VideoPlayer = new VideoPlayer(640, 360);
-stage.addChild(player);
-player.load("video.mp4");
-player.play();
-```
+| イベント | 説明 |
+|----------|------|
+| `VideoEvent.METADATA_RECEIVED` | メタデータ受信時 |
+| `VideoEvent.PLAY` | 再生開始時 |
+| `VideoEvent.PAUSE` | 一時停止時 |
+| `VideoEvent.SEEK` | シーク時 |
+| `VideoEvent.ENDED` | 再生終了時 |
 
 ## サポートフォーマット
 

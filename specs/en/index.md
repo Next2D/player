@@ -16,7 +16,7 @@ An overview of the pipeline that enables Next2D Player's high-speed rendering.
 ```mermaid
 flowchart TB
     %% Main Drawing Flow Chart
-    subgraph MainFlow["🎨 Drawing Flow Chart - Main Rendering Pipeline"]
+    subgraph MainFlow["Drawing Flow Chart - Main Rendering Pipeline"]
         direction TB
 
         subgraph Inputs["Display Objects"]
@@ -36,10 +36,10 @@ flowchart TB
 
         MaskCheck -->|NO| CacheCheck1{"cache<br/>exists?"}
 
-        CacheCheck1 -->|NO| TextureAtlas["📦 Texture Atlas<br/>(Binary Tree Packing)"]
+        CacheCheck1 -->|NO| TextureAtlas["Texture Atlas<br/>(Binary Tree Packing)"]
         TextureAtlas --> Coordinates
 
-        CacheCheck1 -->|YES| Coordinates["📍 Coordinates DB<br/>(x, y, w, h)"]
+        CacheCheck1 -->|YES| Coordinates["Coordinates DB<br/>(x, y, w, h)"]
 
         Coordinates --> FilterBlendCheck{"filter or<br/>blend?"}
 
@@ -48,19 +48,19 @@ flowchart TB
 
         NeedCache -->|NO| CacheRender["Render to Cache"]
         CacheRender --> TextureCache
-        NeedCache -->|YES| TextureCache["💾 Texture Cache"]
+        NeedCache -->|YES| TextureCache["Texture Cache"]
 
         TextureCache -->|drawArrays| FinalRender
 
-        MainArrays["⚡ Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
+        MainArrays["Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
 
-        MainArrays -->|drawArraysInstanced<br/><b>Multiple objects in one call</b>| FinalRender["🎬 Final Rendering"]
+        MainArrays -->|drawArraysInstanced<br/><b>Multiple objects in one call</b>| FinalRender["Final Rendering"]
 
-        FinalRender -->|60fps| MainFramebuffer["🖥️ Main Framebuffer<br/>(Display)"]
+        FinalRender -->|60fps| MainFramebuffer["Main Framebuffer<br/>(Display)"]
     end
 
     %% Branch Flow for Filter/Blend/Mask
-    subgraph BranchFlow["🎭 Filter/Blend/Mask - Branch Processing"]
+    subgraph BranchFlow["Filter/Blend/Mask - Branch Processing"]
         direction TB
 
         subgraph FilterInputs["Display Objects"]
@@ -79,7 +79,7 @@ flowchart TB
         CacheCheck2 -->|YES| BranchArrays
         EffectRender --> BranchArrays
 
-        BranchArrays["⚡ Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
+        BranchArrays["Instanced Arrays<br/>━━━━━━━━━━━━━━━<br/>matrix<br/>colorTransform<br/>Coordinates<br/>━━━━━━━━━━━━━━━<br/><b>Batch Rendering</b>"]
 
         BranchArrays -->|drawArraysInstanced<br/><b>Multiple objects in one call</b>| BranchRender["Effect Result"]
 
@@ -140,14 +140,18 @@ DisplayObject with timeline animation:
 
 ## Basic Usage
 
-```typescript
-import { next2d, MovieClip, DropShadowFilter } from "@next2d/player";
+```javascript
+const { MovieClip } = next2d.display;
+const { DropShadowFilter } = next2d.filters;
 
 // Initialize stage
-const root: MovieClip = next2d.createRootMovieClip();
+const root = await next2d.createRootMovieClip(800, 600, 60, {
+    tagId: "container",
+    bgColor: "#ffffff"
+});
 
 // Create MovieClip
-const mc: MovieClip = new MovieClip();
+const mc = new MovieClip();
 root.addChild(mc);
 
 // Set position and size
@@ -159,7 +163,7 @@ mc.rotation = 45;
 
 // Apply filters
 mc.filters = [
-  new DropShadowFilter(4, 45, 0x000000, 0.5)
+    new DropShadowFilter(4, 45, 0x000000, 0.5)
 ];
 ```
 
@@ -167,17 +171,15 @@ mc.filters = [
 
 Load and render JSON files created with Open Animation Tool:
 
-```typescript
-import { Loader, URLRequest } from "@next2d/player";
-import type { LoaderInfo, Event, MovieClip, Stage } from "@next2d/player";
+```javascript
+const { Loader } = next2d.display;
+const { URLRequest } = next2d.net;
 
-const loader: Loader = new Loader();
-loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
-  const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
-  const mc: MovieClip = loaderInfo.content as MovieClip;
-  stage.addChild(mc);
-});
-loader.load(new URLRequest("animation.json"));
+const loader = new Loader();
+await loader.load(new URLRequest("animation.json"));
+
+const mc = loader.content;
+stage.addChild(mc);
 ```
 
 ## Related Documentation
@@ -195,8 +197,3 @@ loader.load(new URLRequest("animation.json"));
 - [Filters](./filters/index.md) - Blur, DropShadow, Glow, etc.
 - [Sound](./sound.md) - Audio playback and sound effects
 - [Tween Animation](./tween.md) - Programmatic animation
-
-### Game Development
-- [Game Loop](./game-loop.md) - enterFrame-based game loop patterns
-- [Collision Detection](./collision.md) - hitTest-based collision detection
-- [Performance Optimization](./performance.md) - Techniques for maintaining 60fps

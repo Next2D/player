@@ -32,10 +32,10 @@ classDiagram
 
 ### Basic Drawing
 
-```typescript
-import { Shape } from "@next2d/player";
+```javascript
+const { Shape } = next2d.display;
 
-const shape: Shape = new Shape();
+const shape = new Shape();
 
 // Filled rectangle
 shape.graphics.beginFill(0x3498db);
@@ -47,12 +47,11 @@ stage.addChild(shape);
 
 ### Compound Shape Drawing
 
-```typescript
-import { Shape } from "@next2d/player";
-import type { Graphics } from "@next2d/player";
+```javascript
+const { Shape } = next2d.display;
 
-const shape: Shape = new Shape();
-const g: Graphics = shape.graphics;
+const shape = new Shape();
+const g = shape.graphics;
 
 // Background
 g.beginFill(0xecf0f1);
@@ -73,12 +72,11 @@ stage.addChild(shape);
 
 ### Path Drawing
 
-```typescript
-import { Shape } from "@next2d/player";
-import type { Graphics } from "@next2d/player";
+```javascript
+const { Shape } = next2d.display;
 
-const shape: Shape = new Shape();
-const g: Graphics = shape.graphics;
+const shape = new Shape();
+const g = shape.graphics;
 
 g.beginFill(0x9b59b6);
 
@@ -102,12 +100,11 @@ stage.addChild(shape);
 
 ### Bezier Curves
 
-```typescript
-import { Shape } from "@next2d/player";
-import type { Graphics } from "@next2d/player";
+```javascript
+const { Shape } = next2d.display;
 
-const shape: Shape = new Shape();
-const g: Graphics = shape.graphics;
+const shape = new Shape();
+const g = shape.graphics;
 
 g.lineStyle(3, 0x1abc9c);
 
@@ -122,29 +119,29 @@ stage.addChild(shape);
 
 ### Gradient Background
 
-```typescript
-import { Shape, Matrix } from "@next2d/player";
-import type { Graphics } from "@next2d/player";
+```javascript
+const { Shape } = next2d.display;
+const { Matrix } = next2d.geom;
 
-const shape: Shape = new Shape();
-const g: Graphics = shape.graphics;
+const shape = new Shape();
+const g = shape.graphics;
 
 // Matrix for gradient
-const matrix: Matrix = new Matrix();
+const matrix = new Matrix();
 matrix.createGradientBox(
-  stage.stageWidth,
-  stage.stageHeight,
-  Math.PI / 2,  // 90 degrees (vertical)
-  0, 0
+    stage.stageWidth,
+    stage.stageHeight,
+    Math.PI / 2,  // 90 degrees (vertical)
+    0, 0
 );
 
 // Radial gradient
 g.beginGradientFill(
-  "radial",
-  [0x667eea, 0x764ba2],
-  [1, 1],
-  [0, 255],
-  matrix
+    "radial",
+    [0x667eea, 0x764ba2],
+    [1, 1],
+    [0, 255],
+    matrix
 );
 g.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
 g.endFill();
@@ -155,54 +152,53 @@ stage.addChildAt(shape, 0);
 
 ### Dynamic Redrawing
 
-```typescript
-import { Shape } from "@next2d/player";
-import type { Graphics } from "@next2d/player";
+```javascript
+const { Shape } = next2d.display;
 
-const shape: Shape = new Shape();
+const shape = new Shape();
 stage.addChild(shape);
 
-let angle: number = 0;
+let angle = 0;
 
 // Redraw each frame
-stage.addEventListener("enterFrame", (): void => {
-  const g: Graphics = shape.graphics;
+stage.addEventListener("enterFrame", function() {
+    const g = shape.graphics;
 
-  // Clear previous drawing
-  g.clear();
+    // Clear previous drawing
+    g.clear();
 
-  // Draw at new position
-  const x: number = 200 + Math.cos(angle) * 100;
-  const y: number = 150 + Math.sin(angle) * 100;
+    // Draw at new position
+    const x = 200 + Math.cos(angle) * 100;
+    const y = 150 + Math.sin(angle) * 100;
 
-  g.beginFill(0xe74c3c);
-  g.drawCircle(x, y, 20);
-  g.endFill();
+    g.beginFill(0xe74c3c);
+    g.drawCircle(x, y, 20);
+    g.endFill();
 
-  angle += 0.05;
+    angle += 0.05;
 });
 ```
 
 ### Composed of Multiple Shapes
 
-```typescript
-import { Shape } from "@next2d/player";
+```javascript
+const { Shape } = next2d.display;
 
 // Background layer
-const bgShape: Shape = new Shape();
+const bgShape = new Shape();
 bgShape.graphics.beginFill(0x2c3e50);
 bgShape.graphics.drawRect(0, 0, 400, 300);
 bgShape.graphics.endFill();
 
 // Decoration layer
-const decorShape: Shape = new Shape();
+const decorShape = new Shape();
 decorShape.graphics.beginFill(0x3498db, 0.5);
 decorShape.graphics.drawCircle(100, 100, 80);
 decorShape.graphics.drawCircle(300, 200, 60);
 decorShape.graphics.endFill();
 
 // Front layer
-const frontShape: Shape = new Shape();
+const frontShape = new Shape();
 frontShape.graphics.lineStyle(2, 0xecf0f1);
 frontShape.graphics.drawRect(50, 50, 300, 200);
 
@@ -218,7 +214,7 @@ stage.addChild(frontShape);
 3. **Use clear()**: Always call clear() when dynamically redrawing
 4. **Cache complex shapes**: Cache drawing with cacheAsBitmap property
 
-```typescript
+```javascript
 // Cache complex shapes as bitmap
 shape.cacheAsBitmap = true;
 ```

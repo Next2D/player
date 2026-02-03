@@ -9,26 +9,16 @@ classDiagram
     class Sound {
         +length: Number
         +url: String
-        +play(): SoundChannel
-        +close(): void
-    }
-    class SoundChannel {
-        +position: Number
-        +soundTransform: SoundTransform
+        +volume: Number
+        +loopCount: Number
+        +load(request): Promise
+        +play(): void
         +stop(): void
     }
-    class SoundTransform {
-        +volume: Number
-        +pan: Number
-    }
     class SoundMixer {
-        +soundTransform: SoundTransform
+        +volume: Number
         +stopAll(): void
     }
-
-    Sound --> SoundChannel : creates
-    SoundChannel --> SoundTransform : uses
-    SoundMixer --> SoundTransform : uses
 ```
 
 ## Sound
@@ -41,251 +31,210 @@ A class for loading and playing audio files.
 |----------|------|-------------|
 | `length` | Number | Sound duration (milliseconds) |
 | `url` | String | Loaded URL |
-| `bytesLoaded` | Number | Bytes loaded |
-| `bytesTotal` | Number | Total bytes |
+| `volume` | Number | Volume (0.0 - 1.0) |
+| `loopCount` | Number | Number of loops (0 = no loop, 9999 = infinite) |
 
 ### Methods
 
 | Method | Description |
 |--------|-------------|
-| `play(startTime, loops, soundTransform)` | Start playback, returns SoundChannel |
-| `close()` | Close the stream |
+| `load(request)` | Load audio file (returns Promise) |
+| `play()` | Start playback |
+| `stop()` | Stop playback |
 
 ## Usage Examples
 
 ### Basic Audio Playback
 
-```typescript
-import { Sound, URLRequest } from "@next2d/player";
-import type { SoundChannel, Event } from "@next2d/player";
+```javascript
+const { Sound } = next2d.media;
+const { URLRequest } = next2d.net;
 
 // Create Sound object
-const sound: Sound = new Sound();
-
-// Load complete event
-sound.addEventListener("complete", (event: Event): void => {
-  // Start playback
-  const channel: SoundChannel = sound.play();
-});
+const sound = new Sound();
 
 // Load audio file
-sound.load(new URLRequest("bgm.mp3"));
+await sound.load(new URLRequest("bgm.mp3"));
+
+// Start playback
+sound.play();
 ```
 
 ### Sound Effect Playback
 
-```typescript
-import { Sound, URLRequest } from "@next2d/player";
-import type { SoundChannel } from "@next2d/player";
+```javascript
+const { Sound } = next2d.media;
+const { URLRequest } = next2d.net;
 
 // Preload sound effects
-const seJump: Sound = new Sound();
-const seHit: Sound = new Sound();
-const seCoin: Sound = new Sound();
+const seJump = new Sound();
+const seHit = new Sound();
+const seCoin = new Sound();
 
 // Load
-seJump.load(new URLRequest("se/jump.mp3"));
-seHit.load(new URLRequest("se/hit.mp3"));
-seCoin.load(new URLRequest("se/coin.mp3"));
+await seJump.load(new URLRequest("se/jump.mp3"));
+await seHit.load(new URLRequest("se/hit.mp3"));
+await seCoin.load(new URLRequest("se/coin.mp3"));
 
 // Play function
-function playSE(sound: Sound): SoundChannel {
-  return sound.play();
+function playSE(sound) {
+    sound.play();
 }
 
 // Use in game
-player.addEventListener("jump", (): void => {
-  playSE(seJump);
+player.addEventListener("jump", function() {
+    playSE(seJump);
 });
 ```
 
 ### BGM Loop Playback
 
-```typescript
-import { Sound, SoundTransform, URLRequest } from "@next2d/player";
-import type { SoundChannel } from "@next2d/player";
+```javascript
+const { Sound } = next2d.media;
+const { URLRequest } = next2d.net;
 
-const bgm: Sound = new Sound();
-let bgmChannel: SoundChannel | null = null;
+const bgm = new Sound();
 
-bgm.addEventListener("complete", (): void => {
-  // Set volume and loop playback
-  const transform: SoundTransform = new SoundTransform();
-  transform.volume = 0.7;  // 70%
+await bgm.load(new URLRequest("bgm/stage1.mp3"));
 
-  // Second argument: loop count (9999 for infinite loop)
-  bgmChannel = bgm.play(0, 9999, transform);
-});
+// Set volume and loop count
+bgm.volume = 0.7;  // 70%
+bgm.loopCount = 9999;  // Infinite loop
 
-bgm.load(new URLRequest("bgm/stage1.mp3"));
+bgm.play();
 
 // Stop BGM
-function stopBGM(): void {
-  if (bgmChannel) {
-    bgmChannel.stop();
-    bgmChannel = null;
-  }
+function stopBGM() {
+    bgm.stop();
 }
 ```
 
 ### Volume Control
 
-```typescript
-import { SoundTransform } from "@next2d/player";
-import type { SoundChannel } from "@next2d/player";
+```javascript
+const { Sound } = next2d.media;
+const { URLRequest } = next2d.net;
 
-let bgmChannel: SoundChannel;
-let currentVolume: number = 1.0;
+const bgm = new Sound();
+await bgm.load(new URLRequest("bgm.mp3"));
+bgm.volume = 1.0;
+bgm.loopCount = 9999;
+bgm.play();
 
 // Change volume
-function setVolume(volume: number): void {
-  currentVolume = Math.max(0, Math.min(1, volume));
-
-  const transform: SoundTransform = new SoundTransform();
-  transform.volume = currentVolume;
-  bgmChannel.soundTransform = transform;
+function setVolume(volume) {
+    bgm.volume = Math.max(0, Math.min(1, volume));
 }
 
 // Fade out
-function fadeOut(duration: number = 1000): void {
-  const startVolume: number = currentVolume;
-  const startTime: number = Date.now();
+function fadeOut(duration) {
+    duration = duration || 1000;
+    const startVolume = bgm.volume;
+    const startTime = Date.now();
 
-  stage.addEventListener("enterFrame", function fade(): void {
-    const elapsed: number = Date.now() - startTime;
-    const progress: number = Math.min(1, elapsed / duration);
+    stage.addEventListener("enterFrame", function fade() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(1, elapsed / duration);
 
-    setVolume(startVolume * (1 - progress));
+        setVolume(startVolume * (1 - progress));
 
-    if (progress >= 1) {
-      stage.removeEventListener("enterFrame", fade);
-      bgmChannel.stop();
-    }
-  });
-}
-```
-
-### Pan (Left/Right Balance) Settings
-
-```typescript
-import { SoundTransform } from "@next2d/player";
-import type { SoundChannel } from "@next2d/player";
-
-// Set pan (-1: left, 0: center, 1: right)
-function setPan(channel: SoundChannel, pan: number): void {
-  const transform: SoundTransform = new SoundTransform();
-  transform.volume = channel.soundTransform.volume;
-  transform.pan = Math.max(-1, Math.min(1, pan));
-  channel.soundTransform = transform;
-}
-
-// Adjust pan based on enemy position
-function playEnemySound(enemyX: number): void {
-  const channel: SoundChannel = seEnemy.play();
-
-  // Calculate pan based on screen center
-  const centerX: number = stage.stageWidth / 2;
-  const pan: number = (enemyX - centerX) / centerX;
-  setPan(channel, pan);
+        if (progress >= 1) {
+            stage.removeEventListener("enterFrame", fade);
+            bgm.stop();
+        }
+    });
 }
 ```
 
 ### Sound Manager
 
-```typescript
-import { Sound, SoundTransform, URLRequest } from "@next2d/player";
-import type { SoundChannel } from "@next2d/player";
+```javascript
+const { Sound } = next2d.media;
+const { URLRequest } = next2d.net;
 
 class SoundManager {
-  private _sounds: Map<string, Sound> = new Map();
-  private _bgmChannel: SoundChannel | null = null;
-  private _seChannels: SoundChannel[] = [];
-  private _bgmVolume: number = 0.7;
-  private _seVolume: number = 1.0;
-  private _isMuted: boolean = false;
+    constructor() {
+        this._sounds = new Map();
+        this._bgm = null;
+        this._bgmVolume = 0.7;
+        this._seVolume = 1.0;
+        this._isMuted = false;
+    }
 
-  // Preload sound
-  async preload(id: string, url: string): Promise<void> {
-    return new Promise((resolve) => {
-      const sound: Sound = new Sound();
-      sound.addEventListener("complete", (): void => {
+    // Preload sound
+    async preload(id, url) {
+        const sound = new Sound();
+        await sound.load(new URLRequest(url));
         this._sounds.set(id, sound);
-        resolve();
-      });
-      sound.load(new URLRequest(url));
-    });
-  }
-
-  // Play BGM
-  playBGM(id: string, loops: number = 9999): void {
-    this.stopBGM();
-
-    const sound: Sound | undefined = this._sounds.get(id);
-    if (sound) {
-      const transform: SoundTransform = new SoundTransform();
-      transform.volume = this._isMuted ? 0 : this._bgmVolume;
-      this._bgmChannel = sound.play(0, loops, transform);
     }
-  }
 
-  // Stop BGM
-  stopBGM(): void {
-    if (this._bgmChannel) {
-      this._bgmChannel.stop();
-      this._bgmChannel = null;
+    // Play BGM
+    playBGM(id, loops) {
+        loops = loops || 9999;
+        this.stopBGM();
+
+        const sound = this._sounds.get(id);
+        if (sound) {
+            sound.volume = this._isMuted ? 0 : this._bgmVolume;
+            sound.loopCount = loops;
+            sound.play();
+            this._bgm = sound;
+        }
     }
-  }
 
-  // Play SE
-  playSE(id: string): SoundChannel | null {
-    const sound: Sound | undefined = this._sounds.get(id);
-    if (sound) {
-      const transform: SoundTransform = new SoundTransform();
-      transform.volume = this._isMuted ? 0 : this._seVolume;
-      const channel: SoundChannel = sound.play(0, 0, transform);
-      this._seChannels.push(channel);
-      return channel;
+    // Stop BGM
+    stopBGM() {
+        if (this._bgm) {
+            this._bgm.stop();
+            this._bgm = null;
+        }
     }
-    return null;
-  }
 
-  // Toggle mute
-  toggleMute(): boolean {
-    this._isMuted = !this._isMuted;
-    this._updateVolumes();
-    return this._isMuted;
-  }
-
-  // Set BGM volume
-  setBGMVolume(volume: number): void {
-    this._bgmVolume = Math.max(0, Math.min(1, volume));
-    this._updateVolumes();
-  }
-
-  // Set SE volume
-  setSEVolume(volume: number): void {
-    this._seVolume = Math.max(0, Math.min(1, volume));
-  }
-
-  private _updateVolumes(): void {
-    if (this._bgmChannel) {
-      const transform: SoundTransform = new SoundTransform();
-      transform.volume = this._isMuted ? 0 : this._bgmVolume;
-      this._bgmChannel.soundTransform = transform;
+    // Play SE
+    playSE(id) {
+        const sound = this._sounds.get(id);
+        if (sound) {
+            sound.volume = this._isMuted ? 0 : this._seVolume;
+            sound.loopCount = 0;
+            sound.play();
+        }
     }
-  }
+
+    // Toggle mute
+    toggleMute() {
+        this._isMuted = !this._isMuted;
+        this._updateVolumes();
+        return this._isMuted;
+    }
+
+    // Set BGM volume
+    setBGMVolume(volume) {
+        this._bgmVolume = Math.max(0, Math.min(1, volume));
+        this._updateVolumes();
+    }
+
+    // Set SE volume
+    setSEVolume(volume) {
+        this._seVolume = Math.max(0, Math.min(1, volume));
+    }
+
+    _updateVolumes() {
+        if (this._bgm) {
+            this._bgm.volume = this._isMuted ? 0 : this._bgmVolume;
+        }
+    }
 }
 
 // Usage example
-const soundManager: SoundManager = new SoundManager();
+const soundManager = new SoundManager();
 
 // Preload on startup
-async function initSounds(): Promise<void> {
-  await soundManager.preload("bgm_title", "bgm/title.mp3");
-  await soundManager.preload("bgm_stage1", "bgm/stage1.mp3");
-  await soundManager.preload("se_jump", "se/jump.mp3");
-  await soundManager.preload("se_coin", "se/coin.mp3");
-  await soundManager.preload("se_damage", "se/damage.mp3");
+async function initSounds() {
+    await soundManager.preload("bgm_title", "bgm/title.mp3");
+    await soundManager.preload("bgm_stage1", "bgm/stage1.mp3");
+    await soundManager.preload("se_jump", "se/jump.mp3");
+    await soundManager.preload("se_coin", "se/coin.mp3");
+    await soundManager.preload("se_damage", "se/damage.mp3");
 }
 
 // During game
@@ -297,16 +246,14 @@ soundManager.playSE("se_jump");
 
 A class for controlling all audio.
 
-```typescript
-import { SoundMixer, SoundTransform } from "@next2d/player";
+```javascript
+const { SoundMixer } = next2d.media;
 
 // Stop all audio
 SoundMixer.stopAll();
 
 // Change global volume
-const globalTransform: SoundTransform = new SoundTransform();
-globalTransform.volume = 0.5;
-SoundMixer.soundTransform = globalTransform;
+SoundMixer.volume = 0.5;
 ```
 
 ## Supported Formats
@@ -329,4 +276,3 @@ SoundMixer.soundTransform = globalTransform;
 ## Related
 
 - [Event System](./events.md)
-- [Game Loop](./game-loop.md)

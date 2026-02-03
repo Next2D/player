@@ -44,7 +44,7 @@ classDiagram
 
 Starts timeline playback.
 
-```typescript
+```javascript
 movieClip.play();
 ```
 
@@ -52,7 +52,7 @@ movieClip.play();
 
 Stops timeline playback.
 
-```typescript
+```javascript
 movieClip.stop();
 ```
 
@@ -60,7 +60,7 @@ movieClip.stop();
 
 Moves to specified frame and starts playback.
 
-```typescript
+```javascript
 // Specify by frame number
 movieClip.gotoAndPlay(10);
 
@@ -72,7 +72,7 @@ movieClip.gotoAndPlay("start");
 
 Moves to specified frame and stops.
 
-```typescript
+```javascript
 // Specify by frame number
 movieClip.gotoAndStop(1);
 
@@ -84,7 +84,7 @@ movieClip.gotoAndStop("end");
 
 Advances to next frame and stops.
 
-```typescript
+```javascript
 movieClip.nextFrame();
 ```
 
@@ -92,7 +92,7 @@ movieClip.nextFrame();
 
 Returns to previous frame and stops.
 
-```typescript
+```javascript
 movieClip.prevFrame();
 ```
 
@@ -102,12 +102,9 @@ movieClip.prevFrame();
 
 Event that occurs each frame:
 
-```typescript
-import type { Event, MovieClip } from "@next2d/player";
-
-movieClip.addEventListener("enterFrame", (event: Event): void => {
-  const target: MovieClip = event.target as MovieClip;
-  console.log("Frame:", target.currentFrame);
+```javascript
+movieClip.addEventListener("enterFrame", function(event) {
+    console.log("Frame:", event.target.currentFrame);
 });
 ```
 
@@ -115,11 +112,9 @@ movieClip.addEventListener("enterFrame", (event: Event): void => {
 
 Occurs when frame construction is complete:
 
-```typescript
-import type { Event } from "@next2d/player";
-
-movieClip.addEventListener("frameConstructed", (event: Event): void => {
-  // Before frame script execution
+```javascript
+movieClip.addEventListener("frameConstructed", function(event) {
+    // Before frame script execution
 });
 ```
 
@@ -127,11 +122,9 @@ movieClip.addEventListener("frameConstructed", (event: Event): void => {
 
 Occurs when leaving a frame:
 
-```typescript
-import type { Event } from "@next2d/player";
-
-movieClip.addEventListener("exitFrame", (event: Event): void => {
-  // Before moving to next frame
+```javascript
+movieClip.addEventListener("exitFrame", function(event) {
+    // Before moving to next frame
 });
 ```
 
@@ -139,71 +132,67 @@ movieClip.addEventListener("exitFrame", (event: Event): void => {
 
 ### Basic Animation Control
 
-```typescript
-import { Loader, URLRequest } from "@next2d/player";
-import type { LoaderInfo, Event, MovieClip } from "@next2d/player";
+```javascript
+const { Loader } = next2d.display;
+const { URLRequest } = next2d.net;
 
 // Load MovieClip from JSON
-const loader: Loader = new Loader();
-loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
-  const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
-  const mc: MovieClip = loaderInfo.content as MovieClip;
-  stage.addChild(mc);
+const loader = new Loader();
+await loader.load(new URLRequest("animation.json"));
 
-  // Stop initially
-  mc.stop();
+const mc = loader.content;
+stage.addChild(mc);
 
-  // Play/pause on button click
-  button.addEventListener("click", (): void => {
+// Stop initially
+mc.stop();
+
+// Play/pause on button click
+button.addEventListener("click", function() {
     if (mc.isPlaying) {
-      mc.stop();
+        mc.stop();
     } else {
-      mc.play();
+        mc.play();
     }
-  });
 });
-loader.load(new URLRequest("animation.json"));
 ```
 
 ### Control with Frame Labels
 
-```typescript
+```javascript
 // Move to label position
 mc.gotoAndStop("idle");
 
 // State change
-function changeState(state: string): void {
-  switch (state) {
-    case "idle":
-      mc.gotoAndPlay("idle");
-      break;
-    case "walk":
-      mc.gotoAndPlay("walk_start");
-      break;
-    case "attack":
-      mc.gotoAndPlay("attack");
-      break;
-  }
+function changeState(state) {
+    switch (state) {
+        case "idle":
+            mc.gotoAndPlay("idle");
+            break;
+        case "walk":
+            mc.gotoAndPlay("walk_start");
+            break;
+        case "attack":
+            mc.gotoAndPlay("attack");
+            break;
+    }
 }
 ```
 
 ### Controlling Nested MovieClips
 
-```typescript
-import type { MovieClip } from "@next2d/player";
-
+```javascript
 // Access child MovieClip
-const childMc: MovieClip = mc.getChildByName("character") as MovieClip;
+const childMc = mc.getChildByName("character");
 childMc.gotoAndPlay("run");
 
 // Access grandchild MovieClip
-const grandChild: MovieClip = (mc as any).character.arm as MovieClip;
+const grandChild = mc.character.arm;
 grandChild.play();
 ```
 
 ### Changing Frame Rate
 
-```typescript
+```javascript
 // Change stage frame rate
 stage.frameRate = 30;
 ```
@@ -212,13 +201,11 @@ stage.frameRate = 30;
 
 A class that holds frame label information:
 
-```typescript
-import type { FrameLabel } from "@next2d/player";
-
+```javascript
 // Get all labels in current scene
-const labels: FrameLabel[] = mc.currentLabels;
-labels.forEach((label: FrameLabel): void => {
-  console.log(`${label.name}: frame ${label.frame}`);
+const labels = mc.currentLabels;
+labels.forEach(function(label) {
+    console.log(label.name + ": frame " + label.frame);
 });
 ```
 

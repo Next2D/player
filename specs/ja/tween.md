@@ -20,82 +20,71 @@ flowchart LR
 ## 基本的なTweenクラス
 
 ```typescript
-import type { DisplayObject } from "@next2d/player";
-
-type EasingFunction = (t: number) => number;
-
-interface TweenOptions {
-  duration: number;        // ミリ秒
-  easing?: EasingFunction;
-  onUpdate?: () => void;
-  onComplete?: () => void;
-}
-
 class Tween {
-  private _target: DisplayObject;
-  private _properties: Record<string, { start: number; end: number }> = {};
-  private _duration: number;
-  private _easing: EasingFunction;
-  private _startTime: number = 0;
-  private _isPlaying: boolean = false;
-  private _onUpdate?: () => void;
-  private _onComplete?: () => void;
+    private _target;
+    private _properties = {};
+    private _duration;
+    private _easing;
+    private _startTime = 0;
+    private _isPlaying = false;
+    private _onUpdate;
+    private _onComplete;
 
-  constructor(target: DisplayObject, options: TweenOptions) {
-    this._target = target;
-    this._duration = options.duration;
-    this._easing = options.easing || Easing.linear;
-    this._onUpdate = options.onUpdate;
-    this._onComplete = options.onComplete;
-  }
-
-  to(properties: Record<string, number>): Tween {
-    for (const key in properties) {
-      this._properties[key] = {
-        start: (this._target as any)[key],
-        end: properties[key]
-      };
-    }
-    return this;
-  }
-
-  play(): Tween {
-    this._startTime = Date.now();
-    this._isPlaying = true;
-    this._update();
-    return this;
-  }
-
-  private _update = (): void => {
-    if (!this._isPlaying) return;
-
-    const elapsed: number = Date.now() - this._startTime;
-    let progress: number = Math.min(1, elapsed / this._duration);
-    progress = this._easing(progress);
-
-    // プロパティを更新
-    for (const key in this._properties) {
-      const prop = this._properties[key];
-      (this._target as any)[key] = prop.start + (prop.end - prop.start) * progress;
+    constructor(target, options) {
+        this._target = target;
+        this._duration = options.duration;
+        this._easing = options.easing || Easing.linear;
+        this._onUpdate = options.onUpdate;
+        this._onComplete = options.onComplete;
     }
 
-    if (this._onUpdate) {
-      this._onUpdate();
+    to(properties) {
+        for (const key in properties) {
+            this._properties[key] = {
+                start: this._target[key],
+                end: properties[key]
+            };
+        }
+        return this;
     }
 
-    if (elapsed < this._duration) {
-      requestAnimationFrame(this._update);
-    } else {
-      this._isPlaying = false;
-      if (this._onComplete) {
-        this._onComplete();
-      }
+    play() {
+        this._startTime = Date.now();
+        this._isPlaying = true;
+        this._update();
+        return this;
     }
-  };
 
-  stop(): void {
-    this._isPlaying = false;
-  }
+    private _update = () => {
+        if (!this._isPlaying) return;
+
+        const elapsed = Date.now() - this._startTime;
+        let progress = Math.min(1, elapsed / this._duration);
+        progress = this._easing(progress);
+
+        // プロパティを更新
+        for (const key in this._properties) {
+            const prop = this._properties[key];
+            this._target[key] = prop.start + (prop.end - prop.start) * progress;
+        }
+
+        if (this._onUpdate) {
+            this._onUpdate();
+        }
+
+        if (elapsed < this._duration) {
+            requestAnimationFrame(this._update);
+        } else {
+            this._isPlaying = false;
+            if (this._onComplete) {
+                this._onComplete();
+            }
+        }
+    };
+
+    stop() {
+        this._isPlaying = false;
+    }
 }
 ```
 
@@ -103,50 +92,50 @@ class Tween {
 
 ```typescript
 const Easing = {
-  // 線形
-  linear: (t: number): number => t,
+    // 線形
+    linear: (t) => t,
 
-  // 加速
-  easeInQuad: (t: number): number => t * t,
-  easeInCubic: (t: number): number => t * t * t,
-  easeInQuart: (t: number): number => t * t * t * t,
+    // 加速
+    easeInQuad: (t) => t * t,
+    easeInCubic: (t) => t * t * t,
+    easeInQuart: (t) => t * t * t * t,
 
-  // 減速
-  easeOutQuad: (t: number): number => t * (2 - t),
-  easeOutCubic: (t: number): number => (--t) * t * t + 1,
-  easeOutQuart: (t: number): number => 1 - (--t) * t * t * t,
+    // 減速
+    easeOutQuad: (t) => t * (2 - t),
+    easeOutCubic: (t) => (--t) * t * t + 1,
+    easeOutQuart: (t) => 1 - (--t) * t * t * t,
 
-  // 加速→減速
-  easeInOutQuad: (t: number): number =>
-    t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
-  easeInOutCubic: (t: number): number =>
-    t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
+    // 加速→減速
+    easeInOutQuad: (t) =>
+        t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+    easeInOutCubic: (t) =>
+        t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
 
-  // バウンス
-  easeOutBounce: (t: number): number => {
-    if (t < 1 / 2.75) {
-      return 7.5625 * t * t;
-    } else if (t < 2 / 2.75) {
-      return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-    } else if (t < 2.5 / 2.75) {
-      return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
-    } else {
-      return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
+    // バウンス
+    easeOutBounce: (t) => {
+        if (t < 1 / 2.75) {
+            return 7.5625 * t * t;
+        } else if (t < 2 / 2.75) {
+            return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
+        } else if (t < 2.5 / 2.75) {
+            return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
+        } else {
+            return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
+        }
+    },
+
+    // バック（行き過ぎて戻る）
+    easeOutBack: (t) => {
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    },
+
+    // エラスティック（ゴムのような動き）
+    easeOutElastic: (t) => {
+        if (t === 0 || t === 1) return t;
+        return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
     }
-  },
-
-  // バック（行き過ぎて戻る）
-  easeOutBack: (t: number): number => {
-    const c1: number = 1.70158;
-    const c3: number = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-  },
-
-  // エラスティック（ゴムのような動き）
-  easeOutElastic: (t: number): number => {
-    if (t === 0 || t === 1) return t;
-    return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
-  }
 };
 ```
 
@@ -155,17 +144,17 @@ const Easing = {
 ### 基本的な移動アニメーション
 
 ```typescript
-import { Sprite } from "@next2d/player";
+const { Sprite } = next2d.display;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 sprite.x = 0;
 sprite.y = 100;
 stage.addChild(sprite);
 
 // 右に移動
 new Tween(sprite, { duration: 1000, easing: Easing.easeOutQuad })
-  .to({ x: 400 })
-  .play();
+    .to({ x: 400 })
+    .play();
 ```
 
 ### 複数プロパティの同時アニメーション
@@ -173,41 +162,41 @@ new Tween(sprite, { duration: 1000, easing: Easing.easeOutQuad })
 ```typescript
 // 移動 + 拡大 + フェードイン
 new Tween(sprite, {
-  duration: 500,
-  easing: Easing.easeOutCubic
+    duration: 500,
+    easing: Easing.easeOutCubic
 })
-  .to({
-    x: 200,
-    y: 150,
-    scaleX: 2,
-    scaleY: 2,
-    alpha: 1
-  })
-  .play();
+    .to({
+        x: 200,
+        y: 150,
+        scaleX: 2,
+        scaleY: 2,
+        alpha: 1
+    })
+    .play();
 ```
 
 ### シーケンシャルアニメーション
 
 ```typescript
 // 連続したアニメーション
-function sequentialAnimation(sprite: DisplayObject): void {
-  new Tween(sprite, {
-    duration: 500,
-    onComplete: () => {
-      new Tween(sprite, {
-        duration: 300,
+function sequentialAnimation(sprite) {
+    new Tween(sprite, {
+        duration: 500,
         onComplete: () => {
-          new Tween(sprite, { duration: 500 })
-            .to({ alpha: 0 })
-            .play();
+            new Tween(sprite, {
+                duration: 300,
+                onComplete: () => {
+                    new Tween(sprite, { duration: 500 })
+                        .to({ alpha: 0 })
+                        .play();
+                }
+            })
+                .to({ scaleX: 1.5, scaleY: 1.5 })
+                .play();
         }
-      })
-        .to({ scaleX: 1.5, scaleY: 1.5 })
+    })
+        .to({ y: 100 })
         .play();
-    }
-  })
-    .to({ y: 100 })
-    .play();
 }
 ```
 
@@ -216,134 +205,127 @@ function sequentialAnimation(sprite: DisplayObject): void {
 #### キャラクタージャンプ
 
 ```typescript
-function jump(character: DisplayObject): void {
-  const startY: number = character.y;
-  const jumpHeight: number = 100;
+function jump(character) {
+    const startY = character.y;
+    const jumpHeight = 100;
 
-  // 上昇
-  new Tween(character, {
-    duration: 300,
-    easing: Easing.easeOutQuad,
-    onComplete: () => {
-      // 下降
-      new Tween(character, {
+    // 上昇
+    new Tween(character, {
         duration: 300,
-        easing: Easing.easeInQuad
-      })
-        .to({ y: startY })
+        easing: Easing.easeOutQuad,
+        onComplete: () => {
+            // 下降
+            new Tween(character, {
+                duration: 300,
+                easing: Easing.easeInQuad
+            })
+                .to({ y: startY })
+                .play();
+        }
+    })
+        .to({ y: startY - jumpHeight })
         .play();
-    }
-  })
-    .to({ y: startY - jumpHeight })
-    .play();
 }
 ```
 
 #### ダメージエフェクト
 
 ```typescript
-function damageEffect(target: DisplayObject): void {
-  const originalX: number = target.x;
-  let shakeCount: number = 0;
+function damageEffect(target) {
+    const originalX = target.x;
+    let shakeCount = 0;
 
-  // 点滅 + 揺れ
-  const shake = (): void => {
-    if (shakeCount >= 6) {
-      target.x = originalX;
-      target.alpha = 1;
-      return;
-    }
+    // 点滅 + 揺れ
+    const shake = () => {
+        if (shakeCount >= 6) {
+            target.x = originalX;
+            target.alpha = 1;
+            return;
+        }
 
-    const offset: number = shakeCount % 2 === 0 ? 5 : -5;
-    target.x = originalX + offset;
-    target.alpha = shakeCount % 2 === 0 ? 0.5 : 1;
-    shakeCount++;
+        const offset = shakeCount % 2 === 0 ? 5 : -5;
+        target.x = originalX + offset;
+        target.alpha = shakeCount % 2 === 0 ? 0.5 : 1;
+        shakeCount++;
 
-    setTimeout(shake, 50);
-  };
+        setTimeout(shake, 50);
+    };
 
-  shake();
+    shake();
 }
 ```
 
 #### コイン取得エフェクト
 
 ```typescript
-function coinCollectEffect(coin: DisplayObject, targetY: number): void {
-  // 上に飛んでフェードアウト
-  new Tween(coin, {
-    duration: 500,
-    easing: Easing.easeOutQuad,
-    onUpdate: () => {
-      // 回転
-      coin.rotation += 15;
-    },
-    onComplete: () => {
-      coin.parent?.removeChild(coin);
-    }
-  })
-    .to({
-      y: targetY,
-      alpha: 0,
-      scaleX: 0.5,
-      scaleY: 0.5
+function coinCollectEffect(coin, targetY) {
+    // 上に飛んでフェードアウト
+    new Tween(coin, {
+        duration: 500,
+        easing: Easing.easeOutQuad,
+        onUpdate: () => {
+            // 回転
+            coin.rotation += 15;
+        },
+        onComplete: () => {
+            coin.parent?.removeChild(coin);
+        }
     })
-    .play();
+        .to({
+            y: targetY,
+            alpha: 0,
+            scaleX: 0.5,
+            scaleY: 0.5
+        })
+        .play();
 }
 ```
 
 #### UI表示アニメーション
 
 ```typescript
-function showPopup(popup: DisplayObject): void {
-  popup.scaleX = 0;
-  popup.scaleY = 0;
-  popup.alpha = 0;
+function showPopup(popup) {
+    popup.scaleX = 0;
+    popup.scaleY = 0;
+    popup.alpha = 0;
 
-  new Tween(popup, {
-    duration: 400,
-    easing: Easing.easeOutBack
-  })
-    .to({ scaleX: 1, scaleY: 1, alpha: 1 })
-    .play();
+    new Tween(popup, {
+        duration: 400,
+        easing: Easing.easeOutBack
+    })
+        .to({ scaleX: 1, scaleY: 1, alpha: 1 })
+        .play();
 }
 
-function hidePopup(popup: DisplayObject, onComplete: () => void): void {
-  new Tween(popup, {
-    duration: 200,
-    easing: Easing.easeInQuad,
-    onComplete
-  })
-    .to({ scaleX: 0, scaleY: 0, alpha: 0 })
-    .play();
+function hidePopup(popup, onComplete) {
+    new Tween(popup, {
+        duration: 200,
+        easing: Easing.easeInQuad,
+        onComplete
+    })
+        .to({ scaleX: 0, scaleY: 0, alpha: 0 })
+        .play();
 }
 ```
 
 ## enterFrameを使った軽量Tween
 
 ```typescript
-import type { DisplayObject, Event } from "@next2d/player";
-
 // シンプルなenterFrameベースのTween
-function tweenTo(
-  target: DisplayObject,
-  property: string,
-  endValue: number,
-  speed: number = 0.1
-): void {
-  const handler = (event: Event): void => {
-    const current: number = (target as any)[property];
-    const diff: number = endValue - current;
+function tweenTo(target, property, endValue, speed = 0.1) {
+    const handler = (event) => {
+        const current = target[property];
+        const diff = endValue - current;
 
-    if (Math.abs(diff) < 0.1) {
-      (target as any)[property] = endValue;
-      stage.removeEventListener("enterFrame", handler);
-    } else {
-      (target as any)[property] = current + diff * speed;
-    }
-  };
+        if (Math.abs(diff) < 0.1) {
+            target[property] = endValue;
+            stage.removeEventListener("enterFrame", handler);
+        } else {
+            target[property] = current + diff * speed;
+        }
+    };
 
-  stage.addEventListener("enterFrame", handler);
+    stage.addEventListener("enterFrame", handler);
 }
 
 // 使用例
@@ -355,25 +337,22 @@ tweenTo(sprite, "alpha", 0, 0.05);  // フェードアウト
 
 ```typescript
 // ベジェ曲線ベースのイージング
-function bezierEasing(
-  x1: number, y1: number,
-  x2: number, y2: number
-): EasingFunction {
-  return (t: number): number => {
-    // 簡易的な3次ベジェ補間
-    const cx: number = 3 * x1;
-    const bx: number = 3 * (x2 - x1) - cx;
-    const ax: number = 1 - cx - bx;
+function bezierEasing(x1, y1, x2, y2) {
+    return (t) => {
+        // 簡易的な3次ベジェ補間
+        const cx = 3 * x1;
+        const bx = 3 * (x2 - x1) - cx;
+        const ax = 1 - cx - bx;
 
-    const cy: number = 3 * y1;
-    const by: number = 3 * (y2 - y1) - cy;
-    const ay: number = 1 - cy - by;
+        const cy = 3 * y1;
+        const by = 3 * (y2 - y1) - cy;
+        const ay = 1 - cy - by;
 
-    const sampleCurveY = (t: number): number =>
-      ((ay * t + by) * t + cy) * t;
+        const sampleCurveY = (t) =>
+            ((ay * t + by) * t + cy) * t;
 
-    return sampleCurveY(t);
-  };
+        return sampleCurveY(t);
+    };
 }
 
 // CSS cubic-bezier相当
@@ -390,5 +369,4 @@ const customEase = bezierEasing(0.25, 0.1, 0.25, 1.0);
 ## 関連項目
 
 - [DisplayObject](./display-object.md)
-- [ゲームループ](./game-loop.md)
 - [イベントシステム](./events.md)

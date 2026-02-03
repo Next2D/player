@@ -79,9 +79,9 @@ classDiagram
 ### 基本的なテキスト表示
 
 ```typescript
-import { TextField } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.text = "Hello, Next2D!";
 textField.x = 100;
 textField.y = 100;
@@ -92,13 +92,13 @@ stage.addChild(textField);
 ### TextFormatの適用
 
 ```typescript
-import { TextField, TextFormat } from "@next2d/player";
+const { TextField, TextFormat } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.text = "スタイル付きテキスト";
 
 // TextFormatを作成
-const format: TextFormat = new TextFormat();
+const format = new TextFormat();
 format.font = "Arial";
 format.size = 24;
 format.color = 0x3498db;
@@ -116,9 +116,9 @@ stage.addChild(textField);
 ### 自動サイズ調整
 
 ```typescript
-import { TextField } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.autoSize = "left";  // テキストに合わせて自動拡張
 textField.text = "このテキストに合わせてサイズが調整されます";
 
@@ -128,9 +128,9 @@ stage.addChild(textField);
 ### 複数行テキスト
 
 ```typescript
-import { TextField } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.width = 200;
 textField.multiline = true;
 textField.wordWrap = true;
@@ -142,10 +142,9 @@ stage.addChild(textField);
 ### 入力フィールド
 
 ```typescript
-import { TextField } from "@next2d/player";
-import type { Event } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const inputField: TextField = new TextField();
+const inputField = new TextField();
 inputField.type = "input";
 inputField.width = 200;
 inputField.height = 30;
@@ -161,9 +160,8 @@ inputField.text = "";
 inputField.restrict = "0-9";
 
 // 入力イベント
-inputField.addEventListener("change", (event: Event): void => {
-  const target: TextField = event.target as TextField;
-  console.log("入力値:", target.text);
+inputField.addEventListener("change", (event) => {
+    console.log("入力値:", inputField.text);
 });
 
 stage.addChild(inputField);
@@ -172,9 +170,9 @@ stage.addChild(inputField);
 ### パスワードフィールド
 
 ```typescript
-import { TextField } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const passwordField: TextField = new TextField();
+const passwordField = new TextField();
 passwordField.type = "input";
 passwordField.displayAsPassword = true;
 passwordField.width = 200;
@@ -188,9 +186,9 @@ stage.addChild(passwordField);
 ### HTMLテキスト
 
 ```typescript
-import { TextField } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.width = 300;
 textField.multiline = true;
 textField.htmlText = `
@@ -207,9 +205,9 @@ stage.addChild(textField);
 ### スクロール可能なテキスト
 
 ```typescript
-import { TextField } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const textField: TextField = new TextField();
+const textField = new TextField();
 textField.width = 200;
 textField.height = 100;
 textField.multiline = true;
@@ -218,16 +216,16 @@ textField.border = true;
 textField.text = "長いテキスト...\n".repeat(20);
 
 // スクロール操作
-function scrollUp(): void {
-  if (textField.scrollV > 1) {
-    textField.scrollV--;
-  }
+function scrollUp() {
+    if (textField.scrollV > 1) {
+        textField.scrollV--;
+    }
 }
 
-function scrollDown(): void {
-  if (textField.scrollV < textField.maxScrollV) {
-    textField.scrollV++;
-  }
+function scrollDown() {
+    if (textField.scrollV < textField.maxScrollV) {
+        textField.scrollV++;
+    }
 }
 
 stage.addChild(textField);
@@ -236,22 +234,22 @@ stage.addChild(textField);
 ### 動的なテキスト更新
 
 ```typescript
-import { TextField, TextFormat } from "@next2d/player";
+const { TextField, TextFormat } = next2d.text;
 
-const scoreField: TextField = new TextField();
+const scoreField = new TextField();
 scoreField.autoSize = "left";
 
-const format: TextFormat = new TextFormat();
+const format = new TextFormat();
 format.font = "Arial";
 format.size = 32;
 format.color = 0xffffff;
 scoreField.defaultTextFormat = format;
 
-let score: number = 0;
+let score = 0;
 
-function updateScore(points: number): void {
-  score += points;
-  scoreField.text = `Score: ${score}`;
+function updateScore(points) {
+    score += points;
+    scoreField.text = `Score: ${score}`;
 }
 
 updateScore(0);
@@ -269,17 +267,16 @@ stage.addChild(scoreField);
 | `keyUp` | キーが離されたとき |
 
 ```typescript
-import { TextField } from "@next2d/player";
-import type { KeyboardEvent } from "@next2d/player";
+const { TextField } = next2d.text;
 
-const inputField: TextField = new TextField();
+const inputField = new TextField();
 inputField.type = "input";
 
 // Enterキーでフォーム送信
-inputField.addEventListener("keyDown", (event: KeyboardEvent): void => {
-  if (event.keyCode === 13) {  // Enter
-    submitForm(inputField.text);
-  }
+inputField.addEventListener("keyDown", (event) => {
+    if (event.keyCode === 13) {  // Enter
+        submitForm(inputField.text);
+    }
 });
 
 stage.addChild(inputField);

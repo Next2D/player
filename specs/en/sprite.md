@@ -32,10 +32,10 @@ Use the Sprite's graphics property for dynamic vector drawing.
 
 ### Line and Fill Settings
 
-```typescript
-import { Sprite } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // Set line style
 sprite.graphics.lineStyle(2, 0xFF0000, 1.0);  // thickness, color, alpha
@@ -62,10 +62,10 @@ sprite.graphics.beginFill(0x00FF00, 0.8);  // color, alpha
 
 ### Basic Drawing
 
-```typescript
-import { Sprite } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // Draw red rectangle
 sprite.graphics.beginFill(0xFF0000);
@@ -82,10 +82,10 @@ stage.addChild(sprite);
 
 ### Line Drawing
 
-```typescript
-import { Sprite } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // Set line style
 sprite.graphics.lineStyle(3, 0x000000, 1.0);
@@ -100,22 +100,23 @@ stage.addChild(sprite);
 
 ### Gradient Fill
 
-```typescript
-import { Sprite, Matrix } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
 
-const sprite: Sprite = new Sprite();
+const sprite = new Sprite();
 
 // Create gradient matrix
-const matrix: Matrix = new Matrix();
+const matrix = new Matrix();
 matrix.createGradientBox(200, 200, 0, 0, 0);
 
 // Linear gradient
 sprite.graphics.beginGradientFill(
-  "linear",                    // type
-  [0xFF0000, 0x0000FF],       // colors
-  [1, 1],                      // alphas
-  [0, 255],                    // ratios
-  matrix                       // matrix
+    "linear",                    // type
+    [0xFF0000, 0x0000FF],       // colors
+    [1, 1],                      // alphas
+    [0, 255],                    // ratios
+    matrix                       // matrix
 );
 sprite.graphics.drawRect(0, 0, 200, 200);
 sprite.graphics.endFill();
@@ -125,10 +126,10 @@ stage.addChild(sprite);
 
 ### Use as Button
 
-```typescript
-import { Sprite } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
 
-const button: Sprite = new Sprite();
+const button = new Sprite();
 
 // Enable button mode
 button.buttonMode = true;
@@ -140,8 +141,8 @@ button.graphics.drawRoundRect(0, 0, 120, 40, 8, 8);
 button.graphics.endFill();
 
 // Click event
-button.addEventListener("click", (): void => {
-  console.log("Button clicked");
+button.addEventListener("click", function() {
+    console.log("Button clicked");
 });
 
 stage.addChild(button);
@@ -149,16 +150,16 @@ stage.addChild(button);
 
 ### Use as Mask
 
-```typescript
-import { Sprite } from "@next2d/player";
+```javascript
+const { Sprite } = next2d.display;
 
-const content: Sprite = new Sprite();
+const content = new Sprite();
 content.graphics.beginFill(0xFF0000);
 content.graphics.drawRect(0, 0, 200, 200);
 content.graphics.endFill();
 
 // Mask sprite
-const maskSprite: Sprite = new Sprite();
+const maskSprite = new Sprite();
 maskSprite.graphics.beginFill(0xFFFFFF);
 maskSprite.graphics.drawCircle(100, 100, 50);
 maskSprite.graphics.endFill();
