@@ -83,25 +83,6 @@ classDiagram
 | `xScrollShape` | Shape | Shape object for x scroll bar display (read-only) |
 | `yScrollShape` | Shape | Shape object for y scroll bar display (read-only) |
 
-### Bounding Box Related
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `xMin` | number | Bounding box xMin coordinate |
-| `yMin` | number | Bounding box yMin coordinate |
-| `xMax` | number | Bounding box xMax coordinate |
-| `yMax` | number | Bounding box yMax coordinate |
-| `bounds` | IBounds | The bounding box of the drawing area of the text field (read-only) |
-
-### Other
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `namespace` | string | Returns the space name of the specified object ("next2d.display.TextField") (read-only) |
-| `isText` | boolean | Returns whether the display object has TextField functionality (read-only, always true) |
-| `cacheKey` | number | Built cache key (default: 0) |
-| `cacheParams` | number[] | Parameters used to build the cache (read-only) |
-
 ## Methods
 
 | Method | Return | Description |

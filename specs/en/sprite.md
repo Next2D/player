@@ -1,6 +1,6 @@
 # Sprite
 
-Sprite is a DisplayObjectContainer with graphics drawing capabilities. It is the base class of MovieClip and is used for dynamic graphics drawing without a timeline.
+Sprite is a DisplayObjectContainer. It is the base class of MovieClip and is used for dynamic object management without a timeline.
 
 ## Inheritance
 
@@ -12,7 +12,6 @@ classDiagram
     Sprite <|-- MovieClip
 
     class Sprite {
-        +graphics: Graphics
         +buttonMode: Boolean
         +useHandCursor: Boolean
     }
@@ -121,108 +120,12 @@ classDiagram
 | `deleteGlobalVariable(key: any)` | void | Removes a value from the global variable space |
 | `clearGlobalVariable()` | void | Clears all values in the global variable space |
 
-## graphics Property
-
-Use the Sprite's graphics property for dynamic vector drawing.
-
-### Line and Fill Settings
-
-```javascript
-const { Sprite } = next2d.display;
-
-const sprite = new Sprite();
-
-// Set line style
-sprite.graphics.lineStyle(2, 0xFF0000, 1.0);  // thickness, color, alpha
-
-// Set fill
-sprite.graphics.beginFill(0x00FF00, 0.8);  // color, alpha
-```
-
-### Drawing Methods
-
-| Method | Description |
-|--------|-------------|
-| `moveTo(x, y)` | Move drawing position |
-| `lineTo(x, y)` | Draw line from current position |
-| `curveTo(cx, cy, ax, ay)` | Draw quadratic bezier curve |
-| `drawRect(x, y, w, h)` | Draw rectangle |
-| `drawRoundRect(x, y, w, h, rx, ry)` | Draw rounded rectangle |
-| `drawCircle(x, y, r)` | Draw circle |
-| `drawEllipse(x, y, w, h)` | Draw ellipse |
-| `endFill()` | End fill |
-| `clear()` | Clear drawing content |
-
 ## Usage Examples
-
-### Basic Drawing
-
-```javascript
-const { Sprite } = next2d.display;
-
-const sprite = new Sprite();
-
-// Draw red rectangle
-sprite.graphics.beginFill(0xFF0000);
-sprite.graphics.drawRect(0, 0, 100, 100);
-sprite.graphics.endFill();
-
-// Draw blue circle
-sprite.graphics.beginFill(0x0000FF);
-sprite.graphics.drawCircle(200, 50, 40);
-sprite.graphics.endFill();
-
-stage.addChild(sprite);
-```
-
-### Line Drawing
-
-```javascript
-const { Sprite } = next2d.display;
-
-const sprite = new Sprite();
-
-// Set line style
-sprite.graphics.lineStyle(3, 0x000000, 1.0);
-
-// Draw lines
-sprite.graphics.moveTo(0, 0);
-sprite.graphics.lineTo(100, 100);
-sprite.graphics.lineTo(200, 50);
-
-stage.addChild(sprite);
-```
-
-### Gradient Fill
-
-```javascript
-const { Sprite } = next2d.display;
-const { Matrix } = next2d.geom;
-
-const sprite = new Sprite();
-
-// Create gradient matrix
-const matrix = new Matrix();
-matrix.createGradientBox(200, 200, 0, 0, 0);
-
-// Linear gradient
-sprite.graphics.beginGradientFill(
-    "linear",                    // type
-    [0xFF0000, 0x0000FF],       // colors
-    [1, 1],                      // alphas
-    [0, 255],                    // ratios
-    matrix                       // matrix
-);
-sprite.graphics.drawRect(0, 0, 200, 200);
-sprite.graphics.endFill();
-
-stage.addChild(sprite);
-```
 
 ### Use as Button
 
 ```javascript
-const { Sprite } = next2d.display;
+const { Sprite, Shape } = next2d.display;
 
 const button = new Sprite();
 
@@ -230,10 +133,12 @@ const button = new Sprite();
 button.buttonMode = true;
 button.useHandCursor = true;
 
-// Draw background
-button.graphics.beginFill(0x3498db);
-button.graphics.drawRoundRect(0, 0, 120, 40, 8, 8);
-button.graphics.endFill();
+// Create background Shape
+const bg = new Shape();
+bg.graphics.beginFill(0x3498db);
+bg.graphics.drawRoundRect(0, 0, 120, 40, 8, 8);
+bg.graphics.endFill();
+button.addChild(bg);
 
 // Click event
 button.addEventListener("click", function() {
@@ -246,36 +151,44 @@ stage.addChild(button);
 ### Use as Mask
 
 ```javascript
-const { Sprite } = next2d.display;
+const { Sprite, Shape } = next2d.display;
 
-const content = new Sprite();
+const container = new Sprite();
+
+// Content Shape
+const content = new Shape();
 content.graphics.beginFill(0xFF0000);
 content.graphics.drawRect(0, 0, 200, 200);
 content.graphics.endFill();
+container.addChild(content);
 
-// Mask sprite
-const maskSprite = new Sprite();
-maskSprite.graphics.beginFill(0xFFFFFF);
-maskSprite.graphics.drawCircle(100, 100, 50);
-maskSprite.graphics.endFill();
+// Mask Shape
+const maskShape = new Shape();
+maskShape.graphics.beginFill(0xFFFFFF);
+maskShape.graphics.drawCircle(100, 100, 50);
+maskShape.graphics.endFill();
 
 // Apply mask
-content.mask = maskSprite;
+container.mask = maskShape;
 
-stage.addChild(content);
-stage.addChild(maskSprite);
+stage.addChild(container);
+stage.addChild(maskShape);
 ```
 
 ### Drag and Drop
 
 ```javascript
-const { Sprite } = next2d.display;
+const { Sprite, Shape } = next2d.display;
 const { Rectangle } = next2d.geom;
 
 const draggable = new Sprite();
-draggable.graphics.beginFill(0x3498db);
-draggable.graphics.drawRect(0, 0, 100, 100);
-draggable.graphics.endFill();
+
+// Create background Shape
+const bg = new Shape();
+bg.graphics.beginFill(0x3498db);
+bg.graphics.drawRect(0, 0, 100, 100);
+bg.graphics.endFill();
+draggable.addChild(bg);
 
 // Start drag
 draggable.addEventListener("mouseDown", function() {
@@ -289,6 +202,33 @@ draggable.addEventListener("mouseUp", function() {
 });
 
 stage.addChild(draggable);
+```
+
+### Managing Child Objects
+
+```javascript
+const { Sprite, Shape } = next2d.display;
+
+const container = new Sprite();
+
+// Add multiple Shapes as children
+for (let i = 0; i < 5; i++) {
+    const shape = new Shape();
+    shape.graphics.beginFill(0xFF0000 + i * 0x003300);
+    shape.graphics.drawCircle(0, 0, 20);
+    shape.graphics.endFill();
+    shape.x = i * 50;
+    shape.name = "circle" + i;
+    container.addChild(shape);
+}
+
+// Get child object by name
+const circle2 = container.getChildByName("circle2");
+
+// Get number of children
+console.log(container.numChildren); // 5
+
+stage.addChild(container);
 ```
 
 ## Related

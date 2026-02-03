@@ -27,16 +27,9 @@ DisplayObject is the base class for all display objects in Next2D Player.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `dictionaryId` | number | Source ID of DisplayObject (default: -1) |
-| `placeId` | number | ID of the PlaceObject of the display object (default: -1) |
-| `placeObject` | IPlaceObject \| null | PlaceObject of the current frame of the display object |
-| `characterId` | number | Character ID used for construction (default: -1) |
-| `clipDepth` | number | Depth of the mask target (default: 0) |
 | `name` | string | Name. Used by getChildByName() (default: "") |
 | `startFrame` | number | Start frame (default: 1) |
 | `endFrame` | number | End frame (default: 0) |
-| `changed` | boolean | Indicates whether any changes related to drawing have been made (default: true) |
-| `uniqueKey` | string | Unique key used for caching |
 | `isMask` | boolean | Indicates whether the DisplayObject is set as a mask (default: false) |
 | `parent` | Sprite \| MovieClip \| null | The DisplayObjectContainer parent of this DisplayObject |
 | `alpha` | number | Alpha transparency value (0.0-1.0, default: 1.0) |

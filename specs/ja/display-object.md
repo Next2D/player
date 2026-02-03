@@ -27,16 +27,9 @@ DisplayObjectは、Next2D Playerにおける全ての表示オブジェクトの
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `dictionaryId` | number | DisplayObjectの生成元ID（デフォルト: -1） |
-| `placeId` | number | 表示オブジェクトのPlaceObjectのID（デフォルト: -1） |
-| `placeObject` | IPlaceObject \| null | 現在のフレームの表示オブジェクトのPlaceObject |
-| `characterId` | number | 構築に利用したキャラクターID（デフォルト: -1） |
-| `clipDepth` | number | マスク対象の深度（デフォルト: 0） |
 | `name` | string | 名前。getChildByName()で使用される（デフォルト: ""） |
 | `startFrame` | number | 開始フレーム（デフォルト: 1） |
 | `endFrame` | number | 終了フレーム（デフォルト: 0） |
-| `changed` | boolean | 描画に関連する何らかの変更が加えられたかを示す（デフォルト: true） |
-| `uniqueKey` | string | キャッシュで利用するユニークキー |
 | `isMask` | boolean | マスクとしてDisplayObjectにセットされているかを示す（デフォルト: false） |
 | `parent` | Sprite \| MovieClip \| null | このDisplayObjectの親のDisplayObjectContainer |
 | `alpha` | number | アルファ透明度値（0.0～1.0、デフォルト: 1.0） |

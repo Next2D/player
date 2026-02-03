@@ -83,25 +83,6 @@ classDiagram
 | `xScrollShape` | Shape | xスクロールバーの表示用のShapeオブジェクト（読み取り専用） |
 | `yScrollShape` | Shape | yスクロールバーの表示用のShapeオブジェクト（読み取り専用） |
 
-### バウンディングボックス関連
-
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `xMin` | number | バウンディングボックスのxMin座標 |
-| `yMin` | number | バウンディングボックスのyMin座標 |
-| `xMax` | number | バウンディングボックスのxMax座標 |
-| `yMax` | number | バウンディングボックスのyMax座標 |
-| `bounds` | IBounds | テキストフィールドの描画範囲のバウンディングボックス（読み取り専用） |
-
-### その他
-
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `namespace` | string | 指定されたオブジェクトの空間名（"next2d.display.TextField"）（読み取り専用） |
-| `isText` | boolean | TextFieldの機能を所持しているかを返却（読み取り専用、常にtrue） |
-| `cacheKey` | number | ビルドされたキャッシュキー（デフォルト: 0） |
-| `cacheParams` | number[] | キャッシュのビルドに利用されるパラメータ（読み取り専用） |
-
 ## メソッド
 
 | メソッド | 戻り値 | 説明 |
