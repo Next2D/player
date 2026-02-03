@@ -17,7 +17,22 @@ classDiagram
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `graphics` | Graphics | Graphics drawing object |
+| `graphics` | Graphics | The Graphics object that belongs to this Shape object, where vector drawing commands can occur (read-only) |
+| `isShape` | boolean | Returns whether the display object has Shape functionality (read-only) |
+| `cacheKey` | number | Built cache key |
+| `cacheParams` | number[] | Parameters used to build the cache (read-only) |
+| `isBitmap` | boolean | Bitmap drawing judgment flag |
+| `src` | string | Reads images from the specified path and generates Graphics |
+| `bitmapData` | BitmapData | Returns the bitmap data (read-only) |
+| `namespace` | string | Returns the space name of the specified object (read-only) |
+
+## Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `load(url: string)` | Promise\<void\> | Asynchronously loads images from the specified URL and generates Graphics |
+| `clearBitmapBuffer()` | void | Releases bitmap data |
+| `setBitmapBuffer(width: number, height: number, buffer: Uint8Array)` | void | Sets the RGBA image data |
 
 ## Difference Between Sprite and Shape
 

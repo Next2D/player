@@ -9,37 +9,60 @@ classDiagram
     DisplayObject <|-- Video
 
     class Video {
-        +videoWidth: Number
-        +videoHeight: Number
-        +smoothing: Boolean
-        +src: String
-        +autoPlay: Boolean
-        +loop: Boolean
-        +volume: Number
+        +src: string
+        +videoWidth: number
+        +videoHeight: number
+        +duration: number
+        +currentTime: number
+        +volume: number
+        +loop: boolean
+        +autoPlay: boolean
+        +smoothing: boolean
+        +paused: boolean
+        +muted: boolean
+        +loaded: boolean
+        +ended: boolean
+        +isVideo: boolean
+        +namespace: string
+        +play() Promise~void~
+        +pause() void
+        +seek(offset) void
     }
 ```
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `videoWidth` | Number | Original video width (read-only) |
-| `videoHeight` | Number | Original video height (read-only) |
-| `smoothing` | Boolean | Enable smoothing |
-| `src` | String | Video source URL |
-| `autoPlay` | Boolean | Auto play on load |
-| `loop` | Boolean | Loop playback |
-| `volume` | Number | Volume (0.0 - 1.0) |
-| `currentTime` | Number | Current playback position (seconds) |
-| `duration` | Number | Video duration (seconds, read-only) |
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `src` | string | "" | Specifies the URL of the video content |
+| `videoWidth` | number | 0 | An integer specifying the width of the video, in pixels |
+| `videoHeight` | number | 0 | An integer specifying the height of the video, in pixels |
+| `duration` | number | 0 | Total number of keyframes (video duration) |
+| `currentTime` | number | 0 | Current keyframe (playback position) |
+| `volume` | number | 1 | The volume, ranging from 0 (silent) to 1 (full volume) |
+| `loop` | boolean | false | Specifies whether to generate a video loop |
+| `autoPlay` | boolean | true | Setting up automatic video playback |
+| `smoothing` | boolean | true | Specifies whether the video should be smoothed (interpolated) when it is scaled |
+| `paused` | boolean | true | Returns whether the video is paused |
+| `muted` | boolean | false | Returns whether the video is muted |
+| `loaded` | boolean | false | Returns whether the video has been loaded |
+| `ended` | boolean | false | Returns whether the video has ended |
+| `isVideo` | boolean | true | Returns whether the display object has Video functionality (read-only) |
+| `namespace` | string | - | Returns the space name of the specified object (read-only) |
 
 ## Methods
 
-| Method | Description |
-|--------|-------------|
-| `play()` | Start video playback (returns Promise) |
-| `pause()` | Pause playback |
-| `seek(seconds)` | Seek to specified position |
+| Method | Return | Description |
+|--------|--------|-------------|
+| `play()` | Promise\<void\> | Plays the video file |
+| `pause()` | void | Pauses the video playback |
+| `seek(offset: number)` | void | Seeks the keyframe closest to the specified location |
+
+## Static Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `namespace` | string | Returns the space name of the specified class ("next2d.media.Video") |
 
 ## Usage Examples
 

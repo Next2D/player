@@ -27,74 +27,56 @@ classDiagram
 
 ## プロパティ
 
-### タイムライン関連
+### MovieClip固有のプロパティ
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `currentFrame` | Number | 現在のフレーム番号（1から開始） |
-| `currentFrameLabel` | String | 現在のフレームのラベル |
-| `currentLabels` | Array | 現在のシーンのFrameLabelオブジェクト配列 |
-| `totalFrames` | Number | 総フレーム数 |
-| `framesLoaded` | Number | ロード済みフレーム数 |
-| `isPlaying` | Boolean | 再生中かどうか |
+| `currentFrame` | `number` | MovieClipのタイムライン内の再生ヘッドが置かれているフレームの番号（1から開始、読み取り専用） |
+| `totalFrames` | `number` | MovieClipインスタンス内のフレーム総数（読み取り専用） |
+| `currentFrameLabel` | `FrameLabel \| null` | MovieClipインスタンスのタイムライン内の現在のフレームにあるラベル（読み取り専用） |
+| `currentLabels` | `FrameLabel[] \| null` | 現在のシーンのFrameLabelオブジェクトの配列を返す（読み取り専用） |
+| `isPlaying` | `boolean` | ムービークリップが現在再生されているかどうかを示すブール値（読み取り専用） |
+| `isTimelineEnabled` | `boolean` | MovieClipの機能を所持しているかを返却（読み取り専用） |
+
+### DisplayObjectContainerから継承したプロパティ
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `numChildren` | `number` | このオブジェクトの子の数を返す（読み取り専用） |
+| `mouseChildren` | `boolean` | オブジェクトの子がマウスまたはユーザー入力デバイスに対応しているかどうかを判断する |
+| `mask` | `DisplayObject \| null` | 呼び出し元の表示オブジェクトをマスクする指定されたマスクオブジェクト |
+| `isContainerEnabled` | `boolean` | コンテナの機能を所持しているかを返却（読み取り専用） |
 
 ## メソッド
 
-### play()
+### MovieClip固有のメソッド
 
-タイムラインの再生を開始します。
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `play()` | `void` | ムービークリップのタイムライン内で再生ヘッドを移動する |
+| `stop()` | `void` | ムービークリップ内の再生ヘッドを停止する |
+| `gotoAndPlay(frame: string \| number)` | `void` | 指定されたフレームで再生を開始する |
+| `gotoAndStop(frame: string \| number)` | `void` | 指定されたフレームに再生ヘッドを送り、そこで停止させる |
+| `nextFrame()` | `void` | 次のフレームに再生ヘッドを送り、停止する |
+| `prevFrame()` | `void` | 直前のフレームに再生ヘッドを戻し、停止する |
+| `addFrameLabel(frame_label: FrameLabel)` | `void` | タイムラインに対して動的にLabelを追加する |
 
-```typescript
-movieClip.play();
-```
+### DisplayObjectContainerから継承したメソッド
 
-### stop()
-
-タイムラインの再生を停止します。
-
-```typescript
-movieClip.stop();
-```
-
-### gotoAndPlay(frame)
-
-指定したフレームに移動して再生を開始します。
-
-```typescript
-// フレーム番号で指定
-movieClip.gotoAndPlay(10);
-
-// フレームラベルで指定
-movieClip.gotoAndPlay("start");
-```
-
-### gotoAndStop(frame)
-
-指定したフレームに移動して停止します。
-
-```typescript
-// フレーム番号で指定
-movieClip.gotoAndStop(1);
-
-// フレームラベルで指定
-movieClip.gotoAndStop("end");
-```
-
-### nextFrame()
-
-次のフレームに進んで停止します。
-
-```typescript
-movieClip.nextFrame();
-```
-
-### prevFrame()
-
-前のフレームに戻って停止します。
-
-```typescript
-movieClip.prevFrame();
-```
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `addChild(display_object: DisplayObject)` | `DisplayObject` | このDisplayObjectContainerインスタンスに子DisplayObjectインスタンスを追加する |
+| `addChildAt(display_object: DisplayObject, index: number)` | `DisplayObject` | 指定したインデックス位置に子DisplayObjectインスタンスを追加する |
+| `removeChild(display_object: DisplayObject)` | `void` | 子リストから指定のDisplayObjectインスタンスを削除する |
+| `removeChildAt(index: number)` | `void` | 子リストの指定されたインデックス位置から子DisplayObjectを削除する |
+| `removeChildren(...indexes: number[])` | `void` | 配列で指定されたインデックスの子をコンテナから削除する |
+| `getChildAt(index: number)` | `DisplayObject \| null` | 指定のインデックス位置にある子表示オブジェクトインスタンスを返す |
+| `getChildByName(name: string)` | `DisplayObject \| null` | 指定された名前に一致する子表示オブジェクトを返す |
+| `getChildIndex(display_object: DisplayObject)` | `number` | 子DisplayObjectインスタンスのインデックス位置を返す |
+| `contains(display_object: DisplayObject)` | `boolean` | 指定されたDisplayObjectがインスタンスの子孫か、インスタンス自体かを指定する |
+| `setChildIndex(display_object: DisplayObject, index: number)` | `void` | 表示オブジェクトコンテナの既存の子の位置を変更する |
+| `swapChildren(display_object1: DisplayObject, display_object2: DisplayObject)` | `void` | 指定された2つの子オブジェクトのz順序（重ね順）を入れ替える |
+| `swapChildrenAt(index1: number, index2: number)` | `void` | 指定されたインデックス位置に該当する2つの子オブジェクトのz順序を入れ替える |
 
 ## イベント
 
@@ -188,6 +170,53 @@ childMc.gotoAndPlay("run");
 // 孫MovieClipへのアクセス
 const grandChild = mc.character.arm;
 grandChild.play();
+```
+
+### 子オブジェクトの操作
+
+```typescript
+// 子オブジェクトを追加
+const sprite = new Sprite();
+mc.addChild(sprite);
+
+// 特定のインデックスに追加
+mc.addChildAt(sprite, 0);
+
+// 子オブジェクトを削除
+mc.removeChild(sprite);
+
+// インデックスで削除
+mc.removeChildAt(0);
+
+// 複数の子を削除
+mc.removeChildren(0, 1, 2);
+
+// 子オブジェクトの取得
+const child = mc.getChildAt(0);
+const namedChild = mc.getChildByName("myChild");
+
+// 子のインデックスを取得
+const index = mc.getChildIndex(sprite);
+
+// 子のインデックスを変更
+mc.setChildIndex(sprite, 2);
+
+// 子の順序を入れ替え
+mc.swapChildren(sprite1, sprite2);
+mc.swapChildrenAt(0, 1);
+```
+
+### フレームラベルの動的追加
+
+```typescript
+const { FrameLabel } = next2d.display;
+
+// 新しいラベルを作成して追加
+const label = new FrameLabel("myLabel", 10);
+mc.addFrameLabel(label);
+
+// ラベルを使って移動
+mc.gotoAndPlay("myLabel");
 ```
 
 ### フレームレートの変更

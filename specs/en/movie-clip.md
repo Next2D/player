@@ -27,74 +27,56 @@ classDiagram
 
 ## Properties
 
-### Timeline Related
+### MovieClip-Specific Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `currentFrame` | Number | Current frame number (starts from 1) |
-| `currentFrameLabel` | String | Label of current frame |
-| `currentLabels` | Array | Array of FrameLabel objects for current scene |
-| `totalFrames` | Number | Total number of frames |
-| `framesLoaded` | Number | Number of frames loaded |
-| `isPlaying` | Boolean | Whether playing |
+| `currentFrame` | `number` | Specifies the number of the frame in which the playhead is located in the timeline (starts from 1, read-only) |
+| `totalFrames` | `number` | The total number of frames in the MovieClip instance (read-only) |
+| `currentFrameLabel` | `FrameLabel \| null` | The label at the current frame in the timeline of the MovieClip instance (read-only) |
+| `currentLabels` | `FrameLabel[] \| null` | Returns an array of FrameLabel objects from the current scene (read-only) |
+| `isPlaying` | `boolean` | A Boolean value that indicates whether a movie clip is currently playing (read-only) |
+| `isTimelineEnabled` | `boolean` | Returns whether the display object has MovieClip functionality (read-only) |
+
+### Properties Inherited from DisplayObjectContainer
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `numChildren` | `number` | Returns the number of children of this object (read-only) |
+| `mouseChildren` | `boolean` | Determines whether the children of the object are mouse or user input device enabled |
+| `mask` | `DisplayObject \| null` | The calling display object is masked by the specified mask object |
+| `isContainerEnabled` | `boolean` | Returns whether the display object has container functionality (read-only) |
 
 ## Methods
 
-### play()
+### MovieClip-Specific Methods
 
-Starts timeline playback.
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `play()` | `void` | Moves the playhead in the timeline of the movie clip |
+| `stop()` | `void` | Stops the playhead in the movie clip |
+| `gotoAndPlay(frame: string \| number)` | `void` | Starts playing the file at the specified frame |
+| `gotoAndStop(frame: string \| number)` | `void` | Brings the playhead to the specified frame and stops it there |
+| `nextFrame()` | `void` | Sends the playhead to the next frame and stops it |
+| `prevFrame()` | `void` | Sends the playhead to the previous frame and stops it |
+| `addFrameLabel(frame_label: FrameLabel)` | `void` | Dynamically adds a label to the timeline |
 
-```javascript
-movieClip.play();
-```
+### Methods Inherited from DisplayObjectContainer
 
-### stop()
-
-Stops timeline playback.
-
-```javascript
-movieClip.stop();
-```
-
-### gotoAndPlay(frame)
-
-Moves to specified frame and starts playback.
-
-```javascript
-// Specify by frame number
-movieClip.gotoAndPlay(10);
-
-// Specify by frame label
-movieClip.gotoAndPlay("start");
-```
-
-### gotoAndStop(frame)
-
-Moves to specified frame and stops.
-
-```javascript
-// Specify by frame number
-movieClip.gotoAndStop(1);
-
-// Specify by frame label
-movieClip.gotoAndStop("end");
-```
-
-### nextFrame()
-
-Advances to next frame and stops.
-
-```javascript
-movieClip.nextFrame();
-```
-
-### prevFrame()
-
-Returns to previous frame and stops.
-
-```javascript
-movieClip.prevFrame();
-```
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `addChild(display_object: DisplayObject)` | `DisplayObject` | Adds a child DisplayObject instance to this DisplayObjectContainer instance |
+| `addChildAt(display_object: DisplayObject, index: number)` | `DisplayObject` | Adds a child DisplayObject instance at the specified index position |
+| `removeChild(display_object: DisplayObject)` | `void` | Removes the specified child DisplayObject instance from the child list |
+| `removeChildAt(index: number)` | `void` | Removes a child DisplayObject from the specified index position in the child list |
+| `removeChildren(...indexes: number[])` | `void` | Removes children at the specified indexes from the container |
+| `getChildAt(index: number)` | `DisplayObject \| null` | Returns the child display object instance that exists at the specified index |
+| `getChildByName(name: string)` | `DisplayObject \| null` | Returns the child display object that exists with the specified name |
+| `getChildIndex(display_object: DisplayObject)` | `number` | Returns the index position of a child DisplayObject instance |
+| `contains(display_object: DisplayObject)` | `boolean` | Determines whether the specified display object is a child of the DisplayObjectContainer instance or the instance itself |
+| `setChildIndex(display_object: DisplayObject, index: number)` | `void` | Changes the position of an existing child in the display object container |
+| `swapChildren(display_object1: DisplayObject, display_object2: DisplayObject)` | `void` | Swaps the z-order (front-to-back order) of the two specified child objects |
+| `swapChildrenAt(index1: number, index2: number)` | `void` | Swaps the z-order (front-to-back order) of the child objects at the two specified index positions |
 
 ## Events
 
@@ -188,6 +170,53 @@ childMc.gotoAndPlay("run");
 // Access grandchild MovieClip
 const grandChild = mc.character.arm;
 grandChild.play();
+```
+
+### Child Object Operations
+
+```javascript
+// Add child object
+const sprite = new Sprite();
+mc.addChild(sprite);
+
+// Add at specific index
+mc.addChildAt(sprite, 0);
+
+// Remove child object
+mc.removeChild(sprite);
+
+// Remove by index
+mc.removeChildAt(0);
+
+// Remove multiple children
+mc.removeChildren(0, 1, 2);
+
+// Get child object
+const child = mc.getChildAt(0);
+const namedChild = mc.getChildByName("myChild");
+
+// Get child index
+const index = mc.getChildIndex(sprite);
+
+// Change child index
+mc.setChildIndex(sprite, 2);
+
+// Swap child order
+mc.swapChildren(sprite1, sprite2);
+mc.swapChildrenAt(0, 1);
+```
+
+### Dynamically Adding Frame Labels
+
+```javascript
+const { FrameLabel } = next2d.display;
+
+// Create and add a new label
+const label = new FrameLabel("myLabel", 10);
+mc.addFrameLabel(label);
+
+// Navigate using the label
+mc.gotoAndPlay("myLabel");
 ```
 
 ### Changing Frame Rate

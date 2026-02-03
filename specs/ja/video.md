@@ -9,20 +9,24 @@ classDiagram
     DisplayObject <|-- Video
 
     class Video {
-        +src: String
-        +videoWidth: Number
-        +videoHeight: Number
-        +duration: Number
-        +currentTime: Number
-        +volume: Number
-        +loop: Boolean
-        +autoPlay: Boolean
-        +smoothing: Boolean
-        +paused: Boolean
-        +muted: Boolean
-        +play()
-        +pause()
-        +seek()
+        +src: string
+        +videoWidth: number
+        +videoHeight: number
+        +duration: number
+        +currentTime: number
+        +volume: number
+        +loop: boolean
+        +autoPlay: boolean
+        +smoothing: boolean
+        +paused: boolean
+        +muted: boolean
+        +loaded: boolean
+        +ended: boolean
+        +isVideo: boolean
+        +namespace: string
+        +play() Promise~void~
+        +pause() void
+        +seek(offset) void
     }
 ```
 
@@ -30,25 +34,35 @@ classDiagram
 
 | プロパティ | 型 | デフォルト | 説明 |
 |-----------|------|----------|------|
-| `src` | String | "" | 動画ファイルのURL |
-| `videoWidth` | Number | 0 | 動画の幅（読み取り専用） |
-| `videoHeight` | Number | 0 | 動画の高さ（読み取り専用） |
-| `duration` | Number | 0 | 動画の長さ（秒） |
-| `currentTime` | Number | 0 | 現在の再生位置（秒） |
-| `volume` | Number | 1 | 音量（0.0～1.0） |
-| `loop` | Boolean | false | ループ再生 |
-| `autoPlay` | Boolean | true | 自動再生 |
-| `smoothing` | Boolean | true | スムージング処理 |
-| `paused` | Boolean | true | 一時停止状態 |
-| `muted` | Boolean | false | ミュート状態 |
+| `src` | string | "" | ビデオコンテンツへのURLを指定します |
+| `videoWidth` | number | 0 | ビデオの幅をピクセル単位で指定する整数です |
+| `videoHeight` | number | 0 | ビデオの高さをピクセル単位で指定する整数です |
+| `duration` | number | 0 | キーフレーム総数（動画の長さ） |
+| `currentTime` | number | 0 | 現在のキーフレーム（再生位置） |
+| `volume` | number | 1 | ボリュームです。範囲は 0（無音）～ 1（フルボリューム）です |
+| `loop` | boolean | false | ビデオをループ再生するかどうかを指定します |
+| `autoPlay` | boolean | true | ビデオの自動再生の設定 |
+| `smoothing` | boolean | true | ビデオを拡大/縮小する際にスムージング（補間）するかどうかを指定します |
+| `paused` | boolean | true | ビデオが一時停止しているかどうかを返します |
+| `muted` | boolean | false | ビデオがミュートされているかどうかを返します |
+| `loaded` | boolean | false | ビデオが読み込まれているかどうかを返します |
+| `ended` | boolean | false | ビデオが終了したかどうかを返します |
+| `isVideo` | boolean | true | Videoの機能を所持しているかを返却（読み取り専用） |
+| `namespace` | string | - | 指定されたオブジェクトの空間名を返します（読み取り専用） |
 
 ## メソッド
 
-| メソッド | 説明 |
-|---------|------|
-| `play()` | 動画を再生（Promiseを返す） |
-| `pause()` | 動画を一時停止 |
-| `seek(offset)` | 指定位置にシーク |
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `play()` | Promise\<void\> | ビデオファイルを再生します |
+| `pause()` | void | ビデオの再生を一時停止します |
+| `seek(offset: number)` | void | 指定された位置に最も近いキーフレームをシークします |
+
+## 静的プロパティ
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `namespace` | string | 指定されたクラスの空間名を返します（"next2d.media.Video"） |
 
 ## 使用例
 

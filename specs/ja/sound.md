@@ -24,25 +24,25 @@ classDiagram
 
 ## Sound
 
-音声ファイルを読み込み再生するクラスです。
+音声ファイルを読み込み再生するクラスです。EventDispatcherを継承しています。
 
 ### プロパティ
 
-| プロパティ | 型 | デフォルト | 説明 |
-|-----------|------|----------|------|
-| `audioBuffer` | AudioBuffer | null | オーディオバッファ |
-| `volume` | Number | 1 | 音量（0.0～1.0） |
-| `loopCount` | Number | 0 | ループ回数（0でループなし） |
-| `canLoop` | Boolean | - | ループ可能かどうか（読み取り専用） |
+| プロパティ | 型 | デフォルト | 読み取り専用 | 説明 |
+|-----------|------|----------|:------------:|------|
+| `audioBuffer` | AudioBuffer \| null | null | - | オーディオバッファ。load()で読み込んだ音声データが格納されます |
+| `loopCount` | number | 0 | - | ループ回数の設定。0でループなし、9999で実質無限ループ |
+| `volume` | number | 1 | - | ボリューム。範囲は0（無音）〜1（フルボリューム）。SoundMixer.volumeの値を超えることはできません |
+| `canLoop` | boolean | - | ○ | サウンドがループするかどうかを示します |
 
 ### メソッド
 
-| メソッド | 説明 |
-|---------|------|
-| `load(request)` | URLRequestを使って音声を非同期読み込み |
-| `play(startTime)` | 再生を開始（startTimeは秒単位、デフォルト0） |
-| `stop()` | 再生を停止 |
-| `clone()` | Soundオブジェクトを複製 |
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `clone()` | Sound | Soundクラスを複製します。volume、loopCount、audioBufferがコピーされます |
+| `load(request: URLRequest)` | Promise\<void\> | 指定したURLから外部MP3ファイルのロードを開始します |
+| `play(startTime: number = 0)` | void | サウンドを再生します。startTimeは再生開始時間（秒単位）です。既に再生中の場合は何もしません |
+| `stop()` | void | チャンネルで再生しているサウンドを停止します |
 
 ## 使用例
 

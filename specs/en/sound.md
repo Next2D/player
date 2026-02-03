@@ -6,14 +6,16 @@ Next2D Player provides audio functionality for games and applications, supportin
 
 ```mermaid
 classDiagram
+    EventDispatcher <|-- Sound
     class Sound {
-        +length: Number
-        +url: String
-        +volume: Number
-        +loopCount: Number
+        +audioBuffer: AudioBuffer
+        +volume: number
+        +loopCount: number
+        +canLoop: boolean
         +load(request): Promise
-        +play(): void
+        +play(startTime): void
         +stop(): void
+        +clone(): Sound
     }
     class SoundMixer {
         +volume: Number
@@ -23,24 +25,25 @@ classDiagram
 
 ## Sound
 
-A class for loading and playing audio files.
+A class for loading and playing audio files. Extends EventDispatcher.
 
 ### Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `length` | Number | Sound duration (milliseconds) |
-| `url` | String | Loaded URL |
-| `volume` | Number | Volume (0.0 - 1.0) |
-| `loopCount` | Number | Number of loops (0 = no loop, 9999 = infinite) |
+| Property | Type | Default | Read-only | Description |
+|----------|------|---------|:---------:|-------------|
+| `audioBuffer` | AudioBuffer \| null | null | - | Audio buffer. Stores audio data loaded by load() |
+| `loopCount` | number | 0 | - | Loop count setting. 0 for no loop, 9999 for virtually infinite loop |
+| `volume` | number | 1 | - | Volume, ranging from 0 (silent) to 1 (full volume). Cannot exceed SoundMixer.volume value |
+| `canLoop` | boolean | - | Yes | Indicates whether the sound loops |
 
 ### Methods
 
-| Method | Description |
-|--------|-------------|
-| `load(request)` | Load audio file (returns Promise) |
-| `play()` | Start playback |
-| `stop()` | Stop playback |
+| Method | Return | Description |
+|--------|--------|-------------|
+| `clone()` | Sound | Duplicates the Sound class. Copies volume, loopCount, and audioBuffer |
+| `load(request: URLRequest)` | Promise\<void\> | Initiates loading of an external MP3 file from the specified URL |
+| `play(startTime: number = 0)` | void | Plays a sound. startTime is the playback start time (in seconds). Does nothing if already playing |
+| `stop()` | void | Stops the sound playing in the channel |
 
 ## Usage Examples
 

@@ -23,39 +23,99 @@ classDiagram
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `text` | String | 表示するテキスト |
-| `htmlText` | String | HTMLフォーマットのテキスト |
-| `length` | Number | テキストの文字数（読み取り専用） |
-| `maxChars` | Number | 最大文字数（0で無制限） |
+| `text` | string | テキストフィールド内の現在のテキストであるストリング |
+| `htmlText` | string | テキストフィールドの内容をHTMLで表した文字列 |
+| `length` | number | テキストフィールド内の文字数（読み取り専用） |
+| `maxChars` | number | ユーザーが入力できる最大文字数（0で無制限） |
+| `restrict` | string | ユーザーがテキストフィールドに入力できる文字のセットを指定 |
+| `defaultTextFormat` | TextFormat | テキストに適用するデフォルトのフォーマット |
+| `stopIndex` | number | テキストの任意の表示終了位置の設定（デフォルト: -1） |
 
 ### 表示関連
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `textColor` | Number | テキストの色（0xRRGGBB） |
-| `textWidth` | Number | テキストの幅（読み取り専用） |
-| `textHeight` | Number | テキストの高さ（読み取り専用） |
-| `autoSize` | String | 自動サイズ調整（"none", "left", "center", "right"） |
-| `wordWrap` | Boolean | ワードラップの有効化 |
-| `multiline` | Boolean | 複数行テキストの許可 |
+| `width` | number | 表示オブジェクトの幅（ピクセル単位） |
+| `height` | number | 表示オブジェクトの高さ（ピクセル単位） |
+| `textWidth` | number | テキストの幅（ピクセル単位、読み取り専用） |
+| `textHeight` | number | テキストの高さ（ピクセル単位、読み取り専用） |
+| `autoSize` | string | テキストフィールドの自動的な拡大/縮小および整列を制御（"none", "left", "center", "right"） |
+| `autoFontSize` | boolean | テキストサイズの自動的な拡大/縮小および整列を制御（デフォルト: false） |
+| `wordWrap` | boolean | テキストフィールドのテキストを折り返すかどうか（デフォルト: false） |
+| `multiline` | boolean | 複数行テキストフィールドであるかどうか（デフォルト: false） |
+| `numLines` | number | テキストの行数（読み取り専用） |
+
+### 境界線・背景関連
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `background` | boolean | テキストフィールドに背景の塗りつぶしがあるかどうか（デフォルト: false） |
+| `backgroundColor` | number | テキストフィールドの背景の色（デフォルト: 0xffffff） |
+| `border` | boolean | テキストフィールドに境界線があるかどうか（デフォルト: false） |
+| `borderColor` | number | テキストフィールドの境界線の色（デフォルト: 0x000000） |
+
+### 輪郭関連
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `thickness` | number | 輪郭のテキスト幅。0（デフォルト値）で無効 |
+| `thicknessColor` | number | 輪郭のテキストの色（16進数形式、デフォルト: 0） |
 
 ### 入力関連
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `type` | String | "dynamic"（表示のみ）または "input"（入力可能） |
-| `selectable` | Boolean | テキスト選択の可否 |
-| `displayAsPassword` | Boolean | パスワード表示（*で表示） |
+| `type` | string | テキストフィールドのタイプ（"static", "dynamic", "input"）（デフォルト: "static"） |
+| `focus` | boolean | テキストフィールドがフォーカスを持つかどうか（デフォルト: false） |
+| `focusVisible` | boolean | テキストフィールドの点滅線の表示・非表示を制御（デフォルト: false） |
+| `focusIndex` | number | テキストフィールドのフォーカス位置のインデックス（デフォルト: -1） |
+| `selectIndex` | number | テキストフィールドの選択位置のインデックス（デフォルト: -1） |
+| `compositionStartIndex` | number | テキストフィールドのコンポジション開始インデックス（デフォルト: -1） |
+| `compositionEndIndex` | number | テキストフィールドのコンポジション終了インデックス（デフォルト: -1） |
 
 ### スクロール関連
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `scrollV` | Number | 縦スクロール位置（行番号） |
-| `maxScrollV` | Number | 最大縦スクロール位置（読み取り専用） |
-| `scrollH` | Number | 横スクロール位置（ピクセル） |
-| `maxScrollH` | Number | 最大横スクロール位置（読み取り専用） |
-| `numLines` | Number | テキストの行数（読み取り専用） |
+| `scrollX` | number | x軸のスクロール位置（デフォルト: 0） |
+| `scrollY` | number | y軸のスクロール位置（デフォルト: 0） |
+| `scrollEnabled` | boolean | スクロール機能のON/OFFの制御（デフォルト: true） |
+| `xScrollShape` | Shape | xスクロールバーの表示用のShapeオブジェクト（読み取り専用） |
+| `yScrollShape` | Shape | yスクロールバーの表示用のShapeオブジェクト（読み取り専用） |
+
+### バウンディングボックス関連
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `xMin` | number | バウンディングボックスのxMin座標 |
+| `yMin` | number | バウンディングボックスのyMin座標 |
+| `xMax` | number | バウンディングボックスのxMax座標 |
+| `yMax` | number | バウンディングボックスのyMax座標 |
+| `bounds` | IBounds | テキストフィールドの描画範囲のバウンディングボックス（読み取り専用） |
+
+### その他
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `namespace` | string | 指定されたオブジェクトの空間名（"next2d.display.TextField"）（読み取り専用） |
+| `isText` | boolean | TextFieldの機能を所持しているかを返却（読み取り専用、常にtrue） |
+| `cacheKey` | number | ビルドされたキャッシュキー（デフォルト: 0） |
+| `cacheParams` | number[] | キャッシュのビルドに利用されるパラメータ（読み取り専用） |
+
+## メソッド
+
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `appendText(newText: string)` | void | 指定されたストリングをテキストフィールドのテキストの最後に付加します |
+| `insertText(newText: string)` | void | テキストフィールドのフォーカス位置にテキストを追加します |
+| `deleteText()` | void | テキストフィールドの選択範囲を削除します |
+| `getLineText(lineIndex: number)` | string | 指定された行のテキストを返します |
+| `replaceText(newText: string, beginIndex: number, endIndex: number)` | void | 指定された文字範囲を新しいテキストの内容に置き換えます |
+| `selectAll()` | void | テキストフィールドのすべてのテキストを選択します |
+| `copy()` | void | テキストフィールドの選択範囲をコピーします |
+| `paste()` | void | コピーしたテキストを選択範囲に貼り付けます |
+| `setFocusIndex(stageX: number, stageY: number, selected?: boolean)` | void | テキストフィールドのフォーカス位置を設定します |
+| `keyDown(event: KeyboardEvent)` | void | キーダウンイベントを処理します |
 
 ## TextFormat
 
@@ -217,15 +277,13 @@ textField.text = "長いテキスト...\n".repeat(20);
 
 // スクロール操作
 function scrollUp() {
-    if (textField.scrollV > 1) {
-        textField.scrollV--;
+    if (textField.scrollY > 0) {
+        textField.scrollY -= 10;
     }
 }
 
 function scrollDown() {
-    if (textField.scrollV < textField.maxScrollV) {
-        textField.scrollV++;
-    }
+    textField.scrollY += 10;
 }
 
 stage.addChild(textField);
@@ -254,6 +312,43 @@ function updateScore(points) {
 
 updateScore(0);
 stage.addChild(scoreField);
+```
+
+### テキストの輪郭効果
+
+```typescript
+const { TextField, TextFormat } = next2d.text;
+
+const textField = new TextField();
+textField.autoSize = "left";
+
+const format = new TextFormat();
+format.font = "Arial";
+format.size = 48;
+format.color = 0xffffff;
+textField.defaultTextFormat = format;
+
+textField.text = "輪郭付きテキスト";
+textField.thickness = 2;
+textField.thicknessColor = 0x000000;
+
+stage.addChild(textField);
+```
+
+### テキストの一部置換
+
+```typescript
+const { TextField } = next2d.text;
+
+const textField = new TextField();
+textField.autoSize = "left";
+textField.text = "Hello World!";
+
+// "World"を"Next2D"に置き換え
+textField.replaceText("Next2D", 6, 11);
+// 結果: "Hello Next2D!"
+
+stage.addChild(textField);
 ```
 
 ## イベント

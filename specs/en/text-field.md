@@ -23,39 +23,99 @@ classDiagram
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `text` | String | Text to display |
-| `htmlText` | String | HTML formatted text |
-| `length` | Number | Character count (read-only) |
-| `maxChars` | Number | Maximum characters (0 for unlimited) |
+| `text` | string | A string that is the current text in the text field |
+| `htmlText` | string | Contains the HTML representation of the text field contents |
+| `length` | number | The number of characters in a text field (read-only) |
+| `maxChars` | number | The maximum number of characters that the text field can contain (0 for unlimited) |
+| `restrict` | string | Indicates the set of characters that a user can enter into the text field |
+| `defaultTextFormat` | TextFormat | Specifies the formatting to be applied to the text |
+| `stopIndex` | number | Setting an arbitrary display end position for text (default: -1) |
 
 ### Display Related
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `textColor` | Number | Text color (0xRRGGBB) |
-| `textWidth` | Number | Text width (read-only) |
-| `textHeight` | Number | Text height (read-only) |
-| `autoSize` | String | Auto size ("none", "left", "center", "right") |
-| `wordWrap` | Boolean | Enable word wrap |
-| `multiline` | Boolean | Allow multiline text |
+| `width` | number | Indicates the width of the display object, in pixels |
+| `height` | number | Indicates the height of the display object, in pixels |
+| `textWidth` | number | The width of the text in pixels (read-only) |
+| `textHeight` | number | The height of the text in pixels (read-only) |
+| `autoSize` | string | Controls automatic sizing and alignment of text fields ("none", "left", "center", "right") |
+| `autoFontSize` | boolean | Controls automatic sizing and alignment of text size (default: false) |
+| `wordWrap` | boolean | A Boolean value that indicates whether the text field has word wrap (default: false) |
+| `multiline` | boolean | Indicates whether field is a multiline text field (default: false) |
+| `numLines` | number | Number of text lines (read-only) |
+
+### Border and Background Related
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `background` | boolean | Specifies whether the text field has a background fill (default: false) |
+| `backgroundColor` | number | The color of the text field background (default: 0xffffff) |
+| `border` | boolean | Specifies whether the text field has a border (default: false) |
+| `borderColor` | number | The color of the text field border (default: 0x000000) |
+
+### Outline Related
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `thickness` | number | The text width of the outline, which can be disabled with 0 (default: 0) |
+| `thicknessColor` | number | The color of the outline text in hexadecimal format (default: 0) |
 
 ### Input Related
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `type` | String | "dynamic" (display only) or "input" (editable) |
-| `selectable` | Boolean | Whether text is selectable |
-| `displayAsPassword` | Boolean | Password display (shows as *) |
+| `type` | string | The type of the text field ("static", "dynamic", "input") (default: "static") |
+| `focus` | boolean | Whether the text field has focus (default: false) |
+| `focusVisible` | boolean | Controls the visibility of the text field's blinking line (default: false) |
+| `focusIndex` | number | Index of the focus position of the text field (default: -1) |
+| `selectIndex` | number | Index of the selected position of the text field (default: -1) |
+| `compositionStartIndex` | number | Composition start index of the text field (default: -1) |
+| `compositionEndIndex` | number | Composition end index of the text field (default: -1) |
 
 ### Scroll Related
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `scrollV` | Number | Vertical scroll position (line number) |
-| `maxScrollV` | Number | Maximum vertical scroll position (read-only) |
-| `scrollH` | Number | Horizontal scroll position (pixels) |
-| `maxScrollH` | Number | Maximum horizontal scroll position (read-only) |
-| `numLines` | Number | Number of text lines (read-only) |
+| `scrollX` | number | Scroll position on the x-axis (default: 0) |
+| `scrollY` | number | Scroll position on the y-axis (default: 0) |
+| `scrollEnabled` | boolean | Control ON/OFF of the scroll function (default: true) |
+| `xScrollShape` | Shape | Shape object for x scroll bar display (read-only) |
+| `yScrollShape` | Shape | Shape object for y scroll bar display (read-only) |
+
+### Bounding Box Related
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `xMin` | number | Bounding box xMin coordinate |
+| `yMin` | number | Bounding box yMin coordinate |
+| `xMax` | number | Bounding box xMax coordinate |
+| `yMax` | number | Bounding box yMax coordinate |
+| `bounds` | IBounds | The bounding box of the drawing area of the text field (read-only) |
+
+### Other
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `namespace` | string | Returns the space name of the specified object ("next2d.display.TextField") (read-only) |
+| `isText` | boolean | Returns whether the display object has TextField functionality (read-only, always true) |
+| `cacheKey` | number | Built cache key (default: 0) |
+| `cacheParams` | number[] | Parameters used to build the cache (read-only) |
+
+## Methods
+
+| Method | Return | Description |
+|--------|--------|-------------|
+| `appendText(newText: string)` | void | Appends the string specified by the newText parameter to the end of the text of the text field |
+| `insertText(newText: string)` | void | Adds text to the focus position of the text field |
+| `deleteText()` | void | Deletes the selection range of the text field |
+| `getLineText(lineIndex: number)` | string | Returns the text of the line specified by the lineIndex parameter |
+| `replaceText(newText: string, beginIndex: number, endIndex: number)` | void | Replaces the range of characters that the beginIndex and endIndex parameters specify with the contents of the newText parameter |
+| `selectAll()` | void | Selects all text in the text field |
+| `copy()` | void | Copy a selection of text fields |
+| `paste()` | void | Paste the copied text into the selected range |
+| `setFocusIndex(stageX: number, stageY: number, selected?: boolean)` | void | Sets the focus position of the text field |
+| `keyDown(event: KeyboardEvent)` | void | Processes the key down event |
 
 ## TextFormat
 
@@ -215,15 +275,13 @@ textField.text = "Long text...\n".repeat(20);
 
 // Scroll operations
 function scrollUp() {
-    if (textField.scrollV > 1) {
-        textField.scrollV--;
+    if (textField.scrollY > 0) {
+        textField.scrollY -= 10;
     }
 }
 
 function scrollDown() {
-    if (textField.scrollV < textField.maxScrollV) {
-        textField.scrollV++;
-    }
+    textField.scrollY += 10;
 }
 
 stage.addChild(textField);
@@ -252,6 +310,43 @@ function updateScore(points) {
 
 updateScore(0);
 stage.addChild(scoreField);
+```
+
+### Text Outline Effect
+
+```javascript
+const { TextField, TextFormat } = next2d.text;
+
+const textField = new TextField();
+textField.autoSize = "left";
+
+const format = new TextFormat();
+format.font = "Arial";
+format.size = 48;
+format.color = 0xffffff;
+textField.defaultTextFormat = format;
+
+textField.text = "Outlined Text";
+textField.thickness = 2;
+textField.thicknessColor = 0x000000;
+
+stage.addChild(textField);
+```
+
+### Replace Part of Text
+
+```javascript
+const { TextField } = next2d.text;
+
+const textField = new TextField();
+textField.autoSize = "left";
+textField.text = "Hello World!";
+
+// Replace "World" with "Next2D"
+textField.replaceText("Next2D", 6, 11);
+// Result: "Hello Next2D!"
+
+stage.addChild(textField);
 ```
 
 ## Events

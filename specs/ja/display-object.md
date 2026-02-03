@@ -2,95 +2,77 @@
 
 DisplayObjectは、Next2D Playerにおける全ての表示オブジェクトの基底クラスです。
 
-## プロパティ
+## プロパティ (Properties)
 
-### 位置とサイズ
-
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `x` | Number | X座標（親コンテナのローカル座標） |
-| `y` | Number | Y座標（親コンテナのローカル座標） |
-| `width` | Number | 幅（ピクセル） |
-| `height` | Number | 高さ（ピクセル） |
-| `scaleX` | Number | 水平方向の拡大率（1.0 = 100%） |
-| `scaleY` | Number | 垂直方向の拡大率（1.0 = 100%） |
-| `rotation` | Number | 回転角度（度数法） |
-
-### 表示制御
+### 読み取り専用プロパティ
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `visible` | Boolean | 表示/非表示（デフォルト: true） |
-| `alpha` | Number | 透明度（0.0～1.0） |
-| `blendMode` | String | ブレンドモード |
-| `filters` | Array | フィルターの配列 |
-| `mask` | DisplayObject | マスクオブジェクト |
+| `instanceId` | number | DisplayObjectのユニークなインスタンスID |
+| `isSprite` | boolean | Spriteの機能を所持しているかを返却 |
+| `isInteractive` | boolean | InteractiveObjectの機能を所持しているかを返却 |
+| `isContainerEnabled` | boolean | コンテナの機能を所持しているかを返却 |
+| `isTimelineEnabled` | boolean | MovieClipの機能を所持しているかを返却 |
+| `isShape` | boolean | Shapeの機能を所持しているかを返却 |
+| `isVideo` | boolean | Videoの機能を所持しているかを返却 |
+| `isText` | boolean | Textの機能を所持しているかを返却 |
+| `concatenatedMatrix` | Matrix | ルートレベルまでの結合された変換行列 |
+| `dropTarget` | DisplayObject \| null | スプライトのドラッグ先またはドロップされた先の表示オブジェクト |
+| `loaderInfo` | LoaderInfo \| null | この表示オブジェクトが属するファイルの読み込み情報 |
+| `mouseX` | number | 対象のDisplayObjectの基準点からのマウスのX座標（ピクセル） |
+| `mouseY` | number | 対象のDisplayObjectの基準点からのマウスのY座標（ピクセル） |
+| `root` | MovieClip \| Sprite \| null | DisplayObjectのルートであるDisplayObjectContainer |
 
-### 階層関係
+### 読み書きプロパティ
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `parent` | DisplayObjectContainer | 親コンテナ |
-| `root` | DisplayObject | ルートオブジェクト |
-| `stage` | Stage | ステージ |
-| `name` | String | インスタンス名 |
+| `dictionaryId` | number | DisplayObjectの生成元ID（デフォルト: -1） |
+| `placeId` | number | 表示オブジェクトのPlaceObjectのID（デフォルト: -1） |
+| `placeObject` | IPlaceObject \| null | 現在のフレームの表示オブジェクトのPlaceObject |
+| `characterId` | number | 構築に利用したキャラクターID（デフォルト: -1） |
+| `clipDepth` | number | マスク対象の深度（デフォルト: 0） |
+| `name` | string | 名前。getChildByName()で使用される（デフォルト: ""） |
+| `startFrame` | number | 開始フレーム（デフォルト: 1） |
+| `endFrame` | number | 終了フレーム（デフォルト: 0） |
+| `changed` | boolean | 描画に関連する何らかの変更が加えられたかを示す（デフォルト: true） |
+| `uniqueKey` | string | キャッシュで利用するユニークキー |
+| `isMask` | boolean | マスクとしてDisplayObjectにセットされているかを示す（デフォルト: false） |
+| `parent` | Sprite \| MovieClip \| null | このDisplayObjectの親のDisplayObjectContainer |
+| `alpha` | number | アルファ透明度値（0.0～1.0、デフォルト: 1.0） |
+| `blendMode` | string | 使用するブレンドモード（デフォルト: BlendMode.NORMAL） |
+| `filters` | Array \| null | 表示オブジェクトに関連付けられている各フィルターオブジェクトの配列 |
+| `height` | number | 表示オブジェクトの高さ（ピクセル単位） |
+| `width` | number | 表示オブジェクトの幅（ピクセル単位） |
+| `colorTransform` | ColorTransform | 表示オブジェクトのColorTransform |
+| `matrix` | Matrix | 表示オブジェクトのMatrix |
+| `rotation` | number | DisplayObjectインスタンスの回転角度（度単位） |
+| `scale9Grid` | Rectangle \| null | 現在有効な拡大/縮小グリッド |
+| `scaleX` | number | 基準点から適用されるオブジェクトの水平スケール値 |
+| `scaleY` | number | 基準点から適用されるオブジェクトの垂直スケール値 |
+| `visible` | boolean | 表示オブジェクトが可視かどうか（デフォルト: true） |
+| `x` | number | 親DisplayObjectContainerのローカル座標を基準にしたX座標 |
+| `y` | number | 親DisplayObjectContainerのローカル座標を基準にしたY座標 |
 
-## メソッド
+## メソッド (Methods)
 
-### getBounds(targetCoordinateSpace)
-
-指定座標系での境界矩形を取得します。
-
-```typescript
-const { Rectangle } = next2d.geom;
-
-const bounds = displayObject.getBounds(stage);
-console.log(bounds.x, bounds.y, bounds.width, bounds.height);
-```
-
-### globalToLocal(point)
-
-グローバル座標をローカル座標に変換します。
-
-```typescript
-const { Point } = next2d.geom;
-
-const globalPoint = new Point(100, 100);
-const localPoint = displayObject.globalToLocal(globalPoint);
-```
-
-### localToGlobal(point)
-
-ローカル座標をグローバル座標に変換します。
-
-```typescript
-const { Point } = next2d.geom;
-
-const localPoint = new Point(0, 0);
-const globalPoint = displayObject.localToGlobal(localPoint);
-```
-
-### hitTestPoint(x, y, shapeFlag)
-
-指定座標との衝突判定を行います。
-
-```typescript
-// バウンディングボックスで判定
-const hit1 = displayObject.hitTestPoint(100, 100, false);
-
-// 実際の形状で判定
-const hit2 = displayObject.hitTestPoint(100, 100, true);
-```
-
-### hitTestObject(obj)
-
-他のDisplayObjectとの衝突判定を行います。
-
-```typescript
-if (obj1.hitTestObject(obj2)) {
-    console.log("衝突しました");
-}
-```
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `getBounds(targetDisplayObject)` | Rectangle | 指定したDisplayObjectの座標系を基準にして、表示オブジェクトの領域を定義する矩形を返す |
+| `globalToLocal(point)` | Point | pointオブジェクトをステージ（グローバル）座標から表示オブジェクトの（ローカル）座標に変換 |
+| `localToGlobal(point)` | Point | pointオブジェクトを表示オブジェクトの（ローカル）座標からステージ（グローバル）座標に変換 |
+| `hitTestObject(targetDisplayObject)` | boolean | DisplayObjectの描画範囲を評価して、重複または交差するかどうかを調べる |
+| `hitTestPoint(x, y, shapeFlag)` | boolean | 表示オブジェクトを評価して、x および y パラメーターで指定されたポイントと重複または交差するかどうかを調べる |
+| `getLocalVariable(key)` | any | クラスのローカル変数空間から値を取得 |
+| `setLocalVariable(key, value)` | void | クラスのローカル変数空間へ値を保存 |
+| `hasLocalVariable(key)` | boolean | クラスのローカル変数空間に値があるかどうかを判断 |
+| `deleteLocalVariable(key)` | void | クラスのローカル変数空間の値を削除 |
+| `getGlobalVariable(key)` | any | グローバル変数空間から値を取得 |
+| `setGlobalVariable(key, value)` | void | グローバル変数空間へ値を保存 |
+| `hasGlobalVariable(key)` | boolean | グローバル変数空間に値があるかどうかを判断 |
+| `deleteGlobalVariable(key)` | void | グローバル変数空間の値を削除 |
+| `clearGlobalVariable()` | void | グローバル変数空間の値を全てクリア |
+| `remove()` | void | 親子関係を解除 |
 
 ## ブレンドモード
 
@@ -136,6 +118,51 @@ sprite.filters = [
 
 // ステージに追加
 stage.addChild(sprite);
+```
+
+### 座標変換の例
+
+```typescript
+const { Point } = next2d.geom;
+
+// グローバル座標をローカル座標に変換
+const globalPoint = new Point(100, 100);
+const localPoint = displayObject.globalToLocal(globalPoint);
+
+// ローカル座標をグローバル座標に変換
+const localPos = new Point(0, 0);
+const globalPos = displayObject.localToGlobal(localPos);
+```
+
+### 衝突判定の例
+
+```typescript
+// バウンディングボックスで判定
+const hit1 = displayObject.hitTestPoint(100, 100, false);
+
+// 実際の形状で判定
+const hit2 = displayObject.hitTestPoint(100, 100, true);
+
+// 他のDisplayObjectとの衝突判定
+if (obj1.hitTestObject(obj2)) {
+    console.log("衝突しました");
+}
+```
+
+### 変数操作の例
+
+```typescript
+// ローカル変数の操作
+displayObject.setLocalVariable("score", 100);
+const score = displayObject.getLocalVariable("score");
+if (displayObject.hasLocalVariable("score")) {
+    displayObject.deleteLocalVariable("score");
+}
+
+// グローバル変数の操作
+displayObject.setGlobalVariable("gameState", "playing");
+const state = displayObject.getGlobalVariable("gameState");
+displayObject.clearGlobalVariable(); // 全てクリア
 ```
 
 ## 関連項目

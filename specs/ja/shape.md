@@ -17,7 +17,22 @@ classDiagram
 
 | プロパティ | 型 | 説明 |
 |-----------|------|------|
-| `graphics` | Graphics | グラフィックス描画用オブジェクト |
+| `graphics` | Graphics | この Shape オブジェクトに描画されるベクターの描画コマンドを保持する Graphics オブジェクト（読み取り専用） |
+| `isShape` | boolean | Shapeの機能を所持しているかを返却（読み取り専用） |
+| `cacheKey` | number | ビルドされたキャッシュキー |
+| `cacheParams` | number[] | キャッシュのビルドに利用されるパラメータ（読み取り専用） |
+| `isBitmap` | boolean | ビットマップ描画の判定フラグ |
+| `src` | string | 指定されたパスから画像を読み込み、Graphicsを生成する |
+| `bitmapData` | BitmapData | ビットマップデータを返却（読み取り専用） |
+| `namespace` | string | 指定されたオブジェクトの空間名を返却（読み取り専用） |
+
+## メソッド
+
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `load(url: string)` | Promise\<void\> | 指定されたURLから画像を非同期で読み込み、Graphicsを生成する |
+| `clearBitmapBuffer()` | void | ビットマップデータを解放する |
+| `setBitmapBuffer(width: number, height: number, buffer: Uint8Array)` | void | RGBAの画像データを設定する |
 
 ## SpriteとShapeの違い
 
