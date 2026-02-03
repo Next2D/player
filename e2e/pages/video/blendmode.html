@@ -18,9 +18,14 @@
         const { TextField, TextFormat } = next2d.text;
 
         const videoPath = "/e2e/fixtures/videos/movie.mp4";
+        const videoScale = 0.2;
 
         // 全ビデオを追跡
         const allVideos = [];
+
+        const labelFormat = new TextFormat();
+        labelFormat.size = 10;
+        labelFormat.color = 0xFFFFFF;
 
         // 背景
         const bgFill = new Shape();
@@ -30,77 +35,24 @@
             .endFill();
         root.addChild(bgFill);
 
-        // ブレンドテスト用のビデオを作成
-        const createBlendVideo = (x, y, blendMode, label) => {
-            const container = new Sprite();
-            container.x = x;
-            container.y = y;
-
-            // 下地（赤と青の背景）
-            const base = new Shape();
-            base.graphics
-                .beginFill(0xFF0000, 1.0)
-                .drawRect(0, 0, 80, 60)
-                .endFill();
-            container.addChild(base);
-
-            const baseBlue = new Shape();
-            baseBlue.graphics
-                .beginFill(0x0000FF, 1.0)
-                .drawRect(40, 0, 40, 60)
-                .endFill();
-            container.addChild(baseBlue);
-
-            // ブレンドされるビデオ
-            const video = new Video(60, 45);
-            video.x = 10;
-            video.y = 8;
-            video.blendMode = blendMode;
-            video.src = videoPath;
-            container.addChild(video);
-            allVideos.push(video);
-
-            // ラベル
-            const labelText = new TextField();
-            labelText.x = 0;
-            labelText.y = 62;
-            labelText.width = 80;
-            labelText.height = 16;
-            const format = new TextFormat();
-            format.size = 9;
-            format.color = 0xFFFFFF;
-            format.align = "center";
-            labelText.defaultTextFormat = format;
-            labelText.text = label;
-            container.addChild(labelText);
-
-            return container;
-        };
-
-        // 全14種類のBlendMode
+        // ブレンドモードの配列
         const blendModes = [
             { mode: BlendMode.NORMAL, name: "NORMAL" },
             { mode: BlendMode.ADD, name: "ADD" },
-            { mode: BlendMode.ALPHA, name: "ALPHA" },
-            { mode: BlendMode.DARKEN, name: "DARKEN" },
-            { mode: BlendMode.DIFFERENCE, name: "DIFFERENCE" },
-            { mode: BlendMode.ERASE, name: "ERASE" },
-            { mode: BlendMode.HARDLIGHT, name: "HARDLIGHT" },
-            { mode: BlendMode.INVERT, name: "INVERT" },
-            { mode: BlendMode.LAYER, name: "LAYER" },
-            { mode: BlendMode.LIGHTEN, name: "LIGHTEN" },
             { mode: BlendMode.MULTIPLY, name: "MULTIPLY" },
-            { mode: BlendMode.OVERLAY, name: "OVERLAY" },
             { mode: BlendMode.SCREEN, name: "SCREEN" },
-            { mode: BlendMode.SUBTRACT, name: "SUBTRACT" }
+            { mode: BlendMode.OVERLAY, name: "OVERLAY" },
+            { mode: BlendMode.DARKEN, name: "DARKEN" },
+            { mode: BlendMode.LIGHTEN, name: "LIGHTEN" },
+            { mode: BlendMode.HARDLIGHT, name: "HARDLIGHT" }
         ];
 
-        // 各ブレンドモードを配置（7x2グリッド）
-        const cols = 7;
-        const cellWidth = 100;
-        const cellHeight = 90;
-        const startX = 30;
-        const startY = 20;
+        // 各ブレンドモードを配置（4x2グリッド）
+        const cols = 4;
+        const cellWidth = 190;
+        const cellHeight = 140;
+        const startX = 15;
+        const startY = 10;
 
         blendModes.forEach((item, index) => {
             const col = index % cols;
@@ -108,307 +60,48 @@
             const x = startX + col * cellWidth;
             const y = startY + row * cellHeight;
 
-            const video = createBlendVideo(x, y, item.mode, item.name);
-            root.addChild(video);
+            // コンテナ
+            const container = new Sprite();
+            container.x = x;
+            container.y = y;
+            root.addChild(container);
+
+            // 背景
+            const bg = new Shape();
+            bg.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 90, 70)
+                .endFill();
+            container.addChild(bg);
+
+            const bgBlue = new Shape();
+            bgBlue.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(45, 0, 45, 70)
+                .endFill();
+            container.addChild(bgBlue);
+
+            // ビデオ
+            const video = new Video();
+            video.x = 5;
+            video.y = 5;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.blendMode = item.mode;
+            video.src = videoPath;
+            container.addChild(video);
+            allVideos.push(video);
+
+            // ラベル
+            const label = new TextField();
+            label.x = 0;
+            label.y = 75;
+            label.width = 100;
+            label.height = 16;
+            label.defaultTextFormat = labelFormat;
+            label.text = item.name;
+            container.addChild(label);
         });
-
-        // ===== グラデーション背景テスト =====
-        const titleFormat = new TextFormat();
-        titleFormat.size = 14;
-        titleFormat.color = 0xFFFFFF;
-        titleFormat.bold = true;
-
-        const sectionTitle1 = new TextField();
-        sectionTitle1.x = 30;
-        sectionTitle1.y = 200;
-        sectionTitle1.width = 300;
-        sectionTitle1.height = 20;
-        sectionTitle1.defaultTextFormat = titleFormat;
-        sectionTitle1.text = "Gradient Background Test";
-        root.addChild(sectionTitle1);
-
-        const testContainer = new Sprite();
-        testContainer.x = 30;
-        testContainer.y = 225;
-        root.addChild(testContainer);
-
-        // グラデーション背景
-        const { Matrix } = next2d.geom;
-        const matrix = new Matrix();
-        matrix.createGradientBox(400, 100, 0, 0, 0);
-        const gradBg = new Shape();
-        gradBg.graphics
-            .beginGradientFill(
-                "linear",
-                [0xFF0000, 0x00FF00, 0x0000FF],
-                [1, 1, 1],
-                [0, 127, 255],
-                matrix
-            )
-            .drawRect(0, 0, 400, 100)
-            .endFill();
-        testContainer.addChild(gradBg);
-
-        // MULTIPLY
-        const videoMultiply = new Video(80, 60);
-        videoMultiply.x = 10;
-        videoMultiply.y = 20;
-        videoMultiply.blendMode = BlendMode.MULTIPLY;
-        videoMultiply.src = videoPath;
-        testContainer.addChild(videoMultiply);
-        allVideos.push(videoMultiply);
-
-        // SCREEN
-        const videoScreen = new Video(80, 60);
-        videoScreen.x = 110;
-        videoScreen.y = 20;
-        videoScreen.blendMode = BlendMode.SCREEN;
-        videoScreen.src = videoPath;
-        testContainer.addChild(videoScreen);
-        allVideos.push(videoScreen);
-
-        // OVERLAY
-        const videoOverlay = new Video(80, 60);
-        videoOverlay.x = 210;
-        videoOverlay.y = 20;
-        videoOverlay.blendMode = BlendMode.OVERLAY;
-        videoOverlay.src = videoPath;
-        testContainer.addChild(videoOverlay);
-        allVideos.push(videoOverlay);
-
-        // ADD
-        const videoAdd = new Video(80, 60);
-        videoAdd.x = 310;
-        videoAdd.y = 20;
-        videoAdd.blendMode = BlendMode.ADD;
-        videoAdd.src = videoPath;
-        testContainer.addChild(videoAdd);
-        allVideos.push(videoAdd);
-
-        // ===== 放射グラデーション =====
-        const sectionTitle2 = new TextField();
-        sectionTitle2.x = 460;
-        sectionTitle2.y = 200;
-        sectionTitle2.width = 300;
-        sectionTitle2.height = 20;
-        sectionTitle2.defaultTextFormat = titleFormat;
-        sectionTitle2.text = "Radial Gradient Test";
-        root.addChild(sectionTitle2);
-
-        const radialContainer = new Sprite();
-        radialContainer.x = 460;
-        radialContainer.y = 225;
-        root.addChild(radialContainer);
-
-        const radialMatrix = new Matrix();
-        radialMatrix.createGradientBox(200, 200, 0, 0, 0);
-        const radialBg = new Shape();
-        radialBg.graphics
-            .beginGradientFill(
-                "radial",
-                [0xFFFFFF, 0x000000],
-                [1, 1],
-                [0, 255],
-                radialMatrix
-            )
-            .drawRect(0, 0, 200, 100)
-            .endFill();
-        radialContainer.addChild(radialBg);
-
-        // ADD
-        const videoRadialAdd = new Video(60, 50);
-        videoRadialAdd.x = 10;
-        videoRadialAdd.y = 25;
-        videoRadialAdd.blendMode = BlendMode.ADD;
-        videoRadialAdd.src = videoPath;
-        radialContainer.addChild(videoRadialAdd);
-        allVideos.push(videoRadialAdd);
-
-        // SUBTRACT
-        const videoRadialSub = new Video(60, 50);
-        videoRadialSub.x = 80;
-        videoRadialSub.y = 25;
-        videoRadialSub.blendMode = BlendMode.SUBTRACT;
-        videoRadialSub.src = videoPath;
-        radialContainer.addChild(videoRadialSub);
-        allVideos.push(videoRadialSub);
-
-        // DIFFERENCE
-        const videoRadialDiff = new Video(60, 50);
-        videoRadialDiff.x = 130;
-        videoRadialDiff.y = 25;
-        videoRadialDiff.blendMode = BlendMode.DIFFERENCE;
-        videoRadialDiff.src = videoPath;
-        radialContainer.addChild(videoRadialDiff);
-        allVideos.push(videoRadialDiff);
-
-        // ===== LAYER BlendMode =====
-        const sectionTitle3 = new TextField();
-        sectionTitle3.x = 30;
-        sectionTitle3.y = 340;
-        sectionTitle3.width = 200;
-        sectionTitle3.height = 20;
-        sectionTitle3.defaultTextFormat = titleFormat;
-        sectionTitle3.text = "LAYER BlendMode";
-        root.addChild(sectionTitle3);
-
-        const layerContainer = new Sprite();
-        layerContainer.x = 30;
-        layerContainer.y = 365;
-        layerContainer.blendMode = BlendMode.LAYER;
-        root.addChild(layerContainer);
-
-        const layerBg = new Shape();
-        layerBg.graphics
-            .beginFill(0xFFFFFF, 1.0)
-            .drawRect(0, 0, 180, 100)
-            .endFill();
-        layerContainer.addChild(layerBg);
-
-        const videoLayer1 = new Video(80, 60);
-        videoLayer1.x = 10;
-        videoLayer1.y = 20;
-        videoLayer1.alpha = 0.7;
-        videoLayer1.src = videoPath;
-        layerContainer.addChild(videoLayer1);
-        allVideos.push(videoLayer1);
-
-        const videoLayer2 = new Video(80, 60);
-        videoLayer2.x = 60;
-        videoLayer2.y = 30;
-        videoLayer2.alpha = 0.7;
-        videoLayer2.src = videoPath;
-        layerContainer.addChild(videoLayer2);
-        allVideos.push(videoLayer2);
-
-        // ===== ERASE Test =====
-        const sectionTitle4 = new TextField();
-        sectionTitle4.x = 250;
-        sectionTitle4.y = 340;
-        sectionTitle4.width = 200;
-        sectionTitle4.height = 20;
-        sectionTitle4.defaultTextFormat = titleFormat;
-        sectionTitle4.text = "ERASE Test";
-        root.addChild(sectionTitle4);
-
-        const eraseContainer = new Sprite();
-        eraseContainer.x = 250;
-        eraseContainer.y = 365;
-        eraseContainer.blendMode = BlendMode.LAYER;
-        root.addChild(eraseContainer);
-
-        const eraseBg = new Shape();
-        eraseBg.graphics
-            .beginFill(0x00AAFF, 1.0)
-            .drawRect(0, 0, 180, 100)
-            .endFill();
-        eraseContainer.addChild(eraseBg);
-
-        const videoErase = new Video(100, 70);
-        videoErase.x = 40;
-        videoErase.y = 15;
-        videoErase.blendMode = BlendMode.ERASE;
-        videoErase.src = videoPath;
-        eraseContainer.addChild(videoErase);
-        allVideos.push(videoErase);
-
-        // ===== INVERT Test =====
-        const sectionTitle5 = new TextField();
-        sectionTitle5.x = 470;
-        sectionTitle5.y = 340;
-        sectionTitle5.width = 200;
-        sectionTitle5.height = 20;
-        sectionTitle5.defaultTextFormat = titleFormat;
-        sectionTitle5.text = "INVERT Test";
-        root.addChild(sectionTitle5);
-
-        const invertContainer = new Sprite();
-        invertContainer.x = 470;
-        invertContainer.y = 365;
-        root.addChild(invertContainer);
-
-        const invertBg = new Shape();
-        invertBg.graphics
-            .beginFill(0xFF8800, 1.0)
-            .drawRect(0, 0, 180, 100)
-            .endFill();
-        invertContainer.addChild(invertBg);
-
-        const videoInvert = new Video(100, 70);
-        videoInvert.x = 40;
-        videoInvert.y = 15;
-        videoInvert.blendMode = BlendMode.INVERT;
-        videoInvert.src = videoPath;
-        invertContainer.addChild(videoInvert);
-        allVideos.push(videoInvert);
-
-        // ===== HARDLIGHT Test =====
-        const sectionTitle6 = new TextField();
-        sectionTitle6.x = 30;
-        sectionTitle6.y = 480;
-        sectionTitle6.width = 200;
-        sectionTitle6.height = 20;
-        sectionTitle6.defaultTextFormat = titleFormat;
-        sectionTitle6.text = "HARDLIGHT Test";
-        root.addChild(sectionTitle6);
-
-        const hardlightContainer = new Sprite();
-        hardlightContainer.x = 30;
-        hardlightContainer.y = 505;
-        root.addChild(hardlightContainer);
-
-        const hardlightBg = new Shape();
-        hardlightBg.graphics
-            .beginFill(0x888888, 1.0)
-            .drawRect(0, 0, 200, 80)
-            .endFill();
-        hardlightContainer.addChild(hardlightBg);
-
-        const videoHardlight = new Video(120, 60);
-        videoHardlight.x = 40;
-        videoHardlight.y = 10;
-        videoHardlight.blendMode = BlendMode.HARDLIGHT;
-        videoHardlight.src = videoPath;
-        hardlightContainer.addChild(videoHardlight);
-        allVideos.push(videoHardlight);
-
-        // ===== DARKEN/LIGHTEN Test =====
-        const sectionTitle7 = new TextField();
-        sectionTitle7.x = 270;
-        sectionTitle7.y = 480;
-        sectionTitle7.width = 200;
-        sectionTitle7.height = 20;
-        sectionTitle7.defaultTextFormat = titleFormat;
-        sectionTitle7.text = "DARKEN / LIGHTEN";
-        root.addChild(sectionTitle7);
-
-        const darkenLightenContainer = new Sprite();
-        darkenLightenContainer.x = 270;
-        darkenLightenContainer.y = 505;
-        root.addChild(darkenLightenContainer);
-
-        const dlBg = new Shape();
-        dlBg.graphics
-            .beginFill(0x888888, 1.0)
-            .drawRect(0, 0, 200, 80)
-            .endFill();
-        darkenLightenContainer.addChild(dlBg);
-
-        const videoDarken = new Video(70, 50);
-        videoDarken.x = 20;
-        videoDarken.y = 15;
-        videoDarken.blendMode = BlendMode.DARKEN;
-        videoDarken.src = videoPath;
-        darkenLightenContainer.addChild(videoDarken);
-        allVideos.push(videoDarken);
-
-        const videoLighten = new Video(70, 50);
-        videoLighten.x = 110;
-        videoLighten.y = 15;
-        videoLighten.blendMode = BlendMode.LIGHTEN;
-        videoLighten.src = videoPath;
-        darkenLightenContainer.addChild(videoLighten);
-        allVideos.push(videoLighten);
 
         // 各ビデオのCOMPLETEイベントを待機
         await Promise.all(allVideos.map(video => {
@@ -421,13 +114,33 @@
             });
         }));
 
-        // フレーム描画を待つために複数フレーム待機
+        // 親のchangedフラグも更新する関数
+        const applyChanges = (displayObject) => {
+            displayObject.changed = true;
+            let parent = displayObject.parent;
+            while (parent && !parent.changed) {
+                parent.changed = true;
+                parent = parent.parent;
+            }
+        };
+
+        // ビデオのchangedフラグを更新してレンダリングを強制
+        const updateVideoFrames = () => {
+            allVideos.forEach((video) => {
+                if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                    applyChanges(video);
+                }
+            });
+        };
+
+        // 複数フレームにわたってビデオフレームを更新
         await new Promise((resolve) => {
             let frameCount = 0;
             const waitFrames = () => {
+                updateVideoFrames();
                 frameCount++;
-                if (frameCount >= 30) {
-                    setTimeout(resolve, 500);
+                if (frameCount >= 60) {
+                    setTimeout(resolve, 2000);
                 } else {
                     requestAnimationFrame(waitFrames);
                 }

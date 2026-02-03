@@ -29,12 +29,6 @@ export const execute = (video: Video): number =>
         playingVideos.push(video);
     }
 
-    if (video.$context && video.$videoElement) {
-        video.$context.drawImage(video.$videoElement,
-            0, 0, video.videoWidth, video.videoHeight
-        );
-    }
-
     return requestAnimationFrame((): void =>
     {
         execute(video);

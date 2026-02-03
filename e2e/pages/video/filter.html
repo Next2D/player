@@ -12,484 +12,71 @@
 <body>
 <script type="module">
     window.addEventListener("DOMContentLoaded", async () => {
-        const root = await next2d.createRootMovieClip(900, 700, 60);
+        const root = await next2d.createRootMovieClip(800, 600, 60);
         const { Video } = next2d.media;
-        const { Shape, Sprite } = next2d.display;
         const { TextField, TextFormat } = next2d.text;
         const {
             BlurFilter,
             DropShadowFilter,
             GlowFilter,
             BevelFilter,
-            ColorMatrixFilter,
-            ConvolutionFilter,
-            DisplacementMapFilter,
-            GradientBevelFilter,
-            GradientGlowFilter
+            ColorMatrixFilter
         } = next2d.filters;
 
         const videoPath = "/e2e/fixtures/videos/movie.mp4";
+        const videoScale = 0.2;
 
         // 全ビデオを追跡
         const allVideos = [];
 
-        const titleFormat = new TextFormat();
-        titleFormat.size = 11;
-        titleFormat.color = 0xFFFFFF;
-        titleFormat.bold = true;
+        const labelFormat = new TextFormat();
+        labelFormat.size = 10;
+        labelFormat.color = 0xFFFFFF;
 
-        // ===== BlurFilter =====
-        const blur1 = new Video(120, 80);
-        blur1.x = 20;
-        blur1.y = 20;
-        blur1.filters = [new BlurFilter(4, 4, 1)];
-        blur1.src = videoPath;
-        root.addChild(blur1);
-
-        const blurLabel1 = new TextField();
-        blurLabel1.x = 20;
-        blurLabel1.y = 100;
-        blurLabel1.width = 120;
-        blurLabel1.height = 16;
-        blurLabel1.defaultTextFormat = titleFormat;
-        blurLabel1.text = "Blur(4,4,1)";
-        root.addChild(blurLabel1);
-
-        const blur2 = new Video(120, 80);
-        blur2.x = 160;
-        blur2.y = 20;
-        blur2.filters = [new BlurFilter(10, 10, 2)];
-        blur2.src = videoPath;
-        root.addChild(blur2);
-
-        const blurLabel2 = new TextField();
-        blurLabel2.x = 160;
-        blurLabel2.y = 100;
-        blurLabel2.width = 120;
-        blurLabel2.height = 16;
-        blurLabel2.defaultTextFormat = titleFormat;
-        blurLabel2.text = "Blur(10,10,2)";
-        root.addChild(blurLabel2);
-
-        // ===== DropShadowFilter =====
-        const dropShadow1 = new Video(120, 80);
-        dropShadow1.x = 300;
-        dropShadow1.y = 20;
-        dropShadow1.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1)];
-        dropShadow1.src = videoPath;
-        root.addChild(dropShadow1);
-
-        const dsLabel1 = new TextField();
-        dsLabel1.x = 300;
-        dsLabel1.y = 100;
-        dsLabel1.width = 120;
-        dsLabel1.height = 16;
-        dsLabel1.defaultTextFormat = titleFormat;
-        dsLabel1.text = "DropShadow";
-        root.addChild(dsLabel1);
-
-        const dropShadow2 = new Video(120, 80);
-        dropShadow2.x = 440;
-        dropShadow2.y = 20;
-        dropShadow2.filters = [new DropShadowFilter(8, 135, 0xFF0000, 0.8, 8, 8, 2, 1, false, false, true)];
-        dropShadow2.src = videoPath;
-        root.addChild(dropShadow2);
-
-        const dsLabel2 = new TextField();
-        dsLabel2.x = 440;
-        dsLabel2.y = 100;
-        dsLabel2.width = 120;
-        dsLabel2.height = 16;
-        dsLabel2.defaultTextFormat = titleFormat;
-        dsLabel2.text = "DropShadow Inner";
-        root.addChild(dsLabel2);
-
-        // ===== GlowFilter =====
-        const glow1 = new Video(120, 80);
-        glow1.x = 580;
-        glow1.y = 20;
-        glow1.filters = [new GlowFilter(0x00FF00, 1, 8, 8, 2, 1)];
-        glow1.src = videoPath;
-        root.addChild(glow1);
-
-        const glowLabel1 = new TextField();
-        glowLabel1.x = 580;
-        glowLabel1.y = 100;
-        glowLabel1.width = 120;
-        glowLabel1.height = 16;
-        glowLabel1.defaultTextFormat = titleFormat;
-        glowLabel1.text = "Glow Green";
-        root.addChild(glowLabel1);
-
-        const glow2 = new Video(120, 80);
-        glow2.x = 720;
-        glow2.y = 20;
-        glow2.filters = [new GlowFilter(0x0000FF, 1, 12, 12, 3, 1, true)];
-        glow2.src = videoPath;
-        root.addChild(glow2);
-
-        const glowLabel2 = new TextField();
-        glowLabel2.x = 720;
-        glowLabel2.y = 100;
-        glowLabel2.width = 120;
-        glowLabel2.height = 16;
-        glowLabel2.defaultTextFormat = titleFormat;
-        glowLabel2.text = "Glow Inner";
-        root.addChild(glowLabel2);
-
-        // ===== BevelFilter =====
-        const bevel1 = new Video(120, 80);
-        bevel1.x = 20;
-        bevel1.y = 140;
-        bevel1.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1)];
-        bevel1.src = videoPath;
-        root.addChild(bevel1);
-
-        const bevelLabel1 = new TextField();
-        bevelLabel1.x = 20;
-        bevelLabel1.y = 220;
-        bevelLabel1.width = 120;
-        bevelLabel1.height = 16;
-        bevelLabel1.defaultTextFormat = titleFormat;
-        bevelLabel1.text = "Bevel Inner";
-        root.addChild(bevelLabel1);
-
-        const bevel2 = new Video(120, 80);
-        bevel2.x = 160;
-        bevel2.y = 140;
-        bevel2.filters = [new BevelFilter(6, 45, 0xFFFFFF, 1, 0x000000, 1, 6, 6, 1, 1, "outer")];
-        bevel2.src = videoPath;
-        root.addChild(bevel2);
-
-        const bevelLabel2 = new TextField();
-        bevelLabel2.x = 160;
-        bevelLabel2.y = 220;
-        bevelLabel2.width = 120;
-        bevelLabel2.height = 16;
-        bevelLabel2.defaultTextFormat = titleFormat;
-        bevelLabel2.text = "Bevel Outer";
-        root.addChild(bevelLabel2);
-
-        const bevel3 = new Video(120, 80);
-        bevel3.x = 300;
-        bevel3.y = 140;
-        bevel3.filters = [new BevelFilter(4, 135, 0xFF0000, 1, 0x0000FF, 1, 5, 5, 1, 1)];
-        bevel3.src = videoPath;
-        root.addChild(bevel3);
-
-        const bevelLabel3 = new TextField();
-        bevelLabel3.x = 300;
-        bevelLabel3.y = 220;
-        bevelLabel3.width = 120;
-        bevelLabel3.height = 16;
-        bevelLabel3.defaultTextFormat = titleFormat;
-        bevelLabel3.text = "Bevel Color";
-        root.addChild(bevelLabel3);
-
-        // ===== ColorMatrixFilter =====
-        // グレースケール
-        const grayscaleMatrix = [
-            0.33, 0.33, 0.33, 0, 0,
-            0.33, 0.33, 0.33, 0, 0,
-            0.33, 0.33, 0.33, 0, 0,
-            0, 0, 0, 1, 0
+        // フィルターの配列
+        const filters = [
+            { filter: [new BlurFilter(4, 4, 1)], name: "Blur" },
+            { filter: [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1)], name: "DropShadow" },
+            { filter: [new GlowFilter(0x00FF00, 1, 8, 8, 2, 1)], name: "Glow" },
+            { filter: [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1)], name: "Bevel" },
+            { filter: [new ColorMatrixFilter([0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0, 0, 0, 1, 0])], name: "Grayscale" },
+            { filter: [new BlurFilter(2, 2, 1), new GlowFilter(0xFF00FF, 1, 6, 6, 2, 1)], name: "Blur+Glow" }
         ];
-        const colorMatrix1 = new Video(120, 80);
-        colorMatrix1.x = 440;
-        colorMatrix1.y = 140;
-        colorMatrix1.filters = [new ColorMatrixFilter(grayscaleMatrix)];
-        colorMatrix1.src = videoPath;
-        root.addChild(colorMatrix1);
 
-        const cmLabel1 = new TextField();
-        cmLabel1.x = 440;
-        cmLabel1.y = 220;
-        cmLabel1.width = 120;
-        cmLabel1.height = 16;
-        cmLabel1.defaultTextFormat = titleFormat;
-        cmLabel1.text = "Grayscale";
-        root.addChild(cmLabel1);
+        // 各フィルターを配置（3x2グリッド）
+        const cols = 3;
+        const cellWidth = 250;
+        const cellHeight = 150;
+        const startX = 20;
+        const startY = 20;
 
-        // セピア
-        const sepiaMatrix = [
-            0.393, 0.769, 0.189, 0, 0,
-            0.349, 0.686, 0.168, 0, 0,
-            0.272, 0.534, 0.131, 0, 0,
-            0, 0, 0, 1, 0
-        ];
-        const colorMatrix2 = new Video(120, 80);
-        colorMatrix2.x = 580;
-        colorMatrix2.y = 140;
-        colorMatrix2.filters = [new ColorMatrixFilter(sepiaMatrix)];
-        colorMatrix2.src = videoPath;
-        root.addChild(colorMatrix2);
+        filters.forEach((item, index) => {
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            const x = startX + col * cellWidth;
+            const y = startY + row * cellHeight;
 
-        const cmLabel2 = new TextField();
-        cmLabel2.x = 580;
-        cmLabel2.y = 220;
-        cmLabel2.width = 120;
-        cmLabel2.height = 16;
-        cmLabel2.defaultTextFormat = titleFormat;
-        cmLabel2.text = "Sepia";
-        root.addChild(cmLabel2);
+            // ビデオ
+            const video = new Video();
+            video.x = x;
+            video.y = y;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = item.filter;
+            video.src = videoPath;
+            root.addChild(video);
+            allVideos.push(video);
 
-        // 反転
-        const invertMatrix = [
-            -1, 0, 0, 0, 255,
-            0, -1, 0, 0, 255,
-            0, 0, -1, 0, 255,
-            0, 0, 0, 1, 0
-        ];
-        const colorMatrix3 = new Video(120, 80);
-        colorMatrix3.x = 720;
-        colorMatrix3.y = 140;
-        colorMatrix3.filters = [new ColorMatrixFilter(invertMatrix)];
-        colorMatrix3.src = videoPath;
-        root.addChild(colorMatrix3);
-
-        const cmLabel3 = new TextField();
-        cmLabel3.x = 720;
-        cmLabel3.y = 220;
-        cmLabel3.width = 120;
-        cmLabel3.height = 16;
-        cmLabel3.defaultTextFormat = titleFormat;
-        cmLabel3.text = "Invert";
-        root.addChild(cmLabel3);
-
-        // ===== ConvolutionFilter =====
-        // シャープ
-        const sharpMatrix = [
-            0, -1, 0,
-            -1, 5, -1,
-            0, -1, 0
-        ];
-        const convolution1 = new Video(120, 80);
-        convolution1.x = 20;
-        convolution1.y = 260;
-        convolution1.filters = [new ConvolutionFilter(3, 3, sharpMatrix, 1)];
-        convolution1.src = videoPath;
-        root.addChild(convolution1);
-
-        const convLabel1 = new TextField();
-        convLabel1.x = 20;
-        convLabel1.y = 340;
-        convLabel1.width = 120;
-        convLabel1.height = 16;
-        convLabel1.defaultTextFormat = titleFormat;
-        convLabel1.text = "Sharpen";
-        root.addChild(convLabel1);
-
-        // エッジ検出
-        const edgeMatrix = [
-            -1, -1, -1,
-            -1, 8, -1,
-            -1, -1, -1
-        ];
-        const convolution2 = new Video(120, 80);
-        convolution2.x = 160;
-        convolution2.y = 260;
-        convolution2.filters = [new ConvolutionFilter(3, 3, edgeMatrix, 1)];
-        convolution2.src = videoPath;
-        root.addChild(convolution2);
-
-        const convLabel2 = new TextField();
-        convLabel2.x = 160;
-        convLabel2.y = 340;
-        convLabel2.width = 120;
-        convLabel2.height = 16;
-        convLabel2.defaultTextFormat = titleFormat;
-        convLabel2.text = "Edge Detect";
-        root.addChild(convLabel2);
-
-        // エンボス
-        const embossMatrix = [
-            -2, -1, 0,
-            -1, 1, 1,
-            0, 1, 2
-        ];
-        const convolution3 = new Video(120, 80);
-        convolution3.x = 300;
-        convolution3.y = 260;
-        convolution3.filters = [new ConvolutionFilter(3, 3, embossMatrix, 1)];
-        convolution3.src = videoPath;
-        root.addChild(convolution3);
-
-        const convLabel3 = new TextField();
-        convLabel3.x = 300;
-        convLabel3.y = 340;
-        convLabel3.width = 120;
-        convLabel3.height = 16;
-        convLabel3.defaultTextFormat = titleFormat;
-        convLabel3.text = "Emboss";
-        root.addChild(convLabel3);
-
-        // ===== GradientGlowFilter =====
-        const gradGlow1 = new Video(120, 80);
-        gradGlow1.x = 440;
-        gradGlow1.y = 260;
-        gradGlow1.filters = [new GradientGlowFilter(
-            4, 45,
-            [0xFF0000, 0xFFFF00, 0x00FF00],
-            [1, 1, 1],
-            [0, 127, 255],
-            8, 8, 2, 1
-        )];
-        gradGlow1.src = videoPath;
-        root.addChild(gradGlow1);
-
-        const ggLabel1 = new TextField();
-        ggLabel1.x = 440;
-        ggLabel1.y = 340;
-        ggLabel1.width = 120;
-        ggLabel1.height = 16;
-        ggLabel1.defaultTextFormat = titleFormat;
-        ggLabel1.text = "GradientGlow";
-        root.addChild(ggLabel1);
-
-        // ===== GradientBevelFilter =====
-        const gradBevel1 = new Video(120, 80);
-        gradBevel1.x = 580;
-        gradBevel1.y = 260;
-        gradBevel1.filters = [new GradientBevelFilter(
-            4, 45,
-            [0xFFFFFF, 0x888888, 0x000000],
-            [1, 1, 1],
-            [0, 127, 255],
-            6, 6, 1, 1
-        )];
-        gradBevel1.src = videoPath;
-        root.addChild(gradBevel1);
-
-        const gbLabel1 = new TextField();
-        gbLabel1.x = 580;
-        gbLabel1.y = 340;
-        gbLabel1.width = 120;
-        gbLabel1.height = 16;
-        gbLabel1.defaultTextFormat = titleFormat;
-        gbLabel1.text = "GradientBevel";
-        root.addChild(gbLabel1);
-
-        // ===== 複合フィルター =====
-        const composite1 = new Video(120, 80);
-        composite1.x = 720;
-        composite1.y = 260;
-        composite1.filters = [
-            new BlurFilter(2, 2, 1),
-            new GlowFilter(0xFF00FF, 1, 6, 6, 2, 1)
-        ];
-        composite1.src = videoPath;
-        root.addChild(composite1);
-
-        const compLabel1 = new TextField();
-        compLabel1.x = 720;
-        compLabel1.y = 340;
-        compLabel1.width = 120;
-        compLabel1.height = 16;
-        compLabel1.defaultTextFormat = titleFormat;
-        compLabel1.text = "Blur + Glow";
-        root.addChild(compLabel1);
-
-        // ===== 追加の複合フィルター =====
-        const composite2 = new Video(120, 80);
-        composite2.x = 20;
-        composite2.y = 380;
-        composite2.filters = [
-            new DropShadowFilter(6, 45, 0x000000, 0.8, 6, 6, 1, 1),
-            new BevelFilter(3, 45, 0xFFFFFF, 1, 0x000000, 1, 3, 3, 1, 1)
-        ];
-        composite2.src = videoPath;
-        root.addChild(composite2);
-
-        const compLabel2 = new TextField();
-        compLabel2.x = 20;
-        compLabel2.y = 460;
-        compLabel2.width = 120;
-        compLabel2.height = 16;
-        compLabel2.defaultTextFormat = titleFormat;
-        compLabel2.text = "Shadow+Bevel";
-        root.addChild(compLabel2);
-
-        const composite3 = new Video(120, 80);
-        composite3.x = 160;
-        composite3.y = 380;
-        composite3.filters = [
-            new ColorMatrixFilter(grayscaleMatrix),
-            new GlowFilter(0x00FFFF, 1, 10, 10, 2, 1)
-        ];
-        composite3.src = videoPath;
-        root.addChild(composite3);
-
-        const compLabel3 = new TextField();
-        compLabel3.x = 160;
-        compLabel3.y = 460;
-        compLabel3.width = 120;
-        compLabel3.height = 16;
-        compLabel3.defaultTextFormat = titleFormat;
-        compLabel3.text = "Gray+Glow";
-        root.addChild(compLabel3);
-
-        // ===== 異なるフィルター設定のビデオ（フィルターキャッシュテスト） =====
-        const sectionTitle = new TextField();
-        sectionTitle.x = 20;
-        sectionTitle.y = 500;
-        sectionTitle.width = 400;
-        sectionTitle.height = 20;
-        const bigFormat = new TextFormat();
-        bigFormat.size = 14;
-        bigFormat.color = 0xFFFFFF;
-        bigFormat.bold = true;
-        sectionTitle.defaultTextFormat = bigFormat;
-        sectionTitle.text = "Filter Cache Test (Different Settings)";
-        root.addChild(sectionTitle);
-
-        // 同じサイズだが異なるフィルター設定
-        const cacheTest1 = new Video(100, 70);
-        cacheTest1.x = 20;
-        cacheTest1.y = 530;
-        cacheTest1.filters = [new GlowFilter(0xFF0000, 1, 8, 8, 2, 1)];
-        cacheTest1.src = videoPath;
-        root.addChild(cacheTest1);
-
-        const cacheTest2 = new Video(100, 70);
-        cacheTest2.x = 140;
-        cacheTest2.y = 530;
-        cacheTest2.filters = [new GlowFilter(0x00FF00, 1, 8, 8, 2, 1)];
-        cacheTest2.src = videoPath;
-        root.addChild(cacheTest2);
-
-        const cacheTest3 = new Video(100, 70);
-        cacheTest3.x = 260;
-        cacheTest3.y = 530;
-        cacheTest3.filters = [new GlowFilter(0x0000FF, 1, 8, 8, 2, 1)];
-        cacheTest3.src = videoPath;
-        root.addChild(cacheTest3);
-
-        const cacheTest4 = new Video(100, 70);
-        cacheTest4.x = 380;
-        cacheTest4.y = 530;
-        cacheTest4.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1)];
-        cacheTest4.src = videoPath;
-        root.addChild(cacheTest4);
-
-        const cacheTest5 = new Video(100, 70);
-        cacheTest5.x = 500;
-        cacheTest5.y = 530;
-        cacheTest5.filters = [new BevelFilter(4, 135, 0xFF0000, 1, 0x0000FF, 1, 4, 4, 1, 1)];
-        cacheTest5.src = videoPath;
-        root.addChild(cacheTest5);
-
-        // 全ビデオを配列に追加
-        allVideos.push(
-            blur1, blur2,
-            dropShadow1, dropShadow2,
-            glow1, glow2,
-            bevel1, bevel2, bevel3,
-            colorMatrix1, colorMatrix2, colorMatrix3,
-            convolution1, convolution2, convolution3,
-            gradGlow1, gradBevel1,
-            composite1, composite2, composite3,
-            cacheTest1, cacheTest2, cacheTest3, cacheTest4, cacheTest5
-        );
+            // ラベル
+            const label = new TextField();
+            label.x = x;
+            label.y = y + 100;
+            label.width = 150;
+            label.height = 16;
+            label.defaultTextFormat = labelFormat;
+            label.text = item.name;
+            root.addChild(label);
+        });
 
         // 各ビデオのCOMPLETEイベントを待機
         await Promise.all(allVideos.map(video => {
@@ -502,13 +89,33 @@
             });
         }));
 
-        // フレーム描画を待つために複数フレーム待機
+        // 親のchangedフラグも更新する関数
+        const applyChanges = (displayObject) => {
+            displayObject.changed = true;
+            let parent = displayObject.parent;
+            while (parent && !parent.changed) {
+                parent.changed = true;
+                parent = parent.parent;
+            }
+        };
+
+        // ビデオのchangedフラグを更新してレンダリングを強制
+        const updateVideoFrames = () => {
+            allVideos.forEach((video) => {
+                if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                    applyChanges(video);
+                }
+            });
+        };
+
+        // 複数フレームにわたってビデオフレームを更新
         await new Promise((resolve) => {
             let frameCount = 0;
             const waitFrames = () => {
+                updateVideoFrames();
                 frameCount++;
-                if (frameCount >= 30) {
-                    setTimeout(resolve, 500);
+                if (frameCount >= 60) {
+                    setTimeout(resolve, 2000);
                 } else {
                     requestAnimationFrame(waitFrames);
                 }
