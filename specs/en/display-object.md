@@ -138,6 +138,5 @@ stage.addChild(sprite);
 
 ## Related
 
-- [DisplayObjectContainer](./display-object-container.md)
 - [MovieClip](./movie-clip.md)
 - [Sprite](./sprite.md)

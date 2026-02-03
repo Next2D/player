@@ -27,15 +27,15 @@ sprite.filters = null;
 
 | Filter | Description |
 |--------|-------------|
-| [BlurFilter](./blur.md) | Blur effect |
-| [DropShadowFilter](./drop-shadow.md) | Drop shadow effect |
-| [GlowFilter](./glow.md) | Glow effect |
-| [BevelFilter](./bevel.md) | Bevel effect |
-| [ColorMatrixFilter](./color-matrix.md) | Color matrix transformation |
-| [ConvolutionFilter](./convolution.md) | Convolution effect |
-| [DisplacementMapFilter](./displacement-map.md) | Displacement map effect |
-| [GradientBevelFilter](./gradient-bevel.md) | Gradient bevel effect |
-| [GradientGlowFilter](./gradient-glow.md) | Gradient glow effect |
+| BlurFilter | Blur effect |
+| DropShadowFilter | Drop shadow effect |
+| GlowFilter | Glow effect |
+| BevelFilter | Bevel effect |
+| ColorMatrixFilter | Color matrix transformation |
+| ConvolutionFilter | Convolution effect |
+| DisplacementMapFilter | Displacement map effect |
+| GradientBevelFilter | Gradient bevel effect |
+| GradientGlowFilter | Gradient glow effect |
 
 ## BlurFilter
 

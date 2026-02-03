@@ -211,6 +211,5 @@ labels.forEach((label) => {
 
 ## 関連項目
 
-- [DisplayObjectContainer](./display-object-container.md)
 - [Sprite](./sprite.md)
 - [イベントシステム](./events.md)

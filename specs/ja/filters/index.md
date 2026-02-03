@@ -27,15 +27,15 @@ sprite.filters = null;
 
 | フィルター | 説明 |
 |-----------|------|
-| [BlurFilter](./blur.md) | ぼかし効果 |
-| [DropShadowFilter](./drop-shadow.md) | ドロップシャドウ効果 |
-| [GlowFilter](./glow.md) | グロー効果 |
-| [BevelFilter](./bevel.md) | ベベル効果 |
-| [ColorMatrixFilter](./color-matrix.md) | カラーマトリックス変換 |
-| [ConvolutionFilter](./convolution.md) | 畳み込み効果 |
-| [DisplacementMapFilter](./displacement-map.md) | 変位マップ効果 |
-| [GradientBevelFilter](./gradient-bevel.md) | グラデーションベベル効果 |
-| [GradientGlowFilter](./gradient-glow.md) | グラデーショングロー効果 |
+| BlurFilter | ぼかし効果 |
+| DropShadowFilter | ドロップシャドウ効果 |
+| GlowFilter | グロー効果 |
+| BevelFilter | ベベル効果 |
+| ColorMatrixFilter | カラーマトリックス変換 |
+| ConvolutionFilter | 畳み込み効果 |
+| DisplacementMapFilter | 変位マップ効果 |
+| GradientBevelFilter | グラデーションベベル効果 |
+| GradientGlowFilter | グラデーショングロー効果 |
 
 ## BlurFilter
 

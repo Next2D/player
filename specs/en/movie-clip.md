@@ -211,6 +211,5 @@ labels.forEach(function(label) {
 
 ## Related
 
-- [DisplayObjectContainer](./display-object-container.md)
 - [Sprite](./sprite.md)
 - [Event System](./events.md)
