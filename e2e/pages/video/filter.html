@@ -89,6 +89,27 @@
             });
         }));
 
+        // 固定フレームのためにシークして一時停止
+        const SEEK_TIME = 1.0; // 1秒の位置にシーク
+
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (!video.$videoElement) {
+                    resolve();
+                    return;
+                }
+
+                const onSeeked = () => {
+                    video.$videoElement.removeEventListener("seeked", onSeeked);
+                    video.pause();
+                    resolve();
+                };
+
+                video.$videoElement.addEventListener("seeked", onSeeked);
+                video.seek(SEEK_TIME);
+            });
+        }));
+
         // 親のchangedフラグも更新する関数
         const applyChanges = (displayObject) => {
             displayObject.changed = true;
@@ -100,22 +121,24 @@
         };
 
         // ビデオのchangedフラグを更新してレンダリングを強制
-        const updateVideoFrames = () => {
-            allVideos.forEach((video) => {
-                if (video.$videoElement && video.$videoElement.readyState >= 2) {
-                    applyChanges(video);
-                }
-            });
-        };
+        allVideos.forEach((video) => {
+            if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                applyChanges(video);
+            }
+        });
 
-        // 複数フレームにわたってビデオフレームを更新
+        // レンダリング安定化のため数フレーム待機
         await new Promise((resolve) => {
             let frameCount = 0;
             const waitFrames = () => {
-                updateVideoFrames();
+                allVideos.forEach((video) => {
+                    if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                        applyChanges(video);
+                    }
+                });
                 frameCount++;
-                if (frameCount >= 60) {
-                    setTimeout(resolve, 2000);
+                if (frameCount >= 10) {
+                    resolve();
                 } else {
                     requestAnimationFrame(waitFrames);
                 }
