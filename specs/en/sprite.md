@@ -1,8 +1,8 @@
 # Sprite
 
-Spriteは、グラフィックスの描画機能を持つDisplayObjectContainerです。MovieClipの基底クラスであり、タイムラインを持たない動的なグラフィックス描画に使用します。
+Sprite is a DisplayObjectContainer with graphics drawing capabilities. It is the base class of MovieClip and is used for dynamic graphics drawing without a timeline.
 
-## 継承関係
+## Inheritance
 
 ```mermaid
 classDiagram
@@ -18,49 +18,49 @@ classDiagram
     }
 ```
 
-## プロパティ
+## Properties
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `graphics` | Graphics | グラフィックス描画用オブジェクト |
-| `buttonMode` | Boolean | ボタンモード（trueでハンドカーソル表示） |
-| `useHandCursor` | Boolean | ハンドカーソルの使用（デフォルト: true） |
+| Property | Type | Description |
+|----------|------|-------------|
+| `graphics` | Graphics | Graphics drawing object |
+| `buttonMode` | Boolean | Button mode (shows hand cursor when true) |
+| `useHandCursor` | Boolean | Use hand cursor (default: true) |
 
-## graphicsプロパティ
+## graphics Property
 
-Spriteのgraphicsプロパティを使用して、動的にベクター描画を行えます。
+Use the Sprite's graphics property for dynamic vector drawing.
 
-### 線と塗りの設定
+### Line and Fill Settings
 
 ```typescript
 import type { Sprite } from "@next2d/player";
 
 const sprite: Sprite = new next2d.display.Sprite();
 
-// 線のスタイル設定
-sprite.graphics.lineStyle(2, 0xFF0000, 1.0);  // 太さ, 色, 透明度
+// Set line style
+sprite.graphics.lineStyle(2, 0xFF0000, 1.0);  // thickness, color, alpha
 
-// 塗りの設定
-sprite.graphics.beginFill(0x00FF00, 0.8);  // 色, 透明度
+// Set fill
+sprite.graphics.beginFill(0x00FF00, 0.8);  // color, alpha
 ```
 
-### 描画メソッド
+### Drawing Methods
 
-| メソッド | 説明 |
-|---------|------|
-| `moveTo(x, y)` | 描画位置を移動 |
-| `lineTo(x, y)` | 現在位置から線を描画 |
-| `curveTo(cx, cy, ax, ay)` | 二次ベジェ曲線を描画 |
-| `drawRect(x, y, w, h)` | 矩形を描画 |
-| `drawRoundRect(x, y, w, h, rx, ry)` | 角丸矩形を描画 |
-| `drawCircle(x, y, r)` | 円を描画 |
-| `drawEllipse(x, y, w, h)` | 楕円を描画 |
-| `endFill()` | 塗りを終了 |
-| `clear()` | 描画内容をクリア |
+| Method | Description |
+|--------|-------------|
+| `moveTo(x, y)` | Move drawing position |
+| `lineTo(x, y)` | Draw line from current position |
+| `curveTo(cx, cy, ax, ay)` | Draw quadratic bezier curve |
+| `drawRect(x, y, w, h)` | Draw rectangle |
+| `drawRoundRect(x, y, w, h, rx, ry)` | Draw rounded rectangle |
+| `drawCircle(x, y, r)` | Draw circle |
+| `drawEllipse(x, y, w, h)` | Draw ellipse |
+| `endFill()` | End fill |
+| `clear()` | Clear drawing content |
 
-## 使用例
+## Usage Examples
 
-### 基本的な描画
+### Basic Drawing
 
 ```typescript
 import { next2d } from "@next2d/player";
@@ -68,12 +68,12 @@ import type { Sprite } from "@next2d/player";
 
 const sprite: Sprite = new next2d.display.Sprite();
 
-// 赤い矩形を描画
+// Draw red rectangle
 sprite.graphics.beginFill(0xFF0000);
 sprite.graphics.drawRect(0, 0, 100, 100);
 sprite.graphics.endFill();
 
-// 青い円を描画
+// Draw blue circle
 sprite.graphics.beginFill(0x0000FF);
 sprite.graphics.drawCircle(200, 50, 40);
 sprite.graphics.endFill();
@@ -81,17 +81,17 @@ sprite.graphics.endFill();
 stage.addChild(sprite);
 ```
 
-### 線の描画
+### Line Drawing
 
 ```typescript
 import type { Sprite } from "@next2d/player";
 
 const sprite: Sprite = new next2d.display.Sprite();
 
-// 線のスタイルを設定
+// Set line style
 sprite.graphics.lineStyle(3, 0x000000, 1.0);
 
-// 線を描画
+// Draw lines
 sprite.graphics.moveTo(0, 0);
 sprite.graphics.lineTo(100, 100);
 sprite.graphics.lineTo(200, 50);
@@ -99,24 +99,24 @@ sprite.graphics.lineTo(200, 50);
 stage.addChild(sprite);
 ```
 
-### グラデーション塗り
+### Gradient Fill
 
 ```typescript
 import type { Sprite, Matrix } from "@next2d/player";
 
 const sprite: Sprite = new next2d.display.Sprite();
 
-// グラデーションマトリックスを作成
+// Create gradient matrix
 const matrix: Matrix = new next2d.geom.Matrix();
 matrix.createGradientBox(200, 200, 0, 0, 0);
 
-// 線形グラデーション
+// Linear gradient
 sprite.graphics.beginGradientFill(
-  "linear",                    // タイプ
-  [0xFF0000, 0x0000FF],       // 色
-  [1, 1],                      // 透明度
-  [0, 255],                    // 比率
-  matrix                       // マトリックス
+  "linear",                    // type
+  [0xFF0000, 0x0000FF],       // colors
+  [1, 1],                      // alphas
+  [0, 255],                    // ratios
+  matrix                       // matrix
 );
 sprite.graphics.drawRect(0, 0, 200, 200);
 sprite.graphics.endFill();
@@ -124,31 +124,31 @@ sprite.graphics.endFill();
 stage.addChild(sprite);
 ```
 
-### ボタンとして使用
+### Use as Button
 
 ```typescript
 import type { Sprite } from "@next2d/player";
 
 const button: Sprite = new next2d.display.Sprite();
 
-// ボタンモードを有効化
+// Enable button mode
 button.buttonMode = true;
 button.useHandCursor = true;
 
-// 背景を描画
+// Draw background
 button.graphics.beginFill(0x3498db);
 button.graphics.drawRoundRect(0, 0, 120, 40, 8, 8);
 button.graphics.endFill();
 
-// クリックイベント
+// Click event
 button.addEventListener("click", (): void => {
-  console.log("ボタンがクリックされました");
+  console.log("Button clicked");
 });
 
 stage.addChild(button);
 ```
 
-### マスクとして使用
+### Use as Mask
 
 ```typescript
 import type { Sprite } from "@next2d/player";
@@ -158,20 +158,20 @@ content.graphics.beginFill(0xFF0000);
 content.graphics.drawRect(0, 0, 200, 200);
 content.graphics.endFill();
 
-// マスク用のSprite
+// Mask sprite
 const maskSprite: Sprite = new next2d.display.Sprite();
 maskSprite.graphics.beginFill(0xFFFFFF);
 maskSprite.graphics.drawCircle(100, 100, 50);
 maskSprite.graphics.endFill();
 
-// マスクを適用
+// Apply mask
 content.mask = maskSprite;
 
 stage.addChild(content);
 stage.addChild(maskSprite);
 ```
 
-## 関連項目
+## Related
 
 - [DisplayObject](./display-object.md)
 - [MovieClip](./movie-clip.md)

@@ -1,8 +1,8 @@
 # MovieClip
 
-MovieClipは、タイムラインアニメーションを持つDisplayObjectContainerです。Open Animation Toolで作成したアニメーションはMovieClipとして再生されます。
+MovieClip is a DisplayObjectContainer with timeline animation. Animations created with Open Animation Tool are played as MovieClips.
 
-## 継承関係
+## Inheritance
 
 ```mermaid
 classDiagram
@@ -25,24 +25,24 @@ classDiagram
     }
 ```
 
-## プロパティ
+## Properties
 
-### タイムライン関連
+### Timeline Related
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `currentFrame` | Number | 現在のフレーム番号（1から開始） |
-| `currentFrameLabel` | String | 現在のフレームのラベル |
-| `currentLabels` | Array | 現在のシーンのFrameLabelオブジェクト配列 |
-| `totalFrames` | Number | 総フレーム数 |
-| `framesLoaded` | Number | ロード済みフレーム数 |
-| `isPlaying` | Boolean | 再生中かどうか |
+| Property | Type | Description |
+|----------|------|-------------|
+| `currentFrame` | Number | Current frame number (starts from 1) |
+| `currentFrameLabel` | String | Label of current frame |
+| `currentLabels` | Array | Array of FrameLabel objects for current scene |
+| `totalFrames` | Number | Total number of frames |
+| `framesLoaded` | Number | Number of frames loaded |
+| `isPlaying` | Boolean | Whether playing |
 
-## メソッド
+## Methods
 
 ### play()
 
-タイムラインの再生を開始します。
+Starts timeline playback.
 
 ```typescript
 movieClip.play();
@@ -50,7 +50,7 @@ movieClip.play();
 
 ### stop()
 
-タイムラインの再生を停止します。
+Stops timeline playback.
 
 ```typescript
 movieClip.stop();
@@ -58,31 +58,31 @@ movieClip.stop();
 
 ### gotoAndPlay(frame)
 
-指定したフレームに移動して再生を開始します。
+Moves to specified frame and starts playback.
 
 ```typescript
-// フレーム番号で指定
+// Specify by frame number
 movieClip.gotoAndPlay(10);
 
-// フレームラベルで指定
+// Specify by frame label
 movieClip.gotoAndPlay("start");
 ```
 
 ### gotoAndStop(frame)
 
-指定したフレームに移動して停止します。
+Moves to specified frame and stops.
 
 ```typescript
-// フレーム番号で指定
+// Specify by frame number
 movieClip.gotoAndStop(1);
 
-// フレームラベルで指定
+// Specify by frame label
 movieClip.gotoAndStop("end");
 ```
 
 ### nextFrame()
 
-次のフレームに進んで停止します。
+Advances to next frame and stops.
 
 ```typescript
 movieClip.nextFrame();
@@ -90,70 +90,70 @@ movieClip.nextFrame();
 
 ### prevFrame()
 
-前のフレームに戻って停止します。
+Returns to previous frame and stops.
 
 ```typescript
 movieClip.prevFrame();
 ```
 
-## イベント
+## Events
 
 ### enterFrame
 
-各フレームで発生するイベント：
+Event that occurs each frame:
 
 ```typescript
 import type { Event, MovieClip } from "@next2d/player";
 
 movieClip.addEventListener("enterFrame", (event: Event): void => {
   const target: MovieClip = event.target as MovieClip;
-  console.log("フレーム:", target.currentFrame);
+  console.log("Frame:", target.currentFrame);
 });
 ```
 
 ### frameConstructed
 
-フレームの構築が完了したときに発生：
+Occurs when frame construction is complete:
 
 ```typescript
 import type { Event } from "@next2d/player";
 
 movieClip.addEventListener("frameConstructed", (event: Event): void => {
-  // フレームスクリプトの実行前
+  // Before frame script execution
 });
 ```
 
 ### exitFrame
 
-フレームを離れるときに発生：
+Occurs when leaving a frame:
 
 ```typescript
 import type { Event } from "@next2d/player";
 
 movieClip.addEventListener("exitFrame", (event: Event): void => {
-  // 次のフレームへ移動する前
+  // Before moving to next frame
 });
 ```
 
-## 使用例
+## Usage Examples
 
-### 基本的なアニメーション制御
+### Basic Animation Control
 
 ```typescript
 import { next2d } from "@next2d/player";
 import type { Loader, LoaderInfo, Event, MovieClip, Sprite } from "@next2d/player";
 
-// JSONからMovieClipを読み込み
+// Load MovieClip from JSON
 const loader: Loader = new next2d.display.Loader();
 loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
   const loaderInfo: LoaderInfo = event.currentTarget as LoaderInfo;
   const mc: MovieClip = loaderInfo.content as MovieClip;
   stage.addChild(mc);
 
-  // 最初は停止
+  // Stop initially
   mc.stop();
 
-  // ボタンクリックで再生
+  // Play/pause on button click
   button.addEventListener("click", (): void => {
     if (mc.isPlaying) {
       mc.stop();
@@ -165,13 +165,13 @@ loader.contentLoaderInfo.addEventListener("complete", (event: Event): void => {
 loader.load(new next2d.net.URLRequest("animation.json"));
 ```
 
-### フレームラベルを使った制御
+### Control with Frame Labels
 
 ```typescript
-// ラベル位置に移動
+// Move to label position
 mc.gotoAndStop("idle");
 
-// 状態変更
+// State change
 function changeState(state: string): void {
   switch (state) {
     case "idle":
@@ -187,43 +187,43 @@ function changeState(state: string): void {
 }
 ```
 
-### ネストしたMovieClipの制御
+### Controlling Nested MovieClips
 
 ```typescript
 import type { MovieClip } from "@next2d/player";
 
-// 子MovieClipへのアクセス
+// Access child MovieClip
 const childMc: MovieClip = mc.getChildByName("character") as MovieClip;
 childMc.gotoAndPlay("run");
 
-// 孫MovieClipへのアクセス
+// Access grandchild MovieClip
 const grandChild: MovieClip = (mc as any).character.arm as MovieClip;
 grandChild.play();
 ```
 
-### フレームレートの変更
+### Changing Frame Rate
 
 ```typescript
-// ステージ全体のフレームレートを変更
+// Change stage frame rate
 stage.frameRate = 30;
 ```
 
 ## FrameLabel
 
-フレームラベルの情報を持つクラス：
+A class that holds frame label information:
 
 ```typescript
 import type { FrameLabel } from "@next2d/player";
 
-// 現在のシーンのすべてのラベルを取得
+// Get all labels in current scene
 const labels: FrameLabel[] = mc.currentLabels;
 labels.forEach((label: FrameLabel): void => {
-  console.log(`${label.name}: フレーム ${label.frame}`);
+  console.log(`${label.name}: frame ${label.frame}`);
 });
 ```
 
-## 関連項目
+## Related
 
 - [DisplayObjectContainer](./display-object-container.md)
 - [Sprite](./sprite.md)
-- [イベントシステム](./events.md)
+- [Event System](./events.md)

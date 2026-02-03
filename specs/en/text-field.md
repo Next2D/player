@@ -1,8 +1,8 @@
 # TextField
 
-TextFieldは、テキストの表示と編集を行うDisplayObjectです。ラベル表示から入力フォームまで、テキスト関連の機能を提供します。
+TextField is a DisplayObject for displaying and editing text. It provides text-related functionality from label display to input forms.
 
-## 継承関係
+## Inheritance
 
 ```mermaid
 classDiagram
@@ -17,66 +17,66 @@ classDiagram
     }
 ```
 
-## プロパティ
+## Properties
 
-### テキスト関連
+### Text Related
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `text` | String | 表示するテキスト |
-| `htmlText` | String | HTMLフォーマットのテキスト |
-| `length` | Number | テキストの文字数（読み取り専用） |
-| `maxChars` | Number | 最大文字数（0で無制限） |
+| Property | Type | Description |
+|----------|------|-------------|
+| `text` | String | Text to display |
+| `htmlText` | String | HTML formatted text |
+| `length` | Number | Character count (read-only) |
+| `maxChars` | Number | Maximum characters (0 for unlimited) |
 
-### 表示関連
+### Display Related
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `textColor` | Number | テキストの色（0xRRGGBB） |
-| `textWidth` | Number | テキストの幅（読み取り専用） |
-| `textHeight` | Number | テキストの高さ（読み取り専用） |
-| `autoSize` | String | 自動サイズ調整（"none", "left", "center", "right"） |
-| `wordWrap` | Boolean | ワードラップの有効化 |
-| `multiline` | Boolean | 複数行テキストの許可 |
+| Property | Type | Description |
+|----------|------|-------------|
+| `textColor` | Number | Text color (0xRRGGBB) |
+| `textWidth` | Number | Text width (read-only) |
+| `textHeight` | Number | Text height (read-only) |
+| `autoSize` | String | Auto size ("none", "left", "center", "right") |
+| `wordWrap` | Boolean | Enable word wrap |
+| `multiline` | Boolean | Allow multiline text |
 
-### 入力関連
+### Input Related
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `type` | String | "dynamic"（表示のみ）または "input"（入力可能） |
-| `selectable` | Boolean | テキスト選択の可否 |
-| `displayAsPassword` | Boolean | パスワード表示（*で表示） |
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | String | "dynamic" (display only) or "input" (editable) |
+| `selectable` | Boolean | Whether text is selectable |
+| `displayAsPassword` | Boolean | Password display (shows as *) |
 
-### スクロール関連
+### Scroll Related
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `scrollV` | Number | 縦スクロール位置（行番号） |
-| `maxScrollV` | Number | 最大縦スクロール位置（読み取り専用） |
-| `scrollH` | Number | 横スクロール位置（ピクセル） |
-| `maxScrollH` | Number | 最大横スクロール位置（読み取り専用） |
-| `numLines` | Number | テキストの行数（読み取り専用） |
+| Property | Type | Description |
+|----------|------|-------------|
+| `scrollV` | Number | Vertical scroll position (line number) |
+| `maxScrollV` | Number | Maximum vertical scroll position (read-only) |
+| `scrollH` | Number | Horizontal scroll position (pixels) |
+| `maxScrollH` | Number | Maximum horizontal scroll position (read-only) |
+| `numLines` | Number | Number of text lines (read-only) |
 
 ## TextFormat
 
-テキストのスタイルを設定するクラスです。
+A class for setting text styles.
 
-### プロパティ
+### Properties
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `font` | String | フォント名 |
-| `size` | Number | フォントサイズ |
-| `color` | Number | テキスト色 |
-| `bold` | Boolean | 太字 |
-| `italic` | Boolean | 斜体 |
-| `align` | String | 配置（"left", "center", "right"） |
-| `leading` | Number | 行間（ピクセル） |
-| `letterSpacing` | Number | 文字間隔（ピクセル） |
+| Property | Type | Description |
+|----------|------|-------------|
+| `font` | String | Font name |
+| `size` | Number | Font size |
+| `color` | Number | Text color |
+| `bold` | Boolean | Bold |
+| `italic` | Boolean | Italic |
+| `align` | String | Alignment ("left", "center", "right") |
+| `leading` | Number | Line spacing (pixels) |
+| `letterSpacing` | Number | Letter spacing (pixels) |
 
-## 使用例
+## Usage Examples
 
-### 基本的なテキスト表示
+### Basic Text Display
 
 ```typescript
 import { next2d } from "@next2d/player";
@@ -90,43 +90,43 @@ textField.y = 100;
 stage.addChild(textField);
 ```
 
-### TextFormatの適用
+### Applying TextFormat
 
 ```typescript
 import type { TextField, TextFormat } from "@next2d/player";
 
 const textField: TextField = new next2d.text.TextField();
-textField.text = "スタイル付きテキスト";
+textField.text = "Styled Text";
 
-// TextFormatを作成
+// Create TextFormat
 const format: TextFormat = new next2d.text.TextFormat();
 format.font = "Arial";
 format.size = 24;
 format.color = 0x3498db;
 format.bold = true;
 
-// フォーマットを適用
+// Apply format
 textField.setTextFormat(format);
 
-// デフォルトフォーマットとして設定
+// Set as default format
 textField.defaultTextFormat = format;
 
 stage.addChild(textField);
 ```
 
-### 自動サイズ調整
+### Auto Size
 
 ```typescript
 import type { TextField } from "@next2d/player";
 
 const textField: TextField = new next2d.text.TextField();
-textField.autoSize = "left";  // テキストに合わせて自動拡張
-textField.text = "このテキストに合わせてサイズが調整されます";
+textField.autoSize = "left";  // Auto expand to fit text
+textField.text = "This text will auto-size the field";
 
 stage.addChild(textField);
 ```
 
-### 複数行テキスト
+### Multiline Text
 
 ```typescript
 import type { TextField } from "@next2d/player";
@@ -135,12 +135,12 @@ const textField: TextField = new next2d.text.TextField();
 textField.width = 200;
 textField.multiline = true;
 textField.wordWrap = true;
-textField.text = "これは複数行のテキストです。自動的に折り返されます。";
+textField.text = "This is multiline text. It will wrap automatically.";
 
 stage.addChild(textField);
 ```
 
-### 入力フィールド
+### Input Field
 
 ```typescript
 import type { TextField, Event } from "@next2d/player";
@@ -154,22 +154,22 @@ inputField.borderColor = 0xcccccc;
 inputField.background = true;
 inputField.backgroundColor = 0xffffff;
 
-// プレースホルダーの代わり
+// Placeholder alternative
 inputField.text = "";
 
-// 入力制限（数字のみ）
+// Input restriction (numbers only)
 inputField.restrict = "0-9";
 
-// 入力イベント
+// Input event
 inputField.addEventListener("change", (event: Event): void => {
   const target: TextField = event.target as TextField;
-  console.log("入力値:", target.text);
+  console.log("Input value:", target.text);
 });
 
 stage.addChild(inputField);
 ```
 
-### パスワードフィールド
+### Password Field
 
 ```typescript
 import type { TextField } from "@next2d/player";
@@ -185,7 +185,7 @@ passwordField.borderColor = 0xcccccc;
 stage.addChild(passwordField);
 ```
 
-### HTMLテキスト
+### HTML Text
 
 ```typescript
 import type { TextField } from "@next2d/player";
@@ -195,16 +195,16 @@ textField.width = 300;
 textField.multiline = true;
 textField.htmlText = `
 <font face="Arial" size="20" color="#3498db">
-  <b>太字テキスト</b><br/>
-  <i>斜体テキスト</i><br/>
-  <font color="#e74c3c">赤いテキスト</font>
+  <b>Bold Text</b><br/>
+  <i>Italic Text</i><br/>
+  <font color="#e74c3c">Red Text</font>
 </font>
 `;
 
 stage.addChild(textField);
 ```
 
-### スクロール可能なテキスト
+### Scrollable Text
 
 ```typescript
 import type { TextField } from "@next2d/player";
@@ -215,9 +215,9 @@ textField.height = 100;
 textField.multiline = true;
 textField.wordWrap = true;
 textField.border = true;
-textField.text = "長いテキスト...\n".repeat(20);
+textField.text = "Long text...\n".repeat(20);
 
-// スクロール操作
+// Scroll operations
 function scrollUp(): void {
   if (textField.scrollV > 1) {
     textField.scrollV--;
@@ -233,7 +233,7 @@ function scrollDown(): void {
 stage.addChild(textField);
 ```
 
-### 動的なテキスト更新
+### Dynamic Text Update
 
 ```typescript
 import type { TextField, TextFormat } from "@next2d/player";
@@ -258,15 +258,15 @@ updateScore(0);
 stage.addChild(scoreField);
 ```
 
-## イベント
+## Events
 
-| イベント | 説明 |
-|----------|------|
-| `change` | テキストが変更されたとき |
-| `focus` | フォーカスを得たとき |
-| `blur` | フォーカスを失ったとき |
-| `keyDown` | キーが押されたとき |
-| `keyUp` | キーが離されたとき |
+| Event | Description |
+|-------|-------------|
+| `change` | When text is changed |
+| `focus` | When focus is gained |
+| `blur` | When focus is lost |
+| `keyDown` | When key is pressed |
+| `keyUp` | When key is released |
 
 ```typescript
 import type { TextField, KeyboardEvent } from "@next2d/player";
@@ -274,7 +274,7 @@ import type { TextField, KeyboardEvent } from "@next2d/player";
 const inputField: TextField = new next2d.text.TextField();
 inputField.type = "input";
 
-// Enterキーでフォーム送信
+// Submit form on Enter key
 inputField.addEventListener("keyDown", (event: KeyboardEvent): void => {
   if (event.keyCode === 13) {  // Enter
     submitForm(inputField.text);
@@ -284,7 +284,7 @@ inputField.addEventListener("keyDown", (event: KeyboardEvent): void => {
 stage.addChild(inputField);
 ```
 
-## 関連項目
+## Related
 
 - [DisplayObject](./display-object.md)
-- [イベントシステム](./events.md)
+- [Event System](./events.md)

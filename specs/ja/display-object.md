@@ -41,8 +41,10 @@ DisplayObjectは、Next2D Playerにおける全ての表示オブジェクトの
 
 指定座標系での境界矩形を取得します。
 
-```javascript
-const bounds = displayObject.getBounds(stage);
+```typescript
+import type { Rectangle, Stage } from "@next2d/player";
+
+const bounds: Rectangle = displayObject.getBounds(stage);
 console.log(bounds.x, bounds.y, bounds.width, bounds.height);
 ```
 
@@ -50,37 +52,41 @@ console.log(bounds.x, bounds.y, bounds.width, bounds.height);
 
 グローバル座標をローカル座標に変換します。
 
-```javascript
-const globalPoint = new next2d.geom.Point(100, 100);
-const localPoint = displayObject.globalToLocal(globalPoint);
+```typescript
+import type { Point } from "@next2d/player";
+
+const globalPoint: Point = new next2d.geom.Point(100, 100);
+const localPoint: Point = displayObject.globalToLocal(globalPoint);
 ```
 
 ### localToGlobal(point)
 
 ローカル座標をグローバル座標に変換します。
 
-```javascript
-const localPoint = new next2d.geom.Point(0, 0);
-const globalPoint = displayObject.localToGlobal(localPoint);
+```typescript
+import type { Point } from "@next2d/player";
+
+const localPoint: Point = new next2d.geom.Point(0, 0);
+const globalPoint: Point = displayObject.localToGlobal(localPoint);
 ```
 
 ### hitTestPoint(x, y, shapeFlag)
 
 指定座標との衝突判定を行います。
 
-```javascript
+```typescript
 // バウンディングボックスで判定
-const hit1 = displayObject.hitTestPoint(100, 100, false);
+const hit1: boolean = displayObject.hitTestPoint(100, 100, false);
 
 // 実際の形状で判定
-const hit2 = displayObject.hitTestPoint(100, 100, true);
+const hit2: boolean = displayObject.hitTestPoint(100, 100, true);
 ```
 
 ### hitTestObject(obj)
 
 他のDisplayObjectとの衝突判定を行います。
 
-```javascript
+```typescript
 if (obj1.hitTestObject(obj2)) {
   console.log("衝突しました");
 }
@@ -105,10 +111,11 @@ if (obj1.hitTestObject(obj2)) {
 
 ## 使用例
 
-```javascript
+```typescript
 import { next2d } from "@next2d/player";
+import type { Sprite, Stage, BlurFilter } from "@next2d/player";
 
-const sprite = new next2d.display.Sprite();
+const sprite: Sprite = new next2d.display.Sprite();
 
 // 位置とサイズ
 sprite.x = 100;

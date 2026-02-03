@@ -1,8 +1,8 @@
 # Video
 
-Videoは、動画コンテンツを再生するためのDisplayObjectです。WebM、MP4などの動画フォーマットに対応しています。
+Video is a DisplayObject for playing video content. It supports video formats such as WebM and MP4.
 
-## 継承関係
+## Inheritance
 
 ```mermaid
 classDiagram
@@ -16,65 +16,65 @@ classDiagram
     }
 ```
 
-## プロパティ
+## Properties
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `videoWidth` | Number | 動画の元の幅（読み取り専用） |
-| `videoHeight` | Number | 動画の元の高さ（読み取り専用） |
-| `smoothing` | Boolean | スムージング処理の有効化 |
+| Property | Type | Description |
+|----------|------|-------------|
+| `videoWidth` | Number | Original video width (read-only) |
+| `videoHeight` | Number | Original video height (read-only) |
+| `smoothing` | Boolean | Enable smoothing |
 
-## NetStreamとの連携
+## NetStream Integration
 
-VideoクラスはNetStreamと連携して動画を再生します。
+The Video class works with NetStream to play videos.
 
-### NetStreamプロパティ
+### NetStream Properties
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `time` | Number | 現在の再生位置（秒） |
-| `bytesLoaded` | Number | ロード済みバイト数 |
-| `bytesTotal` | Number | 総バイト数 |
+| Property | Type | Description |
+|----------|------|-------------|
+| `time` | Number | Current playback position (seconds) |
+| `bytesLoaded` | Number | Bytes loaded |
+| `bytesTotal` | Number | Total bytes |
 
-### NetStreamメソッド
+### NetStream Methods
 
-| メソッド | 説明 |
-|---------|------|
-| `play(url)` | 動画の再生を開始 |
-| `pause()` | 再生を一時停止 |
-| `resume()` | 再生を再開 |
-| `close()` | ストリームを閉じる |
-| `seek(seconds)` | 指定位置にシーク |
+| Method | Description |
+|--------|-------------|
+| `play(url)` | Start video playback |
+| `pause()` | Pause playback |
+| `resume()` | Resume playback |
+| `close()` | Close stream |
+| `seek(seconds)` | Seek to specified position |
 
-## 使用例
+## Usage Examples
 
-### 基本的な動画再生
+### Basic Video Playback
 
 ```typescript
 import { next2d } from "@next2d/player";
 import type { Video, NetConnection, NetStream } from "@next2d/player";
 
-// Videoオブジェクトを作成
+// Create Video object
 const video: Video = new next2d.media.Video(640, 360);
 
-// NetConnectionを作成
+// Create NetConnection
 const nc: NetConnection = new next2d.net.NetConnection();
 nc.connect(null);
 
-// NetStreamを作成
+// Create NetStream
 const ns: NetStream = new next2d.net.NetStream(nc);
 
-// VideoにNetStreamをアタッチ
+// Attach NetStream to Video
 video.attachNetStream(ns);
 
-// ステージに追加
+// Add to stage
 stage.addChild(video);
 
-// 動画を再生
+// Play video
 ns.play("video.mp4");
 ```
 
-### 再生コントロール
+### Playback Control
 
 ```typescript
 import type { Video, NetConnection, NetStream } from "@next2d/player";
@@ -87,28 +87,28 @@ const ns: NetStream = new next2d.net.NetStream(nc);
 video.attachNetStream(ns);
 stage.addChild(video);
 
-// 再生ボタン
+// Play button
 playButton.addEventListener("click", (): void => {
   ns.resume();
 });
 
-// 一時停止ボタン
+// Pause button
 pauseButton.addEventListener("click", (): void => {
   ns.pause();
 });
 
-// 停止ボタン
+// Stop button
 stopButton.addEventListener("click", (): void => {
   ns.pause();
   ns.seek(0);
 });
 
-// 10秒進む
+// Forward 10 seconds
 forwardButton.addEventListener("click", (): void => {
   ns.seek(ns.time + 10);
 });
 
-// 10秒戻る
+// Back 10 seconds
 backButton.addEventListener("click", (): void => {
   ns.seek(Math.max(0, ns.time - 10));
 });
@@ -116,7 +116,7 @@ backButton.addEventListener("click", (): void => {
 ns.play("video.mp4");
 ```
 
-### メタデータの取得
+### Getting Metadata
 
 ```typescript
 import type { NetStream } from "@next2d/player";
@@ -130,7 +130,7 @@ interface MetaData {
 
 const ns: NetStream = new next2d.net.NetStream(nc);
 
-// メタデータイベントハンドラ
+// Metadata event handler
 ns.client = {
   onMetaData: (info: MetaData): void => {
     console.log("Duration:", info.duration);
@@ -138,7 +138,7 @@ ns.client = {
     console.log("Height:", info.height);
     console.log("Framerate:", info.framerate);
 
-    // 動画サイズに合わせてVideoをリサイズ
+    // Resize Video to match video size
     video.width = info.width;
     video.height = info.height;
   }
@@ -148,7 +148,7 @@ video.attachNetStream(ns);
 ns.play("video.mp4");
 ```
 
-### 再生進捗の表示
+### Displaying Playback Progress
 
 ```typescript
 import type { Video, NetStream } from "@next2d/player";
@@ -171,7 +171,7 @@ ns.client = {
 video.attachNetStream(ns);
 stage.addChild(video);
 
-// フレームごとに進捗を更新
+// Update progress each frame
 stage.addEventListener("enterFrame", (): void => {
   if (duration > 0) {
     const progress: number = ns.time / duration;
@@ -189,26 +189,26 @@ function formatTime(seconds: number): string {
 ns.play("video.mp4");
 ```
 
-### 音量コントロール
+### Volume Control
 
 ```typescript
 import type { NetStream, SoundTransform, Event } from "@next2d/player";
 
 const ns: NetStream = new next2d.net.NetStream(nc);
 
-// SoundTransformで音量を制御
+// Control volume with SoundTransform
 const soundTransform: SoundTransform = new next2d.media.SoundTransform();
 soundTransform.volume = 0.5;  // 50%
 ns.soundTransform = soundTransform;
 
-// 音量スライダー
+// Volume slider
 volumeSlider.addEventListener("change", (event: Event): void => {
   const st: SoundTransform = new next2d.media.SoundTransform();
   st.volume = (event.target as any).value;  // 0.0 ~ 1.0
   ns.soundTransform = st;
 });
 
-// ミュートトグル
+// Mute toggle
 let isMuted: boolean = false;
 muteButton.addEventListener("click", (): void => {
   const st: SoundTransform = new next2d.media.SoundTransform();
@@ -218,22 +218,22 @@ muteButton.addEventListener("click", (): void => {
 });
 ```
 
-### フルスクリーン対応
+### Fullscreen Support
 
 ```typescript
 import type { Video } from "@next2d/player";
 
 const video: Video = new next2d.media.Video(640, 360);
 
-// フルスクリーントグル
+// Fullscreen toggle
 fullscreenButton.addEventListener("click", (): void => {
   if (stage.displayState === "normal") {
-    // フルスクリーンに切り替え
+    // Switch to fullscreen
     stage.displayState = "fullScreen";
     video.width = stage.stageWidth;
     video.height = stage.stageHeight;
   } else {
-    // 通常表示に戻す
+    // Return to normal display
     stage.displayState = "normal";
     video.width = 640;
     video.height = 360;
@@ -241,7 +241,7 @@ fullscreenButton.addEventListener("click", (): void => {
 });
 ```
 
-### 動画の完了検知
+### Detecting Video Completion
 
 ```typescript
 import type { NetStream } from "@next2d/player";
@@ -262,8 +262,8 @@ ns.client = {
   },
   onPlayStatus: (info: PlayStatus): void => {
     if (info.code === "NetStream.Play.Complete") {
-      console.log("動画の再生が完了しました");
-      // ループ再生
+      console.log("Video playback completed");
+      // Loop playback
       ns.seek(0);
       ns.resume();
     }
@@ -271,7 +271,7 @@ ns.client = {
 };
 ```
 
-### 動画プレイヤーコンポーネント
+### Video Player Component
 
 ```typescript
 import { next2d } from "@next2d/player";
@@ -344,22 +344,22 @@ class VideoPlayer extends (next2d.display.Sprite as typeof Sprite) {
   }
 }
 
-// 使用例
+// Usage
 const player: VideoPlayer = new VideoPlayer(640, 360);
 stage.addChild(player);
 player.load("video.mp4");
 player.play();
 ```
 
-## サポートフォーマット
+## Supported Formats
 
-| フォーマット | 拡張子 | 対応状況 |
-|--------------|--------|----------|
-| MP4 (H.264) | .mp4 | 推奨 |
-| WebM (VP8/VP9) | .webm | 対応 |
-| Ogg Theora | .ogv | ブラウザ依存 |
+| Format | Extension | Support |
+|--------|-----------|---------|
+| MP4 (H.264) | .mp4 | Recommended |
+| WebM (VP8/VP9) | .webm | Supported |
+| Ogg Theora | .ogv | Browser dependent |
 
-## 関連項目
+## Related
 
 - [DisplayObject](./display-object.md)
-- [イベントシステム](./events.md)
+- [Event System](./events.md)

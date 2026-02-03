@@ -1,8 +1,8 @@
 # Shape
 
-Shapeは、ベクターグラフィックスの描画専用クラスです。Spriteと異なり子オブジェクトを持てませんが、軽量でパフォーマンスに優れています。
+Shape is a class dedicated to vector graphics drawing. Unlike Sprite, it cannot hold child objects, but it is lightweight and offers better performance.
 
-## 継承関係
+## Inheritance
 
 ```mermaid
 classDiagram
@@ -13,24 +13,24 @@ classDiagram
     }
 ```
 
-## プロパティ
+## Properties
 
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `graphics` | Graphics | グラフィックス描画用オブジェクト |
+| Property | Type | Description |
+|----------|------|-------------|
+| `graphics` | Graphics | Graphics drawing object |
 
-## SpriteとShapeの違い
+## Difference Between Sprite and Shape
 
-| 特徴 | Shape | Sprite |
-|------|-------|--------|
-| 子オブジェクト | 持てない | 持てる |
-| インタラクション | なし | クリック等可能 |
-| パフォーマンス | 軽量 | やや重い |
-| 用途 | 静的な背景、装飾 | ボタン、コンテナ |
+| Feature | Shape | Sprite |
+|---------|-------|--------|
+| Child objects | Cannot hold | Can hold |
+| Interaction | None | Click etc. possible |
+| Performance | Lightweight | Slightly heavier |
+| Use case | Static backgrounds, decorations | Buttons, containers |
 
-## 使用例
+## Usage Examples
 
-### 基本的な描画
+### Basic Drawing
 
 ```typescript
 import { next2d } from "@next2d/player";
@@ -38,7 +38,7 @@ import type { Shape } from "@next2d/player";
 
 const shape: Shape = new next2d.display.Shape();
 
-// 塗りつぶし矩形
+// Filled rectangle
 shape.graphics.beginFill(0x3498db);
 shape.graphics.drawRect(0, 0, 150, 100);
 shape.graphics.endFill();
@@ -46,7 +46,7 @@ shape.graphics.endFill();
 stage.addChild(shape);
 ```
 
-### 複合図形の描画
+### Compound Shape Drawing
 
 ```typescript
 import type { Shape, Graphics } from "@next2d/player";
@@ -54,16 +54,16 @@ import type { Shape, Graphics } from "@next2d/player";
 const shape: Shape = new next2d.display.Shape();
 const g: Graphics = shape.graphics;
 
-// 背景
+// Background
 g.beginFill(0xecf0f1);
 g.drawRoundRect(0, 0, 200, 150, 10, 10);
 g.endFill();
 
-// 枠線
+// Border
 g.lineStyle(2, 0x2c3e50);
 g.drawRoundRect(0, 0, 200, 150, 10, 10);
 
-// 内側の装飾
+// Inner decoration
 g.beginFill(0xe74c3c);
 g.drawCircle(100, 75, 30);
 g.endFill();
@@ -71,7 +71,7 @@ g.endFill();
 stage.addChild(shape);
 ```
 
-### パスの描画
+### Path Drawing
 
 ```typescript
 import type { Shape, Graphics } from "@next2d/player";
@@ -81,7 +81,7 @@ const g: Graphics = shape.graphics;
 
 g.beginFill(0x9b59b6);
 
-// 星形を描画
+// Draw star shape
 g.moveTo(50, 0);
 g.lineTo(61, 35);
 g.lineTo(98, 35);
@@ -99,7 +99,7 @@ g.endFill();
 stage.addChild(shape);
 ```
 
-### ベジェ曲線
+### Bezier Curves
 
 ```typescript
 import type { Shape, Graphics } from "@next2d/player";
@@ -109,16 +109,16 @@ const g: Graphics = shape.graphics;
 
 g.lineStyle(3, 0x1abc9c);
 
-// 二次ベジェ曲線
+// Quadratic bezier curve
 g.moveTo(0, 100);
-g.curveTo(50, 0, 100, 100);  // 制御点, 終点
+g.curveTo(50, 0, 100, 100);  // control point, end point
 
 g.curveTo(150, 200, 200, 100);
 
 stage.addChild(shape);
 ```
 
-### グラデーション背景
+### Gradient Background
 
 ```typescript
 import type { Shape, Graphics, Matrix } from "@next2d/player";
@@ -126,16 +126,16 @@ import type { Shape, Graphics, Matrix } from "@next2d/player";
 const shape: Shape = new next2d.display.Shape();
 const g: Graphics = shape.graphics;
 
-// グラデーション用マトリックス
+// Matrix for gradient
 const matrix: Matrix = new next2d.geom.Matrix();
 matrix.createGradientBox(
   stage.stageWidth,
   stage.stageHeight,
-  Math.PI / 2,  // 90度（縦方向）
+  Math.PI / 2,  // 90 degrees (vertical)
   0, 0
 );
 
-// 放射状グラデーション
+// Radial gradient
 g.beginGradientFill(
   "radial",
   [0x667eea, 0x764ba2],
@@ -146,11 +146,11 @@ g.beginGradientFill(
 g.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
 g.endFill();
 
-// 最背面に配置
+// Place at back
 stage.addChildAt(shape, 0);
 ```
 
-### 動的な再描画
+### Dynamic Redrawing
 
 ```typescript
 import type { Shape, Graphics } from "@next2d/player";
@@ -160,14 +160,14 @@ stage.addChild(shape);
 
 let angle: number = 0;
 
-// フレームごとに再描画
+// Redraw each frame
 stage.addEventListener("enterFrame", (): void => {
   const g: Graphics = shape.graphics;
 
-  // 前の描画をクリア
+  // Clear previous drawing
   g.clear();
 
-  // 新しい位置に描画
+  // Draw at new position
   const x: number = 200 + Math.cos(angle) * 100;
   const y: number = 150 + Math.sin(angle) * 100;
 
@@ -179,25 +179,25 @@ stage.addEventListener("enterFrame", (): void => {
 });
 ```
 
-### 複数のShapeで構成
+### Composed of Multiple Shapes
 
 ```typescript
 import type { Shape } from "@next2d/player";
 
-// 背景レイヤー
+// Background layer
 const bgShape: Shape = new next2d.display.Shape();
 bgShape.graphics.beginFill(0x2c3e50);
 bgShape.graphics.drawRect(0, 0, 400, 300);
 bgShape.graphics.endFill();
 
-// 装飾レイヤー
+// Decoration layer
 const decorShape: Shape = new next2d.display.Shape();
 decorShape.graphics.beginFill(0x3498db, 0.5);
 decorShape.graphics.drawCircle(100, 100, 80);
 decorShape.graphics.drawCircle(300, 200, 60);
 decorShape.graphics.endFill();
 
-// 前面レイヤー
+// Front layer
 const frontShape: Shape = new next2d.display.Shape();
 frontShape.graphics.lineStyle(2, 0xecf0f1);
 frontShape.graphics.drawRect(50, 50, 300, 200);
@@ -207,20 +207,20 @@ stage.addChild(decorShape);
 stage.addChild(frontShape);
 ```
 
-## パフォーマンスのヒント
+## Performance Tips
 
-1. **静的な描画にはShapeを使用**: インタラクションが不要な背景や装飾にはShapeが最適
-2. **描画の最小化**: 頻繁に変更されない場合は一度だけ描画
-3. **clear()の使用**: 動的な再描画時は必ずclear()を呼ぶ
-4. **複雑な図形はキャッシュ**: cacheAsBitmapプロパティで描画をキャッシュ
+1. **Use Shape for static drawing**: Shape is optimal for backgrounds and decorations that don't need interaction
+2. **Minimize drawing**: Only draw once if content doesn't change frequently
+3. **Use clear()**: Always call clear() when dynamically redrawing
+4. **Cache complex shapes**: Cache drawing with cacheAsBitmap property
 
 ```typescript
-// 複雑な図形をビットマップとしてキャッシュ
+// Cache complex shapes as bitmap
 shape.cacheAsBitmap = true;
 ```
 
-## 関連項目
+## Related
 
 - [DisplayObject](./display-object.md)
 - [Sprite](./sprite.md)
-- [フィルター](./filters/index.md)
+- [Filters](./filters/index.md)

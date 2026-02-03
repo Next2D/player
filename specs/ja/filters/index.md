@@ -4,10 +4,11 @@ Next2D Playerは、DisplayObjectに適用できる様々なビジュアルフィ
 
 ## フィルターの適用方法
 
-```javascript
+```typescript
 import { next2d } from "@next2d/player";
+import type { Sprite } from "@next2d/player";
 
-const sprite = new next2d.display.Sprite();
+const sprite: Sprite = new next2d.display.Sprite();
 
 // 単一のフィルター
 sprite.filters = [new next2d.filters.BlurFilter(4, 4)];
@@ -40,7 +41,7 @@ sprite.filters = null;
 
 ぼかし効果を適用します。
 
-```javascript
+```typescript
 new next2d.filters.BlurFilter(blurX, blurY, quality);
 ```
 
@@ -54,7 +55,7 @@ new next2d.filters.BlurFilter(blurX, blurY, quality);
 
 ドロップシャドウ効果を適用します。
 
-```javascript
+```typescript
 new next2d.filters.DropShadowFilter(
   distance, angle, color, alpha,
   blurX, blurY, strength, quality,
@@ -80,7 +81,7 @@ new next2d.filters.DropShadowFilter(
 
 グロー効果を適用します。
 
-```javascript
+```typescript
 new next2d.filters.GlowFilter(
   color, alpha, blurX, blurY,
   strength, quality, inner, knockout
@@ -102,24 +103,28 @@ new next2d.filters.GlowFilter(
 
 ### ボタンのホバー効果
 
-```javascript
-const button = new next2d.display.Sprite();
+```typescript
+import type { Sprite } from "@next2d/player";
 
-button.addEventListener("rollOver", () => {
+const button: Sprite = new next2d.display.Sprite();
+
+button.addEventListener("rollOver", (): void => {
   button.filters = [
     new next2d.filters.GlowFilter(0x00ff00, 0.8, 10, 10)
   ];
 });
 
-button.addEventListener("rollOut", () => {
+button.addEventListener("rollOut", (): void => {
   button.filters = null;
 });
 ```
 
 ### 影付きテキスト
 
-```javascript
-const textField = new next2d.text.TextField();
+```typescript
+import type { TextField } from "@next2d/player";
+
+const textField: TextField = new next2d.text.TextField();
 textField.text = "Hello World";
 textField.filters = [
   new next2d.filters.DropShadowFilter(2, 45, 0x000000, 0.5, 2, 2)
@@ -128,7 +133,7 @@ textField.filters = [
 
 ### 複合フィルター
 
-```javascript
+```typescript
 sprite.filters = [
   // 外側のグロー
   new next2d.filters.GlowFilter(0x0088ff, 0.8, 15, 15, 2, 1, false),
