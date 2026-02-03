@@ -343,9 +343,9 @@ export const execute = (recodes : any[] | null): any[] =>
                         array.push(...buffer.subarray(idx, idx + 4096));
                     }
 
-                    const matrix: Float32Array = recodes[idx++];
+                    const matrix: Matrix = recodes[idx++];
                     if (matrix) {
-                        array.push(...matrix);
+                        array.push(...matrix.rawData);
                     } else {
                         array.push(1, 0, 0, 1, 0, 0);
                     }
