@@ -5,7 +5,7 @@ import { BasicVertex, BasicMainVertex } from "./wgsl/vertex/BasicVertex";
 import { InstancedVertex } from "./wgsl/vertex/InstancedVertex";
 import { GradientFillVertex, GradientFillMainVertex } from "./wgsl/vertex/GradientVertex";
 import { BitmapFillVertex, BitmapFillMainVertex } from "./wgsl/vertex/BitmapVertex";
-import { BlurFilterVertex, NodeClearVertex, PositionedTextureVertex, BitmapSyncVertex } from "./wgsl/vertex/FilterVertex";
+import { BlurFilterVertex, NodeClearVertex, PositionedTextureVertex, BitmapSyncVertex, TextureScaleVertex, TextureScaleBlendVertex, ComplexBlendScaleVertex, ComplexBlendVertex, ComplexBlendCopyVertex, ComplexBlendOutputVertex, FilterComplexBlendOutputVertex } from "./wgsl/vertex/FilterVertex";
 
 import { FillFragment } from "./wgsl/fragment/FillFragment";
 import { StencilWriteFragment, StencilFillFragment } from "./wgsl/fragment/StencilFragment";
@@ -879,6 +879,69 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     static getPositionedTextureVertexShader (): string
     {
         return PositionedTextureVertex;
+    }
+
+    /**
+     * @description スケール変換用頂点シェーダー（複雑なブレンドモードでスケールが適用されている場合に使用）
+     * @return {string}
+     */
+    static getTextureScaleVertexShader (): string
+    {
+        return TextureScaleVertex;
+    }
+
+    /**
+     * @description フィルター処理用スケール変換頂点シェーダー（Video/Bitmap用、Y軸反転あり）
+     * @return {string}
+     */
+    static getTextureScaleBlendVertexShader (): string
+    {
+        return TextureScaleBlendVertex;
+    }
+
+    /**
+     * @description 複雑なブレンドモード用スケール変換頂点シェーダー（Y軸反転なし）
+     * @return {string}
+     */
+    static getComplexBlendScaleVertexShader (): string
+    {
+        return ComplexBlendScaleVertex;
+    }
+
+    /**
+     * @description 複雑なブレンドモード用フルスクリーンクワッド頂点シェーダー（Y軸反転なし）
+     * @return {string}
+     */
+    static getComplexBlendVertexShader (): string
+    {
+        return ComplexBlendVertex;
+    }
+
+    /**
+     * @description 複雑なブレンドモード用テクスチャコピー頂点シェーダー（Y軸反転なし）
+     * @return {string}
+     */
+    static getComplexBlendCopyVertexShader (): string
+    {
+        return ComplexBlendCopyVertex;
+    }
+
+    /**
+     * @description 複雑なブレンドモード結果描画用頂点シェーダー（Y軸反転なし）
+     * @return {string}
+     */
+    static getComplexBlendOutputVertexShader (): string
+    {
+        return ComplexBlendOutputVertex;
+    }
+
+    /**
+     * @description フィルター＋複雑なブレンドモード結果描画用頂点シェーダー（Y軸反転あり）
+     * @return {string}
+     */
+    static getFilterComplexBlendOutputVertexShader (): string
+    {
+        return FilterComplexBlendOutputVertex;
     }
 
     /**

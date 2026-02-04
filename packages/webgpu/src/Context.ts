@@ -2633,9 +2633,10 @@ export class Context
      *              Bitmapも同じ方向になるよう画像を上下反転して書き込む
      * @param {Node} node
      * @param {OffscreenCanvas | ImageBitmap} element
+     * @param {boolean} flipY - Videoの場合はtrueを指定（デフォルト: false）
      * @return {void}
      */
-    drawElement (node: Node, element: OffscreenCanvas | ImageBitmap): void
+    drawElement (node: Node, element: OffscreenCanvas | ImageBitmap, flipY: boolean = false): void
     {
         // WebGPU draw element
         // OffscreenCanvasまたはImageBitmapをアトラステクスチャに描画
@@ -2643,8 +2644,8 @@ export class Context
         const attachment = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
         if (!attachment || !attachment.texture) { return }
 
-        const width = element.width || node.w;
-        const height = element.height || node.h;
+        const width = node.w;
+        const height = node.h;
 
         // レンダーパスがアクティブな場合は終了
         if (this.renderPassEncoder) {
@@ -2658,30 +2659,11 @@ export class Context
         }
 
         // MSAAが有効な場合は一時テクスチャ経由でMSAAテクスチャに直接描画
-        // MSAAが無効な場合は従来通りresolve targetに直接コピー
+        // MSAAが無効な場合もシェーダー経由で描画（WebGLと同じ処理フロー）
         if (attachment.msaa && attachment.msaaTexture?.view) {
-            this.drawElementToMsaa(attachment, node, element, width, height);
+            this.drawElementToMsaa(attachment, node, element, width, height, flipY);
         } else {
-            try {
-                this.device.queue.copyExternalImageToTexture(
-                    {
-                        "source": element as ImageBitmap,
-                        "flipY": true
-                    },
-                    {
-                        "texture": attachment.texture.resource,
-                        "origin": { "x": node.x, "y": node.y, "z": 0 },
-                        "premultipliedAlpha": true
-                    },
-                    {
-                        "width": width,
-                        "height": height,
-                        "depthOrArrayLayers": 1
-                    }
-                );
-            } catch (e) {
-                console.error("[WebGPU] Failed to copy external image to texture:", e);
-            }
+            this.drawElementToTexture(attachment, node, element, width, height, flipY);
         }
     }
 
@@ -2692,6 +2674,7 @@ export class Context
      * @param {OffscreenCanvas | ImageBitmap} element
      * @param {number} width
      * @param {number} height
+     * @param {boolean} flipY - 画像をアップロード時に上下反転するか
      * @return {void}
      */
     private drawElementToMsaa (
@@ -2699,7 +2682,8 @@ export class Context
         node: Node,
         element: OffscreenCanvas | ImageBitmap,
         width: number,
-        height: number
+        height: number,
+        flipY: boolean
     ): void
     {
         // 一時テクスチャを作成
@@ -2710,11 +2694,11 @@ export class Context
         });
 
         // ImageBitmapを一時テクスチャにコピー
-        // PositionedTextureVertexシェーダーがY軸反転するので、ここではflipY: false
+        // flipYパラメータで画像の上下反転を制御（Videoはtrue、TextFieldはfalse）
         this.device.queue.copyExternalImageToTexture(
             {
                 "source": element as ImageBitmap,
-                "flipY": false
+                "flipY": flipY
             },
             {
                 "texture": tempTexture,
@@ -2740,6 +2724,7 @@ export class Context
         }
 
         // PositionUniforms: offset, size, viewport, padding
+        // node.xとnode.yを直接使用（WebGPU座標系用）
         const uniformData = new Float32Array([
             node.x, node.y,                           // offset
             width, height,                            // size
@@ -2780,6 +2765,125 @@ export class Context
         };
 
         const stencilView = attachment.msaaStencil?.view;
+        if (stencilView) {
+            renderPassDescriptor.depthStencilAttachment = {
+                "view": stencilView,
+                "stencilLoadOp": "load" as GPULoadOp,
+                "stencilStoreOp": "store" as GPUStoreOp
+            };
+        }
+
+        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+        renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
+        renderPass.setPipeline(pipeline);
+        renderPass.setBindGroup(0, bindGroup);
+        renderPass.draw(6);
+        renderPass.end();
+
+        this.device.queue.submit([commandEncoder.finish()]);
+
+        // リソースを解放
+        uniformBuffer.destroy();
+        tempTexture.destroy();
+    }
+
+    /**
+     * @description 一時テクスチャ経由で通常テクスチャに描画（非MSAA版）
+     * @param {IAttachmentObject} attachment
+     * @param {Node} node
+     * @param {OffscreenCanvas | ImageBitmap} element
+     * @param {number} width
+     * @param {number} height
+     * @param {boolean} flipY - 画像をアップロード時に上下反転するか
+     * @return {void}
+     */
+    private drawElementToTexture (
+        attachment: IAttachmentObject,
+        node: Node,
+        element: OffscreenCanvas | ImageBitmap,
+        width: number,
+        height: number,
+        flipY: boolean
+    ): void
+    {
+        // 一時テクスチャを作成
+        const tempTexture = this.device.createTexture({
+            "size": { "width": width, "height": height },
+            "format": "rgba8unorm",
+            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+        });
+
+        // ImageBitmapを一時テクスチャにコピー
+        // flipYパラメータで画像の上下反転を制御（Videoはtrue、TextFieldはfalse）
+        this.device.queue.copyExternalImageToTexture(
+            {
+                "source": element as ImageBitmap,
+                "flipY": flipY
+            },
+            {
+                "texture": tempTexture,
+                "premultipliedAlpha": true
+            },
+            {
+                "width": width,
+                "height": height
+            }
+        );
+
+        // bitmap_renderパイプラインを取得（非MSAA版）
+        const pipeline = this.pipelineManager.getPipeline("bitmap_render");
+        if (!pipeline) {
+            tempTexture.destroy();
+            return;
+        }
+
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("positioned_texture");
+        if (!bindGroupLayout) {
+            tempTexture.destroy();
+            return;
+        }
+
+        // PositionUniforms: offset, size, viewport, padding
+        // node.xとnode.yを直接使用（WebGPU座標系用）
+        const uniformData = new Float32Array([
+            node.x, node.y,                           // offset
+            width, height,                            // size
+            attachment.width, attachment.height,      // viewport
+            0.0, 0.0                                  // padding
+        ]);
+        const uniformBuffer = this.device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+        const sampler = this.device.createSampler({
+            "magFilter": "linear",
+            "minFilter": "linear"
+        });
+
+        const tempTextureView = tempTexture.createView();
+
+        const bindGroup = this.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": tempTextureView }
+            ]
+        });
+
+        // 通常テクスチャに描画
+        const commandEncoder = this.device.createCommandEncoder();
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            "colorAttachments": [{
+                "view": attachment.texture!.view,
+                "loadOp": "load" as GPULoadOp,
+                "storeOp": "store" as GPUStoreOp
+            }]
+        };
+
+        const stencilView = attachment.stencil?.view;
         if (stencilView) {
             renderPassDescriptor.depthStencilAttachment = {
                 "view": stencilView,
@@ -2859,6 +2963,7 @@ export class Context
             node,
             width,
             height,
+            _is_bitmap,
             matrix,
             color_transform,
             blend_mode,

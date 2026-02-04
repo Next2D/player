@@ -215,33 +215,58 @@ struct BevelUniforms {
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let base = textureSample(baseTexture, textureSampler, input.texCoord);
+
+    // WebGL版と同様: blur1は通常座標、blur2は反転座標でサンプル
     let blur1 = textureSample(blurTexture, textureSampler, input.texCoord);
     let blur2 = textureSample(blurTexture, textureSampler, 1.0 - input.texCoord);
-    var highlightAlpha = (blur1.a - blur2.a) * uniforms.strength;
-    var shadowAlpha = (blur2.a - blur1.a) * uniforms.strength;
+
+    // ハイライトとシャドウのアルファを計算
+    var highlightAlpha = blur1.a - blur2.a;
+    var shadowAlpha = blur2.a - blur1.a;
+
+    // strengthを適用
+    highlightAlpha *= uniforms.strength;
+    shadowAlpha *= uniforms.strength;
+
+    // クランプ
     highlightAlpha = clamp(highlightAlpha, 0.0, 1.0);
     shadowAlpha = clamp(shadowAlpha, 0.0, 1.0);
-    let highlight = uniforms.highlightColor * highlightAlpha;
-    let shadow = uniforms.shadowColor * shadowAlpha;
-    let bevelColor = highlight + shadow - highlight * shadow.a;
+
+    // ベベルカラーを計算
+    let bevelColor = uniforms.highlightColor * highlightAlpha + uniforms.shadowColor * shadowAlpha;
+
+    // DEBUG: bevelColor.aが0の場合はbaseを返す
+    // bevelColor.aは highlightAlpha + shadowAlpha 相当（プリマルチプライドなので）
+    // highlightAlphaとshadowAlphaは同時に正になることはない
+    let totalBevelAlpha = highlightAlpha + shadowAlpha;
+    if (totalBevelAlpha < 0.001) {
+        return base;
+    }
+
+    // タイプに応じて合成
     var result: vec4<f32>;
     let bevelType = uniforms.bevelType;
     let knockout = uniforms.knockout > 0.5;
+
     if (bevelType < 0.5) {
+        // full (type = 0)
         if (knockout) {
             result = bevelColor;
         } else {
             result = base - base * bevelColor.a + bevelColor;
         }
     } else if (bevelType < 1.5) {
+        // inner (type = 1)
         result = bevelColor;
     } else {
+        // outer (type = 2)
         if (knockout) {
             result = bevelColor - bevelColor * base.a;
         } else {
             result = base + bevelColor - bevelColor * base.a;
         }
     }
+
     return result;
 }
 `;

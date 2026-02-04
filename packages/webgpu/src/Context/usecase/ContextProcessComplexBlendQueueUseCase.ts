@@ -39,11 +39,12 @@ const copyTextureRegionViaRenderPass = (
     textureManager: TextureManager,
     pipelineManager: PipelineManager
 ): void => {
-    const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
+    // 複雑なブレンド専用のコピーパイプライン（Y軸反転なし）を使用
+    const pipeline = pipelineManager.getPipeline("complex_blend_copy");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
 
     if (!pipeline || !bindGroupLayout) {
-        console.error("[WebGPU] texture_copy_rgba8 pipeline not found");
+        console.error("[WebGPU] complex_blend_copy pipeline not found");
         return;
     }
 
@@ -109,12 +110,12 @@ const drawToMainAttachment = (
     textureManager: TextureManager,
     pipelineManager: PipelineManager
 ): void => {
-    // 位置変換付きテクスチャ描画パイプラインを使用
-    const pipeline = pipelineManager.getPipeline("positioned_texture");
+    // 複雑なブレンド用結果描画パイプラインを使用（Y軸反転なし）
+    const pipeline = pipelineManager.getPipeline("complex_blend_output");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("positioned_texture");
 
     if (!pipeline || !bindGroupLayout) {
-        console.error("[WebGPU] positioned_texture pipeline not found");
+        console.error("[WebGPU] complex_blend_output pipeline not found");
         return;
     }
 
@@ -214,9 +215,12 @@ export const execute = (
             continue;
         }
 
-        // 統一サイズを使用（ソースとデスティネーションで同じサイズ）
-        const blendWidth = node.w;
-        const blendHeight = node.h;
+        // スケールが適用されているかチェック（WebGL版と同様）
+        const hasScale = matrix[0] !== 1 || matrix[1] !== 0 || matrix[3] !== 0 || matrix[4] !== 1;
+
+        // スケール適用後のサイズを使用
+        const blendWidth = hasScale ? width : node.w;
+        const blendHeight = hasScale ? height : node.h;
 
         // メインアタッチメントの境界をチェック
         const clippedWidth = Math.min(blendWidth, mainAttachment.width - dstX);
@@ -225,22 +229,112 @@ export const execute = (
             continue;
         }
 
-        // 1. ソーステクスチャを作成（アトラスからコピー - 両方rgba8unorm）
-        const srcAttachment = frameBufferManager.createTemporaryAttachment(blendWidth, blendHeight);
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": atlasAttachment.texture.resource,
-                "origin": { "x": node.x, "y": node.y, "z": 0 }
-            },
-            {
-                "texture": srcAttachment.texture!.resource,
-                "origin": { "x": 0, "y": 0, "z": 0 }
-            },
-            {
-                "width": blendWidth,
-                "height": blendHeight
+        // 1. ソーステクスチャを作成
+        let srcAttachment: IAttachmentObject;
+
+        if (hasScale) {
+            // スケールが適用されている場合は、元のテクスチャをスケール変換
+            srcAttachment = frameBufferManager.createTemporaryAttachment(blendWidth, blendHeight);
+
+            // 複雑なブレンドモード専用スケール変換パイプラインを使用（Y軸反転なし）
+            const scalePipeline = pipelineManager.getPipeline("complex_blend_scale");
+            const scaleBindGroupLayout = pipelineManager.getBindGroupLayout("texture_scale");
+
+            if (scalePipeline && scaleBindGroupLayout) {
+                // 変換行列を計算（WebGL版と同様のロジック）
+                // 中心を原点に移動 → スケール適用 → 新しい中心に移動
+                const halfW = blendWidth / 2;
+                const halfH = blendHeight / 2;
+                const halfNodeW = node.w / 2;
+                const halfNodeH = node.h / 2;
+
+                // tMatrix = scale matrix * translate(-halfNodeW, -halfNodeH) + translate(halfW, halfH)
+                const tMatrix = new Float32Array([
+                    matrix[0], matrix[1],
+                    matrix[3], matrix[4],
+                    -halfNodeW * matrix[0] - halfNodeH * matrix[3] + halfW,
+                    -halfNodeW * matrix[1] - halfNodeH * matrix[4] + halfH
+                ]);
+
+                // 元のテクスチャをコピー
+                const originalAttachment = frameBufferManager.createTemporaryAttachment(node.w, node.h);
+                commandEncoder.copyTextureToTexture(
+                    {
+                        "texture": atlasAttachment.texture.resource,
+                        "origin": { "x": node.x, "y": node.y, "z": 0 }
+                    },
+                    {
+                        "texture": originalAttachment.texture!.resource,
+                        "origin": { "x": 0, "y": 0, "z": 0 }
+                    },
+                    { "width": node.w, "height": node.h }
+                );
+
+                // ユニフォームデータ: matrix (6 floats) + srcSize (2 floats) + dstSize (2 floats)
+                const uniformData = new Float32Array([
+                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
+                    node.w, node.h,
+                    blendWidth, blendHeight,
+                    0, 0 // padding
+                ]);
+                const uniformBuffer = device.createBuffer({
+                    "size": 48,
+                    "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+                });
+                device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+                const sampler = textureManager.createSampler("scale_sampler", true);
+                const bindGroup = device.createBindGroup({
+                    "layout": scaleBindGroupLayout,
+                    "entries": [
+                        { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                        { "binding": 1, "resource": sampler },
+                        { "binding": 2, "resource": originalAttachment.texture!.view }
+                    ]
+                });
+
+                const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
+                    srcAttachment.texture!.view,
+                    0, 0, 0, 0,
+                    "clear"
+                );
+
+                const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+                passEncoder.setPipeline(scalePipeline);
+                passEncoder.setBindGroup(0, bindGroup);
+                passEncoder.draw(6, 1, 0, 0);
+                passEncoder.end();
+
+                frameBufferManager.releaseTemporaryAttachment(originalAttachment);
+            } else {
+                // フォールバック: スケールパイプラインがない場合は直接コピー
+                commandEncoder.copyTextureToTexture(
+                    {
+                        "texture": atlasAttachment.texture.resource,
+                        "origin": { "x": node.x, "y": node.y, "z": 0 }
+                    },
+                    {
+                        "texture": srcAttachment.texture!.resource,
+                        "origin": { "x": 0, "y": 0, "z": 0 }
+                    },
+                    { "width": Math.min(node.w, blendWidth), "height": Math.min(node.h, blendHeight) }
+                );
             }
-        );
+        } else {
+            // スケールなしの場合は直接コピー
+            srcAttachment = frameBufferManager.createTemporaryAttachment(blendWidth, blendHeight);
+            commandEncoder.copyTextureToTexture(
+                {
+                    "texture": atlasAttachment.texture.resource,
+                    "origin": { "x": node.x, "y": node.y, "z": 0 }
+                },
+                {
+                    "texture": srcAttachment.texture!.resource,
+                    "origin": { "x": 0, "y": 0, "z": 0 }
+                },
+                { "width": blendWidth, "height": blendHeight }
+            );
+        }
 
         // 2. デスティネーションテクスチャを作成（ソースと同じサイズ）
         //    メインアタッチメント(bgra8unorm)からレンダーパスでコピー(rgba8unorm)

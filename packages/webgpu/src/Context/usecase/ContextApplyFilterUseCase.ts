@@ -16,6 +16,7 @@ import { execute as filterApplyConvolutionFilterUseCase } from "../../Filter/Con
 import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/GradientBevelFilter/FilterApplyGradientBevelFilterUseCase";
 import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase";
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
+import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 
 /**
  * @description ノードからテクスチャをアタッチメントとして取得
@@ -61,13 +62,159 @@ const getTextureFromNode = (
 };
 
 /**
+ * @description シンプルなブレンドモードかどうかをチェック
+ *              Check if the blend mode is simple
+ *
+ * @param {IBlendMode} blendMode
+ * @return {boolean}
+ */
+const isSimpleBlendMode = (blendMode: IBlendMode): boolean => {
+    const simpleBlendModes: IBlendMode[] = ["normal", "layer", "add", "screen", "alpha", "erase", "copy"];
+    return simpleBlendModes.includes(blendMode);
+};
+
+/**
+ * @description メインアタッチメントから指定領域のテクスチャをコピー
+ *              Copy texture region from main attachment
+ *
+ * @param {ILocalFilterConfig} config
+ * @param {IAttachmentObject} mainAttachment
+ * @param {number} x
+ * @param {number} y
+ * @param {number} width
+ * @param {number} height
+ * @return {IAttachmentObject}
+ */
+const copyMainAttachmentRegion = (
+    config: ILocalFilterConfig,
+    mainAttachment: IAttachmentObject,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+): IAttachmentObject => {
+    // 一時アタッチメントを作成
+    const dstAttachment = config.frameBufferManager.createTemporaryAttachment(width, height);
+
+    // レンダーパスでコピー（フォーマット変換: bgra8unorm -> rgba8unorm）
+    const pipeline = config.pipelineManager.getPipeline("complex_blend_copy");
+    const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
+
+    if (!pipeline || !bindGroupLayout || !mainAttachment.texture || !dstAttachment.texture) {
+        return dstAttachment;
+    }
+
+    // ユニフォームバッファ: scale (vec2) + offset (vec2)
+    const scaleX = width / mainAttachment.width;
+    const scaleY = height / mainAttachment.height;
+    const offsetX = x / mainAttachment.width;
+    const offsetY = y / mainAttachment.height;
+
+    const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
+    const uniformBuffer = config.device.createBuffer({
+        "size": 16,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+    const sampler = config.textureManager.createSampler("filter_copy_sampler", false);
+
+    const bindGroup = config.device.createBindGroup({
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": mainAttachment.texture.view }
+        ]
+    });
+
+    const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+        dstAttachment.texture.view,
+        0, 0, 0, 0,
+        "clear"
+    );
+
+    const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(pipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.draw(6, 1, 0, 0);
+    passEncoder.end();
+
+    return dstAttachment;
+};
+
+/**
+ * @description ブレンド結果をメインアタッチメントに描画
+ *              Draw blended result to main attachment
+ *
+ * @param {ILocalFilterConfig} config
+ * @param {IAttachmentObject} srcAttachment
+ * @param {IAttachmentObject} mainAttachment
+ * @param {number} x
+ * @param {number} y
+ * @return {void}
+ */
+const drawBlendResultToMain = (
+    config: ILocalFilterConfig,
+    srcAttachment: IAttachmentObject,
+    mainAttachment: IAttachmentObject,
+    x: number,
+    y: number
+): void => {
+    // フィルター＋複雑なブレンド用のパイプライン（Y軸反転あり）を使用
+    const pipeline = config.pipelineManager.getPipeline("filter_complex_blend_output");
+    const bindGroupLayout = config.pipelineManager.getBindGroupLayout("positioned_texture");
+
+    if (!pipeline || !bindGroupLayout || !srcAttachment.texture || !mainAttachment.texture) {
+        return;
+    }
+
+    // ユニフォームデータ: offset, size, viewport, padding
+    const uniformData = new Float32Array([
+        x, y,                                         // offset (描画位置)
+        srcAttachment.width, srcAttachment.height,    // size (テクスチャサイズ)
+        mainAttachment.width, mainAttachment.height,  // viewport (ビューポートサイズ)
+        0, 0                                          // padding (16バイトアライメント)
+    ]);
+    const uniformBuffer = config.device.createBuffer({
+        "size": 32,
+        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+    const sampler = config.textureManager.createSampler("filter_blend_output_sampler", false);
+
+    const bindGroup = config.device.createBindGroup({
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": srcAttachment.texture.view }
+        ]
+    });
+
+    // メインアタッチメントへの描画（loadで既存内容を保持）
+    const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+        mainAttachment.texture.view,
+        0, 0, 0, 0,
+        "load"
+    );
+
+    const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(pipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.draw(6, 1, 0, 0);
+    passEncoder.end();
+};
+
+/**
  * @description フィルター結果をメインアタッチメントに描画
  *              Draw filter result to main attachment (WebGL版と同じフロー)
  *
  * @param {ILocalFilterConfig} config
  * @param {IAttachmentObject} filterAttachment
- * @param {Float32Array} _colorTransform - 未使用（将来の拡張用）
- * @param {IBlendMode} _blendMode - 未使用（将来の拡張用）
+ * @param {Float32Array} colorTransform
+ * @param {IBlendMode} blendMode
  * @param {number} x
  * @param {number} y
  * @param {GPUTextureView} _mainTextureView - 未使用（メインアタッチメントに描画）
@@ -77,8 +224,8 @@ const getTextureFromNode = (
 const drawFilterToMain = (
     config: ILocalFilterConfig,
     filter_attachment: IAttachmentObject,
-    _color_transform: Float32Array,
-    _blend_mode: IBlendMode,
+    color_transform: Float32Array,
+    blend_mode: IBlendMode,
     x: number,
     y: number,
     _main_texture_view: GPUTextureView,
@@ -90,28 +237,15 @@ const drawFilterToMain = (
         return;
     }
 
-    // texture_copy_bgraパイプラインを使用
-    const pipeline = config.pipelineManager.getPipeline("texture_copy_bgra");
-    const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
-
-    if (!pipeline || !bindGroupLayout) {
-        return;
-    }
-
-    // サンプラーを作成
-    const sampler = config.textureManager.createSampler("filter_output_sampler", true);
-
     // 描画位置とサイズを計算
     let drawX = Math.floor(x);
     let drawY = Math.floor(y);
     let drawWidth = filter_attachment.width;
     let drawHeight = filter_attachment.height;
 
-    // UV座標のオフセット（描画位置が負の場合に調整）
+    // 負の描画位置を処理（画面外の部分をクリップ）
     let uvOffsetX = 0;
     let uvOffsetY = 0;
-
-    // 負の描画位置を処理（画面外の部分をクリップ）
     if (drawX < 0) {
         uvOffsetX = -drawX / filter_attachment.width;
         drawWidth += drawX;
@@ -138,46 +272,139 @@ const drawFilterToMain = (
         drawHeight = mainHeight - drawY;
     }
 
-    // UV座標のスケール（クリップされた部分を考慮）
-    const uvScaleX = drawWidth / filter_attachment.width;
-    const uvScaleY = drawHeight / filter_attachment.height;
+    // シンプルなブレンドモードの場合
+    if (isSimpleBlendMode(blend_mode)) {
+        // ブレンドモードに応じたパイプラインを選択
+        let pipelineName: string;
+        switch (blend_mode) {
+            case "add":
+                pipelineName = "filter_output_add";
+                break;
+            case "screen":
+                pipelineName = "filter_output_screen";
+                break;
+            case "alpha":
+                pipelineName = "filter_output_alpha";
+                break;
+            case "erase":
+                pipelineName = "filter_output_erase";
+                break;
+            case "copy":
+                pipelineName = "texture_copy_bgra";
+                break;
+            default:
+                // normal, layer
+                pipelineName = "filter_output";
+                break;
+        }
 
-    // ユニフォーム: scale(2) + offset(2)
-    const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
+        const pipeline = config.pipelineManager.getPipeline(pipelineName);
+        const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
 
-    // ユニフォームバッファを作成
-    const uniformBuffer = config.device.createBuffer({
-        "size": 16,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
-    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+        if (!pipeline || !bindGroupLayout) {
+            // フォールバック
+            pipelineName = "filter_output";
+        }
 
-    const bindGroup = config.device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": filter_attachment.texture.view }
-        ]
-    });
+        const sampler = config.textureManager.createSampler("filter_output_sampler", true);
 
-    // メインアタッチメントへのレンダーパス（既存コンテンツをロード）
-    const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
-        mainAttachment.texture.view,
-        0, 0, 0, 0,
-        "load"
-    );
+        // UV座標の設定
+        // 負の描画位置の場合、uvOffset を設定してテクスチャの左端/上端をスキップ
+        // uvScale = 1 - uvOffset でテクスチャの残り部分をカバー
+        const uvScaleX = 1 - uvOffsetX;
+        const uvScaleY = 1 - uvOffsetY;
+        const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
+        const uniformBuffer = config.device.createBuffer({
+            "size": 16,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        config.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
-    const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
-    passEncoder.setPipeline(pipeline);
-    passEncoder.setBindGroup(0, bindGroup);
+        const bindGroup = config.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": filter_attachment.texture.view }
+            ]
+        });
 
-    // ビューポートとシザーを設定して、フィルター結果を正しい位置に描画
-    passEncoder.setViewport(drawX, drawY, drawWidth, drawHeight, 0, 1);
-    passEncoder.setScissorRect(drawX, drawY, drawWidth, drawHeight);
+        const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+            mainAttachment.texture.view,
+            0, 0, 0, 0,
+            "load"
+        );
 
-    passEncoder.draw(6, 1, 0, 0);
-    passEncoder.end();
+        // テスト: 描画位置とサイズをログ出力相当（描画が行われているか確認）
+        const vpX = Math.max(0, Math.floor(drawX));
+        const vpY = Math.max(0, Math.floor(drawY));
+        const vpW = Math.max(1, filter_attachment.width);
+        const vpH = Math.max(1, filter_attachment.height);
+        const scissorX = vpX;
+        const scissorY = vpY;
+        const scissorW = Math.max(1, Math.min(vpW, mainWidth - vpX));
+        const scissorH = Math.max(1, Math.min(vpH, mainHeight - vpY));
+
+        // 描画が有効な範囲内でのみ実行
+        if (scissorW <= 0 || scissorH <= 0 || vpX >= mainWidth || vpY >= mainHeight) {
+            return;
+        }
+
+        const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
+        passEncoder.setPipeline(pipeline);
+        passEncoder.setBindGroup(0, bindGroup);
+        passEncoder.setViewport(vpX, vpY, vpW, vpH, 0, 1);
+        passEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
+        passEncoder.draw(6, 1, 0, 0);
+        passEncoder.end();
+    } else {
+        // 複雑なブレンドモード（multiply, overlay, darken, lighten, hardlight等）
+        // 1. メインアタッチメントから描画先の矩形をコピー
+        const dstAttachment = copyMainAttachmentRegion(
+            config, mainAttachment,
+            drawX, drawY, drawWidth, drawHeight
+        );
+
+        // 2. カラートランスフォームを準備（WebGL版と同じフォーマット）
+        const ct = new Float32Array([
+            color_transform[0],      // mulR
+            color_transform[1],      // mulG
+            color_transform[2],      // mulB
+            color_transform[3],      // mulA (globalAlpha)
+            color_transform[4] / 255, // addR
+            color_transform[5] / 255, // addG
+            color_transform[6] / 255, // addB
+            0                        // addA
+        ]);
+
+        // 3. 複雑なブレンドを適用
+        const blendedAttachment = blendApplyComplexBlendUseCase(
+            filter_attachment,
+            dstAttachment,
+            blend_mode,
+            ct,
+            {
+                "device": config.device,
+                "commandEncoder": config.commandEncoder,
+                "frameBufferManager": config.frameBufferManager,
+                "pipelineManager": config.pipelineManager,
+                "textureManager": config.textureManager
+            }
+        );
+
+        // 4. 結果をメインアタッチメントに描画
+        drawBlendResultToMain(
+            config,
+            blendedAttachment,
+            mainAttachment,
+            drawX,
+            drawY
+        );
+
+        // 5. 一時テクスチャを解放
+        config.frameBufferManager.releaseTemporaryAttachment(dstAttachment);
+        config.frameBufferManager.releaseTemporaryAttachment(blendedAttachment);
+    }
 };
 
 /**
@@ -185,8 +412,9 @@ const drawFilterToMain = (
  *              Apply filters
  *
  * @param {Node} node
- * @param {number} _width
- * @param {number} _height
+ * @param {number} width - スケール適用後の幅
+ * @param {number} height - スケール適用後の高さ
+ * @param {boolean} is_bitmap - ビットマップ（Video/Bitmap）かどうか
  * @param {Float32Array} matrix
  * @param {Float32Array} colorTransform
  * @param {IBlendMode} blendMode
@@ -199,8 +427,9 @@ const drawFilterToMain = (
  */
 export const execute = (
     node: Node,
-    _width: number,
-    _height: number,
+    width: number,
+    height: number,
+    is_bitmap: boolean,
     matrix: Float32Array,
     color_transform: Float32Array,
     blend_mode: IBlendMode,
@@ -218,6 +447,91 @@ export const execute = (
     let filterAttachment = getTextureFromNode(node, config.commandEncoder, config.frameBufferManager);
 
     const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
+
+    // スケール・回転が適用されているかチェック（WebGL版と同じロジック）
+    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+    const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+    const radianX = Math.atan2(matrix[1], matrix[0]);
+    const radianY = Math.atan2(-matrix[2], matrix[3]);
+
+    // is_bitmap=true（Video/Bitmap）の場合はスケールを適用、false（Shape）の場合はスケールなし
+    const a0 = is_bitmap ? scaleX * Math.cos(radianX) : Math.cos(radianX);
+    const b1 = is_bitmap ? scaleX * Math.sin(radianX) : Math.sin(radianX);
+    const c2 = is_bitmap ? -scaleY * Math.sin(radianY) : -Math.sin(radianY);
+    const d3 = is_bitmap ? scaleY * Math.cos(radianY) : Math.cos(radianY);
+
+    // 変換行列を計算（WebGL版と同じ）
+    const a = new Float32Array([a0, b1, c2, d3, width / 2, height / 2]);
+    const b = new Float32Array([1, 0, 0, 1, -node.w / 2, -node.h / 2]);
+
+    // 行列乗算: a * b
+    const tMatrix = new Float32Array([
+        a[0] * b[0] + a[2] * b[1],
+        a[1] * b[0] + a[3] * b[1],
+        a[0] * b[2] + a[2] * b[3],
+        a[1] * b[2] + a[3] * b[3],
+        a[0] * b[4] + a[2] * b[5] + a[4],
+        a[1] * b[4] + a[3] * b[5] + a[5]
+    ]);
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // スケール・回転変換が必要な場合（WebGL版と同じ条件）
+    if (tMatrix[0] !== 1 || tMatrix[1] !== 0 || tMatrix[2] !== 0 || tMatrix[3] !== 1) {
+        // スケール変換用のアタッチメントを作成
+        const scaledAttachment = config.frameBufferManager.createTemporaryAttachment(width, height);
+
+        // スケール変換用パイプラインを使用
+        // is_bitmap=true（Video/Bitmap）の場合はテクスチャ座標Y反転版を使用
+        const scalePipelineName = is_bitmap ? "texture_scale_blend" : "texture_scale";
+        const scalePipeline = config.pipelineManager.getPipeline(scalePipelineName);
+        const scaleBindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_scale");
+
+        if (scalePipeline && scaleBindGroupLayout) {
+            // ユニフォームデータ: matrix (6 floats) + srcSize (2 floats) + dstSize (2 floats) + padding (2 floats)
+            const uniformData = new Float32Array([
+                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
+                node.w, node.h,
+                width, height,
+                0, 0 // padding
+            ]);
+            const uniformBuffer = config.device.createBuffer({
+                "size": 48,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+            config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+            const sampler = config.textureManager.createSampler("filter_scale_sampler", true);
+            const bindGroup = config.device.createBindGroup({
+                "layout": scaleBindGroupLayout,
+                "entries": [
+                    { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                    { "binding": 1, "resource": sampler },
+                    { "binding": 2, "resource": filterAttachment.texture!.view }
+                ]
+            });
+
+            const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+                scaledAttachment.texture!.view,
+                0, 0, 0, 0,
+                "clear"
+            );
+
+            const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
+            passEncoder.setPipeline(scalePipeline);
+            passEncoder.setBindGroup(0, bindGroup);
+            passEncoder.draw(6, 1, 0, 0);
+            passEncoder.end();
+
+            offsetX = tMatrix[4];
+            offsetY = tMatrix[5];
+
+            // 元のアタッチメントを解放してスケール済みアタッチメントを使用
+            config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+            filterAttachment = scaledAttachment;
+        }
+    }
 
     // フィルターを適用
     for (let idx = 0; params.length > idx; ) {
@@ -508,13 +822,13 @@ export const execute = (
     }
 
     // フィルター適用後のテクスチャをメインキャンバスに描画
-    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
-    const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+    // scaleX, scaleYは上部で計算済み
     const xMin = bounds[0] * (scaleX / devicePixelRatio);
     const yMin = bounds[1] * (scaleY / devicePixelRatio);
 
-    const drawX = -$offset.x + xMin + matrix[4];
-    const drawY = -$offset.y + yMin + matrix[5];
+    // WebGL版と同じ: スケール変換のオフセットとフィルターのオフセットを考慮
+    const drawX = -offsetX - $offset.x + xMin + matrix[4];
+    const drawY = -offsetY - $offset.y + yMin + matrix[5];
 
     drawFilterToMain(
         config,

@@ -996,11 +996,12 @@ export class Context
      *
      * @param  {Node} node
      * @param  {OffscreenCanvas | ImageBitmap} element
+     * @param  {boolean} _flipY - WebGPU互換用（WebGLでは未使用）
      * @return {void}
      * @method
      * @public
      */
-    drawElement (node: Node, element: OffscreenCanvas | ImageBitmap): void
+    drawElement (node: Node, element: OffscreenCanvas | ImageBitmap, _flipY: boolean = false): void
     {
         contextDrawElementUseCase(node, element);
     }

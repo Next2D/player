@@ -81,7 +81,8 @@ export const execute = (
             );
 
             const imageBitmap = image_bitmaps.shift() as ImageBitmap;
-            $context.drawElement(node, imageBitmap);
+            // Video用にflipY: trueを指定（WebGPUでは画像の座標系変換が必要）
+            $context.drawElement(node, imageBitmap, true);
 
             $context.endNodeRendering();
 
