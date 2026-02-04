@@ -57,7 +57,9 @@ export class PathCommand
      */
     moveTo(x: number, y: number): void
     {
-        if (this.$currentPath.length >= 10) {
+        // stroke用は2点以上（6要素）、fill用は3点以上（9要素）が必要
+        // WebGL版と同じ: stroke描画に対応するため6要素以上で保存
+        if (this.$currentPath.length >= 6) {
             this.$vertices.push(this.$currentPath);
         }
 
@@ -165,7 +167,7 @@ export class PathCommand
     }
 
     /**
-     * @description 円弧を二次ベジェ曲線で近似
+     * @description 円弧を描画（WebGL版と同じ実装: 4つの三次ベジェ曲線を使用）
      * @param {number} x
      * @param {number} y
      * @param {number} radius
@@ -173,40 +175,51 @@ export class PathCommand
      */
     arc(x: number, y: number, radius: number): void
     {
-        // 円を8つの二次ベジェ曲線で近似
-        const segments = 8;
-        const angleStep = Math.PI * 2 / segments;
+        const r = radius;
+        const k = radius * 0.5522847498307936; // 円を三次ベジェで近似するための定数
 
-        for (let i = 0; i < segments; i++) {
-            const angle0 = i * angleStep;
-            const angle1 = (i + 1) * angleStep;
+        // 4つの三次ベジェ曲線で円を描画
+        // 始点: (x + r, y)
+        // 各象限を1つの三次ベジェ曲線で描画
 
-            const cos0 = Math.cos(angle0);
-            const sin0 = Math.sin(angle0);
-            const cos1 = Math.cos(angle1);
-            const sin1 = Math.sin(angle1);
+        // 第1象限: (x + r, y) -> (x, y + r)
+        this.bezierCurveTo(
+            x + r, y + k,
+            x + k, y + r,
+            x, y + r
+        );
 
-            const x0 = x + radius * cos0;
-            const y0 = y + radius * sin0;
-            const x1 = x + radius * cos1;
-            const y1 = y + radius * sin1;
+        // 第2象限: (x, y + r) -> (x - r, y)
+        this.bezierCurveTo(
+            x - k, y + r,
+            x - r, y + k,
+            x - r, y
+        );
 
-            // 制御点（二次ベジェ近似）
-            const mid = (angle0 + angle1) / 2;
-            const controlRadius = radius / Math.cos((angle1 - angle0) / 2);
-            const cx = x + controlRadius * Math.cos(mid);
-            const cy = y + controlRadius * Math.sin(mid);
+        // 第3象限: (x - r, y) -> (x, y - r)
+        this.bezierCurveTo(
+            x - r, y - k,
+            x - k, y - r,
+            x, y - r
+        );
 
-            if (i === 0) {
-                this.moveTo(x0, y0);
-            }
+        // 第4象限: (x, y - r) -> (x + r, y) - 終点は始点と同じ
+        this.bezierCurveTo(
+            x + k, y - r,
+            x + r, y - k,
+            x + r, y
+        );
 
-            this.$currentPath.push(cx, cy, true);
-            this.$currentPath.push(x1, y1, false);
+        // 閉じた円の終点を始点座標で強制上書き（浮動小数点誤差を排除）
+        // ストロークのjoin処理で始点と終点が完全一致する必要があるため
+        const pathLength = this.$currentPath.length;
+        if (pathLength >= 3) {
+            this.$currentPath[pathLength - 3] = this.$startX;
+            this.$currentPath[pathLength - 2] = this.$startY;
         }
 
-        this.$currentX = x + radius;
-        this.$currentY = y;
+        this.$currentX = this.$startX;
+        this.$currentY = this.$startY;
     }
 
     /**
@@ -224,13 +237,14 @@ export class PathCommand
     }
 
     /**
-     * @description 頂点データを取得
+     * @description 頂点データを取得（fill用: 3点以上が必要）
      * @return {IPath[]}
      */
     get $getVertices(): IPath[]
     {
         const vertices = [...this.$vertices];
-        if (this.$currentPath.length >= 10) {
+        // fill用は3点以上（9要素）が必要
+        if (this.$currentPath.length >= 9) {
             vertices.push(this.$currentPath);
         }
         return vertices;

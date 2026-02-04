@@ -437,6 +437,6 @@ stage.addChild(shape);
 
 ## Related
 
-- [DisplayObject](./display-object.md)
-- [Sprite](./sprite.md)
-- [Filters](./filters/index.md)
+- [DisplayObject](/en/reference/player/display-object)
+- [Sprite](/en/reference/player/sprite)
+- [Filters](/en/reference/player/filters)

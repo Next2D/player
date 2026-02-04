@@ -185,15 +185,15 @@ stage.addChild(mc);
 ## Related Documentation
 
 ### Display Objects
-- [DisplayObject](./display-object.md) - Base class for all display objects
-- [MovieClip](./movie-clip.md) - Timeline animation
-- [Sprite](./sprite.md) - Graphics drawing and interaction
-- [Shape](./shape.md) - Lightweight vector drawing
-- [TextField](./text-field.md) - Text display and input
-- [Video](./video.md) - Video playback
+- [DisplayObject](/en/reference/player/display-object) - Base class for all display objects
+- [MovieClip](/en/reference/player/movie-clip) - Timeline animation
+- [Sprite](/en/reference/player/sprite) - Graphics drawing and interaction
+- [Shape](/en/reference/player/shape) - Lightweight vector drawing
+- [TextField](/en/reference/player/text-field) - Text display and input
+- [Video](/en/reference/player/video) - Video playback
 
 ### Systems
-- [Event System](./events.md) - Mouse, keyboard, touch events
-- [Filters](./filters/index.md) - Blur, DropShadow, Glow, etc.
-- [Sound](./sound.md) - Audio playback and sound effects
-- [Tween Animation](./tween.md) - Programmatic animation
+- [Event System](/en/reference/player/events) - Mouse, keyboard, touch events
+- [Filters](/en/reference/player/filters) - Blur, DropShadow, Glow, etc.
+- [Sound](/en/reference/player/sound) - Audio playback and sound effects
+- [Tween Animation](/en/reference/player/tween) - Programmatic animation

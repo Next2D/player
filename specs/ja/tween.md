@@ -368,5 +368,5 @@ const customEase = bezierEasing(0.25, 0.1, 0.25, 1.0);
 
 ## 関連項目
 
-- [DisplayObject](./display-object.md)
-- [イベントシステム](./events.md)
+- [DisplayObject](/ja/reference/player/display-object)
+- [イベントシステム](/ja/reference/player/events)

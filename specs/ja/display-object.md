@@ -160,5 +160,5 @@ displayObject.clearGlobalVariable(); // 全てクリア
 
 ## 関連項目
 
-- [MovieClip](./movie-clip.md)
-- [Sprite](./sprite.md)
+- [MovieClip](/ja/reference/player/movie-clip)
+- [Sprite](/ja/reference/player/sprite)

@@ -287,4 +287,4 @@ SoundMixer.volume = 0.5;  // 50%
 
 ## 関連項目
 
-- [イベントシステム](./events.md)
+- [イベントシステム](/ja/reference/player/events)

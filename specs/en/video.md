@@ -273,5 +273,5 @@ stage.addChild(video);
 
 ## Related
 
-- [DisplayObject](./display-object.md)
-- [Event System](./events.md)
+- [DisplayObject](/en/reference/player/display-object)
+- [Event System](/en/reference/player/events)

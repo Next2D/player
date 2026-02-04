@@ -151,6 +151,7 @@ const calculateCurveRectangle = (
     endPoint: IPoint,
     thickness: number
 ): IPath => {
+    // WebGL版と同じ分割数（5回分割 = 32セグメント）
     const segments = splitBezierMultipleTimes(startPoint, controlPoint, endPoint, 5);
 
     const leftCurves: Array<IPoint[]> = [];
@@ -161,13 +162,22 @@ const calculateCurveRectangle = (
         rightCurves.push(approximateOffsetQuadratic(seg[0], seg[1], seg[2], -thickness));
     }
 
+    // セグメント間の連続性を確保：各セグメントの終点を次のセグメントの始点に強制一致
+    // これにより内側の曲線のつなぎめの隙間を解消
+    for (let idx = 0; idx < leftCurves.length - 1; ++idx) {
+        leftCurves[idx + 1][0] = leftCurves[idx][2];
+    }
+    for (let idx = 0; idx < rightCurves.length - 1; ++idx) {
+        rightCurves[idx + 1][0] = rightCurves[idx][2];
+    }
+
+    // 左サイドの最初のサブカーブ始点
     const leftStart = leftCurves[0][0];
     const paths: IPath = [leftStart.x, leftStart.y, false];
 
-    for (const curves of leftCurves) {
-        // WebGL版と同じ: 曲線フラグ(true)を使用
-        // 曲線セグメント（始点、制御点、終点）で三角形を構成することで
-        // 曲線の内側を正しく覆う
+    // 左サイド: WebGL版と同じく曲線フラグをtrueに設定（Loop-Blinn法で処理）
+    for (let idx = 0; idx < leftCurves.length; ++idx) {
+        const curves = leftCurves[idx];
         paths.push(
             curves[1].x, curves[1].y, true,
             curves[2].x, curves[2].y, false
@@ -175,16 +185,18 @@ const calculateCurveRectangle = (
     }
 
     const reversedRight = [...rightCurves].reverse();
-    for (let idx = 0; idx < reversedRight.length; idx++) {
+    for (let idx = 0; idx < reversedRight.length; ++idx) {
         const [q0, q1, q2] = reversedRight[idx];
-        reversedRight[idx] = [q2, q1, q0];
+        reversedRight[idx] = [q2, q1, q0]; // [Q2, Q1, Q0]
     }
 
+    // 右サイドの最初のサブカーブ始点
     const rightEnd = reversedRight[0][0];
     paths.push(rightEnd.x, rightEnd.y, false);
 
-    for (const curves of reversedRight) {
-        // WebGL版と同じ: 曲線フラグ(true)を使用
+    // 右サイド: WebGL版と同じく曲線フラグをtrueに設定（Loop-Blinn法で処理）
+    for (let idx = 0; idx < reversedRight.length; ++idx) {
+        const curves = reversedRight[idx];
         paths.push(
             curves[1].x, curves[1].y, true,
             curves[2].x, curves[2].y, false
@@ -254,7 +266,10 @@ const findOverlappingPaths = (
     paths: IPath
 ): number[] => {
     const points: number[] = [];
+    // 浮動小数点誤差を考慮した許容範囲（非常に小さい値）
+    const epsilon = 0.0001;
     for (let idx = 0; idx < paths.length; idx += 3) {
+        // カーブのコントロール座標なら終了
         if (paths[idx + 2] as boolean) {
             continue;
         }
@@ -266,7 +281,8 @@ const findOverlappingPaths = (
             Math.pow(dx - x, 2) + Math.pow(dy - y, 2)
         );
 
-        if (distance !== r) {
+        // 浮動小数点誤差を考慮した比較
+        if (Math.abs(distance - r) > epsilon) {
             continue;
         }
 
@@ -332,6 +348,7 @@ const generateBevelJoin = (
     rectangles: IPath[],
     isLast: boolean = false
 ): void => {
+    // WebGL版と同じ: isLastフラグでインデックスを切り替え
     const indexA = isLast ? 0 : rectangles.length - 1;
     const indexB = isLast ? rectangles.length - 1 : rectangles.length - 2;
     const pathsA = findOverlappingPaths(x, y, r, rectangles[indexA]);
@@ -372,6 +389,7 @@ const generateRoundJoin = (
     rectangles: IPath[],
     isLast: boolean = false
 ): void => {
+    // WebGL版と同じ: isLastフラグでインデックスを切り替え
     const indexA = isLast ? 0 : rectangles.length - 1;
     const indexB = isLast ? rectangles.length - 1 : rectangles.length - 2;
     const pathsA = findOverlappingPaths(x, y, r, rectangles[indexA]);
@@ -692,27 +710,34 @@ export const generateStrokeOutline = (vertices: IPath, thickness: number): IPath
         startPoint.y = endPoint.y;
     }
 
-    if (vertices[0] === vertices[vertices.length - 3]
-        && vertices[1] === vertices[vertices.length - 2]
-        && rectangles.length > 1
-    ) {
+    // 始点と終点が繋がっているかどうかをチェック（浮動小数点誤差を考慮）
+    const startX = vertices[0] as number;
+    const startY = vertices[1] as number;
+    const endX = vertices[vertices.length - 3] as number;
+    const endY = vertices[vertices.length - 2] as number;
+    const closedEpsilon = 0.0001; // 非常に小さい許容誤差
+    const isClosed = Math.abs(startX - endX) < closedEpsilon
+        && Math.abs(startY - endY) < closedEpsilon
+        && rectangles.length > 1;
 
-        // 始点と終点が繋がっている時はjointsの設定を適用
+    if (isClosed) {
+
+        // 始点と終点が繋がっている時はjointsの設定を適用（WebGL版と同じ）
         switch ($context.joints) {
 
             case 0: // bevel
                 generateBevelJoin(
-                    startPoint.x, startPoint.y, thickness, rectangles, true
+                    startX, startY, thickness, rectangles, true
                 );
                 break;
 
             case 1: // miter
-                startPoint.x = vertices[0] as number;
-                startPoint.y = vertices[1] as number;
-                endPoint.x   = vertices[3] as number;
-                endPoint.y   = vertices[4] as number;
-                prevPoint.x  = vertices[vertices.length - 6] as number;
-                prevPoint.y  = vertices[vertices.length - 5] as number;
+                startPoint.x = startX;
+                startPoint.y = startY;
+                endPoint.x = vertices[3] as number;
+                endPoint.y = vertices[4] as number;
+                prevPoint.x = vertices[vertices.length - 6] as number;
+                prevPoint.y = vertices[vertices.length - 5] as number;
                 generateMiterJoin(
                     startPoint, endPoint, prevPoint,
                     thickness, rectangles, true
@@ -721,7 +746,7 @@ export const generateStrokeOutline = (vertices: IPath, thickness: number): IPath
 
             case 2: // round
                 generateRoundJoin(
-                    startPoint.x, startPoint.y, thickness, rectangles, true
+                    startX, startY, thickness, rectangles, true
                 );
                 break;
 

@@ -240,5 +240,5 @@ labels.forEach((label) => {
 
 ## 関連項目
 
-- [Sprite](./sprite.md)
-- [イベントシステム](./events.md)
+- [Sprite](/ja/reference/player/sprite)
+- [イベントシステム](/ja/reference/player/events)

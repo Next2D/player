@@ -389,5 +389,5 @@ sprite.filters = [
 
 ## 関連項目
 
-- [DisplayObject](../display-object.md)
-- [MovieClip](../movie-clip.md)
+- [DisplayObject](/ja/reference/player/display-object)
+- [MovieClip](/ja/reference/player/movie-clip)

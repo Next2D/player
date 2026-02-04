@@ -389,5 +389,5 @@ sprite.filters = [
 
 ## Related
 
-- [DisplayObject](../display-object.md)
-- [MovieClip](../movie-clip.md)
+- [DisplayObject](/en/reference/player/display-object)
+- [MovieClip](/en/reference/player/movie-clip)

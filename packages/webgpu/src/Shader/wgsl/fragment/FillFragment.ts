@@ -7,6 +7,14 @@ struct FragmentInput {
 
 @fragment
 fn main(input: FragmentInput) -> @location(0) vec4<f32> {
+    // ストローク塗りつぶし判定: bezier座標が(0.5, 0.5)の場合はLoop-Blinn法をスキップ
+    // f_val = 0.5 * 0.5 - 0.5 = -0.25 < 0 なので曲線の内側だが、
+    // smoothstepの計算で半透明になる可能性があるため、単純塗りつぶしを使用
+    if (input.bezier.x == 0.5 && input.bezier.y == 0.5) {
+        // 単純塗りつぶし（WebGL版のSOLID_FILL_COLORと同じ）
+        return vec4<f32>(input.color.rgb * input.color.a, input.color.a);
+    }
+
     // Loop-Blinn法によるアンチエイリアス（WebGL版MASKシェーダーと同じ）
     let f_val = input.bezier.x * input.bezier.x - input.bezier.y;
 

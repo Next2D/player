@@ -160,5 +160,5 @@ displayObject.clearGlobalVariable(); // Clear all
 
 ## Related
 
-- [MovieClip](./movie-clip.md)
-- [Sprite](./sprite.md)
+- [MovieClip](/en/reference/player/movie-clip)
+- [Sprite](/en/reference/player/sprite)

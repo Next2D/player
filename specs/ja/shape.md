@@ -437,6 +437,6 @@ stage.addChild(shape);
 
 ## 関連項目
 
-- [DisplayObject](./display-object.md)
-- [Sprite](./sprite.md)
-- [フィルター](./filters/index.md)
+- [DisplayObject](/ja/reference/player/display-object)
+- [Sprite](/ja/reference/player/sprite)
+- [フィルター](/ja/reference/player/filters)

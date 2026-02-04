@@ -33,6 +33,7 @@ import {
     $resetMaskState
 } from "./Mask";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
+import { execute as meshStrokeFillGenerateUseCase } from "./Mesh/usecase/MeshStrokeFillGenerateUseCase";
 import { generateStrokeMesh } from "./Mesh/usecase/MeshStrokeGenerateUseCase";
 // Note: MeshGradientStrokeGenerateUseCase and MeshBitmapStrokeGenerateUseCase
 // are now used via ContextGradientStrokeUseCase and ContextBitmapStrokeUseCase
@@ -1078,7 +1079,8 @@ export class Context
         const strokeOutlines = generateStrokeMesh(vertices, this.thickness);
         if (strokeOutlines.length === 0) { return }
 
-        // WebGL版と同じ: meshFillGenerateUseCaseを使用（曲線フラグに応じたbezier座標を設定）
+        // WebGL版と同じ: ストロークもmeshFillGenerateUseCaseを使用
+        // 曲線セグメントにはLoop-Blinn用のbezier座標が設定され、滑らかな曲線が描画される
         const mesh = meshFillGenerateUseCase(
             strokeOutlines,
             a, b, c, d, tx, ty,

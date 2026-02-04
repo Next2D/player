@@ -233,6 +233,6 @@ stage.addChild(container);
 
 ## Related
 
-- [DisplayObject](./display-object.md)
-- [MovieClip](./movie-clip.md)
-- [Shape](./shape.md)
+- [DisplayObject](/en/reference/player/display-object)
+- [MovieClip](/en/reference/player/movie-clip)
+- [Shape](/en/reference/player/shape)

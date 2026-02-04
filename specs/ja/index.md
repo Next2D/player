@@ -186,15 +186,15 @@ stage.addChild(mc);
 ## 関連ドキュメント
 
 ### 表示オブジェクト
-- [DisplayObject](./display-object.md) - 全ての表示オブジェクトの基底クラス
-- [MovieClip](./movie-clip.md) - タイムラインアニメーション
-- [Sprite](./sprite.md) - グラフィックス描画とインタラクション
-- [Shape](./shape.md) - 軽量なベクター描画
-- [TextField](./text-field.md) - テキスト表示と入力
-- [Video](./video.md) - 動画再生
+- [DisplayObject](/ja/reference/player/display-object) - 全ての表示オブジェクトの基底クラス
+- [MovieClip](/ja/reference/player/movie-clip) - タイムラインアニメーション
+- [Sprite](/ja/reference/player/sprite) - グラフィックス描画とインタラクション
+- [Shape](/ja/reference/player/shape) - 軽量なベクター描画
+- [TextField](/ja/reference/player/text-field) - テキスト表示と入力
+- [Video](/ja/reference/player/video) - 動画再生
 
 ### システム
-- [イベントシステム](./events.md) - マウス、キーボード、タッチイベント
-- [フィルター](./filters/index.md) - Blur、DropShadow、Glowなど
-- [サウンド](./sound.md) - 音声再生とサウンドエフェクト
-- [Tweenアニメーション](./tween.md) - プログラムによるアニメーション
+- [イベントシステム](/ja/reference/player/events) - マウス、キーボード、タッチイベント
+- [フィルター](/ja/reference/player/filters) - Blur、DropShadow、Glowなど
+- [サウンド](/ja/reference/player/sound) - 音声再生とサウンドエフェクト
+- [Tweenアニメーション](/ja/reference/player/tween) - プログラムによるアニメーション

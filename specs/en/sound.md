@@ -278,4 +278,4 @@ SoundMixer.volume = 0.5;
 
 ## Related
 
-- [Event System](./events.md)
+- [Event System](/en/reference/player/events)

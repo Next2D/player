@@ -240,5 +240,5 @@ labels.forEach(function(label) {
 
 ## Related
 
-- [Sprite](./sprite.md)
-- [Event System](./events.md)
+- [Sprite](/en/reference/player/sprite)
+- [Event System](/en/reference/player/events)

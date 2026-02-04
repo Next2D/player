@@ -60,12 +60,10 @@ export const execute = (
         // フラットネスが閾値以下、または最大深度に達した場合は近似
         if (flatness <= flatnessThreshold || depth >= MAX_RECURSION_DEPTH) {
             // 三次ベジェを二次ベジェに近似
-            // 始点と終点からの影響も考慮した正確な近似
-            // Q(t) ≈ C(t) となるように制御点を調整
-            // ctrl = (3 * (P1 + P2) - P0 - P3) / 4
+            // WebGL版と同じ: 分割後は単純に2つの制御点の中点を使用
             const ctrl: IPoint = {
-                "x": (3 * (ctrl1.x + ctrl2.x) - start.x - end.x) * 0.25,
-                "y": (3 * (ctrl1.y + ctrl2.y) - start.y - end.y) * 0.25
+                "x": (ctrl1.x + ctrl2.x) * 0.5,
+                "y": (ctrl1.y + ctrl2.y) * 0.5
             };
 
             result.push({

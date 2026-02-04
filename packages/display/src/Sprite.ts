@@ -6,11 +6,8 @@ import { execute as spriteStartDragService } from "./Sprite/service/SpriteStartD
 import { execute as spriteStopDragService } from "./Sprite/service/SpriteStopDragService";
 
 /**
- * @description Sprite クラスは、表示リストの基本的要素です。
- *              グラフィックを表示でき、子を持つこともできる表示リストノードです。
- *
- *              The Sprite class is a basic display list building block:
- *              a display list node that can display graphics and can also contain children.
+ * @description Sprite クラスは、表示リストの基本的要素です。子を持つこともできる表示リストノードです。
+ *              The Sprite class is the basic display list building block: a display list node that can
  *
  * @class
  * @memberOf next2d.display
