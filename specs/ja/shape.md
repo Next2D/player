@@ -234,6 +234,207 @@ stage.addChild(frontShape);
 shape.cacheAsBitmap = true;
 ```
 
+## Graphics クラス
+
+Graphicsクラスは、ベクターグラフィックスを描画するための描画APIを提供します。Shape.graphicsプロパティを通じてアクセスします。
+
+### 塗りつぶしメソッド
+
+| メソッド | 説明 |
+|---------|------|
+| `beginFill(color: number, alpha?: number)` | 単色の塗りつぶしを開始。alphaのデフォルトは1 |
+| `beginGradientFill(type, colors, alphas, ratios, matrix?, spreadMethod?, interpolationMethod?, focalPointRatio?)` | グラデーション塗りつぶしを開始 |
+| `beginBitmapFill(bitmapData, matrix?, repeat?, smooth?)` | ビットマップ塗りつぶしを開始 |
+| `endFill()` | 塗りつぶしを終了 |
+
+#### beginGradientFill パラメータ
+
+| パラメータ | 型 | 説明 |
+|-----------|------|------|
+| `type` | string | "linear" または "radial" |
+| `colors` | number[] | 色の配列（16進数） |
+| `alphas` | number[] | 各色の透明度（0-1） |
+| `ratios` | number[] | 各色の位置（0-255） |
+| `matrix` | Matrix | グラデーションの変形マトリックス |
+| `spreadMethod` | string | "pad", "reflect", "repeat"（デフォルト: "pad"） |
+| `interpolationMethod` | string | "rgb" または "linearRGB"（デフォルト: "rgb"） |
+| `focalPointRatio` | number | 放射状グラデーションの焦点位置（-1 to 1） |
+
+### 線スタイルメソッド
+
+| メソッド | 説明 |
+|---------|------|
+| `lineStyle(thickness?, color?, alpha?, pixelHinting?, scaleMode?, caps?, joints?, miterLimit?)` | 線のスタイルを設定 |
+| `lineGradientStyle(type, colors, alphas, ratios, matrix?, spreadMethod?, interpolationMethod?, focalPointRatio?)` | グラデーション線スタイルを設定 |
+| `lineBitmapStyle(bitmapData, matrix?, repeat?, smooth?)` | ビットマップ線スタイルを設定 |
+| `endLine()` | 線スタイルを終了 |
+
+#### lineStyle パラメータ
+
+| パラメータ | 型 | デフォルト | 説明 |
+|-----------|------|---------|------|
+| `thickness` | number | 0 | 線の太さ（ピクセル） |
+| `color` | number | 0 | 線の色（16進数） |
+| `alpha` | number | 1 | 透明度（0-1） |
+| `pixelHinting` | boolean | false | ピクセルスナップ |
+| `scaleMode` | string | "normal" | "normal", "none", "vertical", "horizontal" |
+| `caps` | string | null | "none", "round", "square" |
+| `joints` | string | null | "bevel", "miter", "round" |
+| `miterLimit` | number | 3 | マイター結合の限界値 |
+
+### パスメソッド
+
+| メソッド | 説明 |
+|---------|------|
+| `moveTo(x: number, y: number)` | 描画位置を移動 |
+| `lineTo(x: number, y: number)` | 現在位置から指定座標まで直線を描画 |
+| `curveTo(controlX, controlY, anchorX, anchorY)` | 二次ベジェ曲線を描画 |
+| `cubicCurveTo(controlX1, controlY1, controlX2, controlY2, anchorX, anchorY)` | 三次ベジェ曲線を描画 |
+
+### 図形メソッド
+
+| メソッド | 説明 |
+|---------|------|
+| `drawRect(x, y, width, height)` | 矩形を描画 |
+| `drawRoundRect(x, y, width, height, ellipseWidth, ellipseHeight?)` | 角丸矩形を描画 |
+| `drawCircle(x, y, radius)` | 円を描画 |
+| `drawEllipse(x, y, width, height)` | 楕円を描画 |
+
+### ユーティリティメソッド
+
+| メソッド | 説明 |
+|---------|------|
+| `clear()` | すべての描画コマンドをクリア |
+| `clone()` | Graphicsオブジェクトを複製 |
+| `copyFrom(source: Graphics)` | 別のGraphicsから描画コマンドをコピー |
+
+### 詳細な使用例
+
+#### 線形グラデーション
+
+```typescript
+const { Shape } = next2d.display;
+const { Matrix } = next2d.geom;
+
+const shape = new Shape();
+const g = shape.graphics;
+
+const matrix = new Matrix();
+matrix.createGradientBox(200, 100, 0, 0, 0);  // 幅, 高さ, 回転, x, y
+
+g.beginGradientFill(
+    "linear",                    // タイプ
+    [0xff0000, 0x00ff00, 0x0000ff],  // 色
+    [1, 1, 1],                   // 透明度
+    [0, 127, 255],               // 比率
+    matrix
+);
+g.drawRect(0, 0, 200, 100);
+g.endFill();
+
+stage.addChild(shape);
+```
+
+#### 三次ベジェ曲線
+
+```typescript
+const { Shape } = next2d.display;
+
+const shape = new Shape();
+const g = shape.graphics;
+
+g.lineStyle(2, 0x3498db);
+
+// 滑らかなS字曲線
+g.moveTo(0, 100);
+g.cubicCurveTo(
+    50, 0,     // 制御点1
+    150, 200,  // 制御点2
+    200, 100   // 終点
+);
+
+stage.addChild(shape);
+```
+
+#### ビットマップ塗りつぶし
+
+```typescript
+const { Shape, Loader } = next2d.display;
+
+const loader = new Loader();
+await loader.load("texture.png");
+
+const bitmapData = loader.contentLoaderInfo
+    .content.bitmapData;
+
+const shape = new Shape();
+const g = shape.graphics;
+
+g.beginBitmapFill(bitmapData, null, true, true);
+g.drawRect(0, 0, 400, 300);
+g.endFill();
+
+stage.addChild(shape);
+```
+
+#### グラデーション線
+
+```typescript
+const { Shape } = next2d.display;
+const { Matrix } = next2d.geom;
+
+const shape = new Shape();
+const g = shape.graphics;
+
+const matrix = new Matrix();
+matrix.createGradientBox(200, 200, 0, 0, 0);
+
+g.lineGradientStyle(
+    "linear",
+    [0xff0000, 0x0000ff],
+    [1, 1],
+    [0, 255],
+    matrix
+);
+g.lineStyle(5);
+
+g.moveTo(10, 10);
+g.lineTo(190, 10);
+g.lineTo(190, 190);
+g.lineTo(10, 190);
+g.lineTo(10, 10);
+
+stage.addChild(shape);
+```
+
+#### 複雑な図形の組み合わせ
+
+```typescript
+const { Shape } = next2d.display;
+
+const shape = new Shape();
+const g = shape.graphics;
+
+// 外側の矩形（塗りつぶし）
+g.beginFill(0x2c3e50);
+g.drawRoundRect(0, 0, 200, 150, 15, 15);
+g.endFill();
+
+// 内側の円（別の色で塗りつぶし）
+g.beginFill(0xe74c3c);
+g.drawCircle(100, 75, 40);
+g.endFill();
+
+// 装飾線
+g.lineStyle(2, 0xecf0f1);
+g.moveTo(20, 20);
+g.lineTo(180, 20);
+g.moveTo(20, 130);
+g.lineTo(180, 130);
+
+stage.addChild(shape);
+```
+
 ## 関連項目
 
 - [DisplayObject](./display-object.md)

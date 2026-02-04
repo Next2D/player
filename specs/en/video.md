@@ -23,7 +23,6 @@ classDiagram
         +loaded: boolean
         +ended: boolean
         +isVideo: boolean
-        +namespace: string
         +play() Promise~void~
         +pause() void
         +seek(offset) void
@@ -48,7 +47,6 @@ classDiagram
 | `loaded` | boolean | false | Returns whether the video has been loaded |
 | `ended` | boolean | false | Returns whether the video has ended |
 | `isVideo` | boolean | true | Returns whether the display object has Video functionality (read-only) |
-| `namespace` | string | - | Returns the space name of the specified object (read-only) |
 
 ## Methods
 
@@ -57,12 +55,6 @@ classDiagram
 | `play()` | Promise\<void\> | Plays the video file |
 | `pause()` | void | Pauses the video playback |
 | `seek(offset: number)` | void | Seeks the keyframe closest to the specified location |
-
-## Static Properties
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `namespace` | string | Returns the space name of the specified class ("next2d.media.Video") |
 
 ## Usage Examples
 

@@ -131,9 +131,7 @@ loader.contentLoaderInfo.addEventListener("progress", function(event) {
 loader.load(new URLRequest("animation.json"));
 ```
 
-## Mouse and Touch Events
-
-### Mouse Events
+## Mouse Events
 
 | Event | Description |
 |-------|-------------|
@@ -154,22 +152,6 @@ sprite.addEventListener("click", function(event) {
 
 sprite.addEventListener("mouseMove", function(event) {
     console.log("Mouse position:", event.stageX, event.stageY);
-});
-```
-
-### Touch Events
-
-| Event | Description |
-|-------|-------------|
-| `touchBegin` | Touch start |
-| `touchEnd` | Touch end |
-| `touchMove` | Touch move |
-| `touchTap` | Tap |
-
-```javascript
-sprite.addEventListener("touchTap", function(event) {
-    console.log("Touch ID:", event.touchPointID);
-    console.log("Touch position:", event.localX, event.localY);
 });
 ```
 

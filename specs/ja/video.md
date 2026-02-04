@@ -23,7 +23,6 @@ classDiagram
         +loaded: boolean
         +ended: boolean
         +isVideo: boolean
-        +namespace: string
         +play() Promise~void~
         +pause() void
         +seek(offset) void
@@ -48,7 +47,6 @@ classDiagram
 | `loaded` | boolean | false | ビデオが読み込まれているかどうかを返します |
 | `ended` | boolean | false | ビデオが終了したかどうかを返します |
 | `isVideo` | boolean | true | Videoの機能を所持しているかを返却（読み取り専用） |
-| `namespace` | string | - | 指定されたオブジェクトの空間名を返します（読み取り専用） |
 
 ## メソッド
 
@@ -57,12 +55,6 @@ classDiagram
 | `play()` | Promise\<void\> | ビデオファイルを再生します |
 | `pause()` | void | ビデオの再生を一時停止します |
 | `seek(offset: number)` | void | 指定された位置に最も近いキーフレームをシークします |
-
-## 静的プロパティ
-
-| プロパティ | 型 | 説明 |
-|-----------|------|------|
-| `namespace` | string | 指定されたクラスの空間名を返します（"next2d.media.Video"） |
 
 ## 使用例
 

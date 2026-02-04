@@ -130,9 +130,7 @@ loader.contentLoaderInfo.addEventListener("progress", (event) => {
 });
 ```
 
-## マウス・タッチイベント
-
-### マウスイベント
+## マウスイベント
 
 | イベント | 説明 |
 |----------|------|
@@ -153,22 +151,6 @@ sprite.addEventListener("click", (event) => {
 
 sprite.addEventListener("mouseMove", (event) => {
     console.log("マウス位置:", event.stageX, event.stageY);
-});
-```
-
-### タッチイベント
-
-| イベント | 説明 |
-|----------|------|
-| `touchBegin` | タッチ開始 |
-| `touchEnd` | タッチ終了 |
-| `touchMove` | タッチ移動 |
-| `touchTap` | タップ |
-
-```typescript
-sprite.addEventListener("touchTap", (event) => {
-    console.log("タッチID:", event.touchPointID);
-    console.log("タッチ位置:", event.localX, event.localY);
 });
 ```
 
