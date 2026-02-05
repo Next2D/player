@@ -46,8 +46,17 @@ struct BlendUniforms {
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     var src = textureSample(texture1, sampler0, input.texCoord);
     var dst = textureSample(texture0, sampler0, input.texCoord);
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
     src = src * uniforms.colorTransform + vec4<f32>(uniforms.addColor.rgb, 0.0);
-    return src + dst - src * dst;
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+    var srcRgb = src.rgb / src.a;
+    var dstRgb = dst.rgb / dst.a;
+    // Screen: 1 - (1 - src) * (1 - dst) = src + dst - src * dst
+    var c = vec4<f32>(srcRgb + dstRgb - srcRgb * dstRgb, src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
 }
 `;
 
