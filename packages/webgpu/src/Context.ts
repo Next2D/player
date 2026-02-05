@@ -179,7 +179,7 @@ export class Context
         this.$clearColorA = 0;
 
         this.thickness  = 1;
-        this.caps       = 1;
+        this.caps       = 0;
         this.joints     = 2;
         this.miterLimit = 0;
 

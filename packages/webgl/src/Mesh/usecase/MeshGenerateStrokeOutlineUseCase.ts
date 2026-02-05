@@ -105,22 +105,30 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
         startPoint.y = endPoint.y;
     }
 
-    if (vertices[0] === vertices[vertices.length - 3]
-        && vertices[1] === vertices[vertices.length - 2]
-    ) {
+    // 始点と終点が繋がっているかどうかをチェック（浮動小数点誤差を考慮）
+    const closedStartX = vertices[0] as number;
+    const closedStartY = vertices[1] as number;
+    const closedEndX = vertices[vertices.length - 3] as number;
+    const closedEndY = vertices[vertices.length - 2] as number;
+    const closedEpsilon = 0.0001;
+    const isClosed = Math.abs(closedStartX - closedEndX) < closedEpsilon
+        && Math.abs(closedStartY - closedEndY) < closedEpsilon
+        && rectangles.length > 1;
+
+    if (isClosed) {
 
         // 始点と終点が繋がっている時はjointsの設定を適用
         switch ($context.joints) {
 
             case 0: // bevel
                 meshGenerateCalculateBevelJoinUseCase(
-                    startPoint.x, startPoint.y, thickness, rectangles, true
+                    closedStartX, closedStartY, thickness, rectangles, true
                 );
                 break;
 
             case 1: // miter
-                startPoint.x = vertices[0] as number;
-                startPoint.y = vertices[1] as number;
+                startPoint.x = closedStartX;
+                startPoint.y = closedStartY;
                 endPoint.x   = vertices[3] as number;
                 endPoint.y   = vertices[4] as number;
                 prevPoint.x  = vertices[vertices.length - 6] as number;
@@ -133,7 +141,7 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
 
             case 2: // round
                 meshGenerateCalculateRoundJoinUseCase(
-                    startPoint.x, startPoint.y, thickness, rectangles, true
+                    closedStartX, closedStartY, thickness, rectangles, true
                 );
                 break;
 
@@ -152,7 +160,7 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
                 );
                 break;
 
-            case 2: // square:
+            case 2: // square
                 meshGenerateCalculateSquareCapService(
                     vertices, thickness, rectangles
                 );

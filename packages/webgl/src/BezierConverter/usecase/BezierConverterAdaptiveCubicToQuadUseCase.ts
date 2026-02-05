@@ -74,12 +74,14 @@ const splitCubicAt = (
  * @description 3次ベジエを2次ベジエに近似
  *              Approximate cubic Bezier as quadratic Bezier
  *
- * @param  {number} p1x
- * @param  {number} p1y
- * @param  {number} p2x
- * @param  {number} p2y
- * @param  {number} p3x
- * @param  {number} p3y
+ * @param  {number} p0x - 始点X
+ * @param  {number} p0y - 始点Y
+ * @param  {number} p1x - 第1制御点X
+ * @param  {number} p1y - 第1制御点Y
+ * @param  {number} p2x - 第2制御点X
+ * @param  {number} p2y - 第2制御点Y
+ * @param  {number} p3x - 終点X
+ * @param  {number} p3y - 終点Y
  * @param  {Float32Array} buffer
  * @param  {number} offset
  * @return {void}
@@ -87,6 +89,7 @@ const splitCubicAt = (
  * @private
  */
 const cubicToQuad = (
+    p0x: number, p0y: number,
     p1x: number, p1y: number,
     p2x: number, p2y: number,
     p3x: number, p3y: number,
@@ -94,10 +97,9 @@ const cubicToQuad = (
     offset: number
 ): void => {
     // 3次ベジエの制御点から2次ベジエの制御点を近似
-    // Q_control = (3*C1 - P0 + 3*C2 - P1) / 4
-    // ただし、分割後は単純に中点を使用
-    const cx = (p1x + p2x) * 0.5;
-    const cy = (p1y + p2y) * 0.5;
+    // Q_control = (3*C1 + 3*C2 - P0 - P3) / 4
+    const cx = (3 * p1x + 3 * p2x - p0x - p3x) * 0.25;
+    const cy = (3 * p1y + 3 * p2y - p0y - p3y) * 0.25;
 
     buffer[offset] = cx;
     buffer[offset + 1] = cy;
@@ -149,13 +151,13 @@ export const execute = (
         splitCubicAt(from_x, from_y, cx1, cy1, cx2, cy2, x, y, 0.5, $tempLeft, $tempRight);
 
         cubicToQuad(
-            $tempLeft[2], $tempLeft[3], $tempLeft[4], $tempLeft[5], $tempLeft[6], $tempLeft[7],
+            $tempLeft[0], $tempLeft[1], $tempLeft[2], $tempLeft[3], $tempLeft[4], $tempLeft[5], $tempLeft[6], $tempLeft[7],
             $adaptiveBuffer, offset
         );
         offset += 4;
 
         cubicToQuad(
-            $tempRight[2], $tempRight[3], $tempRight[4], $tempRight[5], $tempRight[6], $tempRight[7],
+            $tempRight[0], $tempRight[1], $tempRight[2], $tempRight[3], $tempRight[4], $tempRight[5], $tempRight[6], $tempRight[7],
             $adaptiveBuffer, offset
         );
         offset += 4;
@@ -178,13 +180,13 @@ export const execute = (
         splitCubicAt(temp1[0], temp1[1], temp1[2], temp1[3], temp1[4], temp1[5], temp1[6], temp1[7], 0.5, left1, left2);
         splitCubicAt(temp2[0], temp2[1], temp2[2], temp2[3], temp2[4], temp2[5], temp2[6], temp2[7], 0.5, right1, right2);
 
-        cubicToQuad(left1[2], left1[3], left1[4], left1[5], left1[6], left1[7], $adaptiveBuffer, offset);
+        cubicToQuad(left1[0], left1[1], left1[2], left1[3], left1[4], left1[5], left1[6], left1[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(left2[2], left2[3], left2[4], left2[5], left2[6], left2[7], $adaptiveBuffer, offset);
+        cubicToQuad(left2[0], left2[1], left2[2], left2[3], left2[4], left2[5], left2[6], left2[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(right1[2], right1[3], right1[4], right1[5], right1[6], right1[7], $adaptiveBuffer, offset);
+        cubicToQuad(right1[0], right1[1], right1[2], right1[3], right1[4], right1[5], right1[6], right1[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(right2[2], right2[3], right2[4], right2[5], right2[6], right2[7], $adaptiveBuffer, offset);
+        cubicToQuad(right2[0], right2[1], right2[2], right2[3], right2[4], right2[5], right2[6], right2[7], $adaptiveBuffer, offset);
         offset += 4;
     } else {
         // 8分割: 3段階で8分割（既存の方法と同等）
@@ -219,21 +221,21 @@ export const execute = (
         splitCubicAt(b3[0], b3[1], b3[2], b3[3], b3[4], b3[5], b3[6], b3[7], 0.5, c5, c6);
         splitCubicAt(b4[0], b4[1], b4[2], b4[3], b4[4], b4[5], b4[6], b4[7], 0.5, c7, c8);
 
-        cubicToQuad(c1[2], c1[3], c1[4], c1[5], c1[6], c1[7], $adaptiveBuffer, offset);
+        cubicToQuad(c1[0], c1[1], c1[2], c1[3], c1[4], c1[5], c1[6], c1[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(c2[2], c2[3], c2[4], c2[5], c2[6], c2[7], $adaptiveBuffer, offset);
+        cubicToQuad(c2[0], c2[1], c2[2], c2[3], c2[4], c2[5], c2[6], c2[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(c3[2], c3[3], c3[4], c3[5], c3[6], c3[7], $adaptiveBuffer, offset);
+        cubicToQuad(c3[0], c3[1], c3[2], c3[3], c3[4], c3[5], c3[6], c3[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(c4[2], c4[3], c4[4], c4[5], c4[6], c4[7], $adaptiveBuffer, offset);
+        cubicToQuad(c4[0], c4[1], c4[2], c4[3], c4[4], c4[5], c4[6], c4[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(c5[2], c5[3], c5[4], c5[5], c5[6], c5[7], $adaptiveBuffer, offset);
+        cubicToQuad(c5[0], c5[1], c5[2], c5[3], c5[4], c5[5], c5[6], c5[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(c6[2], c6[3], c6[4], c6[5], c6[6], c6[7], $adaptiveBuffer, offset);
+        cubicToQuad(c6[0], c6[1], c6[2], c6[3], c6[4], c6[5], c6[6], c6[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(c7[2], c7[3], c7[4], c7[5], c7[6], c7[7], $adaptiveBuffer, offset);
+        cubicToQuad(c7[0], c7[1], c7[2], c7[3], c7[4], c7[5], c7[6], c7[7], $adaptiveBuffer, offset);
         offset += 4;
-        cubicToQuad(c8[2], c8[3], c8[4], c8[5], c8[6], c8[7], $adaptiveBuffer, offset);
+        cubicToQuad(c8[0], c8[1], c8[2], c8[3], c8[4], c8[5], c8[6], c8[7], $adaptiveBuffer, offset);
         offset += 4;
     }
 

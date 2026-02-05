@@ -765,7 +765,7 @@ export const generateStrokeOutline = (vertices: IPath, thickness: number): IPath
                 );
                 break;
 
-            case 2: // square:
+            case 2: // square
                 generateSquareCap(
                     vertices, thickness, rectangles
                 );

@@ -25,25 +25,26 @@ export const execute = (
 
     const indexA = is_last ? 0 : rectangles.length - 1;
     const indexB = is_last ? rectangles.length - 1 : rectangles.length - 2;
+
+    // 曲線矩形同士の接合ではjoinを追加しない
+    // 曲線は滑らかに接続されているため、joinジオメトリは不要
+    const isRectACurve = rectangles[indexA].length > 15;
+    const isRectBCurve = rectangles[indexB].length > 15;
+    if (isRectACurve && isRectBCurve) {
+        return;
+    }
+
     const pathsA = meshFindOverlappingPathsService(x, y, r, rectangles[indexA]);
     const pathsB = meshFindOverlappingPathsService(x, y, r, rectangles[indexB]);
 
-    const pointA = meshIsPointInsideRectangleService(
-        pathsA, rectangles[indexB]
-    );
-
-    // 接続点が矩形の内部にある場合は終了
+    const pointA = meshIsPointInsideRectangleService(pathsA, rectangles[indexB]);
     if (!pointA) {
-        return ;
+        return;
     }
 
-    const pointB = meshIsPointInsideRectangleService(
-        pathsB, rectangles[indexA]
-    );
-
-    // 接続点が矩形の内部にある場合は終了
+    const pointB = meshIsPointInsideRectangleService(pathsB, rectangles[indexA]);
     if (!pointB) {
-        return ;
+        return;
     }
 
     const angleA = Math.atan2(pointA[1] - y, pointA[0] - x);
@@ -55,6 +56,14 @@ export const execute = (
         angleDiff -= 2 * Math.PI;
     } else if (angleDiff < -Math.PI) {
         angleDiff += 2 * Math.PI;
+    }
+
+    // 角度差が小さい場合または180度に近い場合はスキップ
+    // 小さい角度差: 曲線の閉じたパスでは不要
+    // 180度に近い場合: 外側と内側の点を間違えて選んでいる
+    const absAngleDiff = Math.abs(angleDiff);
+    if (absAngleDiff < 0.1 || absAngleDiff > Math.PI - 0.1) {
+        return;
     }
 
     const segment = 8;

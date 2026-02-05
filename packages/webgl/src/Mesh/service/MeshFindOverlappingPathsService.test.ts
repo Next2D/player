@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("MeshFindOverlappingPathsService.js method test", () =>
 {
-    it("test case", () =>
+    it("test case - returns points at exact distance r", () =>
     {
         const paths = [
             0, 0, false,
@@ -21,7 +21,23 @@ describe("MeshFindOverlappingPathsService.js method test", () =>
             120, 0, false,
             130, 0, false
         ];
+        // Only returns point (0,0) which is exactly at distance 0 from center (0,0)
         const points = execute(0, 0, 0, paths);
         expect(points.length).toBe(2);
+        expect(points[0]).toBe(0);
+        expect(points[1]).toBe(0);
+    });
+
+    it("test case - returns points at specified radius", () =>
+    {
+        const paths = [
+            5, 0, false,   // distance 5 from origin
+            -5, 0, false,  // distance 5 from origin
+            0, 5, false,   // distance 5 from origin
+            10, 0, false,  // distance 10 from origin
+        ];
+        // Returns points at distance 5 (within epsilon 0.01)
+        const points = execute(0, 0, 5, paths);
+        expect(points.length).toBe(6); // 3 points * 2 (x,y)
     });
 });

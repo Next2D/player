@@ -223,7 +223,7 @@ export class Context
      *              Stroke cap
      *
      * @type {number}
-     * @default 1
+     * @default 0
      * @public
      */
     public caps: number;
@@ -288,7 +288,7 @@ export class Context
 
         // stroke
         this.thickness  = 1;
-        this.caps       = 1;
+        this.caps       = 0;
         this.joints     = 2;
         this.miterLimit = 0;
 

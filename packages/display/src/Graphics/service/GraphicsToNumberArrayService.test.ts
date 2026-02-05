@@ -4,6 +4,68 @@ import { Graphics } from "../../Graphics";
 
 describe("GraphicsToNumberArrayService.js test", () =>
 {
+    it("execute test case - invalid lineCap/lineJoin should use default values", () =>
+    {
+        // STROKE_STYLE with invalid lineCap and lineJoin values
+        const recodes = [
+            Graphics.STROKE_STYLE,
+            100, "invalid_cap", "invalid_join", 1, 2, 3, 4, 5,
+        ];
+        const array = execute(recodes);
+
+        expect(array[0]).toBe(Graphics.STROKE_STYLE);
+        expect(array[1]).toBe(100);
+        expect(array[2]).toBe(0); // default lineCap = "none" = 0
+        expect(array[3]).toBe(2); // default lineJoin = "round" = 2
+    });
+
+    it("execute test case - GRADIENT_STROKE with invalid lineCap/lineJoin", () =>
+    {
+        const object = {
+            "ratio": 0,
+            "R": 255,
+            "G": 100,
+            "B": 0,
+            "A": 1
+        };
+        const recodes = [
+            Graphics.GRADIENT_STROKE,
+            10, "invalid_cap", "invalid_join", 5,
+            "linear", [object], new Float32Array([1, 2, 3, 4, 5, 6]),
+            "pad", "rgb", 0
+        ];
+        const array = execute(recodes);
+
+        expect(array[0]).toBe(Graphics.GRADIENT_STROKE);
+        expect(array[1]).toBe(10); // thickness
+        expect(array[2]).toBe(0);  // default lineCap = "none" = 0
+        expect(array[3]).toBe(2);  // default lineJoin = "round" = 2
+        expect(array[4]).toBe(5);  // miterLimit
+    });
+
+    it("execute test case - BITMAP_STROKE with invalid lineCap/lineJoin", () =>
+    {
+        // BitmapDataをモックするため、bufferがnullのケースをテスト
+        const mockBitmapData = {
+            width: 10,
+            height: 10,
+            buffer: null
+        };
+        const recodes = [
+            Graphics.BITMAP_STROKE,
+            8, "invalid_cap", "invalid_join", 3,
+            mockBitmapData, null, true, true
+        ];
+        const array = execute(recodes);
+
+        expect(array[0]).toBe(Graphics.BITMAP_STROKE);
+        expect(array[1]).toBe(8);  // thickness
+        expect(array[2]).toBe(0);  // default lineCap = "none" = 0
+        expect(array[3]).toBe(2);  // default lineJoin = "round" = 2
+        expect(array[4]).toBe(3);  // miterLimit
+        // buffer is null, so processing stops after miterLimit
+    });
+
     it("execute test case1", () =>
     {
         const recodes = [
