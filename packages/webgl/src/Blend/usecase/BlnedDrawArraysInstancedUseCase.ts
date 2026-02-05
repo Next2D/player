@@ -2,7 +2,7 @@ import { execute as variantsBlendInstanceShaderService } from "../../Shader/Vari
 import { execute as shaderInstancedManagerDrawArraysInstancedUseCase } from "../../Shader/ShaderInstancedManager/usecase/ShaderInstancedManagerDrawArraysInstancedUseCase";
 import { execute as blendOperationUseCase } from "../../Blend/usecase/BlendOperationUseCase";
 import { execute as frameBufferManagerTransferAtlasTextureService } from "../../FrameBufferManager/service/FrameBufferManagerTransferAtlasTextureService";
-import { $context } from "../../WebGLUtil";
+import { $getCurrentBlendMode } from "../../Blend";
 
 /**
  * @description インスタンス描画を実行します。
@@ -22,7 +22,7 @@ export const execute = (): void =>
     // Transfer to atlas texture.
     frameBufferManagerTransferAtlasTextureService();
 
-    blendOperationUseCase($context.globalCompositeOperation);
+    blendOperationUseCase($getCurrentBlendMode());
     shaderInstancedManagerDrawArraysInstancedUseCase(
         shaderInstancedManager
     );
