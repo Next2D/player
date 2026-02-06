@@ -3,7 +3,6 @@ import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
-import { $getFilterGradientAttachmentObject } from "../FilterGradientLUTCache";
 
 /**
  * @description 度からラジアンへの変換係数
@@ -13,10 +12,11 @@ const DEG_TO_RAD: number = Math.PI / 180;
 /**
  * @description グラデーショングローフィルターを適用
  *              Apply gradient glow filter
- *              注意: グラデーションLUTは共有テクスチャに描画されるため、
- *              キャッシュは使用しません。各フレームで再描画が必要です。
- *              Note: Gradient LUT is drawn to a shared texture, so caching
- *              is not used. Re-drawing is required each frame.
+ *
+ *              WebGL版と同じフロー:
+ *              1. ブラー適用
+ *              2. グラデーションLUT生成（専用テクスチャ）
+ *              3. UV変換方式で最終合成（isInsideでハード境界クリッピング）
  *
  * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
  * @param  {Float32Array} matrix - 変換行列
@@ -32,7 +32,7 @@ const DEG_TO_RAD: number = Math.PI / 180;
  * @param  {number} type - タイプ (0: full, 1: inner, 2: outer)
  * @param  {boolean} knockout - ノックアウトモード
  * @param  {number} devicePixelRatio - デバイスピクセル比
- * @param  {IGradientGlowConfig} config - WebGPUリソース設定
+ * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
@@ -85,7 +85,7 @@ export const execute = (
     const x = Math.cos(radian) * distance * (xScale / devicePixelRatio);
     const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);
 
-    // 出力サイズを計算
+    // ===== WebGL版と同じサイズ・位置計算 =====
     const isInner = type === 1;
     const w = isInner ? baseWidth : blurWidth + Math.max(0, Math.abs(x) - offsetDiffX);
     const h = isInner ? baseHeight : blurHeight + Math.max(0, Math.abs(y) - offsetDiffY);
@@ -100,7 +100,37 @@ export const execute = (
     const blurTextureX = isInner ? x - blurOffsetX : (x > 0 ? Math.max(0, x - offsetDiffX) : 0) + fractionX;
     const blurTextureY = isInner ? y - blurOffsetY : (y > 0 ? Math.max(0, y - offsetDiffY) : 0) + fractionY;
 
-    // 出力アタッチメントを作成
+    // ===== グラデーションLUT生成（専用テクスチャ） =====
+    // 注意: 共有テクスチャは使用しない。
+    // queue.writeTextureはcommandEncoder外で即座に実行されるため、
+    // 同一フレーム内の複数GradientGlowFilter適用時に最後の書き込みで上書きされる。
+    const lutData = generateFilterGradientLUT(ratios, colors, alphas);
+    const lutTexture = device.createTexture({
+        "size": { "width": 256, "height": 1 },
+        "format": "rgba8unorm",
+        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+    });
+    device.queue.writeTexture(
+        { "texture": lutTexture },
+        lutData.buffer,
+        { "bytesPerRow": 256 * 4, "offset": lutData.byteOffset },
+        { "width": 256, "height": 1 }
+    );
+    const lutView = lutTexture.createView();
+
+    // ===== UV変換パラメータ計算 =====
+    // WebGPU: texCoord.y=0がトップ（Y-flip補正済み）
+    const baseScaleX = width / baseWidth;
+    const baseScaleY = height / baseHeight;
+    const baseOffsetUVX = baseTextureX / baseWidth;
+    const baseOffsetUVY = baseTextureY / baseHeight;
+
+    const blurScaleX = width / blurWidth;
+    const blurScaleY = height / blurHeight;
+    const blurOffsetUVX = blurTextureX / blurWidth;
+    const blurOffsetUVY = blurTextureY / blurHeight;
+
+    // ===== 最終合成パス =====
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
     const pipeline = pipelineManager.getPipeline("gradient_glow_filter");
@@ -112,32 +142,18 @@ export const execute = (
         return sourceAttachment;
     }
 
-    // サンプラーを作成
     const sampler = textureManager.createSampler("gradient_glow_sampler", true);
 
-    // グラデーションLUTテクスチャを生成（共有テクスチャを使用、キャッシュなし）
-    const lutData = generateFilterGradientLUT(ratios, colors, alphas);
-    const lutAttachment = $getFilterGradientAttachmentObject();
-
-    // 共有テクスチャにLUTデータを書き込み
-    device.queue.writeTexture(
-        { "texture": lutAttachment.texture!.resource },
-        lutData.buffer,
-        { "bytesPerRow": 256 * 4, "offset": lutData.byteOffset },
-        { "width": 256, "height": 1 }
-    );
-
-    // ユニフォームバッファを作成
-    // strength: f32 (4 bytes)
-    // inner: f32 (4 bytes)
-    // knockout: f32 (4 bytes)
-    // glowType: f32 (4 bytes)
-    // Total: 16 bytes
+    // ユニフォームバッファ: 12 floats = 48 bytes
     const uniformData = new Float32Array([
         strength,
         isInner ? 1.0 : 0.0,
         knockout ? 1.0 : 0.0,
-        type
+        type,
+        baseScaleX, baseScaleY,
+        baseOffsetUVX, baseOffsetUVY,
+        blurScaleX, blurScaleY,
+        blurOffsetUVX, blurOffsetUVY
     ]);
 
     const uniformBuffer = device.createBuffer({
@@ -146,67 +162,15 @@ export const execute = (
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-    // 元テクスチャを適切な位置にコピーした一時テクスチャを作成
-    const baseTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    const baseX = Math.round(baseTextureX);
-    const baseY = Math.round(baseTextureY);
-    if (baseX >= 0 && baseY >= 0 &&
-        baseX + baseWidth <= width && baseY + baseHeight <= height) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": sourceAttachment.texture!.resource,
-                "origin": { "x": 0, "y": 0, "z": 0 }
-            },
-            {
-                "texture": baseTextureForComposite.texture!.resource,
-                "origin": { "x": baseX, "y": baseY, "z": 0 }
-            },
-            {
-                "width": baseWidth,
-                "height": baseHeight
-            }
-        );
-    }
-
-    // ブラーテクスチャを適切な位置にコピーした一時テクスチャを作成
-    const blurTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    const blurX2 = Math.round(blurTextureX);
-    const blurY2 = Math.round(blurTextureY);
-    const srcX = Math.max(0, -blurX2);
-    const srcY = Math.max(0, -blurY2);
-    const dstX = Math.max(0, blurX2);
-    const dstY = Math.max(0, blurY2);
-    const copyWidth = Math.min(blurWidth - srcX, width - dstX);
-    const copyHeight = Math.min(blurHeight - srcY, height - dstY);
-
-    if (copyWidth > 0 && copyHeight > 0) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": blurAttachment.texture!.resource,
-                "origin": { "x": srcX, "y": srcY, "z": 0 }
-            },
-            {
-                "texture": blurTextureForComposite.texture!.resource,
-                "origin": { "x": dstX, "y": dstY, "z": 0 }
-            },
-            {
-                "width": copyWidth,
-                "height": copyHeight
-            }
-        );
-    }
-
-    // バインドグループを作成
+    // バインドグループを作成（オリジナルテクスチャを直接使用）
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": [
             { "binding": 0, "resource": { "buffer": uniformBuffer } },
             { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": blurTextureForComposite.texture!.view },
-            { "binding": 3, "resource": baseTextureForComposite.texture!.view },
-            { "binding": 4, "resource": lutAttachment.texture!.view }
+            { "binding": 2, "resource": blurAttachment.texture!.view },
+            { "binding": 3, "resource": sourceAttachment.texture!.view },
+            { "binding": 4, "resource": lutView }
         ]
     });
 
@@ -221,13 +185,10 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ（LUTは共有テクスチャなので破棄しない）
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
+    // クリーンアップ
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-    frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
-    frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);
 
-    // オフセットを更新
+    // WebGL版と同じオフセット更新
     $offset.x = baseOffsetX + baseTextureX;
     $offset.y = baseOffsetY + baseTextureY;
 

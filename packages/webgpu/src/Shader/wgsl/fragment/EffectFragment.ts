@@ -117,6 +117,10 @@ struct GradientGlowUniforms {
     inner: f32,
     knockout: f32,
     glowType: f32,
+    baseScale: vec2<f32>,
+    baseOffset: vec2<f32>,
+    blurScale: vec2<f32>,
+    blurOffset: vec2<f32>,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: GradientGlowUniforms;
@@ -125,14 +129,22 @@ struct GradientGlowUniforms {
 @group(0) @binding(3) var baseTexture: texture_2d<f32>;
 @group(0) @binding(4) var gradientLUT: texture_2d<f32>;
 
+fn isInside(uv: vec2<f32>) -> f32 {
+    let s = step(vec4<f32>(0.0, uv.x, 0.0, uv.y), vec4<f32>(uv.x, 1.0, uv.y, 1.0));
+    return step(4.0, dot(s, vec4<f32>(1.0, 1.0, 1.0, 1.0)));
+}
+
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var blur = textureSample(blurTexture, textureSampler, input.texCoord);
-    let base = textureSample(baseTexture, textureSampler, input.texCoord);
-    let isInner = uniforms.inner > 0.5;
-    if (isInner) {
-        blur.a = 1.0 - blur.a;
-    }
+    // WebGL版と同じ: UV変換+isInsideでハード境界クリッピング
+    let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
+    let base = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+
+    let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
+    var blur = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+
+    // WebGL版と同じ: gradient glowではinner alpha反転しない
+    // (非gradient GlowFilterではinver反転するが、gradient版ではLUTが空間マッピングを制御)
     blur.a = clamp(blur.a * uniforms.strength, 0.0, 1.0);
     let glowColor = textureSample(gradientLUT, textureSampler, vec2<f32>(blur.a, 0.5));
     var result: vec4<f32>;
@@ -145,7 +157,14 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
             result = base - base * glowColor.a + glowColor;
         }
     } else if (glowType < 1.5) {
-        result = glowColor;
+        // inner (type = 1)
+        // WebGL版: baseを描画後にsource-atop blendでglowColorを合成
+        // source-atop: result = src * dst.a + dst * (1 - src.a)
+        if (knockout) {
+            result = glowColor * base.a;
+        } else {
+            result = glowColor * base.a + base * (1.0 - glowColor.a);
+        }
     } else {
         if (knockout) {
             result = glowColor - glowColor * base.a;

@@ -10,6 +10,13 @@ const GPUBufferUsage = {
 };
 (globalThis as any).GPUBufferUsage = GPUBufferUsage;
 
+// Mock GPUTextureUsage
+const GPUTextureUsage = {
+    TEXTURE_BINDING: 0x04,
+    COPY_DST: 0x08
+};
+(globalThis as any).GPUTextureUsage = GPUTextureUsage;
+
 // Mock offset
 vi.mock("../index", () => ({
     "$offset": { "x": 0, "y": 0 }
@@ -31,18 +38,7 @@ vi.mock("../../Gradient/GradientLUTGenerator", () => ({
     "generateFilterGradientLUT": vi.fn(() => new Uint8Array(256 * 4))
 }));
 
-// Mock FilterGradientLUTCache
-vi.mock("../FilterGradientLUTCache", () => ({
-    "$getFilterGradientAttachmentObject": vi.fn(() => ({
-        "id": -256,
-        "width": 256,
-        "height": 1,
-        "texture": {
-            "resource": { "label": "mockLUTTexture" },
-            "view": { "label": "mockLUTTextureView" }
-        }
-    }))
-}));
+// Note: FilterGradientLUTCache is no longer used (per-invocation LUT textures instead)
 
 describe("FilterApplyGradientGlowFilterUseCase", () =>
 {
@@ -72,6 +68,10 @@ describe("FilterApplyGradientGlowFilterUseCase", () =>
         return {
             "device": {
                 "createBuffer": vi.fn(() => ({ "label": "mockBuffer" })),
+                "createTexture": vi.fn(() => ({
+                    "label": "mockLUTTexture",
+                    "createView": vi.fn(() => ({ "label": "mockLUTTextureView" }))
+                })),
                 "queue": {
                     "writeBuffer": vi.fn(),
                     "writeTexture": vi.fn()
@@ -184,7 +184,7 @@ describe("FilterApplyGradientGlowFilterUseCase", () =>
             expect(config.device.queue.writeBuffer).toHaveBeenCalled();
         });
 
-        it("should copy textures for compositing", () =>
+        it("should use render passes for compositing", () =>
         {
             const sourceAttachment = createMockAttachment();
             const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
@@ -203,7 +203,8 @@ describe("FilterApplyGradientGlowFilterUseCase", () =>
                 config
             );
 
-            expect(config.commandEncoder.copyTextureToTexture).toHaveBeenCalled();
+            // UV変換方式: 最終合成パス
+            expect(config.commandEncoder.beginRenderPass).toHaveBeenCalled();
         });
 
         it("should return result attachment", () =>
@@ -326,7 +327,7 @@ describe("FilterApplyGradientGlowFilterUseCase", () =>
                 config
             );
 
-            expect(config.commandEncoder.copyTextureToTexture).toHaveBeenCalled();
+            expect(config.commandEncoder.beginRenderPass).toHaveBeenCalled();
         });
 
         it("should calculate glow position based on angle 90", () =>
@@ -348,7 +349,7 @@ describe("FilterApplyGradientGlowFilterUseCase", () =>
                 config
             );
 
-            expect(config.commandEncoder.copyTextureToTexture).toHaveBeenCalled();
+            expect(config.commandEncoder.beginRenderPass).toHaveBeenCalled();
         });
     });
 
@@ -427,8 +428,8 @@ describe("FilterApplyGradientGlowFilterUseCase", () =>
                 config
             );
 
-            // Should release blur, baseTextureForComposite, and blurTextureForComposite
-            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(3);
+            // blurAttachmentのみ解放（UV変換方式ではcomposite用テクスチャ不要）
+            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(1);
         });
     });
 
