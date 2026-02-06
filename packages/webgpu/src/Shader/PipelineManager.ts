@@ -3033,6 +3033,232 @@ export class PipelineManager
         });
         this.pipelines.set("filter_output_erase", filterOutputErasePipeline);
 
+        // === MSAA版フィルター/ブレンド出力パイプライン ===
+        // sampleCount > 1 の場合、mainAttachmentのmsaaTextureに描画するためのMSAA版パイプラインを作成
+        if (this.sampleCount > 1) {
+            // texture_copy_bgra の MSAA版
+            const pipelineBGRAMsaa = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "zero",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "zero",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("texture_copy_bgra_msaa", pipelineBGRAMsaa);
+
+            // filter_output (normal/layer) の MSAA版
+            const filterOutputMsaaPipeline = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": filterOutputShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("filter_output_msaa", filterOutputMsaaPipeline);
+
+            // filter_output_add の MSAA版
+            const filterOutputAddMsaaPipeline = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": filterOutputShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "one",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "one",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("filter_output_add_msaa", filterOutputAddMsaaPipeline);
+
+            // filter_output_screen の MSAA版
+            const filterOutputScreenMsaaPipeline = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": filterOutputShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("filter_output_screen_msaa", filterOutputScreenMsaaPipeline);
+
+            // filter_output_alpha の MSAA版
+            const filterOutputAlphaMsaaPipeline = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": filterOutputShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "zero",
+                                "dstFactor": "src-alpha",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "zero",
+                                "dstFactor": "src-alpha",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("filter_output_alpha_msaa", filterOutputAlphaMsaaPipeline);
+
+            // filter_output_erase の MSAA版
+            const filterOutputEraseMsaaPipeline = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": filterOutputShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "zero",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "zero",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("filter_output_erase_msaa", filterOutputEraseMsaaPipeline);
+        }
+
         // === 位置変換付きテクスチャ描画パイプライン（複雑なブレンド結果の描画用） ===
         this.createPositionedTexturePipeline();
 
@@ -4301,6 +4527,45 @@ export class PipelineManager
         });
 
         this.pipelines.set("complex_blend_output", pipeline);
+
+        // MSAA版
+        if (this.sampleCount > 1) {
+            const msaaPipeline = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("complex_blend_output_msaa", msaaPipeline);
+        }
     }
 
     /**
@@ -4361,6 +4626,45 @@ export class PipelineManager
         });
 
         this.pipelines.set("filter_complex_blend_output", pipeline);
+
+        // MSAA版
+        if (this.sampleCount > 1) {
+            const msaaPipeline = this.device.createRenderPipeline({
+                "layout": pipelineLayout,
+                "vertex": {
+                    "module": vertexShaderModule,
+                    "entryPoint": "main",
+                    "buffers": []
+                },
+                "fragment": {
+                    "module": fragmentShaderModule,
+                    "entryPoint": "main",
+                    "targets": [{
+                        "format": this.format,
+                        "blend": {
+                            "color": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            },
+                            "alpha": {
+                                "srcFactor": "one",
+                                "dstFactor": "one-minus-src-alpha",
+                                "operation": "add"
+                            }
+                        }
+                    }]
+                },
+                "primitive": {
+                    "topology": "triangle-list",
+                    "cullMode": "none"
+                },
+                "multisample": {
+                    "count": this.sampleCount
+                }
+            });
+            this.pipelines.set("filter_complex_blend_output_msaa", msaaPipeline);
+        }
     }
 
     /**

@@ -725,9 +725,14 @@ ${blendFunction}
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     var dst = textureSample(dstTexture, textureSampler, input.texCoord);
     var src = textureSample(srcTexture, textureSampler, input.texCoord);
-    src = src * uniforms.mulColor + uniforms.addColor;
-    src = clamp(src, vec4<f32>(0.0), vec4<f32>(1.0));
-    src = vec4<f32>(src.rgb * src.a, src.a);
+    let mul = uniforms.mulColor;
+    let add = uniforms.addColor;
+    if (mul.x != 1.0 || mul.y != 1.0 || mul.z != 1.0 || mul.w != 1.0
+        || add.x != 0.0 || add.y != 0.0 || add.z != 0.0) {
+        src = vec4<f32>(src.rgb / max(vec3<f32>(0.0001), vec3<f32>(src.a)), src.a);
+        src = clamp(src * mul + add, vec4<f32>(0.0), vec4<f32>(1.0));
+        src = vec4<f32>(src.rgb * src.a, src.a);
+    }
     return blend(src, dst);
 }
 `;

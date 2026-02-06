@@ -78,9 +78,9 @@ export const execute = (
             case "erase":
                 return "instanced_erase";
             case "copy":
-            case "layer":
                 return "instanced_copy";
             default:
+                // normal, layer
                 return "instanced_normal";
         }
     };

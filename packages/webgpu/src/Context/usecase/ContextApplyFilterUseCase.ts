@@ -162,7 +162,10 @@ const drawBlendResultToMain = (
     y: number
 ): void => {
     // フィルター＋複雑なブレンド用のパイプライン（Y軸反転あり）を使用
-    const pipeline = config.pipelineManager.getPipeline("filter_complex_blend_output");
+    // MSAA有効時はMSAA版パイプラインを使用してmsaaTextureに描画→texture.viewにresolve
+    const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+    const pipelineName = useMsaa ? "filter_complex_blend_output_msaa" : "filter_complex_blend_output";
+    const pipeline = config.pipelineManager.getPipeline(pipelineName);
     const bindGroupLayout = config.pipelineManager.getBindGroupLayout("positioned_texture");
 
     if (!pipeline || !bindGroupLayout || !srcAttachment.texture || !mainAttachment.texture) {
@@ -194,10 +197,14 @@ const drawBlendResultToMain = (
     });
 
     // メインアタッチメントへの描画（loadで既存内容を保持）
+    // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
+    const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
+    const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
     const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
-        mainAttachment.texture.view,
+        colorView,
         0, 0, 0, 0,
-        "load"
+        "load",
+        resolveTarget
     );
 
     const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
@@ -274,27 +281,30 @@ const drawFilterToMain = (
 
     // シンプルなブレンドモードの場合
     if (isSimpleBlendMode(blend_mode)) {
+        // MSAA有効時はMSAA版パイプラインを使用してmsaaTextureに描画→texture.viewにresolve
+        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+
         // ブレンドモードに応じたパイプラインを選択
         let pipelineName: string;
         switch (blend_mode) {
             case "add":
-                pipelineName = "filter_output_add";
+                pipelineName = useMsaa ? "filter_output_add_msaa" : "filter_output_add";
                 break;
             case "screen":
-                pipelineName = "filter_output_screen";
+                pipelineName = useMsaa ? "filter_output_screen_msaa" : "filter_output_screen";
                 break;
             case "alpha":
-                pipelineName = "filter_output_alpha";
+                pipelineName = useMsaa ? "filter_output_alpha_msaa" : "filter_output_alpha";
                 break;
             case "erase":
-                pipelineName = "filter_output_erase";
+                pipelineName = useMsaa ? "filter_output_erase_msaa" : "filter_output_erase";
                 break;
             case "copy":
-                pipelineName = "texture_copy_bgra";
+                pipelineName = useMsaa ? "texture_copy_bgra_msaa" : "texture_copy_bgra";
                 break;
             default:
                 // normal, layer
-                pipelineName = "filter_output";
+                pipelineName = useMsaa ? "filter_output_msaa" : "filter_output";
                 break;
         }
 
@@ -303,7 +313,7 @@ const drawFilterToMain = (
 
         if (!pipeline || !bindGroupLayout) {
             // フォールバック
-            pipelineName = "filter_output";
+            pipelineName = useMsaa ? "filter_output_msaa" : "filter_output";
         }
 
         const sampler = config.textureManager.createSampler("filter_output_sampler", true);
@@ -329,10 +339,14 @@ const drawFilterToMain = (
             ]
         });
 
+        // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
+        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
+        const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
         const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
-            mainAttachment.texture.view,
+            colorView,
             0, 0, 0, 0,
-            "load"
+            "load",
+            resolveTarget
         );
 
         // テスト: 描画位置とサイズをログ出力相当（描画が行われているか確認）

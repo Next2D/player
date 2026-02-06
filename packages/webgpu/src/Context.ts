@@ -2312,9 +2312,9 @@ export class Context
      */
     drawFill (): void
     {
-        // fill()で描画を実行（レンダーパスは継続）
-        // ノード領域のクリアはfill()内でensureNodeAreaCleared()経由で行われる
-        this.fill();
+        // WebGL版ではfill()がバッファに蓄積し、drawFill()がまとめてGPU描画する
+        // WebGPU版ではfill()が直接GPU描画するため、ここでfill()を再呼び出しする必要はない
+        // （END_FILLコマンドからfill()は既に呼ばれている）
 
         // drawFill()呼び出し後、レンダーパスを終了
         if (this.renderPassEncoder) {

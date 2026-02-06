@@ -111,11 +111,14 @@ const drawToMainAttachment = (
     pipelineManager: PipelineManager
 ): void => {
     // 複雑なブレンド用結果描画パイプラインを使用（Y軸反転なし）
-    const pipeline = pipelineManager.getPipeline("complex_blend_output");
+    // MSAA有効時はMSAA版パイプラインを使用してmsaaTextureに描画→texture.viewにresolve
+    const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+    const pipelineName = useMsaa ? "complex_blend_output_msaa" : "complex_blend_output";
+    const pipeline = pipelineManager.getPipeline(pipelineName);
     const bindGroupLayout = pipelineManager.getBindGroupLayout("positioned_texture");
 
     if (!pipeline || !bindGroupLayout) {
-        console.error("[WebGPU] complex_blend_output pipeline not found");
+        console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         return;
     }
 
@@ -145,10 +148,14 @@ const drawToMainAttachment = (
     });
 
     // メインアタッチメントへの描画（loadで既存内容を保持）
+    // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
+    const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
+    const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-        mainAttachment.texture!.view,
+        colorView,
         0, 0, 0, 0,
-        "load"
+        "load",
+        resolveTarget
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
