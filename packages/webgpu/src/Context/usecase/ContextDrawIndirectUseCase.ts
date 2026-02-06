@@ -89,7 +89,8 @@ export const execute = (
     const normalPipeline = pipelineManager.getPipeline(pipelineName);
     const maskedPipeline = pipelineManager.getPipeline("instanced_masked");
 
-    const useStencil = isMasked && maskedPipeline && mainAttachment.stencil?.view;
+    const useStencil = isMasked && maskedPipeline
+        && (mainAttachment.msaaStencil?.view || mainAttachment.stencil?.view);
 
     const pipeline = useStencil ? maskedPipeline : normalPipeline;
 
@@ -102,18 +103,31 @@ export const execute = (
     let passEncoder: GPURenderPassEncoder;
 
     if (useStencil) {
+        // MSAA対応
+        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
+        const stencilView = useMsaa && mainAttachment.msaaStencil?.view
+            ? mainAttachment.msaaStencil.view : mainAttachment.stencil!.view;
+        const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
+
         const renderPassDescriptor = frameBufferManager.createStencilRenderPassDescriptor(
-            mainAttachment.texture!.view,
-            mainAttachment.stencil!.view,
+            colorView,
+            stencilView,
             "load",
-            "load"
+            "load",
+            resolveTarget
         );
         passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
     } else {
+        // 通常のレンダーパス（MSAA対応）
+        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
+        const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
         const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
-            mainAttachment.texture!.view,
+            colorView,
             0, 0, 0, 0,
-            "load"
+            "load",
+            resolveTarget
         );
         passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
     }

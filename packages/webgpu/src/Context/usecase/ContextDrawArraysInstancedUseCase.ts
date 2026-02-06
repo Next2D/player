@@ -81,7 +81,8 @@ export const execute = (
 
     // 実際にマスクを使用するか判定
     // maskedパイプラインが存在し、マスクが有効で、ステンシルがある場合のみ
-    const useStencil = isMasked && maskedPipeline && main_attachment.stencil?.view;
+    const useStencil = isMasked && maskedPipeline
+        && (main_attachment.msaaStencil?.view || main_attachment.stencil?.view);
 
     const pipeline = useStencil ? maskedPipeline : normalPipeline;
 
@@ -94,20 +95,31 @@ export const execute = (
     let passEncoder: GPURenderPassEncoder;
 
     if (useStencil) {
-        // ステンシル付きレンダーパス（マスク用）
+        // ステンシル付きレンダーパス（マスク用）- MSAA対応
+        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
+        const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
+        const stencilView = useMsaa && main_attachment.msaaStencil?.view
+            ? main_attachment.msaaStencil.view : main_attachment.stencil!.view;
+        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
+
         const renderPassDescriptor = frame_buffer_manager.createStencilRenderPassDescriptor(
-            main_attachment.texture!.view,
-            main_attachment.stencil!.view,
+            colorView,
+            stencilView,
             "load", // カラーは既存の内容を保持
-            "load"  // ステンシルも既存の内容を保持（マスク情報）
+            "load",  // ステンシルも既存の内容を保持（マスク情報）
+            resolveTarget
         );
         passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     } else {
-        // 通常のレンダーパス
+        // 通常のレンダーパス（MSAA対応）
+        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
+        const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
+        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
         const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
-            main_attachment.texture!.view,
+            colorView,
             0, 0, 0, 0,
-            "load" // 既存の内容を保持
+            "load", // 既存の内容を保持
+            resolveTarget
         );
         passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     }

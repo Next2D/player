@@ -825,6 +825,10 @@ export class PipelineManager
                     },
                     "stencilReadMask": 0xFF,
                     "stencilWriteMask": stencilWriteMask // レベルに応じたビットのみ書き込み
+                },
+                "multisample": {
+                    "count": this.sampleCount,
+                    "alphaToCoverageEnabled": true
                 }
             });
             this.pipelines.set(`clip_write_main_${level}`, clipWriteMainPipeline);
@@ -872,6 +876,9 @@ export class PipelineManager
                     },
                     "stencilReadMask": 0xFF,
                     "stencilWriteMask": stencilWriteMask
+                },
+                "multisample": {
+                    "count": this.sampleCount
                 }
             });
             this.pipelines.set(`clip_clear_main_${level}`, clipClearMainPipeline);
@@ -1411,6 +1418,9 @@ export class PipelineManager
             "primitive": {
                 "topology": "triangle-list",
                 "cullMode": "none"
+            },
+            "multisample": {
+                "count": this.sampleCount
             }
         });
 
@@ -1455,7 +1465,8 @@ export class PipelineManager
                     }
                 }]
             },
-            "primitive": { "topology": "triangle-list", "cullMode": "none" }
+            "primitive": { "topology": "triangle-list", "cullMode": "none" },
+            "multisample": { "count": this.sampleCount }
         });
         this.pipelines.set("instanced_add", addPipeline);
 
@@ -1496,7 +1507,8 @@ export class PipelineManager
                     }
                 }]
             },
-            "primitive": { "topology": "triangle-list", "cullMode": "none" }
+            "primitive": { "topology": "triangle-list", "cullMode": "none" },
+            "multisample": { "count": this.sampleCount }
         });
         this.pipelines.set("instanced_screen", screenPipeline);
 
@@ -1537,7 +1549,8 @@ export class PipelineManager
                     }
                 }]
             },
-            "primitive": { "topology": "triangle-list", "cullMode": "none" }
+            "primitive": { "topology": "triangle-list", "cullMode": "none" },
+            "multisample": { "count": this.sampleCount }
         });
         this.pipelines.set("instanced_alpha", alphaPipeline);
 
@@ -1578,7 +1591,8 @@ export class PipelineManager
                     }
                 }]
             },
-            "primitive": { "topology": "triangle-list", "cullMode": "none" }
+            "primitive": { "topology": "triangle-list", "cullMode": "none" },
+            "multisample": { "count": this.sampleCount }
         });
         this.pipelines.set("instanced_erase", erasePipeline);
 
@@ -1619,7 +1633,8 @@ export class PipelineManager
                     }
                 }]
             },
-            "primitive": { "topology": "triangle-list", "cullMode": "none" }
+            "primitive": { "topology": "triangle-list", "cullMode": "none" },
+            "multisample": { "count": this.sampleCount }
         });
         this.pipelines.set("instanced_copy", copyPipeline);
         this.pipelines.set("instanced_layer", copyPipeline); // layerもcopyと同じ
@@ -1683,6 +1698,9 @@ export class PipelineManager
                 },
                 "stencilReadMask": 0xFF,
                 "stencilWriteMask": 0x00 // 描画時はステンシル書き込み無効
+            },
+            "multisample": {
+                "count": this.sampleCount
             }
         });
         this.pipelines.set("instanced_masked", maskedPipeline);

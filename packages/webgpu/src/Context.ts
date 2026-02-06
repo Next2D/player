@@ -288,9 +288,17 @@ export class Context
         this.ensureCommandEncoder();
 
         // メインアタッチメントにステンシルがある場合はステンシル付きレンダーパスを使用
+        // MSAA有効時はmsaaTextureをクリアしresolveTargetで非MSAAテクスチャにも反映
+        const clearUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
+        const clearColorView = clearUseMsaa
+            ? this.$mainAttachmentObject.msaaTexture!.view
+            : this.$mainAttachmentObject.texture.view;
+        const clearResolveTarget = clearUseMsaa
+            ? this.$mainAttachmentObject.texture.view : undefined;
+
         const renderPassDescriptor: GPURenderPassDescriptor = {
             "colorAttachments": [{
-                "view": this.$mainAttachmentObject.texture.view,
+                "view": clearColorView,
                 "clearValue": {
                     "r": this.$clearColorR,
                     "g": this.$clearColorG,
@@ -298,14 +306,18 @@ export class Context
                     "a": this.$clearColorA
                 },
                 "loadOp": "clear",
-                "storeOp": "store"
+                "storeOp": "store",
+                "resolveTarget": clearResolveTarget
             }]
         };
 
         // ステンシルバッファもクリア
-        if (this.$mainAttachmentObject.stencil?.view) {
+        const clearStencilView = clearUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
+            ? this.$mainAttachmentObject.msaaStencil.view
+            : this.$mainAttachmentObject.stencil?.view;
+        if (clearStencilView) {
             renderPassDescriptor.depthStencilAttachment = {
-                "view": this.$mainAttachmentObject.stencil.view,
+                "view": clearStencilView,
                 "stencilClearValue": 0,
                 "stencilLoadOp": "clear",
                 "stencilStoreOp": "store"
@@ -2034,11 +2046,19 @@ export class Context
         if (!this.renderPassEncoder) {
             this.ensureCommandEncoder();
 
-            // メインアタッチメントの場合はステンシル付きレンダーパスを作成
+            // メインアタッチメントの場合はステンシル付きレンダーパスを作成（MSAA対応）
             if (isMainAttachment && this.$mainAttachmentObject?.stencil?.view) {
+                const clipUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
+                const clipColorView = clipUseMsaa
+                    ? this.$mainAttachmentObject.msaaTexture!.view
+                    : this.$mainAttachmentObject.texture!.view;
+                const clipStencilView = clipUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
+                    ? this.$mainAttachmentObject.msaaStencil.view
+                    : this.$mainAttachmentObject.stencil.view;
+                // resolveTargetなし: clip()はwriteMask=0でcolorを変更しない
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    this.$mainAttachmentObject.texture!.view,
-                    this.$mainAttachmentObject.stencil.view,
+                    clipColorView,
+                    clipStencilView,
                     "load",
                     "load"
                 );
@@ -3476,9 +3496,20 @@ export class Context
             const isFirstMask = this.$mainAttachmentObject.clipLevel === 0;
             const stencilLoadOp = isFirstMask ? "clear" : "load";
 
+            // MSAA有効時はmsaaTexture/msaaStencilを使用（sampleCount一致が必要）
+            // resolveTargetは設定しない: clip()はwriteMask=0でcolorを変更しないため、
+            // resolveでtexture.viewを上書きすると、先にtexture.viewに描画された内容が消える
+            const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
+            const colorView = mainUseMsaa
+                ? this.$mainAttachmentObject.msaaTexture!.view
+                : this.$mainAttachmentObject.texture.view;
+            const stencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
+                ? this.$mainAttachmentObject.msaaStencil.view
+                : this.$mainAttachmentObject.stencil.view;
+
             const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                this.$mainAttachmentObject.texture.view,
-                this.$mainAttachmentObject.stencil.view,
+                colorView,
+                stencilView,
                 "load", // カラーは既存の内容を保持
                 stencilLoadOp  // 最初のマスク: クリア、ネスト: 保持
             );
@@ -3566,17 +3597,26 @@ export class Context
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
-        if (wasLastMask && this.$mainAttachmentObject?.stencil) {
+        // MSAA有効時はmsaaTexture/msaaStencilを使用
+        const leaveMsaa = this.$mainAttachmentObject?.msaa && this.$mainAttachmentObject?.msaaTexture?.view;
+        const leaveColorView = leaveMsaa
+            ? this.$mainAttachmentObject!.msaaTexture!.view
+            : this.$mainAttachmentObject?.texture!.view;
+        const leaveStencilView = leaveMsaa && this.$mainAttachmentObject?.msaaStencil?.view
+            ? this.$mainAttachmentObject!.msaaStencil!.view
+            : this.$mainAttachmentObject?.stencil?.view;
+        if (wasLastMask && leaveStencilView) {
             // 単体マスク（最後のマスク）の場合、ステンシルバッファをクリア
             // WebGL: gl.clear(STENCIL_BUFFER_BIT)
+            // resolveTargetは設定しない（ステンシルクリアのみが目的で、カラーの上書きを防ぐ）
             const clearPassDescriptor: GPURenderPassDescriptor = {
                 "colorAttachments": [{
-                    "view": this.$mainAttachmentObject.texture!.view,
-                    "loadOp": "load", // カラーは保持
-                    "storeOp": "store"
+                    "view": leaveColorView!,
+                    "loadOp": "load" as GPULoadOp,
+                    "storeOp": "store" as GPUStoreOp
                 }],
                 "depthStencilAttachment": {
-                    "view": this.$mainAttachmentObject.stencil.view,
+                    "view": leaveStencilView,
                     "stencilLoadOp": "clear", // ステンシルをクリア
                     "stencilStoreOp": "store",
                     "stencilClearValue": 0
@@ -3584,7 +3624,7 @@ export class Context
             };
             const clearPass = this.commandEncoder!.beginRenderPass(clearPassDescriptor);
             clearPass.end();
-        } else if (currentClipLevel > 1 && this.$mainAttachmentObject?.stencil) {
+        } else if (currentClipLevel > 1 && leaveStencilView) {
             // ネストされたマスクの場合、上位レベルのステンシルビットをクリア
             // WebGL: stencilMask(1 << clipLevel), stencilOp(REPLACE, REPLACE, REPLACE)
             // 全画面矩形を描画してステンシルビットをクリア
@@ -3595,9 +3635,10 @@ export class Context
 
             if (pipeline) {
                 // ステンシル付きレンダーパスを開始
+                // resolveTargetなし: clip_clear_mainはwriteMask=0でcolorを変更しない
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    this.$mainAttachmentObject.texture!.view,
-                    this.$mainAttachmentObject.stencil.view,
+                    leaveColorView!,
+                    leaveStencilView,
                     "load", // カラーは保持
                     "load"  // ステンシルは保持（特定のビットのみクリア）
                 );
