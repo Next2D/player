@@ -180,7 +180,14 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
             result = base - base * bevelColor.a + bevelColor;
         }
     } else if (bevelType < 1.5) {
-        result = bevelColor;
+        // inner (type = 1)
+        // WebGL版: base描画後にsource-atop blendでbevelColorを合成
+        // source-atop: result = src * dst.a + dst * (1 - src.a)
+        if (knockout) {
+            result = bevelColor * base.a;
+        } else {
+            result = bevelColor * base.a + base * (1.0 - bevelColor.a);
+        }
     } else {
         if (knockout) {
             result = bevelColor - bevelColor * base.a;
@@ -235,15 +242,9 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     // ベベルカラーを計算
     let bevelColor = uniforms.highlightColor * highlightAlpha + uniforms.shadowColor * shadowAlpha;
 
-    // DEBUG: bevelColor.aが0の場合はbaseを返す
-    // bevelColor.aは highlightAlpha + shadowAlpha 相当（プリマルチプライドなので）
-    // highlightAlphaとshadowAlphaは同時に正になることはない
-    let totalBevelAlpha = highlightAlpha + shadowAlpha;
-    if (totalBevelAlpha < 0.001) {
-        return base;
-    }
-
     // タイプに応じて合成
+    // WebGL版ではinner型にsource-atop blending（result = src * dst.a + dst * (1 - src.a)）を使用
+    // WebGPU版では単一パスで合成するため、シェーダー内で同等の計算を行う
     var result: vec4<f32>;
     let bevelType = uniforms.bevelType;
     let knockout = uniforms.knockout > 0.5;
@@ -257,7 +258,15 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
         }
     } else if (bevelType < 1.5) {
         // inner (type = 1)
-        result = bevelColor;
+        // WebGL版: base描画後にsource-atop blendでbevelColorを合成
+        // source-atop: result = src * dst.a + dst * (1 - src.a)
+        // = bevelColor * base.a + base * (1 - bevelColor.a)
+        // これによりbase.a=0の領域にはベベルが漏れない
+        if (knockout) {
+            result = bevelColor * base.a;
+        } else {
+            result = bevelColor * base.a + base * (1.0 - bevelColor.a);
+        }
     } else {
         // outer (type = 2)
         if (knockout) {

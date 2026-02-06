@@ -52,16 +52,13 @@ export const execute = (
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
     // 動的にシェーダーを生成
-    const fragmentShaderCode = ShaderSource.getConvolutionFilterFragmentShader(
+    // ConvolutionFilterシェーダーはvertex(vs_main)とfragment(fs_main)の両方を含む
+    const shaderCode = ShaderSource.getConvolutionFilterFragmentShader(
         matrixX, matrixY, preserveAlpha, clamp
     );
 
-    const vertexShaderModule = device.createShaderModule({
-        "code": ShaderSource.getBlurFilterVertexShader()
-    });
-
-    const fragmentShaderModule = device.createShaderModule({
-        "code": fragmentShaderCode
+    const shaderModule = device.createShaderModule({
+        "code": shaderCode
     });
 
     // マトリクスサイズを計算
@@ -97,13 +94,13 @@ export const execute = (
     const pipeline = device.createRenderPipeline({
         "layout": pipelineLayout,
         "vertex": {
-            "module": vertexShaderModule,
-            "entryPoint": "main",
+            "module": shaderModule,
+            "entryPoint": "vs_main",
             "buffers": []
         },
         "fragment": {
-            "module": fragmentShaderModule,
-            "entryPoint": "main",
+            "module": shaderModule,
+            "entryPoint": "fs_main",
             "targets": [{
                 "format": "rgba8unorm",
                 "blend": {

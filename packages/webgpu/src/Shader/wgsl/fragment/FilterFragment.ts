@@ -91,8 +91,17 @@ struct ColorMatrixUniforms {
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     var color = textureSample(inputTexture, textureSampler, input.texCoord);
+
+    // Unpremultiply（WebGL版と同じ処理）
+    color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
+
+    // カラーマトリックス適用
     var result = uniforms.matrix * color + uniforms.offset;
     result = clamp(result, vec4<f32>(0.0), vec4<f32>(1.0));
+
+    // Premultiply
+    result = vec4<f32>(result.rgb * result.a, result.a);
+
     return result;
 }
 `;
