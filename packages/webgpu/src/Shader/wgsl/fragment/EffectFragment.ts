@@ -21,14 +21,18 @@ struct GlowUniforms {
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let blurColor = textureSample(blurTexture, textureSampler, input.texCoord);
     let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
-    let glowAlpha = clamp(blurColor.a * uniforms.strength, 0.0, 1.0);
-    let glowColor = vec4<f32>(uniforms.color.rgb * glowAlpha, glowAlpha);
+    var rawAlpha = blurColor.a;
+    if (uniforms.inner > 0.5) {
+        rawAlpha = 1.0 - rawAlpha;
+    }
+    let glowAlpha = clamp(rawAlpha * uniforms.strength, 0.0, 1.0);
+    let glowColor = vec4<f32>(uniforms.color.rgb * glowAlpha, uniforms.color.a * glowAlpha);
     if (uniforms.inner > 0.5) {
         let innerGlow = glowColor * baseColor.a;
         if (uniforms.knockout > 0.5) {
             return innerGlow;
         } else {
-            return baseColor + innerGlow * (1.0 - baseColor.a);
+            return innerGlow + baseColor * (1.0 - glowColor.a);
         }
     } else {
         if (uniforms.knockout > 0.5) {

@@ -12,7 +12,7 @@
 <body>
 <script type="module">
     window.addEventListener("DOMContentLoaded", async () => {
-        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const root = await next2d.createRootMovieClip(600, 600, 60);
         const { Shape } = next2d.display;
         const { GlowFilter } = next2d.filters;
 
@@ -112,6 +112,73 @@
         whiteGlow.y = 210;
         whiteGlow.filters = [new GlowFilter(0xFFFFFF, 1, 10, 10, 2, 1)];
         root.addChild(whiteGlow);
+
+        // ===== inner + 赤グロー =====
+        const innerRed = createTestShape(0x00FFFF);
+        innerRed.x = 30;
+        innerRed.y = 310;
+        innerRed.filters = [new GlowFilter(0xFF0000, 1, 8, 8, 2, 1, true)];
+        root.addChild(innerRed);
+
+        // ===== inner + 緑グロー =====
+        const innerGreen = createTestShape(0xFF00FF);
+        innerGreen.x = 150;
+        innerGreen.y = 310;
+        innerGreen.filters = [new GlowFilter(0x00FF00, 1, 8, 8, 2, 1, true)];
+        root.addChild(innerGreen);
+
+        // ===== inner + 白グロー =====
+        const innerWhite = createTestShape(0x000000);
+        innerWhite.x = 280;
+        innerWhite.y = 310;
+        innerWhite.filters = [new GlowFilter(0xFFFFFF, 1, 8, 8, 2, 1, true)];
+        root.addChild(innerWhite);
+
+        // ===== inner + knockout =====
+        const innerKnockout = createTestShape(0x00FFFF);
+        innerKnockout.x = 410;
+        innerKnockout.y = 310;
+        innerKnockout.filters = [new GlowFilter(0xFF0000, 1, 8, 8, 2, 1, true, true)];
+        root.addChild(innerKnockout);
+
+        // ===== inner + strength 強 =====
+        const innerStrong = createTestShape(0x00FFFF);
+        innerStrong.x = 30;
+        innerStrong.y = 400;
+        innerStrong.filters = [new GlowFilter(0x000000, 1, 8, 8, 5, 1, true)];
+        root.addChild(innerStrong);
+
+        // ===== inner + blur 大 =====
+        const innerBigBlur = createTestShape(0x00FFFF);
+        innerBigBlur.x = 150;
+        innerBigBlur.y = 400;
+        innerBigBlur.filters = [new GlowFilter(0x000000, 1, 20, 20, 2, 1, true)];
+        root.addChild(innerBigBlur);
+
+        // ===== inner + alpha 低 =====
+        const innerLowAlpha = createTestShape(0x00FFFF);
+        innerLowAlpha.x = 280;
+        innerLowAlpha.y = 400;
+        innerLowAlpha.filters = [new GlowFilter(0x000000, 0.5, 10, 10, 2, 1, true)];
+        root.addChild(innerLowAlpha);
+
+        // ===== inner + 円形 =====
+        const innerCircle = new Shape();
+        innerCircle.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawCircle(45, 30, 30)
+            .endFill();
+        innerCircle.x = 410;
+        innerCircle.y = 400;
+        innerCircle.filters = [new GlowFilter(0x000000, 1, 8, 8, 2, 1, true)];
+        root.addChild(innerCircle);
+
+        // ===== inner + knockout + 色付き =====
+        const innerKnockoutColor = createTestShape(0xFFFF00);
+        innerKnockoutColor.x = 30;
+        innerKnockoutColor.y = 500;
+        innerKnockoutColor.filters = [new GlowFilter(0x0000FF, 1, 10, 10, 2, 1, true, true)];
+        root.addChild(innerKnockoutColor);
 
         window.__E2E_RENDER_COMPLETE__ = true;
     });
