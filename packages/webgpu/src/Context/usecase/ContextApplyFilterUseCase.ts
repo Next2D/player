@@ -871,9 +871,9 @@ export const execute = (
     const xMin = bounds[0] * (scaleX / devicePixelRatio);
     const yMin = bounds[1] * (scaleY / devicePixelRatio);
 
-    // WebGL版と同じ: スケール変換のオフセットとフィルターのオフセットを考慮
-    const drawX = -offsetX - $offset.x + xMin + matrix[4];
-    const drawY = -offsetY - $offset.y + yMin + matrix[5];
+    // WebGL版と同じ: スケール変換のオフセットを考慮（$offsetはフィルターチェーン内部用で最終位置には不要）
+    const drawX = -offsetX + xMin + matrix[4];
+    const drawY = -offsetY + yMin + matrix[5];
 
     drawFilterToMain(
         config,

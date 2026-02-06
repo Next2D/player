@@ -278,14 +278,9 @@ export const execute = (
     frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
     frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);
 
-    // オフセットを更新
-    if (isInner) {
-        $offset.x = baseOffsetX;
-        $offset.y = baseOffsetY;
-    } else {
-        $offset.x = baseOffsetX + baseTextureX;
-        $offset.y = baseOffsetY + baseTextureY;
-    }
+    // オフセットを更新（WebGL版と同じ: 常にbaseOffset+baseTextureXYに設定）
+    $offset.x = baseOffsetX + baseTextureX;
+    $offset.y = baseOffsetY + baseTextureY;
 
     return destAttachment;
 };

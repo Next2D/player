@@ -195,11 +195,5 @@ export const execute = (
     frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
     frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);
 
-    // オフセットを更新（インナーの場合は元のオフセットを維持）
-    if (inner) {
-        $offset.x = baseOffsetX;
-        $offset.y = baseOffsetY;
-    }
-
     return destAttachment;
 };

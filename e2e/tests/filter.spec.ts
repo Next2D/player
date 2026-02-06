@@ -64,4 +64,11 @@ test.describe("Filterテスト", () => {
 
         await expect(page).toHaveScreenshot("filter-gradient-glow.png");
     });
+
+    test("MultiFilter", async ({ page }) => {
+        await page.goto("/e2e/pages/filter/multi-filter.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("filter-multi-filter.png");
+    });
 });

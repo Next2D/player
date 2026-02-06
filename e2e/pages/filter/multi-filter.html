@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - MultiFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape } = next2d.display;
+        const {
+            BlurFilter,
+            GlowFilter,
+            DropShadowFilter,
+            BevelFilter,
+            ColorMatrixFilter,
+            GradientGlowFilter
+        } = next2d.filters;
+
+        // テスト用シェイプを作成
+        const createTestShape = (color = 0xFF0000) => {
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(color, 1.0)
+                .drawRoundRect(0, 0, 80, 50, 8)
+                .endFill();
+            return shape;
+        };
+
+        // ===== 1. フィルターなし（参照位置用）=====
+        const noFilter = createTestShape();
+        noFilter.x = 30;
+        noFilter.y = 30;
+        root.addChild(noFilter);
+
+        // ===== 2. Blur + Glow =====
+        const blurGlow = createTestShape();
+        blurGlow.x = 160;
+        blurGlow.y = 30;
+        blurGlow.filters = [
+            new BlurFilter(4, 4, 1),
+            new GlowFilter(0xFFFF00, 1, 8, 8, 2, 1)
+        ];
+        root.addChild(blurGlow);
+
+        // ===== 3. Blur + DropShadow =====
+        const blurShadow = createTestShape();
+        blurShadow.x = 310;
+        blurShadow.y = 30;
+        blurShadow.filters = [
+            new BlurFilter(4, 4, 1),
+            new DropShadowFilter(6, 45, 0x000000, 1, 4, 4, 1, 1)
+        ];
+        root.addChild(blurShadow);
+
+        // ===== 4. Blur + Bevel =====
+        const blurBevel = createTestShape(0x888888);
+        blurBevel.x = 460;
+        blurBevel.y = 30;
+        blurBevel.filters = [
+            new BlurFilter(4, 4, 1),
+            new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner")
+        ];
+        root.addChild(blurBevel);
+
+        // ===== 5. Glow + DropShadow =====
+        const glowShadow = createTestShape();
+        glowShadow.x = 30;
+        glowShadow.y = 140;
+        glowShadow.filters = [
+            new GlowFilter(0x00FF00, 1, 6, 6, 2, 1),
+            new DropShadowFilter(6, 45, 0x000000, 0.8, 4, 4, 1, 1)
+        ];
+        root.addChild(glowShadow);
+
+        // ===== 6. Blur + ColorMatrix =====
+        const blurColor = createTestShape();
+        blurColor.x = 160;
+        blurColor.y = 140;
+        blurColor.filters = [
+            new BlurFilter(4, 4, 1),
+            new ColorMatrixFilter([
+                0.5, 0, 0, 0, 0,
+                0, 1, 0, 0, 0,
+                0, 0, 0.5, 0, 0,
+                0, 0, 0, 1, 0
+            ])
+        ];
+        root.addChild(blurColor);
+
+        // ===== 7. Blur + Glow + DropShadow（3重）=====
+        const triple = createTestShape();
+        triple.x = 310;
+        triple.y = 140;
+        triple.filters = [
+            new BlurFilter(2, 2, 1),
+            new GlowFilter(0xFFFF00, 1, 6, 6, 2, 1),
+            new DropShadowFilter(4, 45, 0x000000, 0.8, 4, 4, 1, 1)
+        ];
+        root.addChild(triple);
+
+        // ===== 8. Bevel + GradientGlow =====
+        const bevelGGlow = createTestShape(0x888888);
+        bevelGGlow.x = 460;
+        bevelGGlow.y = 140;
+        bevelGGlow.filters = [
+            new BevelFilter(3, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner"),
+            new GradientGlowFilter(4, 45, [0xFF0000, 0xFFFF00], [1, 1], [0, 255], 6, 6, 1, 1, "outer")
+        ];
+        root.addChild(bevelGGlow);
+
+        // ===== 9. Glow(inner) + DropShadow =====
+        const innerGlowShadow = createTestShape(0x00FFFF);
+        innerGlowShadow.x = 30;
+        innerGlowShadow.y = 250;
+        innerGlowShadow.filters = [
+            new GlowFilter(0x000000, 1, 6, 6, 2, 1, true),
+            new DropShadowFilter(6, 45, 0x000000, 0.8, 4, 4, 1, 1)
+        ];
+        root.addChild(innerGlowShadow);
+
+        // ===== 10. DropShadow(inner) + Glow =====
+        const innerShadowGlow = createTestShape(0x00FFFF);
+        innerShadowGlow.x = 160;
+        innerShadowGlow.y = 250;
+        innerShadowGlow.filters = [
+            new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1, true),
+            new GlowFilter(0xFFFF00, 1, 8, 8, 2, 1)
+        ];
+        root.addChild(innerShadowGlow);
+
+        // ===== 11. Bevel(outer) + Glow =====
+        const outerBevelGlow = createTestShape(0x888888);
+        outerBevelGlow.x = 310;
+        outerBevelGlow.y = 250;
+        outerBevelGlow.filters = [
+            new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "outer"),
+            new GlowFilter(0x00FF00, 1, 6, 6, 2, 1)
+        ];
+        root.addChild(outerBevelGlow);
+
+        // ===== 12. Blur + Bevel(outer) =====
+        const blurOuterBevel = createTestShape(0x888888);
+        blurOuterBevel.x = 460;
+        blurOuterBevel.y = 250;
+        blurOuterBevel.filters = [
+            new BlurFilter(4, 4, 1),
+            new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "outer")
+        ];
+        root.addChild(blurOuterBevel);
+
+        // ===== 13. 円 + Blur + Glow =====
+        const circleBlurGlow = new Shape();
+        circleBlurGlow.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawCircle(40, 25, 25)
+            .endFill();
+        circleBlurGlow.x = 30;
+        circleBlurGlow.y = 370;
+        circleBlurGlow.filters = [
+            new BlurFilter(3, 3, 1),
+            new GlowFilter(0x00FFFF, 1, 8, 8, 2, 1)
+        ];
+        root.addChild(circleBlurGlow);
+
+        // ===== 14. Glow + Glow（同種フィルター2重）=====
+        const doubleGlow = createTestShape();
+        doubleGlow.x = 160;
+        doubleGlow.y = 370;
+        doubleGlow.filters = [
+            new GlowFilter(0xFFFF00, 1, 6, 6, 2, 1),
+            new GlowFilter(0x00FF00, 0.8, 12, 12, 1, 1)
+        ];
+        root.addChild(doubleGlow);
+
+        // ===== 15. DropShadow + DropShadow（同種2重）=====
+        const doubleShadow = createTestShape();
+        doubleShadow.x = 310;
+        doubleShadow.y = 370;
+        doubleShadow.filters = [
+            new DropShadowFilter(3, 45, 0x000000, 0.6, 3, 3, 1, 1),
+            new DropShadowFilter(8, 45, 0x000000, 0.3, 8, 8, 1, 1)
+        ];
+        root.addChild(doubleShadow);
+
+        // ===== 16. Bevel(inner) + Bevel(outer) =====
+        const innerOuterBevel = createTestShape(0x888888);
+        innerOuterBevel.x = 460;
+        innerOuterBevel.y = 370;
+        innerOuterBevel.filters = [
+            new BevelFilter(3, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner"),
+            new BevelFilter(3, 45, 0xFFFFFF, 0.6, 0x000000, 0.6, 4, 4, 1, 1, "outer")
+        ];
+        root.addChild(innerOuterBevel);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>
