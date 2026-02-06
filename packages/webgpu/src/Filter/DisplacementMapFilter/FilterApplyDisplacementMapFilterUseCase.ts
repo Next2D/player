@@ -58,12 +58,9 @@ export const execute = (
     const width = sourceAttachment.width;
     const height = sourceAttachment.height;
 
-    // 変換行列からスケールを取得
-    const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]) / devicePixelRatio;
-    const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]) / devicePixelRatio;
-
-    const baseWidth = width / xScale;
-    const baseHeight = height / yScale;
+    // WebGL版と同じ: baseWidth/baseHeightはビットマップサイズを使用
+    const baseWidth = bitmapWidth;
+    const baseHeight = bitmapHeight;
 
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
@@ -180,8 +177,9 @@ export const execute = (
     uniformData[3] = (baseHeight - bitmapHeight - mapPointY) / bitmapHeight;
 
     // scale
+    // WebGPU: Y-flip補正後のtexCoordはY方向がWebGLと逆なので、scale.yの符号を反転
     uniformData[4] = scaleX / baseWidth;
-    uniformData[5] = -scaleY / baseHeight;
+    uniformData[5] = scaleY / baseHeight;
 
     // padding
     uniformData[6] = 0;

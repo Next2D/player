@@ -29,7 +29,8 @@ import {
     DropShadowFilterFragment,
     GradientGlowFilterFragment,
     GradientBevelFilterFragment,
-    BevelFilterFragment
+    BevelFilterFragment,
+    BevelBaseFragment
 } from "./wgsl/fragment/EffectFragment";
 
 /**
@@ -422,6 +423,15 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     static getBevelFilterFragmentShader (): string
     {
         return BevelFilterFragment;
+    }
+
+    /**
+     * @description ベベルベース生成用フラグメントシェーダー
+     * @return {string}
+     */
+    static getBevelBaseFragmentShader (): string
+    {
+        return BevelBaseFragment;
     }
 
     /**
@@ -837,14 +847,20 @@ ${uniformsStruct}
 @group(0) @binding(3) var mapTexture: texture_2d<f32>;
 
 fn isInside(uv: vec2<f32>) -> f32 {
-    let s = step(vec2<f32>(0.0), uv) - step(vec2<f32>(1.0), uv);
+    // WebGL版と同じ: uv=1.0を範囲内として扱う
+    let s = step(vec2<f32>(0.0), uv) * step(uv, vec2<f32>(1.0));
     return s.x * s.y;
 }
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let st = input.texCoord * uniforms.uvToStScale - uniforms.uvToStOffset;
-    let mapColor = textureSample(mapTexture, textureSampler, st);
+    // WebGPU: Y-flip補正後のtexCoordはY=0が上、WebGLはY=0が下
+    // stはWebGL座標系(Y=0が下)に合わせて計算(isInsideやoffset計算用)
+    let stCoord = vec2<f32>(input.texCoord.x, 1.0 - input.texCoord.y);
+    let st = stCoord * uniforms.uvToStScale - uniforms.uvToStOffset;
+    // マップテクスチャサンプリング: WebGLはUNPACK_FLIP_Y=trueでY反転アップロード
+    // WebGPUのwriteTextureは反転なし → サンプリング時にY反転して補正
+    let mapColor = textureSample(mapTexture, textureSampler, vec2<f32>(st.x, 1.0 - st.y));
     let offset = vec2<f32>(${cx}, ${cy}) - 0.5;
     let uv = input.texCoord + offset * uniforms.scale;
     var sourceColor: vec4<f32>;

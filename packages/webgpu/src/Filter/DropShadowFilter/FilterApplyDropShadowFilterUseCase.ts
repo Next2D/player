@@ -97,7 +97,7 @@ export const execute = (
     const fractionX = (width - w) / 2;
     const fractionY = (height - h) / 2;
 
-    // テクスチャの位置を計算
+    // テクスチャの位置を計算（WebGL版と同じ）
     const baseTextureX = inner ? 0 : Math.max(0, offsetDiffX - shadowX) + fractionX;
     const baseTextureY = inner ? 0 : Math.max(0, offsetDiffY - shadowY) + fractionY;
     const blurTextureX = inner ? shadowX - blurOffsetX : (shadowX > 0 ? Math.max(0, shadowX - offsetDiffX) : 0) + fractionX;
@@ -133,27 +133,41 @@ export const execute = (
 
     // ユニフォームバッファを作成
     // color: vec4<f32> (16 bytes)
-    // offset: vec2<f32> (8 bytes)
+    // baseScale: vec2<f32> (8 bytes)
+    // baseOffset: vec2<f32> (8 bytes)
+    // blurScale: vec2<f32> (8 bytes)
+    // blurOffset: vec2<f32> (8 bytes)
     // strength: f32 (4 bytes)
     // inner: f32 (4 bytes)
     // knockout: f32 (4 bytes)
     // hideObject: f32 (4 bytes)
-    // _padding: vec2<f32> (8 bytes)
-    // Total: 48 bytes
+    // Total: 64 bytes
     const [r, g, b, a] = intToRGBA(color, alpha);
 
-    // テクスチャ座標でのオフセットを計算
-    const texOffsetX = (blurTextureX - baseTextureX) / width;
-    const texOffsetY = (blurTextureY - baseTextureY) / height;
+    // WebGL版と同じUV変換方式:
+    // uv = texCoord * scale - offset
+    // WebGPU: texCoord.y=0がトップ、テクスチャY=0がトップ（Y-flip補正済み）
+    // → offset_y = textureY / textureHeight（WebGLのY反転不要）
+    const baseScaleX = width / baseWidth;
+    const baseScaleY = height / baseHeight;
+    const baseOffsetUVX = baseTextureX / baseWidth;
+    const baseOffsetUVY = baseTextureY / baseHeight;
+
+    const blurScaleX = width / blurWidth;
+    const blurScaleY = height / blurHeight;
+    const blurOffsetUVX = blurTextureX / blurWidth;
+    const blurOffsetUVY = blurTextureY / blurHeight;
 
     const uniformData = new Float32Array([
         r, g, b, a,
-        texOffsetX, texOffsetY,
+        baseScaleX, baseScaleY,
+        baseOffsetUVX, baseOffsetUVY,
+        blurScaleX, blurScaleY,
+        blurOffsetUVX, blurOffsetUVY,
         strength,
         isInner ? 1.0 : 0.0,
         isKnockout ? 1.0 : 0.0,
-        isHideObject ? 1.0 : 0.0,
-        0.0, 0.0 // padding
+        isHideObject ? 1.0 : 0.0
     ]);
 
     const uniformBuffer = device.createBuffer({
@@ -162,67 +176,14 @@ export const execute = (
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-    // 元テクスチャを適切な位置にコピーした一時テクスチャを作成
-    const baseTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    // 元テクスチャをコピー（オフセット付き）
-    const baseX = Math.round(baseTextureX);
-    const baseY = Math.round(baseTextureY);
-    if (baseX >= 0 && baseY >= 0 &&
-        baseX + baseWidth <= width && baseY + baseHeight <= height) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": sourceAttachment.texture!.resource,
-                "origin": { "x": 0, "y": 0, "z": 0 }
-            },
-            {
-                "texture": baseTextureForComposite.texture!.resource,
-                "origin": { "x": baseX, "y": baseY, "z": 0 }
-            },
-            {
-                "width": baseWidth,
-                "height": baseHeight
-            }
-        );
-    }
-
-    // ブラーテクスチャを適切な位置にコピーした一時テクスチャを作成
-    const blurTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    const blurX2 = Math.round(blurTextureX);
-    const blurY2 = Math.round(blurTextureY);
-    const srcX = Math.max(0, -blurX2);
-    const srcY = Math.max(0, -blurY2);
-    const dstX = Math.max(0, blurX2);
-    const dstY = Math.max(0, blurY2);
-    const copyWidth = Math.min(blurWidth - srcX, width - dstX);
-    const copyHeight = Math.min(blurHeight - srcY, height - dstY);
-
-    if (copyWidth > 0 && copyHeight > 0) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": blurAttachment.texture!.resource,
-                "origin": { "x": srcX, "y": srcY, "z": 0 }
-            },
-            {
-                "texture": blurTextureForComposite.texture!.resource,
-                "origin": { "x": dstX, "y": dstY, "z": 0 }
-            },
-            {
-                "width": copyWidth,
-                "height": copyHeight
-            }
-        );
-    }
-
-    // バインドグループを作成
+    // バインドグループを作成（オリジナルテクスチャを直接使用）
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": [
             { "binding": 0, "resource": { "buffer": uniformBuffer } },
             { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": blurTextureForComposite.texture!.view },
-            { "binding": 3, "resource": baseTextureForComposite.texture!.view }
+            { "binding": 2, "resource": blurAttachment.texture!.view },
+            { "binding": 3, "resource": sourceAttachment.texture!.view }
         ]
     });
 
@@ -238,10 +199,7 @@ export const execute = (
     passEncoder.end();
 
     // クリーンアップ
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-    frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
-    frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);
 
     return destAttachment;
 };

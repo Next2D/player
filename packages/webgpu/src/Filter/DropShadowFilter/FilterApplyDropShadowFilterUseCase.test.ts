@@ -198,7 +198,8 @@ describe("FilterApplyDropShadowFilterUseCase", () =>
                 config
             );
 
-            expect(config.commandEncoder.copyTextureToTexture).toHaveBeenCalled();
+            // UV変換方式: レンダーパスで直接描画
+            expect(config.commandEncoder.beginRenderPass).toHaveBeenCalled();
         });
 
         it("should calculate shadow position based on angle 90", () =>
@@ -225,7 +226,7 @@ describe("FilterApplyDropShadowFilterUseCase", () =>
                 config
             );
 
-            expect(config.commandEncoder.copyTextureToTexture).toHaveBeenCalled();
+            expect(config.commandEncoder.beginRenderPass).toHaveBeenCalled();
         });
 
         it("should calculate shadow position based on angle 180", () =>
@@ -252,7 +253,7 @@ describe("FilterApplyDropShadowFilterUseCase", () =>
                 config
             );
 
-            expect(config.commandEncoder.copyTextureToTexture).toHaveBeenCalled();
+            expect(config.commandEncoder.beginRenderPass).toHaveBeenCalled();
         });
     });
 
@@ -437,8 +438,8 @@ describe("FilterApplyDropShadowFilterUseCase", () =>
                 config
             );
 
-            // Should release blur, baseTextureForComposite, and blurTextureForComposite
-            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(3);
+            // UV変換方式: blurAttachmentのみ解放（コンポジットテクスチャは不要）
+            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -468,7 +469,8 @@ describe("FilterApplyDropShadowFilterUseCase", () =>
                 config
             );
 
-            expect(config.commandEncoder.copyTextureToTexture).toHaveBeenCalled();
+            // UV変換方式: レンダーパスで直接描画
+            expect(config.commandEncoder.beginRenderPass).toHaveBeenCalled();
         });
     });
 });

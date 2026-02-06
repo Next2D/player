@@ -55,6 +55,7 @@ export class PipelineManager
         this.createBevelFilterPipeline(); // ベベルフィルター用
         this.createGradientGlowFilterPipeline(); // グラデーショングローフィルター用
         this.createGradientBevelFilterPipeline(); // グラデーションベベルフィルター用
+        this.createBevelBasePipeline(); // ベベルベース生成用
         this.createComplexBlendPipelines(); // 複雑なブレンドモード用
         this.createNodeClearPipeline(); // ノードクリア用
     }
@@ -3918,6 +3919,82 @@ export class PipelineManager
         });
 
         this.pipelines.set("gradient_bevel_filter", pipeline);
+    }
+
+    /**
+     * @description ベベルベース生成用パイプラインを作成
+     *              WebGL版と同じ: original * (1 - shifted.a) を1パスで計算
+     * @return {void}
+     */
+    private createBevelBasePipeline(): void
+    {
+        const bindGroupLayout = this.device.createBindGroupLayout({
+            "entries": [
+                {
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
+                },
+                {
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
+                },
+                {
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
+                }
+            ]
+        });
+
+        this.bindGroupLayouts.set("bevel_base", bindGroupLayout);
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            "bindGroupLayouts": [bindGroupLayout]
+        });
+
+        const vertexShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getBlurFilterVertexShader()
+        });
+
+        const fragmentShaderModule = this.device.createShaderModule({
+            "code": ShaderSource.getBevelBaseFragmentShader()
+        });
+
+        const pipeline = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "zero",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            }
+        });
+
+        this.pipelines.set("bevel_base", pipeline);
     }
 
     /**
