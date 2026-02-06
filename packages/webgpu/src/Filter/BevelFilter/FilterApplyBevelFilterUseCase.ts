@@ -99,8 +99,8 @@ export const execute = (
         // 「オフセット位置に描画」= 画面の(offset,offset)にソースの(0,0)を描画
         // = 画面位置Pに対して、ソース位置(P - offset)をサンプル
         // = uv = texCoord - offset（正のoffset）
-        const offsetX = (x * 2) / baseWidth;
-        const offsetY = (y * 2) / baseHeight;
+        const offsetX = x * 2 / baseWidth;
+        const offsetY = y * 2 / baseHeight;
 
         const eraseUniformData = new Float32Array([
             1.0, 1.0,         // scale
@@ -149,8 +149,6 @@ export const execute = (
 
     const blurWidth = blurAttachment.width;
     const blurHeight = blurAttachment.height;
-    const blurOffsetX = $offset.x;
-    const blurOffsetY = $offset.y;
 
     // 出力サイズを計算
     const absX = Math.abs(x);

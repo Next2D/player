@@ -13,7 +13,7 @@ import { execute as meshStrokeFillGenerateService } from "../service/MeshStrokeF
  * - color: r, g, b, a (4 floats)
  * - matrix row 0: a, b, 0 (3 floats)
  * - matrix row 1: c, d, 0 (3 floats)
- * - matrix row 2: tx, ty, 0 (3 floats)
+ * - matrix row 2: tx, ty, 1 (3 floats)
  *
  * @param  {IPath[]} vertices - パス頂点配列 [x, y, isCurve, ...]
  * @param  {number} thickness - 線の太さ（フル値、内部で/2される）

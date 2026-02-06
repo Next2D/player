@@ -4,7 +4,7 @@ import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
 import { execute as maskUnionMaskService } from "../../Mask/service/MaskUnionMaskService";
-import { $clipBounds, $clipLevels } from "../../Mask";
+import { $clipLevels } from "../../Mask";
 
 /**
  * @description マスク処理を実行
@@ -12,15 +12,15 @@ import { $clipBounds, $clipLevels } from "../../Mask";
  *              ビット単位のステンシル操作でネストされたマスクをサポート
  *              Execute clipping using stencil buffer (same as WebGL version)
  *
- * @param {GPURenderPassEncoder} renderPassEncoder
- * @param {BufferManager} bufferManager
- * @param {PipelineManager} pipelineManager
- * @param {IAttachmentObject} currentAttachment - 現在のアタッチメント
- * @param {IPath[]} pathVertices - パス頂点
- * @param {Float32Array} contextMatrix - コンテキストの変換行列
- * @param {Float32Array} fillStyle - 塗りつぶしスタイル [r, g, b, a]
- * @param {number} globalAlpha - グローバルアルファ値
- * @param {boolean} isMainAttachment - メインアタッチメントへの描画かどうか
+ * @param {GPURenderPassEncoder} render_pass_encoder
+ * @param {BufferManager} buffer_manager
+ * @param {PipelineManager} pipeline_manager
+ * @param {IAttachmentObject} current_attachment - 現在のアタッチメント
+ * @param {IPath[]} path_vertices - パス頂点
+ * @param {Float32Array} context_matrix - コンテキストの変換行列
+ * @param {Float32Array} fill_style - 塗りつぶしスタイル [r, g, b, a]
+ * @param {number} global_alpha - グローバルアルファ値
+ * @param {boolean} is_main_attachment - メインアタッチメントへの描画かどうか
  * @return {void}
  */
 export const execute = (
@@ -36,18 +36,6 @@ export const execute = (
 ): void => {
     // クリップ境界を取得
     const clipLevel = current_attachment.clipLevel;
-    const bounds = $clipBounds.get(clipLevel);
-    if (!bounds) {
-        return;
-    }
-
-    const xMin = bounds[0];
-    const yMin = bounds[1];
-    const xMax = bounds[2];
-    const yMax = bounds[3];
-
-    const width = Math.ceil(Math.abs(xMax - xMin));
-    const height = Math.ceil(Math.abs(yMax - yMin));
 
     // メッシュを生成
     const viewportWidth = current_attachment.width;

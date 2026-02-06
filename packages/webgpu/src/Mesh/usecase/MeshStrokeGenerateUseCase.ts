@@ -516,14 +516,12 @@ const generateRoundCap = (
     rectangles: IPath[]
 ): void => {
     // 始点のキャップ
+    // WebGL版と同じく隣接頂点を直接使用（制御点でもそのまま使用する）
+    // カーブの場合、制御点への方向が正しい接線方向となる
     const startX = vertices[0] as number;
     const startY = vertices[1] as number;
-    let nextIdx = 3;
-    while (nextIdx < vertices.length && vertices[nextIdx + 2] as boolean) {
-        nextIdx += 3;
-    }
-    const startNextX = vertices[nextIdx] as number;
-    const startNextY = vertices[nextIdx + 1] as number;
+    const startNextX = vertices[3] as number;
+    const startNextY = vertices[4] as number;
 
     const startAngle = Math.atan2(startY - startNextY, startX - startNextX);
     const startCapPath: IPath = [startX, startY, false];
@@ -539,14 +537,11 @@ const generateRoundCap = (
     rectangles.unshift(startCapPath);
 
     // 終点のキャップ
+    // WebGL版と同じく隣接頂点を直接使用（制御点でもそのまま使用する）
     const endX = vertices[vertices.length - 3] as number;
     const endY = vertices[vertices.length - 2] as number;
-    let prevIdx = vertices.length - 6;
-    while (prevIdx >= 0 && vertices[prevIdx + 2] as boolean) {
-        prevIdx -= 3;
-    }
-    const endPrevX = vertices[prevIdx] as number;
-    const endPrevY = vertices[prevIdx + 1] as number;
+    const endPrevX = vertices[vertices.length - 6] as number;
+    const endPrevY = vertices[vertices.length - 5] as number;
 
     const endAngle = Math.atan2(endY - endPrevY, endX - endPrevX);
     const endCapPath: IPath = [endX, endY, false];
@@ -570,14 +565,11 @@ const generateSquareCap = (
     rectangles: IPath[]
 ): void => {
     // 始点のキャップ
+    // WebGL版と同じく隣接頂点を直接使用（制御点でもそのまま使用する）
     const startX = vertices[0] as number;
     const startY = vertices[1] as number;
-    let nextIdx = 3;
-    while (nextIdx < vertices.length && vertices[nextIdx + 2] as boolean) {
-        nextIdx += 3;
-    }
-    const startNextX = vertices[nextIdx] as number;
-    const startNextY = vertices[nextIdx + 1] as number;
+    const startNextX = vertices[3] as number;
+    const startNextY = vertices[4] as number;
 
     const startDx = startX - startNextX;
     const startDy = startY - startNextY;
@@ -599,14 +591,11 @@ const generateSquareCap = (
     }
 
     // 終点のキャップ
+    // WebGL版と同じく隣接頂点を直接使用（制御点でもそのまま使用する）
     const endX = vertices[vertices.length - 3] as number;
     const endY = vertices[vertices.length - 2] as number;
-    let prevIdx = vertices.length - 6;
-    while (prevIdx >= 0 && vertices[prevIdx + 2] as boolean) {
-        prevIdx -= 3;
-    }
-    const endPrevX = vertices[prevIdx] as number;
-    const endPrevY = vertices[prevIdx + 1] as number;
+    const endPrevX = vertices[vertices.length - 6] as number;
+    const endPrevY = vertices[vertices.length - 5] as number;
 
     const endDx = endX - endPrevX;
     const endDy = endY - endPrevY;

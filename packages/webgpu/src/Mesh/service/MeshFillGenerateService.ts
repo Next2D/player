@@ -10,7 +10,7 @@ import type { IPath } from "../../interface/IPath";
  * - color: r, g, b, a (4 floats)
  * - matrix row 0: a, b, 0 (3 floats)
  * - matrix row 1: c, d, 0 (3 floats)
- * - matrix row 2: tx, ty, 0 (3 floats) - WebGL版と同じ
+ * - matrix row 2: tx, ty, 1 (3 floats) - アフィン変換行列の最終要素
  *
  * @param  {IPath} vertex
  * @param  {Float32Array} buffer
@@ -72,7 +72,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
             // 座標B
             buffer[position++] = vertex[idx] as number;
@@ -93,7 +93,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
             // 座標C
             buffer[position++] = vertex[idx + 3] as number;
@@ -114,7 +114,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
         } else if (vertex[idx + 5]) {
 
@@ -137,7 +137,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
             // 座標B
             buffer[position++] = vertex[idx] as number;
@@ -158,7 +158,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
             // 座標C
             buffer[position++] = vertex[idx + 6] as number;
@@ -179,7 +179,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
         } else {
 
@@ -202,7 +202,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
             // 座標B
             buffer[position++] = vertex[idx] as number;
@@ -223,7 +223,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
 
             // 座標C
             buffer[position++] = vertex[idx + 3] as number;
@@ -244,7 +244,7 @@ export const execute = (
             buffer[position++] = 0;
             buffer[position++] = tx;
             buffer[position++] = ty;
-            buffer[position++] = 0;
+            buffer[position++] = 1;
         }
 
         index += 3;

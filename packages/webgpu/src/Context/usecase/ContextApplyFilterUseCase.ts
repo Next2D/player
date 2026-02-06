@@ -446,6 +446,51 @@ export const execute = (
     // ノードからテクスチャを取得
     let filterAttachment = getTextureFromNode(node, config.commandEncoder, config.frameBufferManager);
 
+    // アトラスのY反転を補正
+    // WebGPUではアトラスに描画する際にY軸が反転して格納される:
+    // - Shape: FillVertexがndc.yを反転なしで使用するため、WebGPUのNDC→ピクセル変換でY反転
+    // - Bitmap/TextField: PositionedTextureVertexのtexCoord Y反転 + position.y反転
+    // どちらも同じ方向にY反転しているため、フィルタ処理前に全コンテンツを補正する
+    if (filterAttachment.texture) {
+        const flippedAttachment = config.frameBufferManager.createTemporaryAttachment(node.w, node.h);
+        const flipPipeline = config.pipelineManager.getPipeline("texture_copy_rgba8");
+        const flipBindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
+
+        if (flipPipeline && flipBindGroupLayout && flippedAttachment.texture) {
+            const sampler = config.textureManager.createSampler("filter_flip_sampler", false);
+
+            // scale=(1, -1), offset=(0, 1) で UV.y = texCoord.y * (-1) + 1 = 1 - texCoord.y
+            const uniformData = new Float32Array([1, -1, 0, 1]);
+            const uniformBuffer = config.device.createBuffer({
+                "size": 16,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+            config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+            const bindGroup = config.device.createBindGroup({
+                "layout": flipBindGroupLayout,
+                "entries": [
+                    { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                    { "binding": 1, "resource": sampler },
+                    { "binding": 2, "resource": filterAttachment.texture.view }
+                ]
+            });
+
+            const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+                flippedAttachment.texture.view, 0, 0, 0, 0, "clear"
+            );
+
+            const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
+            passEncoder.setPipeline(flipPipeline);
+            passEncoder.setBindGroup(0, bindGroup);
+            passEncoder.draw(6, 1, 0, 0);
+            passEncoder.end();
+
+            config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+            filterAttachment = flippedAttachment;
+        }
+    }
+
     const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
 
     // スケール・回転が適用されているかチェック（WebGL版と同じロジック）
@@ -483,8 +528,8 @@ export const execute = (
         const scaledAttachment = config.frameBufferManager.createTemporaryAttachment(width, height);
 
         // スケール変換用パイプラインを使用
-        // is_bitmap=true（Video/Bitmap）の場合はテクスチャ座標Y反転版を使用
-        const scalePipelineName = is_bitmap ? "texture_scale_blend" : "texture_scale";
+        // ビットマップ/TextFieldのY反転はフィルタ処理前に補正済みのため、常にtexture_scaleを使用
+        const scalePipelineName = "texture_scale";
         const scalePipeline = config.pipelineManager.getPipeline(scalePipelineName);
         const scaleBindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_scale");
 

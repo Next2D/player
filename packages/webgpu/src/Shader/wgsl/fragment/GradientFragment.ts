@@ -46,16 +46,36 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
             t = dot(ab, ap) / dotAB;
         }
     } else {
+        // WebGL版と同じ放射グラデーション計算
         let r = gradient.radius;
-        let focalX = gradient.focal;
-        let dx = p.x - focalX;
-        let dy = p.y;
-        let d = dx * dx + dy * dy;
-        if (d < 0.0001) {
-            t = 0.0;
+        let coord = p / r;  // 座標を正規化（単位円に変換）
+        let focalRatio = gradient.focal;
+
+        if (abs(focalRatio) < 0.001) {
+            // focal point無し: 単純な距離計算
+            t = length(coord);
         } else {
-            let sq = sqrt(d);
-            t = sq / r;
+            // focal point有り: WebGL版と同じ二次方程式による計算
+            let focal = vec2<f32>(focalRatio, 0.0);
+            let diff = coord - focal;
+            let lenDiff = length(diff);
+
+            if (lenDiff < 0.0001) {
+                t = 0.0;
+            } else {
+                let dir = diff / lenDiff;
+
+                // 二次方程式 ax^2 + bx + c = 0 を解いて単位円との交点を求める
+                let a_coef = dot(dir, dir);
+                let b_coef = 2.0 * dot(dir, focal);
+                let c_coef = dot(focal, focal) - 1.0;
+                let discriminant = b_coef * b_coef - 4.0 * a_coef * c_coef;
+                let x = (-b_coef + sqrt(max(discriminant, 0.0))) / (2.0 * a_coef);
+
+                // 焦点から現在位置までの距離 / 焦点から円周までの距離
+                let edgePoint = focal + dir * x;
+                t = distance(focal, coord) / distance(focal, edgePoint);
+            }
         }
     }
     t = applySpread(t, gradient.spread);
@@ -116,16 +136,36 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
             t = dot(ab, ap) / dotAB;
         }
     } else {
+        // WebGL版と同じ放射グラデーション計算
         let r = gradient.radius;
-        let focalX = gradient.focal;
-        let dx = p.x - focalX;
-        let dy = p.y;
-        let d = dx * dx + dy * dy;
-        if (d < 0.0001) {
-            t = 0.0;
+        let coord = p / r;  // 座標を正規化（単位円に変換）
+        let focalRatio = gradient.focal;
+
+        if (abs(focalRatio) < 0.001) {
+            // focal point無し: 単純な距離計算
+            t = length(coord);
         } else {
-            let sq = sqrt(d);
-            t = sq / r;
+            // focal point有り: WebGL版と同じ二次方程式による計算
+            let focal = vec2<f32>(focalRatio, 0.0);
+            let diff = coord - focal;
+            let lenDiff = length(diff);
+
+            if (lenDiff < 0.0001) {
+                t = 0.0;
+            } else {
+                let dir = diff / lenDiff;
+
+                // 二次方程式 ax^2 + bx + c = 0 を解いて単位円との交点を求める
+                let a_coef = dot(dir, dir);
+                let b_coef = 2.0 * dot(dir, focal);
+                let c_coef = dot(focal, focal) - 1.0;
+                let discriminant = b_coef * b_coef - 4.0 * a_coef * c_coef;
+                let x = (-b_coef + sqrt(max(discriminant, 0.0))) / (2.0 * a_coef);
+
+                // 焦点から現在位置までの距離 / 焦点から円周までの距離
+                let edgePoint = focal + dir * x;
+                t = distance(focal, coord) / distance(focal, edgePoint);
+            }
         }
     }
     t = applySpread(t, gradient.spread);
@@ -182,16 +222,36 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
             t = dot(ab, ap) / dotAB;
         }
     } else {
+        // WebGL版と同じ放射グラデーション計算
         let r = gradient.radius;
-        let focalX = gradient.focal;
-        let dx = p.x - focalX;
-        let dy = p.y;
-        let d = dx * dx + dy * dy;
-        if (d < 0.0001) {
-            t = 0.0;
+        let coord = p / r;  // 座標を正規化（単位円に変換）
+        let focalRatio = gradient.focal;
+
+        if (abs(focalRatio) < 0.001) {
+            // focal point無し: 単純な距離計算
+            t = length(coord);
         } else {
-            let sq = sqrt(d);
-            t = sq / r;
+            // focal point有り: WebGL版と同じ二次方程式による計算
+            let focal = vec2<f32>(focalRatio, 0.0);
+            let diff = coord - focal;
+            let lenDiff = length(diff);
+
+            if (lenDiff < 0.0001) {
+                t = 0.0;
+            } else {
+                let dir = diff / lenDiff;
+
+                // 二次方程式 ax^2 + bx + c = 0 を解いて単位円との交点を求める
+                let a_coef = dot(dir, dir);
+                let b_coef = 2.0 * dot(dir, focal);
+                let c_coef = dot(focal, focal) - 1.0;
+                let discriminant = b_coef * b_coef - 4.0 * a_coef * c_coef;
+                let x = (-b_coef + sqrt(max(discriminant, 0.0))) / (2.0 * a_coef);
+
+                // 焦点から現在位置までの距離 / 焦点から円周までの距離
+                let edgePoint = focal + dir * x;
+                t = distance(focal, coord) / distance(focal, edgePoint);
+            }
         }
     }
     t = applySpread(t, gradient.spread);

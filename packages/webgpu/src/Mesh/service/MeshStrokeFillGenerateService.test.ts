@@ -140,7 +140,7 @@ describe("MeshStrokeFillGenerateService", () =>
             // Matrix row 2 at indices 14, 15, 16
             expect(buffer[14]).toBeCloseTo(10, 5);  // tx
             expect(buffer[15]).toBeCloseTo(20, 5);  // ty
-            expect(buffer[16]).toBeCloseTo(0, 5);   // padding
+            expect(buffer[16]).toBeCloseTo(1, 5);   // 1 (for affine transform)
         });
     });
 

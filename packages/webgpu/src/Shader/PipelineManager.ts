@@ -1821,6 +1821,84 @@ export class PipelineManager
         this.pipelines.set("gradient_fill_no_stencil", pipelineRGBA); // 明示的にステンシルなし
         this.pipelines.set("gradient_fill_bgra", pipelineBGRA);
 
+        // === グラデーションストローク用パイプライン（ステンシル互換） ===
+        // ストロークのメッシュは既に形状を表しているためステンシルテストは不要だが、
+        // beginNodeRenderingが作成するステンシル付きレンダーパスとの互換性のため
+        // depthStencilを "always" で設定する
+        const strokeStencilState: GPUDepthStencilState = {
+            "format": "stencil8",
+            "stencilFront": {
+                "compare": "always",
+                "failOp": "keep",
+                "depthFailOp": "keep",
+                "passOp": "keep"
+            },
+            "stencilBack": {
+                "compare": "always",
+                "failOp": "keep",
+                "depthFailOp": "keep",
+                "passOp": "keep"
+            },
+            "stencilReadMask": 0x00,
+            "stencilWriteMask": 0x00
+        };
+
+        // アトラス用グラデーションストローク（rgba8unorm + ステンシル互換）
+        const pipelineGradientStrokeAtlas = this.device.createRenderPipeline({
+            "label": "gradient_stroke_atlas_pipeline",
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": strokeStencilState,
+            "multisample": {
+                "count": this.sampleCount
+            }
+        });
+        this.pipelines.set("gradient_stroke_atlas", pipelineGradientStrokeAtlas);
+
+        // メインキャンバス用グラデーションストローク（bgra8unorm + ステンシル互換 + Y反転）
+        const pipelineGradientStrokeBGRA = this.device.createRenderPipeline({
+            "label": "gradient_stroke_bgra_pipeline",
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": strokeStencilState,
+            "multisample": {
+                "count": this.sampleCount
+            }
+        });
+        this.pipelines.set("gradient_stroke_bgra", pipelineGradientStrokeBGRA);
+
         // sampleCount: 1のbgra8unormパイプライン（MSAAなしのメインキャンバス用）
         const pipelineBGRA_noMSAA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
@@ -2153,6 +2231,84 @@ export class PipelineManager
 
         this.pipelines.set("bitmap_fill", pipelineRGBA);
         this.pipelines.set("bitmap_fill_bgra", pipelineBGRA);
+
+        // === ビットマップストローク用パイプライン（ステンシル互換） ===
+        // ストロークのメッシュは既に形状を表しているためステンシルテストは不要だが、
+        // beginNodeRenderingが作成するステンシル付きレンダーパスとの互換性のため
+        // depthStencilを "always" で設定する
+        const bitmapStrokeStencilState: GPUDepthStencilState = {
+            "format": "stencil8",
+            "stencilFront": {
+                "compare": "always",
+                "failOp": "keep",
+                "depthFailOp": "keep",
+                "passOp": "keep"
+            },
+            "stencilBack": {
+                "compare": "always",
+                "failOp": "keep",
+                "depthFailOp": "keep",
+                "passOp": "keep"
+            },
+            "stencilReadMask": 0x00,
+            "stencilWriteMask": 0x00
+        };
+
+        // アトラス用ビットマップストローク（rgba8unorm + ステンシル互換）
+        const pipelineBitmapStrokeAtlas = this.device.createRenderPipeline({
+            "label": "bitmap_stroke_atlas_pipeline",
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": blendState
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": bitmapStrokeStencilState,
+            "multisample": {
+                "count": this.sampleCount
+            }
+        });
+        this.pipelines.set("bitmap_stroke_atlas", pipelineBitmapStrokeAtlas);
+
+        // メインキャンバス用ビットマップストローク（bgra8unorm + ステンシル互換 + Y反転）
+        const pipelineBitmapStrokeBGRA = this.device.createRenderPipeline({
+            "label": "bitmap_stroke_bgra_pipeline",
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModuleMain,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout]
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": this.format,
+                    "blend": blendState
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            },
+            "depthStencil": bitmapStrokeStencilState,
+            "multisample": {
+                "count": this.sampleCount
+            }
+        });
+        this.pipelines.set("bitmap_stroke_bgra", pipelineBitmapStrokeBGRA);
 
         // === アトラスのステンシル付きレンダーパス用（2パス処理のPass 2用） ===
         // NOT_EQUAL 0テストでビットマップを描画し、ステンシルをクリア

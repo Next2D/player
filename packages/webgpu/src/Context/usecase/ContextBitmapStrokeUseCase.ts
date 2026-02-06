@@ -25,6 +25,7 @@ import { execute as contextComputeBitmapMatrixService } from "../service/Context
  * @param {number} viewportWidth
  * @param {number} viewportHeight
  * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
+ * @param {boolean} useStencilPipeline - ステンシル互換パイプラインを使用するかどうか
  * @return {GPUTexture | null} - ビットマップテクスチャ（フレーム終了時に解放が必要）
  */
 export const execute = (
@@ -44,13 +45,16 @@ export const execute = (
     smooth: boolean,
     viewport_width: number,
     viewport_height: number,
-    use_atlas_target: boolean
+    use_atlas_target: boolean,
+    use_stencil_pipeline: boolean
 ): GPUTexture | null => {
-    // 色（ビットマップ描画ではアルファ乗算用に使用）
-    const red = stroke_style[0];
-    const green = stroke_style[1];
-    const blue = stroke_style[2];
-    const alpha = stroke_style[3];
+    // ビットマップ描画では色は白（1, 1, 1, alpha）を使用
+    // ビットマップの色はテクスチャから取得され、頂点色で乗算される
+    // そのため頂点色は白にして、アルファのみstroke_styleから使用
+    const red = 1;
+    const green = 1;
+    const blue = 1;
+    const alpha = stroke_style[3] > 0 ? stroke_style[3] : 1;
 
     // 行列を取得
     const a  = context_matrix[0];
@@ -91,26 +95,26 @@ export const execute = (
         { width, height }
     );
 
-    // ビットマップ変換行列を計算（逆行列）
-    const computedBitmapMatrix = contextComputeBitmapMatrixService(bitmap_matrix);
+    // ビットマップ変換行列を計算（コンテキスト行列と合成して逆行列）
+    const computedBitmapMatrix = contextComputeBitmapMatrixService(bitmap_matrix, context_matrix);
 
     // Uniformバッファを作成
     const uniformData = new Float32Array(16);
     // mat3x3 (WGSL column-major: 各列がvec4にパディング)
-    // computedBitmapMatrixは行優先で格納されているため、列優先に変換
-    // Row-major: [row0: a,b,0] [row1: c,d,0] [row2: tx,ty,1]
-    // Column-major: [col0: a,c,tx] [col1: b,d,ty] [col2: 0,0,1]
-    uniformData[0] = computedBitmapMatrix[0];  // column 0, row 0 (a)
-    uniformData[1] = computedBitmapMatrix[3];  // column 0, row 1 (c)
-    uniformData[2] = computedBitmapMatrix[6];  // column 0, row 2 (tx)
+    // 列構成: col0=(a,c,0), col1=(b,d,0), col2=(tx,ty,1)
+    // 変換: x' = a*x + b*y + tx, y' = c*x + d*y + ty
+    // computedBitmapMatrixは列優先 [a, c, 0, b, d, 0, tx, ty, 1] 形式
+    uniformData[0] = computedBitmapMatrix[0];  // col0.x = a
+    uniformData[1] = computedBitmapMatrix[1];  // col0.y = c
+    uniformData[2] = computedBitmapMatrix[2];  // col0.z = 0
     uniformData[3] = 0; // padding
-    uniformData[4] = computedBitmapMatrix[1];  // column 1, row 0 (b)
-    uniformData[5] = computedBitmapMatrix[4];  // column 1, row 1 (d)
-    uniformData[6] = computedBitmapMatrix[7];  // column 1, row 2 (ty)
+    uniformData[4] = computedBitmapMatrix[3];  // col1.x = b
+    uniformData[5] = computedBitmapMatrix[4];  // col1.y = d
+    uniformData[6] = computedBitmapMatrix[5];  // col1.z = 0
     uniformData[7] = 0; // padding
-    uniformData[8] = computedBitmapMatrix[2];  // column 2, row 0 (0)
-    uniformData[9] = computedBitmapMatrix[5];  // column 2, row 1 (0)
-    uniformData[10] = computedBitmapMatrix[8]; // column 2, row 2 (1)
+    uniformData[8] = computedBitmapMatrix[6];  // col2.x = tx
+    uniformData[9] = computedBitmapMatrix[7];  // col2.y = ty
+    uniformData[10] = computedBitmapMatrix[8]; // col2.z = 1
     uniformData[11] = 0; // padding
     // ビットマップパラメータ
     uniformData[12] = width;
@@ -146,8 +150,13 @@ export const execute = (
         ]
     });
 
-    // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-    const pipelineName = use_atlas_target ? "bitmap_fill" : "bitmap_fill_bgra";
+    // パイプラインを取得
+    // ストロークのメッシュは各セグメントが独立した凸多角形のため、
+    // フィルのような2パスステンシル描画は不要で、直接描画で正しく描画される。
+    // ステンシル付きレンダーパスの場合はステンシル互換パイプライン（compare: always）を使用する。
+    const pipelineName = use_stencil_pipeline
+        ? (use_atlas_target ? "bitmap_stroke_atlas" : "bitmap_stroke_bgra")
+        : (use_atlas_target ? "bitmap_fill" : "bitmap_fill_bgra");
     const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);

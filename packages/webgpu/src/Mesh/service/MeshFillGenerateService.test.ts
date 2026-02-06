@@ -113,10 +113,10 @@ describe("MeshFillGenerateService", () =>
             expect(buffer[11]).toBeCloseTo(0.3, 5); // c
             expect(buffer[12]).toBeCloseTo(3, 5);   // d
             expect(buffer[13]).toBeCloseTo(0, 5);   // 0
-            // Row 2: tx, ty, 0
+            // Row 2: tx, ty, 1
             expect(buffer[14]).toBeCloseTo(100, 5); // tx
             expect(buffer[15]).toBeCloseTo(200, 5); // ty
-            expect(buffer[16]).toBeCloseTo(0, 5);   // 0
+            expect(buffer[16]).toBeCloseTo(1, 5);   // 1 (for affine transform)
         });
     });
 

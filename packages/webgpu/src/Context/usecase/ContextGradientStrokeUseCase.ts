@@ -26,6 +26,7 @@ import { execute as contextComputeGradientMatrixService } from "../service/Conte
  * @param {number} viewportWidth
  * @param {number} viewportHeight
  * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
+ * @param {boolean} useStencilPipeline - ステンシル互換パイプラインを使用するかどうか
  * @return {GPUTexture | null} - LUTテクスチャ（フレーム終了時に解放が必要）
  */
 export const execute = (
@@ -45,13 +46,16 @@ export const execute = (
     focal: number,
     viewport_width: number,
     viewport_height: number,
-    use_atlas_target: boolean
+    use_atlas_target: boolean,
+    use_stencil_pipeline: boolean
 ): GPUTexture | null => {
-    // 色（グラデーション描画ではアルファ乗算用に使用）
-    const red = stroke_style[0];
-    const green = stroke_style[1];
-    const blue = stroke_style[2];
-    const alpha = stroke_style[3];
+    // グラデーション描画では色は白（1, 1, 1, alpha）を使用
+    // グラデーションの色はLUTテクスチャから取得され、頂点色で乗算される
+    // そのため頂点色は白にして、アルファのみstroke_styleから使用
+    const red = 1;
+    const green = 1;
+    const blue = 1;
+    const alpha = stroke_style[3] > 0 ? stroke_style[3] : 1;
 
     // 行列を取得
     const a  = context_matrix[0];
@@ -90,10 +94,11 @@ export const execute = (
     });
 
     // LUTデータをテクスチャに転送
+    // Note: Use lutData directly instead of lutData.buffer to avoid potential issues
     device.queue.writeTexture(
         { "texture": lutTexture },
-        lutData.buffer,
-        { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1, "offset": lutData.byteOffset },
+        lutData,
+        { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1 },
         { "width": lutResolution, "height": 1 }
     );
 
@@ -111,20 +116,23 @@ export const execute = (
     // 合計: 80 bytes
     const uniformData = new Float32Array(20);
     // mat3x3 (WGSL column-major: 各列がvec4にパディング)
-    // inverseMatrixは行優先で格納されているため、列優先に変換
-    // Row-major: [row0: a,b,0] [row1: c,d,0] [row2: tx,ty,1]
-    // Column-major: [col0: a,c,tx] [col1: b,d,ty] [col2: 0,0,1]
+    // inverseMatrixは行優先で格納されている: [a,b,0, c,d,0, tx,ty,1]
+    // WGSL mat3x3 * vec3(x,y,1) で正しいaffine変換を行うための列優先形式:
+    // col0: [a, c, 0]
+    // col1: [b, d, 0]
+    // col2: [tx, ty, 1]
+    // 結果: x' = a*x + b*y + tx, y' = c*x + d*y + ty
     uniformData[0] = gradientData.inverseMatrix[0];  // column 0, row 0 (a)
     uniformData[1] = gradientData.inverseMatrix[3];  // column 0, row 1 (c)
-    uniformData[2] = gradientData.inverseMatrix[6];  // column 0, row 2 (tx)
+    uniformData[2] = 0;                              // column 0, row 2 (0)
     uniformData[3] = 0; // padding
     uniformData[4] = gradientData.inverseMatrix[1];  // column 1, row 0 (b)
     uniformData[5] = gradientData.inverseMatrix[4];  // column 1, row 1 (d)
-    uniformData[6] = gradientData.inverseMatrix[7];  // column 1, row 2 (ty)
+    uniformData[6] = 0;                              // column 1, row 2 (0)
     uniformData[7] = 0; // padding
-    uniformData[8] = gradientData.inverseMatrix[2];  // column 2, row 0 (0)
-    uniformData[9] = gradientData.inverseMatrix[5];  // column 2, row 1 (0)
-    uniformData[10] = gradientData.inverseMatrix[8]; // column 2, row 2 (1)
+    uniformData[8] = gradientData.inverseMatrix[6];  // column 2, row 0 (tx)
+    uniformData[9] = gradientData.inverseMatrix[7];  // column 2, row 1 (ty)
+    uniformData[10] = 1;                             // column 2, row 2 (1)
     uniformData[11] = 0; // padding
     // グラデーションパラメータ
     uniformData[12] = type; // gradientType
@@ -173,8 +181,12 @@ export const execute = (
         ]
     });
 
-    // パイプラインを取得（アトラス用かキャンバス用かで切り替え）
-    const pipelineName = use_atlas_target ? "gradient_fill" : "gradient_fill_bgra";
+    // ストロークのメッシュは各セグメントが独立した凸多角形のため、
+    // フィルのような2パスステンシル描画は不要で、直接描画で正しく描画される。
+    // ステンシル付きレンダーパスの場合はステンシル互換パイプライン（compare: always）を使用する。
+    const pipelineName = use_stencil_pipeline
+        ? (use_atlas_target ? "gradient_stroke_atlas" : "gradient_stroke_bgra")
+        : (use_atlas_target ? "gradient_fill" : "gradient_fill_bgra");
     const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
@@ -182,7 +194,6 @@ export const execute = (
         return null;
     }
 
-    // 描画
     render_pass_encoder.setPipeline(pipeline);
     render_pass_encoder.setVertexBuffer(0, vertexBuffer);
     render_pass_encoder.setBindGroup(0, bindGroup);
