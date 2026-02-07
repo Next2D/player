@@ -1144,7 +1144,7 @@ export class Context
      *              End the container layer and composite the result back to the original main
      *
      * @param  {IBlendMode} blend_mode
-     * @param  {Float32Array | null} matrix
+     * @param  {Float32Array} matrix
      * @param  {Float32Array | null} color_transform
      * @param  {boolean} use_filter
      * @param  {Float32Array | null} filter_bounds
@@ -1157,7 +1157,7 @@ export class Context
      */
     containerEndLayer (
         blend_mode: IBlendMode,
-        matrix: Float32Array | null,
+        matrix: Float32Array,
         color_transform: Float32Array | null,
         use_filter: boolean,
         filter_bounds: Float32Array | null,

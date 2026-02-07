@@ -13,7 +13,7 @@ import {
  * @type {boolean}
  * @private
  */
-const useWebGPU: boolean = true;
+const useWebGPU: boolean = false;
 
 /**
  * @description OffscreenCanvasからWebGL2またはWebGPUのコンテキストを取得
