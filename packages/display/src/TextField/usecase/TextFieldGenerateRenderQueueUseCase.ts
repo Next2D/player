@@ -107,7 +107,6 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-            $poolBoundsArray(bounds);
             renderQueue.push(0);
             return;
 
@@ -127,7 +126,6 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        $poolBoundsArray(bounds);
         renderQueue.push(0);
         return;
     }
