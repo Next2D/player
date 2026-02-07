@@ -24,7 +24,10 @@ vi.mock("./BufferManager/service/BufferManagerCreateRectVerticesService", () => 
 vi.mock("./BufferManager/usecase/BufferManagerAcquireVertexBufferUseCase", () => ({
     "execute": vi.fn((device, pool, requiredSize, data) => {
         const buffer = { "size": requiredSize, "destroy": vi.fn(), "label": "pooledVertex" };
-        pool.push({ buffer, "size": requiredSize });
+        if (!pool.has(requiredSize)) {
+            pool.set(requiredSize, []);
+        }
+        pool.get(requiredSize).push(buffer);
         return buffer;
     })
 }));
@@ -32,7 +35,10 @@ vi.mock("./BufferManager/usecase/BufferManagerAcquireVertexBufferUseCase", () =>
 vi.mock("./BufferManager/usecase/BufferManagerAcquireUniformBufferUseCase", () => ({
     "execute": vi.fn((device, pool, requiredSize) => {
         const buffer = { "size": requiredSize, "destroy": vi.fn(), "label": "pooledUniform" };
-        pool.push({ buffer, "size": requiredSize });
+        if (!pool.has(requiredSize)) {
+            pool.set(requiredSize, []);
+        }
+        pool.get(requiredSize).push(buffer);
         return buffer;
     })
 }));

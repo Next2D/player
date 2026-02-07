@@ -844,14 +844,14 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@fragment");
         });
 
-        it("should generate different shaders for different blend modes", () =>
+        it("should return unified shader for all blend modes", () =>
         {
             const multiply = ShaderSource.getComplexBlendFragmentShader("multiply");
             const screen = ShaderSource.getComplexBlendFragmentShader("screen");
             const overlay = ShaderSource.getComplexBlendFragmentShader("overlay");
 
-            expect(multiply).not.toBe(screen);
-            expect(multiply).not.toBe(overlay);
+            expect(multiply).toBe(screen);
+            expect(multiply).toBe(overlay);
         });
 
         it("should support multiply blend mode", () =>

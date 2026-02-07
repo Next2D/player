@@ -30,9 +30,19 @@ vi.mock("../../Mask", () => ({
     "$getMaskStencilReference": vi.fn(() => 0)
 }));
 
+vi.mock("../../AtlasManager", () => ({
+    "$getAtlasAttachmentObject": vi.fn(() => ({
+        "texture": {
+            "resource": { "label": "atlasTexture" },
+            "view": { "label": "atlasTextureView" }
+        }
+    }))
+}));
+
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
 import { $getCurrentBlendMode } from "../../Blend";
 import { $isMaskTestEnabled } from "../../Mask";
+import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
 describe("ContextDrawArraysInstancedUseCase", () =>
 {
@@ -89,7 +99,8 @@ describe("ContextDrawArraysInstancedUseCase", () =>
         return {
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
-            "createRectVertices": vi.fn(() => new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]))
+            "createRectVertices": vi.fn(() => new Float32Array([0, 0, 1, 0, 1, 1, 0, 1])),
+            "getUnitRectBuffer": vi.fn(() => ({ "label": "mockUnitRectBuffer" }))
         } as unknown as BufferManager;
     };
 
@@ -109,7 +120,9 @@ describe("ContextDrawArraysInstancedUseCase", () =>
 
     const createMockTextureManager = () =>
     {
-        return {} as unknown as TextureManager;
+        return {
+            "createSampler": vi.fn(() => ({ "label": "mockSampler" }))
+        } as unknown as TextureManager;
     };
 
     const createMockPipelineManager = (hasPipeline: boolean = true, hasLayout: boolean = true) =>
@@ -277,7 +290,7 @@ describe("ContextDrawArraysInstancedUseCase", () =>
 
     describe("atlas attachment handling", () =>
     {
-        it("should request atlas attachment", () =>
+        it("should use atlas attachment from AtlasManager", () =>
         {
             const device = createMockDevice();
             const commandEncoder = createMockCommandEncoder();
@@ -298,11 +311,16 @@ describe("ContextDrawArraysInstancedUseCase", () =>
                 pipelineManager
             );
 
-            expect(frameBufferManager.getAttachment).toHaveBeenCalledWith("atlas");
+            // AtlasManagerから取得するため、frameBufferManager.getAttachmentは呼ばれない
+            expect($getAtlasAttachmentObject).toHaveBeenCalled();
+            expect(commandEncoder._mockPassEncoder.draw).toHaveBeenCalled();
         });
 
         it("should return null when atlas attachment not found", () =>
         {
+            // AtlasManagerとFrameBufferManager両方からnullを返す
+            ($getAtlasAttachmentObject as ReturnType<typeof vi.fn>).mockReturnValueOnce(null);
+
             const device = createMockDevice();
             const commandEncoder = createMockCommandEncoder();
             const attachment = createMockAttachment();

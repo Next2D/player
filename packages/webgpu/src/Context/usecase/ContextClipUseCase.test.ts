@@ -18,14 +18,10 @@ vi.mock("../../Mask/service/MaskUnionMaskService", () => ({
 }));
 
 vi.mock("../../Mask", () => ({
-    "$clipBounds": new Map([
-        [1, [0, 0, 100, 100]],
-        [2, [50, 50, 200, 200]]
-    ]),
     "$clipLevels": new Map([[1, 1], [2, 2]])
 }));
 
-import { $clipBounds, $clipLevels } from "../../Mask";
+import { $clipLevels } from "../../Mask";
 
 describe("ContextClipUseCase", () =>
 {
@@ -77,9 +73,6 @@ describe("ContextClipUseCase", () =>
         vi.clearAllMocks();
         vi.spyOn(console, "error").mockImplementation(() => {});
         // Reset mocked Maps to initial state
-        ($clipBounds as Map<number, number[]>).clear();
-        ($clipBounds as Map<number, number[]>).set(1, [0, 0, 100, 100]);
-        ($clipBounds as Map<number, number[]>).set(2, [50, 50, 200, 200]);
         ($clipLevels as Map<number, number>).clear();
         ($clipLevels as Map<number, number>).set(1, 1);
         ($clipLevels as Map<number, number>).set(2, 2);
@@ -87,7 +80,7 @@ describe("ContextClipUseCase", () =>
 
     describe("early exit conditions", () =>
     {
-        it("should return early when clip bounds not found", () =>
+        it("should proceed with unknown clip level using fallback", () =>
         {
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
@@ -107,7 +100,8 @@ describe("ContextClipUseCase", () =>
                 false
             );
 
-            expect(renderPassEncoder.draw).not.toHaveBeenCalled();
+            // Source no longer checks $clipBounds, uses clipLevel as fallback
+            expect(renderPassEncoder.draw).toHaveBeenCalled();
         });
 
         it("should return early when path vertices is empty", () =>
@@ -242,7 +236,7 @@ describe("ContextClipUseCase", () =>
         it("should clamp level to maximum 8 for main attachment", () =>
         {
             // Set up a high level
-            ($clipBounds as Map<number, number[]>).set(10, [0, 0, 100, 100]);
+            ($clipLevels as Map<number, number>).set(10, 10);
 
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();

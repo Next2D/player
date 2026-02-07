@@ -14,7 +14,7 @@ const GPUBufferUsage = {
 (globalThis as any).GPUBufferUsage = GPUBufferUsage;
 
 // Mock Filter offset
-vi.mock("../../Filter", () => ({
+vi.mock("../../Filter/FilterOffset", () => ({
     "$offset": { "x": 0, "y": 0 }
 }));
 
@@ -23,6 +23,16 @@ vi.mock("../../WebGPUUtil", () => ({
     "WebGPUUtil": {
         "getDevicePixelRatio": vi.fn(() => 1)
     }
+}));
+
+// Mock AtlasManager
+vi.mock("../../AtlasManager", () => ({
+    "$getAtlasAttachmentObject": vi.fn(() => null)
+}));
+
+// Mock BlendApplyComplexBlendUseCase
+vi.mock("../../Blend/usecase/BlendApplyComplexBlendUseCase", () => ({
+    "execute": vi.fn((attachment) => attachment)
 }));
 
 // Mock all filter usecases
@@ -164,7 +174,9 @@ describe("ContextApplyFilterUseCase", () =>
 
     const createMockBufferManager = () =>
     {
-        return {} as unknown as BufferManager;
+        return {
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
+        } as unknown as BufferManager;
     };
 
     beforeEach(() =>
@@ -188,6 +200,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -199,6 +212,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -225,6 +239,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -242,6 +257,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -268,6 +284,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -280,6 +297,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -306,6 +324,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -318,6 +337,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -344,6 +364,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -356,6 +377,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -385,6 +407,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -393,6 +416,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -419,6 +443,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -427,6 +452,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -464,6 +490,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -472,6 +499,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -501,6 +529,7 @@ describe("ContextApplyFilterUseCase", () =>
             const config = {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -509,6 +538,7 @@ describe("ContextApplyFilterUseCase", () =>
             execute(
                 node,
                 100, 80,
+                false,
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]),
                 "normal",
@@ -519,7 +549,7 @@ describe("ContextApplyFilterUseCase", () =>
                 bufferManager
             );
 
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("texture_copy_bgra");
+            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("filter_output");
             expect(commandEncoder._mockPassEncoder.draw).toHaveBeenCalled();
         });
     });

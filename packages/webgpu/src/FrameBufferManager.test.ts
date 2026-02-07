@@ -2,6 +2,35 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { FrameBufferManager } from "./FrameBufferManager";
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 
+// Mock GPUTextureUsage
+const GPUTextureUsage = {
+    RENDER_ATTACHMENT: 0x10,
+    TEXTURE_BINDING: 0x04,
+    COPY_SRC: 0x01,
+    COPY_DST: 0x08
+};
+(globalThis as any).GPUTextureUsage = GPUTextureUsage;
+
+// Mock TexturePool
+const mockTexturePoolAcquire = vi.fn((w: number, h: number) => ({
+    "createView": vi.fn(() => ({})),
+    "destroy": vi.fn(),
+    "width": w,
+    "height": h
+}));
+const mockTexturePoolRelease = vi.fn();
+const mockTexturePoolBeginFrame = vi.fn();
+const mockTexturePoolDispose = vi.fn();
+
+vi.mock("./TexturePool", () => ({
+    "TexturePool": class {
+        acquire = mockTexturePoolAcquire;
+        release = mockTexturePoolRelease;
+        beginFrame = mockTexturePoolBeginFrame;
+        dispose = mockTexturePoolDispose;
+    }
+}));
+
 // Mock usecase and service modules
 vi.mock("./FrameBufferManager/usecase/FrameBufferManagerCreateAttachmentUseCase", () => ({
     "execute": vi.fn((device, format, attachments, name, width, height, msaa, mask, idCounter) => {
@@ -375,7 +404,7 @@ describe("FrameBufferManager", () =>
 
     describe("flushPendingReleases", () =>
     {
-        it("should destroy pending attachments", () =>
+        it("should release pending attachments to texture pool", () =>
         {
             const device = createMockDevice();
             const manager = new FrameBufferManager(device, "bgra8unorm");
@@ -384,7 +413,7 @@ describe("FrameBufferManager", () =>
             manager.releaseTemporaryAttachment(attachment);
             manager.flushPendingReleases();
 
-            expect(attachment.texture!.resource.destroy).toHaveBeenCalled();
+            expect(mockTexturePoolRelease).toHaveBeenCalledWith(attachment.texture!.resource);
         });
 
         it("should clear pending releases after flush", () =>
@@ -396,8 +425,10 @@ describe("FrameBufferManager", () =>
             manager.releaseTemporaryAttachment(attachment);
             manager.flushPendingReleases();
 
-            // Second flush should not throw or re-destroy
+            const releaseCountBefore = mockTexturePoolRelease.mock.calls.length;
+            // Second flush should not throw or re-release
             expect(() => manager.flushPendingReleases()).not.toThrow();
+            expect(mockTexturePoolRelease.mock.calls.length).toBe(releaseCountBefore);
         });
     });
 

@@ -193,8 +193,8 @@ export const execute = (
     // フィルのような2パスステンシル描画は不要で、直接描画で正しく描画される。
     // ステンシル付きレンダーパスの場合はステンシル互換パイプライン（compare: always）を使用する。
     const pipelineName = use_stencil_pipeline
-        ? (use_atlas_target ? "gradient_stroke_atlas" : "gradient_stroke_bgra")
-        : (use_atlas_target ? "gradient_fill" : "gradient_fill_bgra");
+        ? use_atlas_target ? "gradient_stroke_atlas" : "gradient_stroke_bgra"
+        : use_atlas_target ? "gradient_fill" : "gradient_fill_bgra";
     const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);

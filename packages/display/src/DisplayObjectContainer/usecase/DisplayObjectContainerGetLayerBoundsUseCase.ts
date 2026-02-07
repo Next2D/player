@@ -5,8 +5,8 @@ import { $getBoundsArray } from "../../DisplayObjectUtil";
  * @description DisplayObjectContainerのレイヤー境界を取得します。
  *              Get the layer bounds of DisplayObjectContainer.
  *
- * @param  {DisplayObjectContainer} display_object_container 
- * @param  {Float32Array | null} matrix 
+ * @param  {DisplayObjectContainer} display_object_container
+ * @param  {Float32Array | null} matrix
  * @return {Float32Array}
  * @method
  * @public
@@ -23,7 +23,8 @@ export const execute = <P extends DisplayObjectContainer> (
         Number.MAX_VALUE, Number.MAX_VALUE,
         -Number.MAX_VALUE, -Number.MAX_VALUE
     );
-    
+
+    console.log("todo:", matrix);
     for (let idx = 0; idx < length; idx++) {
         // todo
     }

@@ -172,7 +172,7 @@ describe("Context", () =>
         it("should initialize stroke properties", () =>
         {
             expect(context.thickness).toBe(1);
-            expect(context.caps).toBe(1);     // round
+            expect(context.caps).toBe(0);     // none
             expect(context.joints).toBe(2);   // miter
             expect(context.miterLimit).toBe(0);
         });

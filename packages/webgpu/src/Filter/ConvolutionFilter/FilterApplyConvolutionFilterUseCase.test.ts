@@ -130,8 +130,8 @@ describe("FilterApplyConvolutionFilterUseCase", () =>
                 config
             );
 
-            // 2 shader modules: vertex and fragment
-            expect(config.device.createShaderModule).toHaveBeenCalledTimes(2);
+            // 1 shader module: combined vertex and fragment
+            expect(config.device.createShaderModule).toHaveBeenCalledTimes(1);
         });
 
         it("should create bind group layout", () =>

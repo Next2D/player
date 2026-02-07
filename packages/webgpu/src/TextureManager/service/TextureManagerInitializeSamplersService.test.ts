@@ -178,15 +178,15 @@ describe("TextureManagerInitializeSamplersService", () =>
 
     describe("total samplers", () =>
     {
-        it("should create exactly 3 samplers", () =>
+        it("should create exactly 4 samplers", () =>
         {
             const device = createMockDevice();
             const samplers = new Map<string, GPUSampler>();
 
             execute(device, samplers);
 
-            expect(samplers.size).toBe(3);
-            expect(device.createSampler).toHaveBeenCalledTimes(3);
+            expect(samplers.size).toBe(4);
+            expect(device.createSampler).toHaveBeenCalledTimes(4);
         });
     });
 });

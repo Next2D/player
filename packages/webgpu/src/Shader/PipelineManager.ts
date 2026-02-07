@@ -76,7 +76,7 @@ export class PipelineManager
     private lazyInitGroups: Set<string> = new Set();
     private readonly lazyGroupMap: ReadonlyMap<string, string> = new Map([
         // blur_filter グループ
-        ...Array.from({ length: 16 }, (_, i): [string, string] => [`blur_filter_${i + 1}`, "blur_filter"]),
+        ...Array.from({ "length": 16 }, (_, i): [string, string] => [`blur_filter_${i + 1}`, "blur_filter"]),
         ["blur_filter", "blur_filter"],
         // texture_copy グループ（多数のパイプラインを含む）
         ["texture_copy", "texture_copy"], ["texture_copy_rgba8", "texture_copy"],

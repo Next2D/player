@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { BufferManager } from "../../BufferManager";
 import type { FrameBufferManager } from "../../FrameBufferManager";
 import type { TextureManager } from "../../TextureManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
@@ -26,6 +27,10 @@ vi.mock("../../Blend/BlendInstancedManager", () => ({
 const mockBlendApplyComplexBlendUseCase = vi.fn();
 vi.mock("../../Blend/usecase/BlendApplyComplexBlendUseCase", () => ({
     "execute": (...args: any[]) => mockBlendApplyComplexBlendUseCase(...args)
+}));
+
+vi.mock("../../AtlasManager", () => ({
+    "$getAtlasAttachmentObject": vi.fn(() => null)
 }));
 
 describe("ContextProcessComplexBlendQueueUseCase", () =>
@@ -111,6 +116,13 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
         } as unknown as PipelineManager;
     };
 
+    const createMockBufferManager = () =>
+    {
+        return {
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
+        } as unknown as BufferManager;
+    };
+
     beforeEach(() =>
     {
         vi.clearAllMocks();
@@ -130,13 +142,16 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
             const textureManager = createMockTextureManager();
             const pipelineManager = createMockPipelineManager();
 
+            const bufferManager = createMockBufferManager();
+
             execute(
                 device,
                 commandEncoder,
                 mainAttachment,
                 frameBufferManager,
                 textureManager,
-                pipelineManager
+                pipelineManager,
+                bufferManager
             );
 
             expect(commandEncoder.copyTextureToTexture).not.toHaveBeenCalled();
@@ -163,13 +178,16 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
             const textureManager = createMockTextureManager();
             const pipelineManager = createMockPipelineManager();
 
+            const bufferManager = createMockBufferManager();
+
             execute(
                 device,
                 commandEncoder,
                 null,
                 frameBufferManager,
                 textureManager,
-                pipelineManager
+                pipelineManager,
+                bufferManager
             );
 
             expect(mockClearComplexBlendQueue).toHaveBeenCalled();
@@ -193,13 +211,16 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
             const textureManager = createMockTextureManager();
             const pipelineManager = createMockPipelineManager();
 
+            const bufferManager = createMockBufferManager();
+
             execute(
                 device,
                 commandEncoder,
                 mainAttachment,
                 frameBufferManager,
                 textureManager,
-                pipelineManager
+                pipelineManager,
+                bufferManager
             );
 
             expect(mockClearComplexBlendQueue).toHaveBeenCalled();
@@ -224,13 +245,16 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
             const textureManager = createMockTextureManager();
             const pipelineManager = createMockPipelineManager();
 
+            const bufferManager = createMockBufferManager();
+
             execute(
                 device,
                 commandEncoder,
                 mainAttachment,
                 frameBufferManager,
                 textureManager,
-                pipelineManager
+                pipelineManager,
+                bufferManager
             );
 
             expect(mockClearComplexBlendQueue).toHaveBeenCalled();
@@ -257,13 +281,16 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
             const textureManager = createMockTextureManager();
             const pipelineManager = createMockPipelineManager();
 
+            const bufferManager = createMockBufferManager();
+
             execute(
                 device,
                 commandEncoder,
                 mainAttachment,
                 frameBufferManager,
                 textureManager,
-                pipelineManager
+                pipelineManager,
+                bufferManager
             );
 
             expect(frameBufferManager.createTemporaryAttachment).not.toHaveBeenCalled();
@@ -288,13 +315,16 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
             const textureManager = createMockTextureManager();
             const pipelineManager = createMockPipelineManager();
 
+            const bufferManager = createMockBufferManager();
+
             execute(
                 device,
                 commandEncoder,
                 mainAttachment,
                 frameBufferManager,
                 textureManager,
-                pipelineManager
+                pipelineManager,
+                bufferManager
             );
 
             expect(frameBufferManager.createTemporaryAttachment).not.toHaveBeenCalled();
@@ -321,13 +351,16 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
             const textureManager = createMockTextureManager();
             const pipelineManager = createMockPipelineManager();
 
+            const bufferManager = createMockBufferManager();
+
             execute(
                 device,
                 commandEncoder,
                 mainAttachment,
                 frameBufferManager,
                 textureManager,
-                pipelineManager
+                pipelineManager,
+                bufferManager
             );
 
             expect(mockClearComplexBlendQueue).toHaveBeenCalled();

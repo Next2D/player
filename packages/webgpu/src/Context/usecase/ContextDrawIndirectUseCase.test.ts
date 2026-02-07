@@ -30,6 +30,15 @@ vi.mock("../../Mask", () => ({
     "$getMaskStencilReference": vi.fn(() => 0)
 }));
 
+vi.mock("../../AtlasManager", () => ({
+    "$getAtlasAttachmentObject": vi.fn(() => ({
+        "texture": {
+            "resource": { "label": "atlasTexture" },
+            "view": { "label": "atlasTextureView" }
+        }
+    }))
+}));
+
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
 import { $getCurrentBlendMode } from "../../Blend";
 
@@ -92,7 +101,8 @@ describe("ContextDrawIndirectUseCase", () =>
             "createRectVertices": vi.fn(() => new Float32Array([0, 0, 1, 0, 1, 1, 0, 1])),
             "acquireStorageBuffer": vi.fn(() => ({ "label": "mockStorageBuffer" })),
             "writeStorageBuffer": vi.fn(),
-            "createIndirectBuffer": vi.fn(() => ({ "label": "mockIndirectBuffer" }))
+            "createIndirectBuffer": vi.fn(() => ({ "label": "mockIndirectBuffer" })),
+            "getUnitRectBuffer": vi.fn(() => ({ "label": "mockUnitRectBuffer" }))
         } as unknown as BufferManager;
     };
 
@@ -112,7 +122,9 @@ describe("ContextDrawIndirectUseCase", () =>
 
     const createMockTextureManager = () =>
     {
-        return {} as unknown as TextureManager;
+        return {
+            "createSampler": vi.fn(() => ({ "label": "mockSampler" }))
+        } as unknown as TextureManager;
     };
 
     const createMockPipelineManager = (hasPipeline: boolean = true, hasLayout: boolean = true) =>
@@ -293,7 +305,7 @@ describe("ContextDrawIndirectUseCase", () =>
             { "mode": "alpha", "expected": "instanced_alpha" },
             { "mode": "erase", "expected": "instanced_erase" },
             { "mode": "copy", "expected": "instanced_copy" },
-            { "mode": "layer", "expected": "instanced_copy" },
+            { "mode": "layer", "expected": "instanced_normal" },
             { "mode": "normal", "expected": "instanced_normal" }
         ];
 

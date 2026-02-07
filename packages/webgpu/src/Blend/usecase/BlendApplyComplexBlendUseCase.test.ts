@@ -77,12 +77,17 @@ describe("BlendApplyComplexBlendUseCase", () =>
             "createSampler": vi.fn(() => ({ "label": "mockSampler" }))
         };
 
+        const mockBufferManager = {
+            "acquireUniformBuffer": vi.fn(() => mockBuffer)
+        };
+
         return {
             "device": mockDevice,
             "commandEncoder": mockCommandEncoder,
             "frameBufferManager": mockFrameBufferManager,
             "pipelineManager": mockPipelineManager,
-            "textureManager": mockTextureManager
+            "textureManager": mockTextureManager,
+            "bufferManager": mockBufferManager
         } as unknown as IFilterConfig;
     };
 
@@ -135,7 +140,7 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
             execute(srcAttachment, dstAttachment, "multiply", colorTransform, config);
 
-            expect(config.pipelineManager.getPipeline).toHaveBeenCalledWith("complex_blend_multiply");
+            expect(config.pipelineManager.getPipeline).toHaveBeenCalledWith("complex_blend");
         });
 
         it("should return source when pipeline not found", () =>
@@ -178,11 +183,7 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
             execute(srcAttachment, dstAttachment, "multiply", colorTransform, config);
 
-            expect(config.device.createBuffer).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-                })
-            );
+            expect(config.bufferManager.acquireUniformBuffer).toHaveBeenCalledWith(48);
         });
 
         it("should write color transform to buffer", () =>

@@ -557,10 +557,9 @@ fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
 
     /**
      * @description 複雑なブレンドモード用フラグメントシェーダーを取得
-     * @param {string} blendMode - ブレンドモード名
      * @return {string}
      */
-    static getComplexBlendFragmentShader (blendMode: string): string
+    static getComplexBlendFragmentShader (): string
     {
         return ShaderSource.getUnifiedComplexBlendFragmentShader();
     }
