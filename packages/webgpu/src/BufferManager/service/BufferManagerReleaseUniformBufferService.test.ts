@@ -1,111 +1,82 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { IPooledBuffer } from "../../interface/IPooledBuffer";
 import { execute } from "./BufferManagerReleaseUniformBufferService";
 
 describe("BufferManagerReleaseUniformBufferService", () =>
 {
-    let pool: IPooledBuffer[];
+    let buckets: Map<number, GPUBuffer[]>;
 
     const createMockBuffer = (size: number): GPUBuffer => ({
         "size": size,
         "destroy": vi.fn()
     } as unknown as GPUBuffer);
 
-    const createPoolEntry = (size: number): IPooledBuffer => ({
-        "buffer": createMockBuffer(size),
-        size
-    });
-
     beforeEach(() =>
     {
-        pool = [];
+        buckets = new Map();
     });
 
-    it("should add buffer to pool", () =>
+    it("should add buffer to correct bucket", () =>
     {
         const buffer = createMockBuffer(256);
 
-        execute(pool, buffer);
+        execute(buckets, buffer);
 
-        expect(pool.length).toBe(1);
-        expect(pool[0].buffer).toBe(buffer);
-        expect(pool[0].size).toBe(256);
+        expect(buckets.has(256)).toBe(true);
+        expect(buckets.get(256)!.length).toBe(1);
+        expect(buckets.get(256)![0]).toBe(buffer);
     });
 
-    it("should add multiple uniform buffers", () =>
+    it("should add multiple uniform buffers to same bucket", () =>
     {
         const buffer1 = createMockBuffer(256);
-        const buffer2 = createMockBuffer(512);
+        const buffer2 = createMockBuffer(256);
 
-        execute(pool, buffer1);
-        execute(pool, buffer2);
+        execute(buckets, buffer1);
+        execute(buckets, buffer2);
 
-        expect(pool.length).toBe(2);
+        expect(buckets.get(256)!.length).toBe(2);
     });
 
-    it("should evict smallest buffer when pool is full", () =>
+    it("should destroy buffer when bucket is full", () =>
     {
-        // Fill pool to max (32)
-        for (let i = 0; i < 32; i++) {
-            pool.push(createPoolEntry((i + 1) * 64)); // sizes: 64, 128, ..., 2048
+        // Fill bucket to max (8)
+        for (let i = 0; i < 8; i++) {
+            const buf = createMockBuffer(256);
+            execute(buckets, buf);
         }
 
-        const smallestBuffer = pool[0].buffer; // size 64
-        const newBuffer = createMockBuffer(4096);
+        const newBuffer = createMockBuffer(256);
+        execute(buckets, newBuffer);
 
-        execute(pool, newBuffer);
-
-        expect(pool.length).toBe(32);
-        expect(smallestBuffer.destroy).toHaveBeenCalled();
-        expect(pool.some((e) => e.buffer === newBuffer)).toBe(true);
+        // Bucket stays at 8, new buffer destroyed
+        expect(buckets.get(256)!.length).toBe(8);
+        expect(newBuffer.destroy).toHaveBeenCalled();
     });
 
-    it("should correctly identify smallest buffer", () =>
-    {
-        pool.push(createPoolEntry(1024));
-        pool.push(createPoolEntry(128)); // smallest
-        pool.push(createPoolEntry(512));
-        pool.push(createPoolEntry(256));
-
-        // Fill remaining slots
-        for (let i = 4; i < 32; i++) {
-            pool.push(createPoolEntry(2048));
-        }
-
-        const smallestBuffer = pool[1].buffer; // size 128
-        const newBuffer = createMockBuffer(3000);
-
-        execute(pool, newBuffer);
-
-        expect(smallestBuffer.destroy).toHaveBeenCalled();
-    });
-
-    it("should not evict when pool has space", () =>
-    {
-        const existing = createPoolEntry(256);
-        pool.push(existing);
-
-        const newBuffer = createMockBuffer(512);
-        execute(pool, newBuffer);
-
-        expect(existing.buffer.destroy).not.toHaveBeenCalled();
-        expect(pool.length).toBe(2);
-    });
-
-    it("should handle empty pool", () =>
+    it("should not destroy buffer when bucket has space", () =>
     {
         const buffer = createMockBuffer(256);
 
-        expect(() => execute(pool, buffer)).not.toThrow();
-        expect(pool.length).toBe(1);
+        execute(buckets, buffer);
+
+        expect(buffer.destroy).not.toHaveBeenCalled();
     });
 
-    it("should store correct size from buffer property", () =>
+    it("should handle empty buckets map", () =>
+    {
+        const buffer = createMockBuffer(256);
+
+        expect(() => execute(buckets, buffer)).not.toThrow();
+        expect(buckets.get(256)!.length).toBe(1);
+    });
+
+    it("should store buffer with correct size key", () =>
     {
         const buffer = createMockBuffer(1024);
 
-        execute(pool, buffer);
+        execute(buckets, buffer);
 
-        expect(pool[0].size).toBe(buffer.size);
+        expect(buckets.has(1024)).toBe(true);
+        expect(buckets.get(1024)![0]).toBe(buffer);
     });
 });

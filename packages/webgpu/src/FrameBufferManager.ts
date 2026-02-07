@@ -1,9 +1,10 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
+import type { ITextureObject } from "./interface/ITextureObject";
 import { execute as frameBufferManagerCreateAttachmentUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerCreateAttachmentUseCase";
 import { execute as frameBufferManagerReleaseTemporaryAttachmentUseCase } from "./FrameBufferManager/usecase/FrameBufferManagerReleaseTemporaryAttachmentUseCase";
 import { execute as frameBufferManagerCreateRenderPassDescriptorService } from "./FrameBufferManager/service/FrameBufferManagerCreateRenderPassDescriptorService";
 import { execute as frameBufferManagerCreateStencilRenderPassDescriptorService } from "./FrameBufferManager/service/FrameBufferManagerCreateStencilRenderPassDescriptorService";
-import { execute as frameBufferManagerFlushPendingReleasesService } from "./FrameBufferManager/service/FrameBufferManagerFlushPendingReleasesService";
+import { TexturePool } from "./TexturePool";
 
 /**
  * @description WebGPUフレームバッファマネージャー
@@ -16,6 +17,7 @@ export class FrameBufferManager
     private attachments: Map<string, IAttachmentObject>;
     private currentAttachment: IAttachmentObject | null;
     private idCounter: { nextId: number; textureId: number; stencilId: number };
+    private texturePool: TexturePool;
 
     /**
      * @description フレーム終了時に遅延解放するアタッチメント
@@ -35,9 +37,20 @@ export class FrameBufferManager
         this.attachments = new Map();
         this.currentAttachment = null;
         this.idCounter = { "nextId": 1, "textureId": 1, "stencilId": 1 };
+        this.texturePool = new TexturePool(device);
 
         // 注意: アトラスはAtlasManagerが動的に管理する（複数アトラス対応）
         // 初期アトラスはAtlasManagerの$getAtlasAttachmentObject()で自動生成される
+    }
+
+    /**
+     * @description フレーム開始時に呼び出し（テクスチャプールのクリーンアップ）
+     *              Called at the beginning of each frame for texture pool maintenance
+     * @return {void}
+     */
+    beginFrame(): void
+    {
+        this.texturePool.beginFrame();
     }
 
     /**
@@ -189,7 +202,40 @@ export class FrameBufferManager
     createTemporaryAttachment(width: number, height: number): IAttachmentObject
     {
         const name = `temp_${this.idCounter.nextId}`;
-        return this.createAttachment(name, width, height, false, false);
+        const usage = GPUTextureUsage.RENDER_ATTACHMENT |
+                      GPUTextureUsage.TEXTURE_BINDING |
+                      GPUTextureUsage.COPY_SRC |
+                      GPUTextureUsage.COPY_DST;
+
+        const gpuTexture = this.texturePool.acquire(width, height, "rgba8unorm", usage);
+        const textureView = gpuTexture.createView();
+
+        const texture: ITextureObject = {
+            "id": this.idCounter.textureId++,
+            "resource": gpuTexture,
+            "view": textureView,
+            width,
+            height,
+            "area": width * height,
+            "smooth": true
+        };
+
+        const attachment: IAttachmentObject = {
+            "id": this.idCounter.nextId++,
+            width,
+            height,
+            "clipLevel": 0,
+            "msaa": false,
+            "mask": false,
+            "color": null,
+            texture,
+            "stencil": null,
+            "msaaTexture": null,
+            "msaaStencil": null
+        };
+
+        this.attachments.set(name, attachment);
+        return attachment;
     }
 
     /**
@@ -215,7 +261,11 @@ export class FrameBufferManager
      */
     flushPendingReleases(): void
     {
-        frameBufferManagerFlushPendingReleasesService(this.pendingReleases);
+        for (const att of this.pendingReleases) {
+            if (att.texture) {
+                this.texturePool.release(att.texture.resource);
+            }
+        }
         this.pendingReleases = [];
     }
 
@@ -235,5 +285,6 @@ export class FrameBufferManager
         }
         this.attachments.clear();
         this.currentAttachment = null;
+        this.texturePool.dispose();
     }
 }

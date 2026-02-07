@@ -1,3 +1,4 @@
+import type { BufferManager } from "../BufferManager";
 import type { FrameBufferManager } from "../FrameBufferManager";
 import type { PipelineManager } from "../Shader/PipelineManager";
 import type { TextureManager } from "../TextureManager";
@@ -9,6 +10,7 @@ import type { TextureManager } from "../TextureManager";
 export interface ILocalFilterConfig {
     device: GPUDevice;
     commandEncoder: GPUCommandEncoder;
+    bufferManager: BufferManager;
     frameBufferManager: FrameBufferManager;
     pipelineManager: PipelineManager;
     textureManager: TextureManager;

@@ -108,10 +108,12 @@ export const execute = (
             0, 0, 0, 0        // padding
         ]);
 
-        const eraseUniformBuffer = device.createBuffer({
-            "size": eraseUniformData.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
+        const eraseUniformBuffer = config.bufferManager
+            ? config.bufferManager.acquireUniformBuffer(eraseUniformData.byteLength)
+            : device.createBuffer({
+                "size": eraseUniformData.byteLength,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
         device.queue.writeBuffer(eraseUniformBuffer, 0, eraseUniformData);
 
         const eraseBindGroup = device.createBindGroup({
@@ -191,10 +193,12 @@ export const execute = (
         type
     ]);
 
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = config.bufferManager
+        ? config.bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // 元テクスチャを適切な位置にコピーした一時テクスチャを作成

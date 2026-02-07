@@ -10,6 +10,11 @@ import {
 } from "../../Mask";
 
 /**
+ * @description グラデーション用サンプラーキャッシュ
+ */
+let $gradientSampler: GPUSampler | null = null;
+
+/**
  * @description グラデーションの塗りつぶしを実行
  *              Execute gradient fill
  *
@@ -159,13 +164,16 @@ export const execute = (
     const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
-    // サンプラーを作成
-    const sampler = device.createSampler({
-        "magFilter": "linear",
-        "minFilter": "linear",
-        "addressModeU": "clamp-to-edge",
-        "addressModeV": "clamp-to-edge"
-    });
+    // サンプラーを作成（キャッシュ済み）
+    if (!$gradientSampler) {
+        $gradientSampler = device.createSampler({
+            "magFilter": "linear",
+            "minFilter": "linear",
+            "addressModeU": "clamp-to-edge",
+            "addressModeV": "clamp-to-edge"
+        });
+    }
+    const sampler = $gradientSampler;
 
     // バインドグループを作成
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("gradient_fill");

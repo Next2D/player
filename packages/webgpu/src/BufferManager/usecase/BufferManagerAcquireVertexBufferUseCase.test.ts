@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { IPooledBuffer } from "../../interface/IPooledBuffer";
 import { execute } from "./BufferManagerAcquireVertexBufferUseCase";
 
 // Mock GPUBufferUsage
@@ -11,7 +10,7 @@ const GPUBufferUsage = {
 
 describe("BufferManagerAcquireVertexBufferUseCase", () =>
 {
-    let pool: IPooledBuffer[];
+    let buckets: Map<number, GPUBuffer[]>;
 
     const createMockDevice = () =>
     {
@@ -28,37 +27,34 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
         } as unknown as GPUDevice;
     };
 
-    const createPoolEntry = (size: number): IPooledBuffer =>
-    {
-        return {
-            "buffer": { "size": size, "id": Math.random() } as unknown as GPUBuffer,
-            size
-        };
-    };
+    const createMockBuffer = (size: number): GPUBuffer => ({
+        "size": size,
+        "id": Math.random()
+    } as unknown as GPUBuffer);
 
     beforeEach(() =>
     {
-        pool = [];
+        buckets = new Map();
     });
 
-    it("should return buffer from pool if size matches", () =>
+    it("should return buffer from bucket if size matches", () =>
     {
-        const entry = createPoolEntry(256);
-        pool.push(entry);
+        const buffer = createMockBuffer(256);
+        buckets.set(256, [buffer]);
         const device = createMockDevice();
 
-        const result = execute(device, pool, 256);
+        const result = execute(device, buckets, 256);
 
-        expect(result).toBe(entry.buffer);
-        expect(pool.length).toBe(0);
+        expect(result).toBe(buffer);
+        expect(buckets.get(256)!.length).toBe(0);
         expect(device.createBuffer).not.toHaveBeenCalled();
     });
 
-    it("should create new buffer if pool is empty", () =>
+    it("should create new buffer if buckets are empty", () =>
     {
         const device = createMockDevice();
 
-        execute(device, pool, 256);
+        execute(device, buckets, 256);
 
         expect(device.createBuffer).toHaveBeenCalled();
     });
@@ -67,7 +63,7 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
     {
         const device = createMockDevice();
 
-        execute(device, pool, 100); // Should round up to 128
+        execute(device, buckets, 100); // Should round up to 128
 
         expect(device.createBuffer).toHaveBeenCalledWith(
             expect.objectContaining({ "size": 128 })
@@ -78,7 +74,7 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
     {
         const device = createMockDevice();
 
-        execute(device, pool, 256);
+        execute(device, buckets, 256);
 
         expect(device.createBuffer).toHaveBeenCalledWith({
             "size": 256,
@@ -86,41 +82,17 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
         });
     });
 
-    it("should return smallest suitable buffer from pool", () =>
+    it("should return buffer from correct bucket for non-power-of-two size", () =>
     {
-        const medium = createPoolEntry(300); // Within 2x of 256
-        const small = createPoolEntry(256);  // Exact match
-        const large = createPoolEntry(400);  // Within 2x but larger
-        pool.push(medium, small, large);
+        // 100 rounds to 128
+        const buffer = createMockBuffer(128);
+        buckets.set(128, [buffer]);
         const device = createMockDevice();
 
-        const result = execute(device, pool, 256);
+        const result = execute(device, buckets, 100);
 
-        expect(result).toBe(small.buffer); // Should pick smallest
-    });
-
-    it("should skip buffer too large (> 2x)", () =>
-    {
-        const entry = createPoolEntry(1024); // More than 2x of 256
-        pool.push(entry);
-        const device = createMockDevice();
-
-        execute(device, pool, 256);
-
-        expect(device.createBuffer).toHaveBeenCalled();
-        expect(pool.length).toBe(1);
-    });
-
-    it("should skip buffer too small", () =>
-    {
-        const entry = createPoolEntry(64);
-        pool.push(entry);
-        const device = createMockDevice();
-
-        execute(device, pool, 256);
-
-        expect(device.createBuffer).toHaveBeenCalled();
-        expect(pool.length).toBe(1);
+        expect(result).toBe(buffer);
+        expect(device.createBuffer).not.toHaveBeenCalled();
     });
 
     it("should write data to buffer if provided", () =>
@@ -128,7 +100,7 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
         const device = createMockDevice();
         const data = new Float32Array([1, 2, 3, 4]);
 
-        execute(device, pool, 256, data);
+        execute(device, buckets, 256, data);
 
         expect(device.queue.writeBuffer).toHaveBeenCalled();
     });
@@ -137,23 +109,23 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
     {
         const device = createMockDevice();
 
-        execute(device, pool, 256);
+        execute(device, buckets, 256);
 
         expect(device.queue.writeBuffer).not.toHaveBeenCalled();
     });
 
     it("should write data to pooled buffer", () =>
     {
-        const entry = createPoolEntry(256);
-        pool.push(entry);
+        const buffer = createMockBuffer(256);
+        buckets.set(256, [buffer]);
         const device = createMockDevice();
         const data = new Float32Array([1, 2, 3, 4]);
 
-        const result = execute(device, pool, 256, data);
+        const result = execute(device, buckets, 256, data);
 
-        expect(result).toBe(entry.buffer);
+        expect(result).toBe(buffer);
         expect(device.queue.writeBuffer).toHaveBeenCalledWith(
-            entry.buffer,
+            buffer,
             0,
             data.buffer,
             data.byteOffset,
@@ -167,7 +139,7 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
         const buffer = new ArrayBuffer(64);
         const data = new Float32Array(buffer, 16, 4); // Offset of 16 bytes
 
-        execute(device, pool, 256, data);
+        execute(device, buckets, 256, data);
 
         expect(device.queue.writeBuffer).toHaveBeenCalledWith(
             expect.anything(),
@@ -178,15 +150,17 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
         );
     });
 
-    it("should remove acquired entry from pool", () =>
+    it("should pop last buffer from bucket (LIFO)", () =>
     {
-        pool.push(createPoolEntry(256));
-        pool.push(createPoolEntry(512));
+        const buffer1 = createMockBuffer(256);
+        const buffer2 = createMockBuffer(256);
+        buckets.set(256, [buffer1, buffer2]);
         const device = createMockDevice();
 
-        execute(device, pool, 256);
+        const result = execute(device, buckets, 256);
 
-        expect(pool.length).toBe(1);
-        expect(pool[0].size).toBe(512);
+        expect(result).toBe(buffer2); // LIFO: last in, first out
+        expect(buckets.get(256)!.length).toBe(1);
+        expect(buckets.get(256)![0]).toBe(buffer1);
     });
 });

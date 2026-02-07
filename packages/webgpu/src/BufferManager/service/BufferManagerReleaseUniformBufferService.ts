@@ -1,45 +1,39 @@
-import type { IPooledBuffer } from "../../interface/IPooledBuffer";
-
 /**
- * @description プールの最大サイズ
- *              Maximum pool size
+ * @description バケットあたりの最大プールサイズ
+ *              Maximum pool size per bucket
  * @type {number}
  * @const
  */
-const MAX_POOL_SIZE: number = 32;
+const MAX_BUCKET_SIZE: number = 8;
 
 /**
  * @description ユニフォームバッファをプールに返却
  *              Release uniform buffer back to pool
+ *              バケット化されたMap<number, GPUBuffer[]>にO(1)で返却
  *
- * @param  {IPooledBuffer[]} pool
+ * @param  {Map<number, GPUBuffer[]>} buckets - サイズ別バケットMap
  * @param  {GPUBuffer} buffer
  * @return {void}
  * @method
  * @protected
  */
 export const execute = (
-    pool: IPooledBuffer[],
+    buckets: Map<number, GPUBuffer[]>,
     buffer: GPUBuffer
 ): void => {
-    if (pool.length >= MAX_POOL_SIZE) {
-        // プールが満杯の場合、最も小さいバッファを破棄
-        let smallestIndex = 0;
-        let smallestSize = pool[0].size;
+    const size = buffer.size;
+    let bucket = buckets.get(size);
 
-        for (let i = 1; i < pool.length; i++) {
-            if (pool[i].size < smallestSize) {
-                smallestSize = pool[i].size;
-                smallestIndex = i;
-            }
-        }
-
-        pool[smallestIndex].buffer.destroy();
-        pool.splice(smallestIndex, 1);
+    if (!bucket) {
+        bucket = [];
+        buckets.set(size, bucket);
     }
 
-    pool.push({
-        buffer,
-        "size": buffer.size
-    });
+    if (bucket.length >= MAX_BUCKET_SIZE) {
+        // バケットが満杯の場合、このバッファを破棄
+        buffer.destroy();
+        return;
+    }
+
+    bucket.push(buffer);
 };

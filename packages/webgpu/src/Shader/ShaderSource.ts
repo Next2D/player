@@ -562,147 +562,36 @@ fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
      */
     static getComplexBlendFragmentShader (blendMode: string): string
     {
-        let blendFunction: string;
+        return ShaderSource.getUnifiedComplexBlendFragmentShader();
+    }
 
+    /**
+     * @description ブレンドモード名からモード番号を取得
+     * @param {string} blendMode
+     * @return {number}
+     */
+    static getBlendModeIndex (blendMode: string): number
+    {
         switch (blendMode) {
-            case "subtract":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    if (src.a == 0.0) { return dst; }
-    if (dst.a == 0.0) { return src; }
-    let a = src - src * dst.a;
-    let b = dst - dst * src.a;
-    let srcRgb = src.rgb / src.a;
-    let dstRgb = dst.rgb / dst.a;
-    var c = vec4<f32>(dstRgb - srcRgb, src.a * dst.a);
-    c = vec4<f32>(c.rgb * c.a, c.a);
-    return a + b + c;
-}
-`;
-                break;
-
-            case "multiply":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    let a = src - src * dst.a;
-    let b = dst - dst * src.a;
-    let c = src * dst;
-    return a + b + c;
-}
-`;
-                break;
-
-            case "lighten":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    if (src.a == 0.0) { return dst; }
-    if (dst.a == 0.0) { return src; }
-    let a = src - src * dst.a;
-    let b = dst - dst * src.a;
-    let srcRgb = src.rgb / src.a;
-    let dstRgb = dst.rgb / dst.a;
-    let mixed = mix(srcRgb, dstRgb, step(srcRgb, dstRgb));
-    var c = vec4<f32>(mixed, src.a * dst.a);
-    c = vec4<f32>(c.rgb * c.a, c.a);
-    return a + b + c;
-}
-`;
-                break;
-
-            case "darken":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    if (src.a == 0.0) { return dst; }
-    if (dst.a == 0.0) { return src; }
-    let a = src - src * dst.a;
-    let b = dst - dst * src.a;
-    let srcRgb = src.rgb / src.a;
-    let dstRgb = dst.rgb / dst.a;
-    let mixed = mix(srcRgb, dstRgb, step(dstRgb, srcRgb));
-    var c = vec4<f32>(mixed, src.a * dst.a);
-    c = vec4<f32>(c.rgb * c.a, c.a);
-    return a + b + c;
-}
-`;
-                break;
-
-            case "overlay":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    if (src.a == 0.0) { return dst; }
-    if (dst.a == 0.0) { return src; }
-    let a = src - src * dst.a;
-    let b = dst - dst * src.a;
-    let srcRgb = src.rgb / src.a;
-    let dstRgb = dst.rgb / dst.a;
-    let mul = srcRgb * dstRgb;
-    let c1 = 2.0 * mul;
-    let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
-    let mixed = mix(c1, c2, step(vec3<f32>(0.5), dstRgb));
-    var c = vec4<f32>(mixed, src.a * dst.a);
-    c = vec4<f32>(c.rgb * c.a, c.a);
-    return a + b + c;
-}
-`;
-                break;
-
-            case "hardlight":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    if (src.a == 0.0) { return dst; }
-    if (dst.a == 0.0) { return src; }
-    let a = src - src * dst.a;
-    let b = dst - dst * src.a;
-    let srcRgb = src.rgb / src.a;
-    let dstRgb = dst.rgb / dst.a;
-    let mul = srcRgb * dstRgb;
-    let c1 = 2.0 * mul;
-    let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
-    let mixed = mix(c1, c2, step(vec3<f32>(0.5), srcRgb));
-    var c = vec4<f32>(mixed, src.a * dst.a);
-    c = vec4<f32>(c.rgb * c.a, c.a);
-    return a + b + c;
-}
-`;
-                break;
-
-            case "difference":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    if (src.a == 0.0) { return dst; }
-    if (dst.a == 0.0) { return src; }
-    let a = src - src * dst.a;
-    let b = dst - dst * src.a;
-    let srcRgb = src.rgb / src.a;
-    let dstRgb = dst.rgb / dst.a;
-    var c = vec4<f32>(abs(srcRgb - dstRgb), src.a * dst.a);
-    c = vec4<f32>(c.rgb * c.a, c.a);
-    return a + b + c;
-}
-`;
-                break;
-
-            case "invert":
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    if (src.a == 0.0) { return dst; }
-    if (dst.a == 0.0) { return src; }
-    let b = dst - dst * src.a;
-    let c = vec4<f32>(src.a - dst.rgb * src.a, src.a);
-    return b + c;
-}
-`;
-                break;
-
-            default:
-                blendFunction = `
-fn blend(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
-    return src + dst - dst * src.a;
-}
-`;
-                break;
+            case "subtract":  return 0;
+            case "multiply":  return 1;
+            case "lighten":   return 2;
+            case "darken":    return 3;
+            case "overlay":   return 4;
+            case "hardlight": return 5;
+            case "difference": return 6;
+            case "invert":    return 7;
+            default:          return 1; // fallback to multiply
         }
+    }
 
+    /**
+     * @description 統一された複雑ブレンドフラグメントシェーダー
+     *              全8モードをuniform分岐で処理する単一シェーダー
+     * @return {string}
+     */
+    static getUnifiedComplexBlendFragmentShader (): string
+    {
         return /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
@@ -712,6 +601,10 @@ struct VertexOutput {
 struct BlendUniforms {
     mulColor: vec4<f32>,
     addColor: vec4<f32>,
+    blendMode: f32,
+    _pad0: f32,
+    _pad1: f32,
+    _pad2: f32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: BlendUniforms;
@@ -719,7 +612,63 @@ struct BlendUniforms {
 @group(0) @binding(2) var dstTexture: texture_2d<f32>;
 @group(0) @binding(3) var srcTexture: texture_2d<f32>;
 
-${blendFunction}
+fn blend(src: vec4<f32>, dst: vec4<f32>, mode: i32) -> vec4<f32> {
+    if (src.a == 0.0) { return dst; }
+    if (dst.a == 0.0) { return src; }
+
+    let a = src - src * dst.a;
+    let b = dst - dst * src.a;
+
+    // mode 1: multiply (no early return needed)
+    if (mode == 1) {
+        let c = src * dst;
+        return a + b + c;
+    }
+
+    let srcRgb = src.rgb / src.a;
+    let dstRgb = dst.rgb / dst.a;
+
+    var blended: vec3<f32>;
+
+    switch (mode) {
+        case 0: { // subtract
+            blended = dstRgb - srcRgb;
+        }
+        case 2: { // lighten
+            blended = mix(srcRgb, dstRgb, step(srcRgb, dstRgb));
+        }
+        case 3: { // darken
+            blended = mix(srcRgb, dstRgb, step(dstRgb, srcRgb));
+        }
+        case 4: { // overlay
+            let mul = srcRgb * dstRgb;
+            let c1 = 2.0 * mul;
+            let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
+            blended = mix(c1, c2, step(vec3<f32>(0.5), dstRgb));
+        }
+        case 5: { // hardlight
+            let mul = srcRgb * dstRgb;
+            let c1 = 2.0 * mul;
+            let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
+            blended = mix(c1, c2, step(vec3<f32>(0.5), srcRgb));
+        }
+        case 6: { // difference
+            blended = abs(srcRgb - dstRgb);
+        }
+        case 7: { // invert
+            let ib = dst - dst * src.a;
+            let ic = vec4<f32>(src.a - dst.rgb * src.a, src.a);
+            return ib + ic;
+        }
+        default: { // fallback
+            blended = srcRgb;
+        }
+    }
+
+    var c = vec4<f32>(blended, src.a * dst.a);
+    c = vec4<f32>(c.rgb * c.a, c.a);
+    return a + b + c;
+}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
@@ -733,7 +682,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
         src = clamp(src * mul + add, vec4<f32>(0.0), vec4<f32>(1.0));
         src = vec4<f32>(src.rgb * src.a, src.a);
     }
-    return blend(src, dst);
+    return blend(src, dst, i32(uniforms.blendMode));
 }
 `;
     }

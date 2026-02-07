@@ -1,4 +1,5 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { BufferManager } from "../../BufferManager";
 import type { FrameBufferManager } from "../../FrameBufferManager";
 import type { TextureManager } from "../../TextureManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
@@ -9,20 +10,6 @@ import { $getAtlasAttachmentObject } from "../../AtlasManager";
 /**
  * @description レンダーパスベースでテクスチャ領域をコピー
  *              Copy texture region using render pass (for format conversion)
- *
- * @param {GPUDevice} device
- * @param {GPUCommandEncoder} commandEncoder
- * @param {GPUTextureView} srcView - ソーステクスチャビュー
- * @param {IAttachmentObject} dstAttachment - デスティネーションアタッチメント
- * @param {number} srcX - ソースX座標
- * @param {number} srcY - ソースY座標
- * @param {number} srcWidth - ソーステクスチャ幅
- * @param {number} srcHeight - ソーステクスチャ高さ
- * @param {number} copyWidth - コピー幅
- * @param {number} copyHeight - コピー高さ
- * @param {FrameBufferManager} frameBufferManager
- * @param {TextureManager} textureManager
- * @param {PipelineManager} pipelineManager
  */
 const copyTextureRegionViaRenderPass = (
     device: GPUDevice,
@@ -37,28 +24,23 @@ const copyTextureRegionViaRenderPass = (
     copyHeight: number,
     frameBufferManager: FrameBufferManager,
     textureManager: TextureManager,
-    pipelineManager: PipelineManager
+    pipelineManager: PipelineManager,
+    bufferManager: BufferManager
 ): void => {
-    // 複雑なブレンド専用のコピーパイプライン（Y軸反転なし）を使用
     const pipeline = pipelineManager.getPipeline("complex_blend_copy");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
 
     if (!pipeline || !bindGroupLayout) {
-        console.error("[WebGPU] complex_blend_copy pipeline not found");
         return;
     }
 
-    // ユニフォームバッファ: scale (vec2) + offset (vec2)
     const scaleX = copyWidth / srcWidth;
     const scaleY = copyHeight / srcHeight;
     const offsetX = srcX / srcWidth;
     const offsetY = srcY / srcHeight;
 
     const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
-    const uniformBuffer = device.createBuffer({
-        "size": 16,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = bufferManager.acquireUniformBuffer(16);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const sampler = textureManager.createSampler("complex_blend_copy_sampler", false);
@@ -88,16 +70,6 @@ const copyTextureRegionViaRenderPass = (
 /**
  * @description 結果をmainAttachmentにレンダーパスで描画（アルファブレンド）
  *              位置変換付きシェーダーを使用して指定位置に描画
- *
- * @param {GPUDevice} device
- * @param {GPUCommandEncoder} commandEncoder
- * @param {IAttachmentObject} srcAttachment - ソースアタッチメント（ブレンド結果）
- * @param {IAttachmentObject} mainAttachment - メインアタッチメント
- * @param {number} dstX - 描画先X座標
- * @param {number} dstY - 描画先Y座標
- * @param {FrameBufferManager} frameBufferManager
- * @param {TextureManager} textureManager
- * @param {PipelineManager} pipelineManager
  */
 const drawToMainAttachment = (
     device: GPUDevice,
@@ -108,32 +80,25 @@ const drawToMainAttachment = (
     dstY: number,
     frameBufferManager: FrameBufferManager,
     textureManager: TextureManager,
-    pipelineManager: PipelineManager
+    pipelineManager: PipelineManager,
+    bufferManager: BufferManager
 ): void => {
-    // 複雑なブレンド用結果描画パイプラインを使用（Y軸反転なし）
-    // MSAA有効時はMSAA版パイプラインを使用してmsaaTextureに描画→texture.viewにresolve
     const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
     const pipelineName = useMsaa ? "complex_blend_output_msaa" : "complex_blend_output";
     const pipeline = pipelineManager.getPipeline(pipelineName);
     const bindGroupLayout = pipelineManager.getBindGroupLayout("positioned_texture");
 
     if (!pipeline || !bindGroupLayout) {
-        console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         return;
     }
 
-    // ユニフォームデータ: offset, size, viewport, padding
-    // シェーダーで頂点位置を計算: vertex * size + offset -> NDC変換
     const uniformData = new Float32Array([
-        dstX, dstY,                               // offset (描画位置)
-        srcAttachment.width, srcAttachment.height, // size (テクスチャサイズ)
-        mainAttachment.width, mainAttachment.height, // viewport (ビューポートサイズ)
-        0, 0                                       // padding (16バイトアライメント)
+        dstX, dstY,
+        srcAttachment.width, srcAttachment.height,
+        mainAttachment.width, mainAttachment.height,
+        0, 0
     ]);
-    const uniformBuffer = device.createBuffer({
-        "size": 32, // 8 floats * 4 bytes
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = bufferManager.acquireUniformBuffer(32);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const sampler = textureManager.createSampler("complex_blend_output_sampler", false);
@@ -147,8 +112,6 @@ const drawToMainAttachment = (
         ]
     });
 
-    // メインアタッチメントへの描画（loadで既存内容を保持）
-    // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
     const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
     const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
@@ -168,14 +131,6 @@ const drawToMainAttachment = (
 /**
  * @description 複雑なブレンドモードのキューを処理
  *              Process complex blend mode queue
- *
- * @param {GPUDevice} device
- * @param {GPUCommandEncoder} commandEncoder
- * @param {IAttachmentObject | null} mainAttachment - メインアタッチメント
- * @param {FrameBufferManager} frameBufferManager
- * @param {TextureManager} textureManager
- * @param {PipelineManager} pipelineManager
- * @return {void}
  */
 export const execute = (
     device: GPUDevice,
@@ -183,7 +138,8 @@ export const execute = (
     mainAttachment: IAttachmentObject | null,
     frameBufferManager: FrameBufferManager,
     textureManager: TextureManager,
-    pipelineManager: PipelineManager
+    pipelineManager: PipelineManager,
+    bufferManager: BufferManager
 ): void => {
     const queue = getComplexBlendQueue();
 
@@ -196,8 +152,6 @@ export const execute = (
         return;
     }
 
-    // 複数アトラス対応
-    // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
     const atlasAttachment = $getAtlasAttachmentObject() || frameBufferManager.getAttachment("atlas");
     if (!atlasAttachment || !atlasAttachment.texture) {
         clearComplexBlendQueue();
@@ -217,19 +171,15 @@ export const execute = (
         const dstX = Math.max(0, Math.floor(matrix[6]));
         const dstY = Math.max(0, Math.floor(matrix[7]));
 
-        // 描画範囲がメインアタッチメントを超える場合はスキップ
         if (dstX >= mainAttachment.width || dstY >= mainAttachment.height) {
             continue;
         }
 
-        // スケールが適用されているかチェック（WebGL版と同様）
         const hasScale = matrix[0] !== 1 || matrix[1] !== 0 || matrix[3] !== 0 || matrix[4] !== 1;
 
-        // スケール適用後のサイズを使用
         const blendWidth = hasScale ? width : node.w;
         const blendHeight = hasScale ? height : node.h;
 
-        // メインアタッチメントの境界をチェック
         const clippedWidth = Math.min(blendWidth, mainAttachment.width - dstX);
         const clippedHeight = Math.min(blendHeight, mainAttachment.height - dstY);
         if (clippedWidth <= 0 || clippedHeight <= 0) {
@@ -240,22 +190,17 @@ export const execute = (
         let srcAttachment: IAttachmentObject;
 
         if (hasScale) {
-            // スケールが適用されている場合は、元のテクスチャをスケール変換
             srcAttachment = frameBufferManager.createTemporaryAttachment(blendWidth, blendHeight);
 
-            // 複雑なブレンドモード専用スケール変換パイプラインを使用（Y軸反転なし）
             const scalePipeline = pipelineManager.getPipeline("complex_blend_scale");
             const scaleBindGroupLayout = pipelineManager.getBindGroupLayout("texture_scale");
 
             if (scalePipeline && scaleBindGroupLayout) {
-                // 変換行列を計算（WebGL版と同様のロジック）
-                // 中心を原点に移動 → スケール適用 → 新しい中心に移動
                 const halfW = blendWidth / 2;
                 const halfH = blendHeight / 2;
                 const halfNodeW = node.w / 2;
                 const halfNodeH = node.h / 2;
 
-                // tMatrix = scale matrix * translate(-halfNodeW, -halfNodeH) + translate(halfW, halfH)
                 const tMatrix = new Float32Array([
                     matrix[0], matrix[1],
                     matrix[3], matrix[4],
@@ -263,7 +208,6 @@ export const execute = (
                     -halfNodeW * matrix[1] - halfNodeH * matrix[4] + halfH
                 ]);
 
-                // 元のテクスチャをコピー
                 const originalAttachment = frameBufferManager.createTemporaryAttachment(node.w, node.h);
                 commandEncoder.copyTextureToTexture(
                     {
@@ -277,17 +221,13 @@ export const execute = (
                     { "width": node.w, "height": node.h }
                 );
 
-                // ユニフォームデータ: matrix (6 floats) + srcSize (2 floats) + dstSize (2 floats)
                 const uniformData = new Float32Array([
                     tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
                     node.w, node.h,
                     blendWidth, blendHeight,
-                    0, 0 // padding
+                    0, 0
                 ]);
-                const uniformBuffer = device.createBuffer({
-                    "size": 48,
-                    "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-                });
+                const uniformBuffer = bufferManager.acquireUniformBuffer(48);
                 device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
                 const sampler = textureManager.createSampler("scale_sampler", true);
@@ -314,7 +254,6 @@ export const execute = (
 
                 frameBufferManager.releaseTemporaryAttachment(originalAttachment);
             } else {
-                // フォールバック: スケールパイプラインがない場合は直接コピー
                 commandEncoder.copyTextureToTexture(
                     {
                         "texture": atlasAttachment.texture.resource,
@@ -328,7 +267,6 @@ export const execute = (
                 );
             }
         } else {
-            // スケールなしの場合は直接コピー
             srcAttachment = frameBufferManager.createTemporaryAttachment(blendWidth, blendHeight);
             commandEncoder.copyTextureToTexture(
                 {
@@ -343,8 +281,7 @@ export const execute = (
             );
         }
 
-        // 2. デスティネーションテクスチャを作成（ソースと同じサイズ）
-        //    メインアタッチメント(bgra8unorm)からレンダーパスでコピー(rgba8unorm)
+        // 2. デスティネーションテクスチャを作成（メインからレンダーパスでコピー）
         const dstAttachment = frameBufferManager.createTemporaryAttachment(blendWidth, blendHeight);
 
         copyTextureRegionViaRenderPass(
@@ -360,7 +297,8 @@ export const execute = (
             blendHeight,
             frameBufferManager,
             textureManager,
-            pipelineManager
+            pipelineManager,
+            bufferManager
         );
 
         // 3. カラートランスフォームを準備
@@ -384,6 +322,7 @@ export const execute = (
             {
                 device,
                 commandEncoder,
+                bufferManager,
                 frameBufferManager,
                 pipelineManager,
                 textureManager
@@ -400,7 +339,8 @@ export const execute = (
             dstY,
             frameBufferManager,
             textureManager,
-            pipelineManager
+            pipelineManager,
+            bufferManager
         );
 
         // 6. 一時テクスチャを解放
@@ -409,6 +349,5 @@ export const execute = (
         frameBufferManager.releaseTemporaryAttachment(blendedAttachment);
     }
 
-    // キューをクリア
     clearComplexBlendQueue();
 };

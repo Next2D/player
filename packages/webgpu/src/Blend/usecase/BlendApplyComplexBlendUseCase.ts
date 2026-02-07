@@ -1,5 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
+import { ShaderSource } from "../../Shader/ShaderSource";
 
 /**
  * @description 複雑なブレンドモードを適用
@@ -29,7 +30,8 @@ export const execute = (
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
-    const pipeline = pipelineManager.getPipeline(`complex_blend_${blendMode}`);
+    // 統一パイプラインを使用
+    const pipeline = pipelineManager.getPipeline("complex_blend");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("complex_blend");
 
     if (!pipeline || !bindGroupLayout) {
@@ -44,16 +46,21 @@ export const execute = (
     // ユニフォームバッファを作成
     // mulColor: vec4<f32> (16 bytes)
     // addColor: vec4<f32> (16 bytes)
-    // Total: 32 bytes
+    // blendMode: f32 + padding: vec3<f32> (16 bytes)
+    // Total: 48 bytes
+    const blendModeIndex = ShaderSource.getBlendModeIndex(blendMode);
     const uniformData = new Float32Array([
         colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],  // mulColor
-        colorTransform[4], colorTransform[5], colorTransform[6], colorTransform[7]   // addColor
+        colorTransform[4], colorTransform[5], colorTransform[6], colorTransform[7],  // addColor
+        blendModeIndex, 0, 0, 0  // blendMode + padding
     ]);
 
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = config.bufferManager
+        ? config.bufferManager.acquireUniformBuffer(48)
+        : device.createBuffer({
+            "size": 48,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // バインドグループを作成
@@ -77,8 +84,6 @@ export const execute = (
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 
     return destAttachment;
 };

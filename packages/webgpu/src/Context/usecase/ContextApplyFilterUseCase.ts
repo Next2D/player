@@ -19,6 +19,18 @@ import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 
 /**
+ * @description シンプルなブレンドモード
+ */
+const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
+    "normal", "layer", "add", "screen", "alpha", "erase", "copy"
+] as IBlendMode[]);
+
+/**
+ * @description Y軸反転用ユニフォームデータ: scale=(1,-1), offset=(0,1)
+ */
+const Y_FLIP_UNIFORM = new Float32Array([1, -1, 0, 1]);
+
+/**
  * @description ノードからテクスチャをアタッチメントとして取得
  *              Get texture from node as attachment
  *
@@ -69,8 +81,7 @@ const getTextureFromNode = (
  * @return {boolean}
  */
 const isSimpleBlendMode = (blendMode: IBlendMode): boolean => {
-    const simpleBlendModes: IBlendMode[] = ["normal", "layer", "add", "screen", "alpha", "erase", "copy"];
-    return simpleBlendModes.includes(blendMode);
+    return SIMPLE_BLEND_MODES.has(blendMode);
 };
 
 /**
@@ -111,10 +122,7 @@ const copyMainAttachmentRegion = (
     const offsetY = y / mainAttachment.height;
 
     const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
-    const uniformBuffer = config.device.createBuffer({
-        "size": 16,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
     config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const sampler = config.textureManager.createSampler("filter_copy_sampler", false);
@@ -179,10 +187,7 @@ const drawBlendResultToMain = (
         mainAttachment.width, mainAttachment.height,  // viewport (ビューポートサイズ)
         0, 0                                          // padding (16バイトアライメント)
     ]);
-    const uniformBuffer = config.device.createBuffer({
-        "size": 32,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
     config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const sampler = config.textureManager.createSampler("filter_blend_output_sampler", false);
@@ -324,10 +329,7 @@ const drawFilterToMain = (
         const uvScaleX = 1 - uvOffsetX;
         const uvScaleY = 1 - uvOffsetY;
         const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
-        const uniformBuffer = config.device.createBuffer({
-            "size": 16,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
+        const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
         config.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
         const bindGroup = config.device.createBindGroup({
@@ -400,6 +402,7 @@ const drawFilterToMain = (
             {
                 "device": config.device,
                 "commandEncoder": config.commandEncoder,
+                "bufferManager": config.bufferManager,
                 "frameBufferManager": config.frameBufferManager,
                 "pipelineManager": config.pipelineManager,
                 "textureManager": config.textureManager
@@ -474,12 +477,8 @@ export const execute = (
             const sampler = config.textureManager.createSampler("filter_flip_sampler", false);
 
             // scale=(1, -1), offset=(0, 1) で UV.y = texCoord.y * (-1) + 1 = 1 - texCoord.y
-            const uniformData = new Float32Array([1, -1, 0, 1]);
-            const uniformBuffer = config.device.createBuffer({
-                "size": 16,
-                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-            });
-            config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+            const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
+            config.device.queue.writeBuffer(uniformBuffer, 0, Y_FLIP_UNIFORM);
 
             const bindGroup = config.device.createBindGroup({
                 "layout": flipBindGroupLayout,
@@ -555,10 +554,7 @@ export const execute = (
                 width, height,
                 0, 0 // padding
             ]);
-            const uniformBuffer = config.device.createBuffer({
-                "size": 48,
-                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-            });
+            const uniformBuffer = config.bufferManager.acquireUniformBuffer(48);
             config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
             const sampler = config.textureManager.createSampler("filter_scale_sampler", true);

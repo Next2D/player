@@ -32,6 +32,16 @@ export const execute = (
     });
     samplers.set("nearest", nearestSampler);
 
+    // アトラス用サンプラー（min: linear, mag: nearest）
+    const atlasSampler = device.createSampler({
+        "magFilter": "nearest",
+        "minFilter": "linear",
+        "mipmapFilter": "nearest",
+        "addressModeU": "clamp-to-edge",
+        "addressModeV": "clamp-to-edge"
+    });
+    samplers.set("atlas_instanced_sampler", atlasSampler);
+
     // リピートサンプラー
     const repeatSampler = device.createSampler({
         "magFilter": "linear",

@@ -1,12 +1,12 @@
-import type { IPooledBuffer } from "../../interface/IPooledBuffer";
 import { execute as bufferManagerUpperPowerOfTwoService } from "../service/BufferManagerUpperPowerOfTwoService";
 
 /**
  * @description プールから頂点バッファを取得（または新規作成）
  *              Acquire vertex buffer from pool (or create new)
+ *              バケット化されたMap<number, GPUBuffer[]>からO(1)で取得
  *
  * @param  {GPUDevice} device
- * @param  {IPooledBuffer[]} pool
+ * @param  {Map<number, GPUBuffer[]>} buckets - サイズ別バケットMap
  * @param  {number} required_size - 必要なバイトサイズ
  * @param  {Float32Array} [data] - 初期データ
  * @return {GPUBuffer}
@@ -15,35 +15,23 @@ import { execute as bufferManagerUpperPowerOfTwoService } from "../service/Buffe
  */
 export const execute = (
     device: GPUDevice,
-    pool: IPooledBuffer[],
+    buckets: Map<number, GPUBuffer[]>,
     required_size: number,
     data?: Float32Array
 ): GPUBuffer => {
-    // プールから適切なサイズのバッファを検索（2倍以内のサイズで最小のもの）
-    let bestIndex = -1;
-    let bestSize = Infinity;
+    // 2のべき乗に切り上げてバケットキーとする
+    const bucketSize = bufferManagerUpperPowerOfTwoService(required_size);
 
-    for (let i = 0; i < pool.length; i++) {
-        const entry = pool[i];
-        if (entry.size >= required_size && entry.size <= required_size * 2) {
-            if (entry.size < bestSize) {
-                bestSize = entry.size;
-                bestIndex = i;
-            }
-        }
-    }
-
+    // バケットからバッファを取得（O(1)）
+    const bucket = buckets.get(bucketSize);
     let buffer: GPUBuffer;
 
-    if (bestIndex >= 0) {
-        // プールから取得
-        const entry = pool.splice(bestIndex, 1)[0];
-        buffer = entry.buffer;
+    if (bucket && bucket.length > 0) {
+        buffer = bucket.pop()!;
     } else {
-        // 新規作成（2のべき乗に切り上げ）
-        const size = bufferManagerUpperPowerOfTwoService(required_size);
+        // 新規作成
         buffer = device.createBuffer({
-            "size": size,
+            "size": bucketSize,
             "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         });
     }

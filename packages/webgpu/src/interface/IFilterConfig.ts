@@ -7,6 +7,9 @@ import type { IAttachmentObject } from "./IAttachmentObject";
 export interface IFilterConfig {
     device: GPUDevice;
     commandEncoder: GPUCommandEncoder;
+    bufferManager?: {
+        acquireUniformBuffer(requiredSize: number): GPUBuffer;
+    };
     frameBufferManager: {
         createTemporaryAttachment(width: number, height: number): IAttachmentObject;
         releaseTemporaryAttachment(attachment: IAttachmentObject): void;

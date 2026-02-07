@@ -14,6 +14,12 @@ import {
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
 /**
+ * @description インスタンスBindGroupキャッシュ
+ */
+let $cachedBindGroup: GPUBindGroup | null = null;
+let $cachedAtlasView: GPUTextureView | null = null;
+
+/**
  * @description 最適化されたインスタンス描画
  *              Optimized instanced drawing with Storage Buffer and Indirect Drawing
  *
@@ -43,7 +49,7 @@ export const execute = (
     mainAttachment: IAttachmentObject,
     bufferManager: BufferManager,
     frameBufferManager: FrameBufferManager,
-    _textureManager: TextureManager,
+    textureManager: TextureManager,
     pipelineManager: PipelineManager,
     useIndirect: boolean = true,
     useStorageBuffer: boolean = true
@@ -157,9 +163,8 @@ export const execute = (
         instanceBuffer = bufferManager.acquireVertexBuffer(instanceData.byteLength, instanceData);
     }
 
-    // 頂点バッファ（矩形）を取得（プールから再利用）
-    const vertices = bufferManager.createRectVertices(0, 0, 1, 1);
-    const vertexBuffer = bufferManager.acquireVertexBuffer(vertices.byteLength, vertices);
+    // 頂点バッファ（矩形）を取得（キャッシュ済み）
+    const vertexBuffer = bufferManager.getUnitRectBuffer();
 
     // アトラステクスチャをバインド（複数アトラス対応）
     // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
@@ -170,13 +175,8 @@ export const execute = (
         return null;
     }
 
-    const sampler = device.createSampler({
-        "minFilter": "linear",
-        "magFilter": "nearest",
-        "mipmapFilter": "nearest",
-        "addressModeU": "clamp-to-edge",
-        "addressModeV": "clamp-to-edge"
-    });
+    // アトラス用サンプラーを取得（キャッシュ済み）
+    const sampler = textureManager.createSampler("atlas_instanced_sampler", false);
 
     const bindGroupLayout = pipelineManager.getBindGroupLayout("instanced");
     if (!bindGroupLayout) {
@@ -185,24 +185,29 @@ export const execute = (
         return null;
     }
 
-    const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": [
-            {
-                "binding": 0,
-                "resource": sampler
-            },
-            {
-                "binding": 1,
-                "resource": atlasAttachment.texture!.view
-            }
-        ]
-    });
+    // BindGroupキャッシュ: アトラスのテクスチャビューが同じなら再利用
+    const atlasView = atlasAttachment.texture!.view;
+    if (!$cachedBindGroup || $cachedAtlasView !== atlasView) {
+        $cachedBindGroup = device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                {
+                    "binding": 0,
+                    "resource": sampler
+                },
+                {
+                    "binding": 1,
+                    "resource": atlasView
+                }
+            ]
+        });
+        $cachedAtlasView = atlasView;
+    }
 
     // 描画
     passEncoder.setVertexBuffer(0, vertexBuffer);
     passEncoder.setVertexBuffer(1, instanceBuffer);
-    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.setBindGroup(0, $cachedBindGroup);
 
     if (useIndirect) {
         // Indirect Drawing: CPU-GPU間のオーバーヘッドを削減

@@ -54,7 +54,8 @@ export const execute = (
         device, commandEncoder, frameBufferManager, pipelineManager,
         sourceAttachment, attachment0, sampler,
         bufferScaleX, bufferScaleY,
-        offsetX * bufferScaleX, offsetY * bufferScaleY
+        offsetX * bufferScaleX, offsetY * bufferScaleY,
+        config.bufferManager
     );
 
     // バッファスケールを考慮したブラー値
@@ -74,7 +75,7 @@ export const execute = (
             applyDirectionalBlur(
                 device, commandEncoder, frameBufferManager, pipelineManager,
                 attachments[srcIndex], attachments[attachmentIndex], sampler,
-                true, bufferBlurX
+                true, bufferBlurX, config.bufferManager
             );
         }
 
@@ -86,7 +87,7 @@ export const execute = (
             applyDirectionalBlur(
                 device, commandEncoder, frameBufferManager, pipelineManager,
                 attachments[srcIndex], attachments[attachmentIndex], sampler,
-                false, bufferBlurY
+                false, bufferBlurY, config.bufferManager
             );
         }
     }
@@ -101,7 +102,8 @@ export const execute = (
         upscaleTexture(
             device, commandEncoder, frameBufferManager, pipelineManager,
             resultAttachment, finalAttachment, sampler,
-            1 / bufferScaleX, 1 / bufferScaleY
+            1 / bufferScaleX, 1 / bufferScaleY,
+            config.bufferManager
         );
 
         // ピンポンバッファを解放
@@ -139,7 +141,8 @@ const copyTextureToAttachment = (
     bufferScaleX: number,
     bufferScaleY: number,
     pixelOffsetX: number,
-    pixelOffsetY: number
+    pixelOffsetY: number,
+    bufferManager?: IFilterConfig["bufferManager"]
 ): void => {
     // texture_copy_rgba8を使用し、ビューポートでオフセットを制御
     const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
@@ -163,10 +166,12 @@ const copyTextureToAttachment = (
 
     // ユニフォームバッファ: scale(2) + offset(2)
     const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = bufferManager
+        ? bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({
@@ -214,7 +219,8 @@ const applyDirectionalBlur = (
     dest: IAttachmentObject,
     sampler: GPUSampler,
     isHorizontal: boolean,
-    blur: number
+    blur: number,
+    bufferManager?: IFilterConfig["bufferManager"]
 ): void => {
     const params = calculateDirectionalBlurParams(
         isHorizontal, blur,
@@ -235,10 +241,12 @@ const applyDirectionalBlur = (
 
     // ユニフォームバッファ: offset(2) + fraction + samples
     const uniformData = new Float32Array([offsetX, offsetY, fraction, samples]);
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = bufferManager
+        ? bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({
@@ -274,7 +282,8 @@ const upscaleTexture = (
     dest: IAttachmentObject,
     sampler: GPUSampler,
     _scaleX: number,
-    _scaleY: number
+    _scaleY: number,
+    bufferManager?: IFilterConfig["bufferManager"]
 ): void => {
     // temp_アタッチメントはrgba8unormフォーマットなので、texture_copy_rgba8パイプラインを使用
     const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
@@ -289,10 +298,12 @@ const upscaleTexture = (
     // シェーダー: uv = (texCoord - offset) * scale
     // scale = 1, offset = 0 で uv = texCoord となり、ソース全体がデスト全体にマッピングされる
     const uniformData = new Float32Array([1, 1, 0, 0]);
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = bufferManager
+        ? bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({
@@ -313,5 +324,4 @@ const upscaleTexture = (
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 };

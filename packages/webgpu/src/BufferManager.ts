@@ -1,4 +1,3 @@
-import type { IPooledBuffer } from "./interface/IPooledBuffer";
 import type { IPooledStorageBuffer } from "./interface/IStorageBufferConfig";
 import { execute as bufferManagerCreateRectVerticesService } from "./BufferManager/service/BufferManagerCreateRectVerticesService";
 import { execute as bufferManagerAcquireVertexBufferUseCase } from "./BufferManager/usecase/BufferManagerAcquireVertexBufferUseCase";
@@ -20,11 +19,12 @@ export class BufferManager
     private device: GPUDevice;
     private vertexBuffers: Map<string, GPUBuffer>;
     private uniformBuffers: Map<string, GPUBuffer>;
-    private vertexBufferPool: IPooledBuffer[];
-    private uniformBufferPool: IPooledBuffer[];
+    private vertexBufferBuckets: Map<number, GPUBuffer[]>;
+    private uniformBufferBuckets: Map<number, GPUBuffer[]>;
     private storageBufferPool: IPooledStorageBuffer[];
     private indirectBuffer: GPUBuffer | null;
     private frameNumber: number;
+    private unitRectBuffer: GPUBuffer | null;
 
     /**
      * @param {GPUDevice} device
@@ -35,11 +35,12 @@ export class BufferManager
         this.device = device;
         this.vertexBuffers = new Map();
         this.uniformBuffers = new Map();
-        this.vertexBufferPool = [];
-        this.uniformBufferPool = [];
+        this.vertexBufferBuckets = new Map();
+        this.uniformBufferBuckets = new Map();
         this.storageBufferPool = [];
         this.indirectBuffer = null;
         this.frameNumber = 0;
+        this.unitRectBuffer = null;
     }
 
     /**
@@ -137,7 +138,7 @@ export class BufferManager
     {
         return bufferManagerAcquireVertexBufferUseCase(
             this.device,
-            this.vertexBufferPool,
+            this.vertexBufferBuckets,
             requiredSize,
             data
         );
@@ -150,7 +151,7 @@ export class BufferManager
      */
     releaseVertexBuffer (buffer: GPUBuffer): void
     {
-        bufferManagerReleaseVertexBufferService(this.vertexBufferPool, buffer);
+        bufferManagerReleaseVertexBufferService(this.vertexBufferBuckets, buffer);
     }
 
     /**
@@ -162,7 +163,7 @@ export class BufferManager
     {
         return bufferManagerAcquireUniformBufferUseCase(
             this.device,
-            this.uniformBufferPool,
+            this.uniformBufferBuckets,
             requiredSize
         );
     }
@@ -174,7 +175,7 @@ export class BufferManager
      */
     releaseUniformBuffer (buffer: GPUBuffer): void
     {
-        bufferManagerReleaseUniformBufferService(this.uniformBufferPool, buffer);
+        bufferManagerReleaseUniformBufferService(this.uniformBufferBuckets, buffer);
     }
 
     /**
@@ -213,15 +214,19 @@ export class BufferManager
         }
         this.uniformBuffers.clear();
 
-        for (const entry of this.vertexBufferPool) {
-            entry.buffer.destroy();
+        for (const bucket of this.vertexBufferBuckets.values()) {
+            for (const buffer of bucket) {
+                buffer.destroy();
+            }
         }
-        this.vertexBufferPool = [];
+        this.vertexBufferBuckets.clear();
 
-        for (const entry of this.uniformBufferPool) {
-            entry.buffer.destroy();
+        for (const bucket of this.uniformBufferBuckets.values()) {
+            for (const buffer of bucket) {
+                buffer.destroy();
+            }
         }
-        this.uniformBufferPool = [];
+        this.uniformBufferBuckets.clear();
 
         for (const entry of this.storageBufferPool) {
             entry.buffer.destroy();
@@ -232,6 +237,11 @@ export class BufferManager
             this.indirectBuffer.destroy();
             this.indirectBuffer = null;
         }
+
+        if (this.unitRectBuffer) {
+            this.unitRectBuffer.destroy();
+            this.unitRectBuffer = null;
+        }
     }
 
     /**
@@ -240,9 +250,17 @@ export class BufferManager
      */
     getPoolStats (): { vertexPoolSize: number; uniformPoolSize: number }
     {
+        let vertexCount = 0;
+        for (const bucket of this.vertexBufferBuckets.values()) {
+            vertexCount += bucket.length;
+        }
+        let uniformCount = 0;
+        for (const bucket of this.uniformBufferBuckets.values()) {
+            uniformCount += bucket.length;
+        }
         return {
-            "vertexPoolSize": this.vertexBufferPool.length,
-            "uniformPoolSize": this.uniformBufferPool.length
+            "vertexPoolSize": vertexCount,
+            "uniformPoolSize": uniformCount
         };
     }
 
@@ -401,6 +419,26 @@ export class BufferManager
             firstVertex,
             firstInstance
         );
+    }
+
+    /**
+     * @description ユニット矩形バッファを取得（キャッシュ済み）
+     *              Get cached unit rect vertex buffer (0,0,1,1)
+     * @return {GPUBuffer}
+     */
+    getUnitRectBuffer (): GPUBuffer
+    {
+        if (!this.unitRectBuffer) {
+            const vertices = this.createRectVertices(0, 0, 1, 1);
+            this.unitRectBuffer = this.device.createBuffer({
+                "size": vertices.byteLength,
+                "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+                "mappedAtCreation": true
+            });
+            new Float32Array(this.unitRectBuffer.getMappedRange()).set(vertices);
+            this.unitRectBuffer.unmap();
+        }
+        return this.unitRectBuffer;
     }
 
     /**

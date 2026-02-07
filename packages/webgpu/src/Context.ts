@@ -73,6 +73,11 @@ import { execute as contextProcessComplexBlendQueueUseCase } from "./Context/use
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
 
 /**
+ * @description スワップチェーン転送用のIdentity UV定数: scale=(1,1), offset=(0,0)
+ */
+const $IDENTITY_UV = new Float32Array([1.0, 1.0, 0.0, 0.0]);
+
+/**
  * @description WebGPU版、Next2Dのコンテキスト
  *              WebGPU version, Next2D context
  *
@@ -213,6 +218,8 @@ export class Context
         this.textureManager = new TextureManager(device);
         this.frameBufferManager = new FrameBufferManager(device, preferred_format);
         this.pipelineManager = new PipelineManager(device, preferred_format);
+        // 遅延パイプライン群を即座に先行作成（初回アクセス時のレイテンシ解消）
+        this.pipelineManager.preloadLazyGroups();
         this.attachmentManager = new AttachmentManager(device);
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
@@ -2470,7 +2477,8 @@ export class Context
             this.$mainAttachmentObject,
             this.frameBufferManager,
             this.textureManager,
-            this.pipelineManager
+            this.pipelineManager,
+            this.bufferManager
         );
     }
 
@@ -2599,16 +2607,10 @@ export class Context
             attachment.width, attachment.height,
             0.0, 0.0
         ]);
-        const uniformBuffer = this.device.createBuffer({
-            "size": uniformData.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
+        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-        const sampler = this.device.createSampler({
-            "magFilter": "linear",
-            "minFilter": "linear"
-        });
+        const sampler = this.textureManager.createSampler("linear_sampler", true);
 
         const tempTextureView = tempTexture.createView();
 
@@ -2650,8 +2652,7 @@ export class Context
 
         this.device.queue.submit([commandEncoder.finish()]);
 
-        // リソースを解放
-        uniformBuffer.destroy();
+        // 一時テクスチャを解放（uniformBufferはプールで管理）
         tempTexture.destroy();
     }
 
@@ -2689,16 +2690,10 @@ export class Context
             attachment.width, attachment.height,   // textureSize
             0.0, 0.0                                // padding
         ]);
-        const uniformBuffer = this.device.createBuffer({
-            "size": uniformData.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
+        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-        const sampler = this.device.createSampler({
-            "magFilter": "linear",
-            "minFilter": "linear"
-        });
+        const sampler = this.textureManager.createSampler("linear_sampler", true);
 
         const bindGroup = this.device.createBindGroup({
             "layout": bindGroupLayout,
@@ -2742,8 +2737,6 @@ export class Context
         renderPass.end();
         this.device.queue.submit([commandEncoder.finish()]);
 
-        // uniform bufferを解放
-        uniformBuffer.destroy();
     }
 
     /**
@@ -2850,16 +2843,10 @@ export class Context
             attachment.width, attachment.height,      // viewport
             0.0, 0.0                                  // padding
         ]);
-        const uniformBuffer = this.device.createBuffer({
-            "size": uniformData.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
+        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-        const sampler = this.device.createSampler({
-            "magFilter": "linear",
-            "minFilter": "linear"
-        });
+        const sampler = this.textureManager.createSampler("linear_sampler", true);
 
         const tempTextureView = tempTexture.createView();
 
@@ -2901,8 +2888,7 @@ export class Context
 
         this.device.queue.submit([commandEncoder.finish()]);
 
-        // リソースを解放
-        uniformBuffer.destroy();
+        // 一時テクスチャを解放（uniformBufferはプールで管理）
         tempTexture.destroy();
     }
 
@@ -2970,16 +2956,10 @@ export class Context
             attachment.width, attachment.height,      // viewport
             0.0, 0.0                                  // padding
         ]);
-        const uniformBuffer = this.device.createBuffer({
-            "size": uniformData.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
+        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
-        const sampler = this.device.createSampler({
-            "magFilter": "linear",
-            "minFilter": "linear"
-        });
+        const sampler = this.textureManager.createSampler("linear_sampler", true);
 
         const tempTextureView = tempTexture.createView();
 
@@ -3020,8 +3000,7 @@ export class Context
 
         this.device.queue.submit([commandEncoder.finish()]);
 
-        // リソースを解放
-        uniformBuffer.destroy();
+        // 一時テクスチャを解放（uniformBufferはプールで管理）
         tempTexture.destroy();
     }
 
@@ -3073,6 +3052,7 @@ export class Context
         const config = {
             "device": this.device,
             "commandEncoder": this.commandEncoder!,
+            "bufferManager": this.bufferManager,
             "frameBufferManager": this.frameBufferManager,
             "pipelineManager": this.pipelineManager,
             "textureManager": this.textureManager
@@ -3150,6 +3130,7 @@ export class Context
             this.ensureMainTexture();
             this.ensureCommandEncoder();
             this.frameStarted = true;
+            this.frameBufferManager.beginFrame();
 
             // 注意: グラデーションLUTは共有テクスチャに描画されるため、
             // キャッシュは使用しません。各フレームで再描画が必要です。
@@ -3306,7 +3287,7 @@ export class Context
         }
 
         // Uniform: scale = (1, 1), offset = (0, 0) で 1:1 コピー
-        const uniformData = new Float32Array([1.0, 1.0, 0.0, 0.0]);
+        const uniformData = $IDENTITY_UV;
         const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 

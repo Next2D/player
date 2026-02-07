@@ -7,6 +7,13 @@ import { renderQueue } from "@next2d/render-queue";
 import { $context } from "../WebGPUUtil";
 
 /**
+ * @description シンプルなブレンドモード（インスタンス描画可能）
+ */
+const SIMPLE_BLEND_MODES: ReadonlySet<string> = new Set([
+    "normal", "layer", "add", "screen", "alpha", "erase", "copy"
+]);
+
+/**
  * @description 複雑なブレンドモード描画キュー
  */
 let $complexBlendQueue: IComplexBlendItem[] = [];
@@ -89,10 +96,7 @@ export const addDisplayObjectToInstanceArray = (
     const ct6 = color_transform[6] / 255;
     const ct7 = 0;
 
-    // シンプルなブレンドモード（インスタンス描画可能）
-    const simpleBlendModes = ["normal", "layer", "add", "screen", "alpha", "erase", "copy"];
-
-    if (simpleBlendModes.includes(blend_mode)) {
+    if (SIMPLE_BLEND_MODES.has(blend_mode)) {
         // ブレンドモードまたはアトラスインデックスが変わった場合
         if ($getCurrentBlendMode() !== blend_mode || $getCurrentAtlasIndex() !== node.index) {
             // 異なるブレンドモード/アトラスになるので、切り替え前にバッチを描画
@@ -110,7 +114,7 @@ export const addDisplayObjectToInstanceArray = (
         // インスタンスデータを配列に追加
         const shaderManager = getInstancedShaderManager();
 
-        renderQueue.push(
+        renderQueue.pushInstanceBuffer(
             // texture rectangle (vec4) - normalized coordinates
             node.x / render_max_size, node.y / render_max_size,
             node.w / render_max_size, node.h / render_max_size,

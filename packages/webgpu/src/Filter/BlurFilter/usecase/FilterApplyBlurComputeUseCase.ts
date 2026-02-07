@@ -86,7 +86,8 @@ export const execute = (
         device, commandEncoder, frameBufferManager, pipelineManager,
         sourceAttachment, attachment0, sampler,
         bufferScaleX, bufferScaleY,
-        offsetX * bufferScaleX, offsetY * bufferScaleY
+        offsetX * bufferScaleX, offsetY * bufferScaleY,
+        config.bufferManager
     );
 
     // バッファスケールを考慮したブラー値
@@ -132,7 +133,8 @@ export const execute = (
 
         upscaleTexture(
             device, commandEncoder, frameBufferManager, pipelineManager,
-            resultAttachment, finalAttachment, sampler
+            resultAttachment, finalAttachment, sampler,
+            config.bufferManager
         );
 
         // ピンポンバッファを解放
@@ -163,7 +165,8 @@ const copyTextureToAttachment = (
     bufferScaleX: number,
     bufferScaleY: number,
     pixelOffsetX: number,
-    pixelOffsetY: number
+    pixelOffsetY: number,
+    bufferManager?: IFilterConfig["bufferManager"]
 ): void => {
     const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
@@ -177,10 +180,12 @@ const copyTextureToAttachment = (
     const scaledSourceHeight = source.height * bufferScaleY;
 
     const uniformData = new Float32Array([1, 1, 0, 0]);
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = bufferManager
+        ? bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({
@@ -224,7 +229,8 @@ const upscaleTexture = (
     pipelineManager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
-    sampler: GPUSampler
+    sampler: GPUSampler,
+    bufferManager?: IFilterConfig["bufferManager"]
 ): void => {
     const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
     const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
@@ -235,10 +241,12 @@ const upscaleTexture = (
     }
 
     const uniformData = new Float32Array([1, 1, 0, 0]);
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = bufferManager
+        ? bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     const bindGroup = device.createBindGroup({

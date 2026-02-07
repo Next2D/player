@@ -14,6 +14,12 @@ import {
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
 /**
+ * @description インスタンスBindGroupキャッシュ
+ */
+let $cachedBindGroup: GPUBindGroup | null = null;
+let $cachedAtlasView: GPUTextureView | null = null;
+
+/**
  * @description インスタンス配列を描画
  *              Draw instanced arrays
  *
@@ -34,7 +40,7 @@ export const execute = (
     main_attachment: IAttachmentObject,
     buffer_manager: BufferManager,
     frame_buffer_manager: FrameBufferManager,
-    _texture_manager: TextureManager,
+    texture_manager: TextureManager,
     pipeline_manager: PipelineManager
 ): GPURenderPassEncoder | null => {
     const shaderManager = getInstancedShaderManager();
@@ -141,9 +147,8 @@ export const execute = (
 
     const instanceBuffer = buffer_manager.acquireVertexBuffer(instanceData.byteLength, instanceData);
 
-    // 頂点バッファ（矩形）を取得（プールから再利用）
-    const vertices = buffer_manager.createRectVertices(0, 0, 1, 1);
-    const vertexBuffer = buffer_manager.acquireVertexBuffer(vertices.byteLength, vertices);
+    // 頂点バッファ（矩形）を取得（キャッシュ済み）
+    const vertexBuffer = buffer_manager.getUnitRectBuffer();
 
     // アトラステクスチャをバインド（複数アトラス対応）
     // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
@@ -154,16 +159,10 @@ export const execute = (
         return null;
     }
 
-    // アトラス用サンプラーを作成（WebGL版と同様の設定）
+    // アトラス用サンプラーを取得（キャッシュ済み）
     // MIN_FILTER: linear（縮小時・回転時にスムーズ）
     // MAG_FILTER: nearest（拡大時にシャープ）
-    const sampler = device.createSampler({
-        "minFilter": "linear",
-        "magFilter": "nearest",
-        "mipmapFilter": "nearest",
-        "addressModeU": "clamp-to-edge",
-        "addressModeV": "clamp-to-edge"
-    });
+    const sampler = texture_manager.createSampler("atlas_instanced_sampler", false);
 
     // バインドグループを作成
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("instanced");
@@ -173,24 +172,29 @@ export const execute = (
         return null;
     }
 
-    const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": [
-            {
-                "binding": 0,
-                "resource": sampler
-            },
-            {
-                "binding": 1,
-                "resource": atlasAttachment.texture!.view
-            }
-        ]
-    });
+    // BindGroupキャッシュ: アトラスのテクスチャビューが同じなら再利用
+    const atlasView = atlasAttachment.texture!.view;
+    if (!$cachedBindGroup || $cachedAtlasView !== atlasView) {
+        $cachedBindGroup = device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                {
+                    "binding": 0,
+                    "resource": sampler
+                },
+                {
+                    "binding": 1,
+                    "resource": atlasView
+                }
+            ]
+        });
+        $cachedAtlasView = atlasView;
+    }
 
     // 描画
     passEncoder.setVertexBuffer(0, vertexBuffer);
     passEncoder.setVertexBuffer(1, instanceBuffer);
-    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.setBindGroup(0, $cachedBindGroup);
     passEncoder.draw(6, shaderManager.count, 0, 0);
 
     // レンダーパスを終了

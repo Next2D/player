@@ -58,6 +58,52 @@ class RenderQueue
     }
 
     /**
+     * @description インスタンスバッファ用のデータを追加（24値）
+     *              Add instance buffer data (24 values)
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    pushInstanceBuffer (
+        a: number, b: number, c: number, d: number,
+        e: number, f: number, g: number, h: number,
+        i: number, j: number, k: number, l: number,
+        m: number, n: number, o: number, p: number,
+        q: number, r: number, s: number, t: number,
+        u: number, v: number, w: number, x: number
+    ): void {
+        if (this.buffer.length < this.offset + 24) {
+            this.resize(24);
+        }
+
+        this.buffer[this.offset++] = a;
+        this.buffer[this.offset++] = b;
+        this.buffer[this.offset++] = c;
+        this.buffer[this.offset++] = d;
+        this.buffer[this.offset++] = e;
+        this.buffer[this.offset++] = f;
+        this.buffer[this.offset++] = g;
+        this.buffer[this.offset++] = h;
+        this.buffer[this.offset++] = i;
+        this.buffer[this.offset++] = j;
+        this.buffer[this.offset++] = k;
+        this.buffer[this.offset++] = l;
+        this.buffer[this.offset++] = m;
+        this.buffer[this.offset++] = n;
+        this.buffer[this.offset++] = o;
+        this.buffer[this.offset++] = p;
+        this.buffer[this.offset++] = q;
+        this.buffer[this.offset++] = r;
+        this.buffer[this.offset++] = s;
+        this.buffer[this.offset++] = t;
+        this.buffer[this.offset++] = u;
+        this.buffer[this.offset++] = v;
+        this.buffer[this.offset++] = w;
+        this.buffer[this.offset++] = x;
+    }
+
+    /**
      * @description Shape用のバッファを追加
      *              Add buffer for Shape
      *

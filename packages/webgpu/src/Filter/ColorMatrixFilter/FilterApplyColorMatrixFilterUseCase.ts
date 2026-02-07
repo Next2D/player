@@ -63,10 +63,12 @@ export const execute = (
     uniformData.set(mat4x4, 0);
     uniformData.set(offset, 16);
 
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = config.bufferManager
+        ? config.bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // バインドグループを作成

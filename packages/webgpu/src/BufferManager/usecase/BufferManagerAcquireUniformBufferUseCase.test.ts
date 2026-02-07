@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { IPooledBuffer } from "../../interface/IPooledBuffer";
 import { execute } from "./BufferManagerAcquireUniformBufferUseCase";
 
 // Mock GPUBufferUsage
@@ -11,7 +10,7 @@ const GPUBufferUsage = {
 
 describe("BufferManagerAcquireUniformBufferUseCase", () =>
 {
-    let pool: IPooledBuffer[];
+    let buckets: Map<number, GPUBuffer[]>;
 
     const createMockDevice = () =>
     {
@@ -25,37 +24,34 @@ describe("BufferManagerAcquireUniformBufferUseCase", () =>
         } as unknown as GPUDevice;
     };
 
-    const createPoolEntry = (size: number): IPooledBuffer =>
-    {
-        return {
-            "buffer": { "size": size, "id": Math.random() } as unknown as GPUBuffer,
-            size
-        };
-    };
+    const createMockBuffer = (size: number): GPUBuffer => ({
+        "size": size,
+        "id": Math.random()
+    } as unknown as GPUBuffer);
 
     beforeEach(() =>
     {
-        pool = [];
+        buckets = new Map();
     });
 
-    it("should return buffer from pool if size matches", () =>
+    it("should return buffer from bucket if size matches", () =>
     {
-        const entry = createPoolEntry(256);
-        pool.push(entry);
+        const buffer = createMockBuffer(256);
+        buckets.set(256, [buffer]);
         const device = createMockDevice();
 
-        const result = execute(device, pool, 256);
+        const result = execute(device, buckets, 256);
 
-        expect(result).toBe(entry.buffer);
-        expect(pool.length).toBe(0);
+        expect(result).toBe(buffer);
+        expect(buckets.get(256)!.length).toBe(0);
         expect(device.createBuffer).not.toHaveBeenCalled();
     });
 
-    it("should create new buffer if pool is empty", () =>
+    it("should create new buffer if buckets are empty", () =>
     {
         const device = createMockDevice();
 
-        const result = execute(device, pool, 256);
+        const result = execute(device, buckets, 256);
 
         expect(device.createBuffer).toHaveBeenCalledWith({
             "size": 256,
@@ -67,7 +63,7 @@ describe("BufferManagerAcquireUniformBufferUseCase", () =>
     {
         const device = createMockDevice();
 
-        execute(device, pool, 100); // Should align to 112 (ceil(100/16)*16)
+        execute(device, buckets, 100); // Should align to 112 (ceil(100/16)*16)
 
         expect(device.createBuffer).toHaveBeenCalledWith(
             expect.objectContaining({ "size": 112 })
@@ -78,68 +74,31 @@ describe("BufferManagerAcquireUniformBufferUseCase", () =>
     {
         const device = createMockDevice();
 
-        execute(device, pool, 64); // Already aligned
+        execute(device, buckets, 64); // Already aligned
 
         expect(device.createBuffer).toHaveBeenCalledWith(
             expect.objectContaining({ "size": 64 })
         );
     });
 
-    it("should return buffer from pool within 2x size range", () =>
+    it("should return buffer from bucket with aligned size", () =>
     {
-        const entry = createPoolEntry(400); // Within 2x of aligned 256
-        pool.push(entry);
+        // 100 aligns to 112
+        const buffer = createMockBuffer(112);
+        buckets.set(112, [buffer]);
         const device = createMockDevice();
 
-        const result = execute(device, pool, 256);
+        const result = execute(device, buckets, 100);
 
-        expect(result).toBe(entry.buffer);
+        expect(result).toBe(buffer);
         expect(device.createBuffer).not.toHaveBeenCalled();
-    });
-
-    it("should skip buffer too large (> 2x)", () =>
-    {
-        const entry = createPoolEntry(1024); // More than 2x of 256
-        pool.push(entry);
-        const device = createMockDevice();
-
-        execute(device, pool, 256);
-
-        expect(device.createBuffer).toHaveBeenCalled();
-        expect(pool.length).toBe(1); // Entry not consumed
-    });
-
-    it("should skip buffer too small", () =>
-    {
-        const entry = createPoolEntry(64);
-        pool.push(entry);
-        const device = createMockDevice();
-
-        execute(device, pool, 256);
-
-        expect(device.createBuffer).toHaveBeenCalled();
-        expect(pool.length).toBe(1); // Entry not consumed
-    });
-
-    it("should pick first suitable buffer from pool", () =>
-    {
-        const small = createPoolEntry(64);
-        const suitable = createPoolEntry(256);
-        const large = createPoolEntry(1024);
-        pool.push(small, suitable, large);
-        const device = createMockDevice();
-
-        const result = execute(device, pool, 256);
-
-        expect(result).toBe(suitable.buffer);
-        expect(pool.length).toBe(2);
     });
 
     it("should handle very small sizes", () =>
     {
         const device = createMockDevice();
 
-        execute(device, pool, 1);
+        execute(device, buckets, 1);
 
         // Should align to 16
         expect(device.createBuffer).toHaveBeenCalledWith(
@@ -147,15 +106,17 @@ describe("BufferManagerAcquireUniformBufferUseCase", () =>
         );
     });
 
-    it("should remove acquired entry from pool", () =>
+    it("should pop last buffer from bucket (LIFO)", () =>
     {
-        pool.push(createPoolEntry(256));
-        pool.push(createPoolEntry(512));
+        const buffer1 = createMockBuffer(256);
+        const buffer2 = createMockBuffer(256);
+        buckets.set(256, [buffer1, buffer2]);
         const device = createMockDevice();
 
-        execute(device, pool, 256);
+        const result = execute(device, buckets, 256);
 
-        expect(pool.length).toBe(1);
-        expect(pool[0].size).toBe(512);
+        expect(result).toBe(buffer2); // LIFO: last in, first out
+        expect(buckets.get(256)!.length).toBe(1);
+        expect(buckets.get(256)![0]).toBe(buffer1);
     });
 });

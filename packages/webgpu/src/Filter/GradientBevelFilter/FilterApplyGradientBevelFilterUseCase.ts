@@ -92,10 +92,12 @@ export const execute = (
         0.0
     ]);
 
-    const bevelBaseUniformBuffer = device.createBuffer({
-        "size": bevelBaseUniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const bevelBaseUniformBuffer = config.bufferManager
+        ? config.bufferManager.acquireUniformBuffer(bevelBaseUniformData.byteLength)
+        : device.createBuffer({
+            "size": bevelBaseUniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(bevelBaseUniformBuffer, 0, bevelBaseUniformData);
 
     const bevelBaseBindGroup = device.createBindGroup({
@@ -210,10 +212,12 @@ export const execute = (
         blurOffsetUVX, blurOffsetUVY
     ]);
 
-    const uniformBuffer = device.createBuffer({
-        "size": uniformData.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const uniformBuffer = config.bufferManager
+        ? config.bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        : device.createBuffer({
+            "size": uniformData.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // バインドグループを作成（オリジナルテクスチャを直接使用）

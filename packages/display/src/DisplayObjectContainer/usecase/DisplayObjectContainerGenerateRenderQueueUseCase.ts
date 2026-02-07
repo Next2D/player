@@ -12,6 +12,7 @@ import { execute as videoGenerateRenderQueueUseCase } from "../../Video/usecase/
 import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../DisplayObject/usecase/DisplayObjectIsMaskReflectedInDisplayUseCase";
 import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerGenerateClipQueueUseCase";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
+import { execute as displayObjectContainerGetLayerBoundsUseCase } from "./DisplayObjectContainerGetLayerBoundsUseCase";
 import { renderQueue } from "@next2d/render-queue";
 import {
     $clamp,
@@ -177,8 +178,13 @@ export const execute = <P extends DisplayObjectContainer>(
 
         const useFilfer = params.length > 0;
         if (useFilfer) {
+            const layerBounds = displayObjectContainerGetLayerBoundsUseCase(
+                display_object_container
+            );
+
             renderQueue.push(
                 +useFilfer, +updated,
+                Math.ceil(layerBounds[3] - layerBounds[0]), Math.ceil(layerBounds[4] - layerBounds[1]),
                 bounds[0], bounds[1], bounds[2], bounds[3],
                 params.length
             );

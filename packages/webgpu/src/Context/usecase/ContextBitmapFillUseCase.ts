@@ -9,6 +9,11 @@ import {
 } from "../../Mask";
 
 /**
+ * @description ビットマップ用サンプラーキャッシュ (smooth|repeat -> sampler)
+ */
+const $bitmapSamplerCache = new Map<string, GPUSampler>();
+
+/**
  * @description ビットマップの塗りつぶしを実行
  *              Execute bitmap fill
  *
@@ -133,13 +138,18 @@ export const execute = (
     const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
-    // サンプラーを作成
-    const sampler = device.createSampler({
-        "magFilter": smooth ? "linear" : "nearest",
-        "minFilter": smooth ? "linear" : "nearest",
-        "addressModeU": repeat ? "repeat" : "clamp-to-edge",
-        "addressModeV": repeat ? "repeat" : "clamp-to-edge"
-    });
+    // サンプラーを取得（キャッシュ済み）
+    const samplerKey = `bitmap_${smooth ? "s" : "n"}_${repeat ? "r" : "c"}`;
+    let sampler = $bitmapSamplerCache.get(samplerKey);
+    if (!sampler) {
+        sampler = device.createSampler({
+            "magFilter": smooth ? "linear" : "nearest",
+            "minFilter": smooth ? "linear" : "nearest",
+            "addressModeU": repeat ? "repeat" : "clamp-to-edge",
+            "addressModeV": repeat ? "repeat" : "clamp-to-edge"
+        });
+        $bitmapSamplerCache.set(samplerKey, sampler);
+    }
 
     // バインドグループを作成
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("bitmap_fill");

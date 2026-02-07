@@ -70,19 +70,16 @@ export const execute = (
     const useFilter = Boolean(render_queue[index++]);
 
     // use new attachment
+    const filterIndex = index;
     if (useBlendMode || useFilter) {
-        // todo
-    }
+        // container begin new attachment
 
-    // フィルターデータをスキップ
-    if (useFilter) {
-        // updated
-        index++;
-        // filterBounds (4 values)
-        index += 4;
-        // params.length + params
-        const paramsLength = render_queue[index++];
-        index += paramsLength;
+        // フィルターデータをスキップ
+        if (useFilter) {
+            index += 7; // update, width, height, bounds
+            const filterCount = render_queue[index++];
+            index += filterCount;
+        }
     }
 
     const length = render_queue[index++];
@@ -193,7 +190,7 @@ export const execute = (
 
     // end new attachment
     if (useBlendMode || useFilter) {
-        // todo
+        console.log(filterIndex);
     }
 
     return index;

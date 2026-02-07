@@ -6,6 +6,11 @@ import { generateGradientLUT, getAdaptiveResolution } from "../../Gradient/Gradi
 import { execute as contextComputeGradientMatrixService } from "../service/ContextComputeGradientMatrixService";
 
 /**
+ * @description グラデーション用サンプラーキャッシュ
+ */
+let $gradientSampler: GPUSampler | null = null;
+
+/**
  * @description グラデーション線の描画を実行（WebGL版と同じ仕様）
  *              Execute gradient stroke (same specification as WebGL)
  *
@@ -156,13 +161,16 @@ export const execute = (
     const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
     device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
 
-    // サンプラーを作成
-    const sampler = device.createSampler({
-        "magFilter": "linear",
-        "minFilter": "linear",
-        "addressModeU": "clamp-to-edge",
-        "addressModeV": "clamp-to-edge"
-    });
+    // サンプラーを取得（キャッシュ済み）
+    if (!$gradientSampler) {
+        $gradientSampler = device.createSampler({
+            "magFilter": "linear",
+            "minFilter": "linear",
+            "addressModeU": "clamp-to-edge",
+            "addressModeV": "clamp-to-edge"
+        });
+    }
+    const sampler = $gradientSampler;
 
     // バインドグループを作成
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("gradient_fill");
