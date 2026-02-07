@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - DisplayObject Properties</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #333333; }</style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape } = next2d.display;
+
+        // --- 1行目（y=20）: visible テスト ---
+        const vis1 = new Shape();
+        vis1.graphics.beginFill(0xFF0000, 1).drawRect(20, 20, 80, 60).endFill();
+        root.addChild(vis1);
+
+        const vis2 = new Shape();
+        vis2.graphics.beginFill(0x00FF00, 1).drawRect(120, 20, 80, 60).endFill();
+        vis2.visible = false;
+        root.addChild(vis2);
+
+        const vis3 = new Shape();
+        vis3.graphics.beginFill(0x0000FF, 1).drawRect(220, 20, 80, 60).endFill();
+        root.addChild(vis3);
+
+        // --- 2行目（y=100）: alpha テスト ---
+        const alpha1 = new Shape();
+        alpha1.graphics.beginFill(0xFF0000, 1).drawRect(20, 100, 80, 60).endFill();
+        alpha1.alpha = 1.0;
+        root.addChild(alpha1);
+
+        const alpha2 = new Shape();
+        alpha2.graphics.beginFill(0xFF0000, 1).drawRect(120, 100, 80, 60).endFill();
+        alpha2.alpha = 0.75;
+        root.addChild(alpha2);
+
+        const alpha3 = new Shape();
+        alpha3.graphics.beginFill(0xFF0000, 1).drawRect(220, 100, 80, 60).endFill();
+        alpha3.alpha = 0.5;
+        root.addChild(alpha3);
+
+        const alpha4 = new Shape();
+        alpha4.graphics.beginFill(0xFF0000, 1).drawRect(320, 100, 80, 60).endFill();
+        alpha4.alpha = 0.25;
+        root.addChild(alpha4);
+
+        const alpha5 = new Shape();
+        alpha5.graphics.beginFill(0xFF0000, 1).drawRect(420, 100, 80, 60).endFill();
+        alpha5.alpha = 0.0;
+        root.addChild(alpha5);
+
+        // --- 3行目（y=180）: rotation テスト ---
+        const rot1 = new Shape();
+        rot1.graphics.beginFill(0x0000FF, 1).drawRect(0, 0, 60, 60).endFill();
+        rot1.x = 50; rot1.y = 180;
+        rot1.rotation = 0;
+        root.addChild(rot1);
+
+        const rot2 = new Shape();
+        rot2.graphics.beginFill(0x0000FF, 1).drawRect(0, 0, 60, 60).endFill();
+        rot2.x = 160; rot2.y = 180;
+        rot2.rotation = 45;
+        root.addChild(rot2);
+
+        const rot3 = new Shape();
+        rot3.graphics.beginFill(0x0000FF, 1).drawRect(0, 0, 60, 60).endFill();
+        rot3.x = 270; rot3.y = 180;
+        rot3.rotation = 90;
+        root.addChild(rot3);
+
+        const rot4 = new Shape();
+        rot4.graphics.beginFill(0x0000FF, 1).drawRect(0, 0, 60, 60).endFill();
+        rot4.x = 380; rot4.y = 180;
+        rot4.rotation = 180;
+        root.addChild(rot4);
+
+        // --- 4行目（y=280）: scaleX/scaleY テスト ---
+        const sc1 = new Shape();
+        sc1.graphics.beginFill(0x00FF00, 1).drawRect(0, 0, 40, 40).endFill();
+        sc1.x = 30; sc1.y = 280;
+        sc1.scaleX = 2; sc1.scaleY = 1;
+        root.addChild(sc1);
+
+        const sc2 = new Shape();
+        sc2.graphics.beginFill(0x00FF00, 1).drawRect(0, 0, 40, 40).endFill();
+        sc2.x = 170; sc2.y = 280;
+        sc2.scaleX = 1; sc2.scaleY = 2;
+        root.addChild(sc2);
+
+        const sc3 = new Shape();
+        sc3.graphics.beginFill(0x00FF00, 1).drawRect(0, 0, 40, 40).endFill();
+        sc3.x = 280; sc3.y = 280;
+        sc3.scaleX = 0.5; sc3.scaleY = 0.5;
+        root.addChild(sc3);
+
+        const sc4 = new Shape();
+        sc4.graphics.beginFill(0x00FF00, 1).drawRect(0, 0, 40, 40).endFill();
+        sc4.x = 360; sc4.y = 280;
+        sc4.scaleX = -1; sc4.scaleY = 1;
+        root.addChild(sc4);
+
+        // --- 5行目（y=380）: 複合transform ---
+        const comp1 = new Shape();
+        comp1.graphics.beginFill(0xFFFF00, 1).drawRect(0, 0, 60, 40).endFill();
+        comp1.x = 50; comp1.y = 380;
+        comp1.rotation = 30; comp1.scaleX = 1.5; comp1.scaleY = 0.8;
+        root.addChild(comp1);
+
+        const comp2 = new Shape();
+        comp2.graphics.beginFill(0xFF00FF, 1).drawRect(0, 0, 60, 40).endFill();
+        comp2.x = 200; comp2.y = 380;
+        comp2.rotation = -45; comp2.scaleX = 1.2; comp2.scaleY = 1.2;
+        root.addChild(comp2);
+
+        const comp3 = new Shape();
+        comp3.graphics.beginFill(0x00FFFF, 1).drawRect(0, 0, 60, 40).endFill();
+        comp3.x = 350; comp3.y = 380;
+        comp3.rotation = 60; comp3.scaleX = 0.7; comp3.scaleY = 1.5;
+        root.addChild(comp3);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

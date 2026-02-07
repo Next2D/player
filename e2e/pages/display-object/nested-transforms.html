@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Nested Transforms</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #333333; }</style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, Sprite } = next2d.display;
+
+        // --- 1. 3段ネスト scale 累積（左側 x=50, y=50） ---
+        const gp1 = new Sprite();
+        gp1.x = 50; gp1.y = 50;
+        gp1.scaleX = 2; gp1.scaleY = 2;
+
+        const p1 = new Sprite();
+        p1.scaleX = 0.5; p1.scaleY = 0.5;
+
+        const child1 = new Shape();
+        child1.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 40, 40).endFill();
+        p1.addChild(child1);
+        gp1.addChild(p1);
+        root.addChild(gp1);
+
+        // 比較用: 直接等倍の四角
+        const ref1 = new Shape();
+        ref1.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 40, 40).endFill();
+        ref1.x = 120; ref1.y = 50;
+        root.addChild(ref1);
+
+        // --- 2. 3段ネスト rotation 累積（中央 x=250, y=50） ---
+        const gp2 = new Sprite();
+        gp2.x = 250; gp2.y = 50;
+        gp2.rotation = 30;
+
+        const p2 = new Sprite();
+        p2.rotation = 30;
+
+        const child2 = new Shape();
+        child2.graphics.beginFill(0x0000FF, 1).drawRect(0, 0, 60, 40).endFill();
+        p2.addChild(child2);
+        gp2.addChild(p2);
+        root.addChild(gp2);
+
+        // --- 3. 3段ネスト position 累積（右側 x=400, y=50） ---
+        const gp3 = new Sprite();
+        gp3.x = 400; gp3.y = 50;
+
+        const p3 = new Sprite();
+        p3.x = 50; p3.y = 50;
+
+        const child3 = new Shape();
+        child3.graphics.beginFill(0x00FF00, 1).drawRect(0, 0, 40, 40).endFill();
+        p3.addChild(child3);
+        gp3.addChild(p3);
+        root.addChild(gp3);
+
+        // --- 4. alpha 累積テスト（y=250） ---
+        const gp4 = new Sprite();
+        gp4.x = 50; gp4.y = 250;
+        gp4.alpha = 0.5;
+
+        const p4 = new Sprite();
+        p4.alpha = 0.5;
+
+        const child4 = new Shape();
+        child4.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        p4.addChild(child4);
+        gp4.addChild(p4);
+        root.addChild(gp4);
+
+        // 比較用: alpha=0.25 の単独四角
+        const ref4 = new Shape();
+        ref4.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        ref4.x = 200; ref4.y = 250;
+        ref4.alpha = 0.25;
+        root.addChild(ref4);
+
+        // --- 5. 混合テスト（y=350） ---
+        const gp5 = new Sprite();
+        gp5.x = 50; gp5.y = 350;
+        gp5.scaleX = 1.5;
+
+        const p5 = new Sprite();
+        p5.rotation = 30;
+
+        const child5 = new Shape();
+        child5.graphics.beginFill(0xFF00FF, 1).drawRect(0, 0, 50, 50).endFill();
+        p5.addChild(child5);
+        gp5.addChild(p5);
+        root.addChild(gp5);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

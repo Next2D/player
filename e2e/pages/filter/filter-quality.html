@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Filter Quality</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { Shape } = next2d.display;
+        const { BlurFilter, DropShadowFilter, GlowFilter } = next2d.filters;
+
+        const createTestShape = (color = 0xFF0000) => {
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(color, 1.0)
+                .drawRoundRect(0, 0, 80, 50, 8)
+                .endFill();
+            return shape;
+        };
+
+        // ===== 1行目（y=30）: BlurFilter quality比較 =====
+
+        // quality=1
+        const b1 = createTestShape();
+        b1.x = 30; b1.y = 30;
+        b1.filters = [new BlurFilter(10, 10, 1)];
+        root.addChild(b1);
+
+        // quality=2
+        const b2 = createTestShape();
+        b2.x = 170; b2.y = 30;
+        b2.filters = [new BlurFilter(10, 10, 2)];
+        root.addChild(b2);
+
+        // quality=3
+        const b3 = createTestShape();
+        b3.x = 310; b3.y = 30;
+        b3.filters = [new BlurFilter(10, 10, 3)];
+        root.addChild(b3);
+
+        // 参照（フィルターなし）
+        const b4 = createTestShape();
+        b4.x = 450; b4.y = 30;
+        root.addChild(b4);
+
+        // ===== 2行目（y=130）: DropShadowFilter quality比較 =====
+
+        // quality=1
+        const d1 = createTestShape();
+        d1.x = 30; d1.y = 130;
+        d1.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 8, 8, 1, 1)];
+        root.addChild(d1);
+
+        // quality=2
+        const d2 = createTestShape();
+        d2.x = 170; d2.y = 130;
+        d2.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 8, 8, 1, 2)];
+        root.addChild(d2);
+
+        // quality=3
+        const d3 = createTestShape();
+        d3.x = 310; d3.y = 130;
+        d3.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 8, 8, 1, 3)];
+        root.addChild(d3);
+
+        // ===== 3行目（y=230）: GlowFilter quality比較 =====
+
+        // quality=1
+        const g1 = createTestShape();
+        g1.x = 30; g1.y = 230;
+        g1.filters = [new GlowFilter(0xFFFF00, 1, 10, 10, 2, 1)];
+        root.addChild(g1);
+
+        // quality=2
+        const g2 = createTestShape();
+        g2.x = 170; g2.y = 230;
+        g2.filters = [new GlowFilter(0xFFFF00, 1, 10, 10, 2, 2)];
+        root.addChild(g2);
+
+        // quality=3
+        const g3 = createTestShape();
+        g3.x = 310; g3.y = 230;
+        g3.filters = [new GlowFilter(0xFFFF00, 1, 10, 10, 2, 3)];
+        root.addChild(g3);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

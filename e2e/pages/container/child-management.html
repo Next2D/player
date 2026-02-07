@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Container Child Management</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #333333; }</style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, Sprite } = next2d.display;
+
+        // --- 1. 基本z-order（y=20）- 3つの重なる四角 ---
+        const container1 = new Sprite();
+        container1.x = 20; container1.y = 20;
+
+        const red1 = new Shape();
+        red1.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        const green1 = new Shape();
+        green1.graphics.beginFill(0x00FF00, 1).drawRect(20, 10, 80, 60).endFill();
+        const blue1 = new Shape();
+        blue1.graphics.beginFill(0x0000FF, 1).drawRect(40, 20, 80, 60).endFill();
+
+        container1.addChild(red1);
+        container1.addChild(green1);
+        container1.addChild(blue1);
+        root.addChild(container1);
+
+        // --- 2. addChildAt テスト（y=20, x=200）- 黄色を最背面に追加 ---
+        const container2 = new Sprite();
+        container2.x = 200; container2.y = 20;
+
+        const r2 = new Shape();
+        r2.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        const g2 = new Shape();
+        g2.graphics.beginFill(0x00FF00, 1).drawRect(20, 10, 80, 60).endFill();
+        container2.addChild(r2);
+        container2.addChild(g2);
+
+        const yellow = new Shape();
+        yellow.graphics.beginFill(0xFFFF00, 1).drawRect(-10, -5, 80, 60).endFill();
+        container2.addChildAt(yellow, 0);
+        root.addChild(container2);
+
+        // --- 3. setChildIndex テスト（y=20, x=400）- 赤を最前面に移動 ---
+        const container3 = new Sprite();
+        container3.x = 400; container3.y = 20;
+
+        const r3 = new Shape();
+        r3.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        const g3 = new Shape();
+        g3.graphics.beginFill(0x00FF00, 1).drawRect(20, 10, 80, 60).endFill();
+        const b3 = new Shape();
+        b3.graphics.beginFill(0x0000FF, 1).drawRect(40, 20, 80, 60).endFill();
+
+        container3.addChild(r3);
+        container3.addChild(g3);
+        container3.addChild(b3);
+        container3.setChildIndex(r3, 2);
+        root.addChild(container3);
+
+        // --- 4. swapChildren テスト（y=150） ---
+        const container4 = new Sprite();
+        container4.x = 20; container4.y = 150;
+
+        const r4 = new Shape();
+        r4.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        const g4 = new Shape();
+        g4.graphics.beginFill(0x00FF00, 1).drawRect(20, 10, 80, 60).endFill();
+        const b4 = new Shape();
+        b4.graphics.beginFill(0x0000FF, 1).drawRect(40, 20, 80, 60).endFill();
+
+        container4.addChild(r4);
+        container4.addChild(g4);
+        container4.addChild(b4);
+        container4.swapChildren(r4, b4);
+        root.addChild(container4);
+
+        // --- 5. swapChildrenAt テスト（y=150, x=200） ---
+        const container5 = new Sprite();
+        container5.x = 200; container5.y = 150;
+
+        const r5 = new Shape();
+        r5.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        const g5 = new Shape();
+        g5.graphics.beginFill(0x00FF00, 1).drawRect(20, 10, 80, 60).endFill();
+        const b5 = new Shape();
+        b5.graphics.beginFill(0x0000FF, 1).drawRect(40, 20, 80, 60).endFill();
+
+        container5.addChild(r5);
+        container5.addChild(g5);
+        container5.addChild(b5);
+        container5.swapChildrenAt(0, 1);
+        root.addChild(container5);
+
+        // --- 6. removeChild テスト（y=150, x=400） ---
+        const container6 = new Sprite();
+        container6.x = 400; container6.y = 150;
+
+        const r6 = new Shape();
+        r6.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 80, 60).endFill();
+        const g6 = new Shape();
+        g6.graphics.beginFill(0x00FF00, 1).drawRect(20, 10, 80, 60).endFill();
+        const b6 = new Shape();
+        b6.graphics.beginFill(0x0000FF, 1).drawRect(40, 20, 80, 60).endFill();
+
+        container6.addChild(r6);
+        container6.addChild(g6);
+        container6.addChild(b6);
+        container6.removeChild(g6);
+        root.addChild(container6);
+
+        // --- 7. numChildren確認用（y=300）- 5つの小さな四角 ---
+        const container7 = new Sprite();
+        container7.x = 20; container7.y = 300;
+
+        const colors = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF];
+        for (let i = 0; i < 5; i++) {
+            const s = new Shape();
+            s.graphics.beginFill(colors[i], 1).drawRect(i * 40, 0, 30, 30).endFill();
+            container7.addChild(s);
+        }
+        root.addChild(container7);
+
+        // --- 8. 深いネスト（y=300, x=300） ---
+        const level1 = new Sprite();
+        level1.x = 300; level1.y = 300;
+        const level2 = new Sprite();
+        level2.x = 20; level2.y = 20;
+        const level3 = new Sprite();
+        level3.x = 20; level3.y = 20;
+        const deepShape = new Shape();
+        deepShape.graphics.beginFill(0xFF00FF, 1).drawRect(0, 0, 60, 60).endFill();
+        level3.addChild(deepShape);
+        level2.addChild(level3);
+        level1.addChild(level2);
+        root.addChild(level1);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

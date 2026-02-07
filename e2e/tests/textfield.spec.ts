@@ -36,4 +36,25 @@ test.describe("TextFieldテスト", () => {
 
         await expect(page).toHaveScreenshot("textfield-multiple.png");
     });
+
+    test("thickness（テキスト輪郭）", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/thickness.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-thickness.png");
+    });
+
+    test("scroll（scrollX, scrollY）", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/scroll.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-scroll.png");
+    });
+
+    test("autoFontSize（テキストサイズ自動調整）", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/auto-font-size.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-auto-font-size.png");
+    });
 });

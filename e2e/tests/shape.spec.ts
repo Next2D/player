@@ -90,4 +90,20 @@ test.describe("Shape描画テスト", () => {
             await expect(page).toHaveScreenshot("load-image-flip.png");
         });
     });
+
+    test.describe("Graphics操作", () => {
+        test("clear() - クリア後の再描画", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/graphics-clear.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("graphics-clear.png");
+        });
+
+        test("copyFrom() - Graphicsのコピー", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/graphics-clone.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("graphics-clone.png");
+        });
+    });
 });

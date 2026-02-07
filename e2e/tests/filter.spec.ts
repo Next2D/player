@@ -71,4 +71,18 @@ test.describe("Filterテスト", () => {
 
         await expect(page).toHaveScreenshot("filter-multi-filter.png");
     });
+
+    test("フィルターモード（inner, knockout, hideObject, type）", async ({ page }) => {
+        await page.goto("/e2e/pages/filter/filter-modes.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("filter-modes.png");
+    });
+
+    test("フィルター品質（quality 1, 2, 3比較）", async ({ page }) => {
+        await page.goto("/e2e/pages/filter/filter-quality.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("filter-quality.png");
+    });
 });
