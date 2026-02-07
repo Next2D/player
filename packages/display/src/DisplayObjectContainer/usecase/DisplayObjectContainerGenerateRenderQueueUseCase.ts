@@ -184,7 +184,8 @@ export const execute = <P extends DisplayObjectContainer>(
 
             renderQueue.push(
                 +useFilfer, +updated,
-                Math.ceil(layerBounds[3] - layerBounds[0]), Math.ceil(layerBounds[4] - layerBounds[1]),
+                Math.ceil(layerBounds[2] - layerBounds[0]),
+                Math.ceil(layerBounds[3] - layerBounds[1]),
                 bounds[0], bounds[1], bounds[2], bounds[3],
                 params.length
             );
