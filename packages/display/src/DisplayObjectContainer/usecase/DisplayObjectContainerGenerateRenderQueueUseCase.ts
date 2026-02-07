@@ -195,7 +195,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 params.length
             );
             renderQueue.set(new Float32Array(params));
-            
+
             $poolBoundsArray(baseLayerBounds);
             $poolBoundsArray(layerBounds);
         } else {
