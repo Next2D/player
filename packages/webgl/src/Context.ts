@@ -45,6 +45,8 @@ import { execute as contextBitmapFillUseCase } from "./Context/usecase/ContextBi
 import { execute as contextBitmapStrokeUseCase } from "./Context/usecase/ContextBitmapStrokeUseCase";
 import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStrokeUseCase";
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
+import { execute as contextContainerBeginLayerUseCase } from "./Context/usecase/ContextContainerBeginLayerUseCase";
+import { execute as contextContainerEndLayerUseCase } from "./Context/usecase/ContextContainerEndLayerUseCase";
 import { execute as contextUpdateTransferBoundsService } from "./Context/service/ContextUpdateTransferBoundsService";
 import { execute as contextDrawFillUseCase } from "./Context/usecase/ContextDrawFillUseCase";
 import { execute as contextCreateImageBitmapService } from "./Context/service/ContextCreateImageBitmapService";
@@ -1118,6 +1120,55 @@ export class Context
             width, height, is_bitmap,
             matrix, color_transform, blend_mode,
             bounds, params
+        );
+    }
+
+    /**
+     * @description コンテナのフィルター/ブレンド用のレイヤーを開始
+     *              Begin a container layer for filter/blend processing
+     *
+     * @param  {number} width
+     * @param  {number} height
+     * @return {void}
+     * @method
+     * @public
+     */
+    containerBeginLayer (width: number, height: number): void
+    {
+        this.drawArraysInstanced();
+        contextContainerBeginLayerUseCase(width, height);
+    }
+
+    /**
+     * @description コンテナのフィルター/ブレンド用レイヤーを終了し、結果を元のメインに合成
+     *              End the container layer and composite the result back to the original main
+     *
+     * @param  {IBlendMode} blend_mode
+     * @param  {Float32Array | null} matrix
+     * @param  {Float32Array | null} color_transform
+     * @param  {boolean} use_filter
+     * @param  {Float32Array | null} filter_bounds
+     * @param  {Float32Array | null} filter_params
+     * @param  {string} unique_key
+     * @param  {string} filter_key
+     * @return {void}
+     * @method
+     * @public
+     */
+    containerEndLayer (
+        blend_mode: IBlendMode,
+        matrix: Float32Array | null,
+        color_transform: Float32Array | null,
+        use_filter: boolean,
+        filter_bounds: Float32Array | null,
+        filter_params: Float32Array | null,
+        unique_key: string,
+        filter_key: string
+    ): void {
+        contextContainerEndLayerUseCase(
+            blend_mode, matrix, color_transform,
+            use_filter, filter_bounds, filter_params,
+            unique_key, filter_key
         );
     }
 

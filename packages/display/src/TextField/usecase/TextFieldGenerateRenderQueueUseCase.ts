@@ -54,6 +54,10 @@ export const execute = (
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(text_field as any);
     const tColorTransform = rawColor
+        && (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0)
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
 
@@ -69,6 +73,9 @@ export const execute = (
     // transformed matrix(tMatrix)
     const rawMatrix = displayObjectGetRawMatrixUseCase(text_field as any);
     const tMatrix = rawMatrix
+        && (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0)
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 

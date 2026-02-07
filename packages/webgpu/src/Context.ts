@@ -71,6 +71,7 @@ import { execute as contextDrawArraysInstancedUseCase } from "./Context/usecase/
 import { execute as contextDrawIndirectUseCase } from "./Context/usecase/ContextDrawIndirectUseCase";
 import { execute as contextProcessComplexBlendQueueUseCase } from "./Context/usecase/ContextProcessComplexBlendQueueUseCase";
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
+import { execute as contextContainerEndLayerUseCase } from "./Context/usecase/ContextContainerEndLayerUseCase";
 
 /**
  * @description スワップチェーン転送用のIdentity UV定数: scale=(1,1), offset=(0,0)
@@ -133,6 +134,11 @@ export class Context
     private attachmentManager: AttachmentManager;
 
     public newDrawState: boolean = false;
+
+    // コンテナレイヤースタック（フィルター/ブレンド用）
+    private readonly $containerLayerStack: IAttachmentObject[] = [];
+    private containerLayerNames: string[] = [];
+    private containerLayerCounter: number = 0;
 
     // マスク描画モードフラグ（beginMask〜endMask間でtrue）
     private inMaskMode: boolean = false;
@@ -3072,6 +3078,114 @@ export class Context
             this.mainTextureView!,
             this.bufferManager
         );
+    }
+
+    /**
+     * @description コンテナのフィルター/ブレンド用のレイヤーを開始
+     *              Begin a container layer for filter/blend processing
+     *
+     * @return {void}
+     * @method
+     * @public
+     */
+    containerBeginLayer (): void
+    {
+        this.drawArraysInstanced();
+
+        // フレームが開始されていない場合は開始
+        if (!this.frameStarted) {
+            this.beginFrame();
+        }
+
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        const mainAttachment = this.$mainAttachmentObject as IAttachmentObject;
+        this.$containerLayerStack.push(mainAttachment);
+
+        // メインと同じサイズのbgra8unormアタッチメントを作成（mask=trueでステンシル付き）
+        const layerName = `container_layer_${this.containerLayerCounter++}`;
+        this.containerLayerNames.push(layerName);
+
+        const tempAttachment = this.frameBufferManager.createAttachment(
+            layerName,
+            mainAttachment.width,
+            mainAttachment.height,
+            mainAttachment.msaa,
+            true
+        );
+
+        this.$mainAttachmentObject = tempAttachment;
+        this.bind(tempAttachment);
+    }
+
+    /**
+     * @description コンテナのフィルター/ブレンド用レイヤーを終了し、結果を元のメインに合成
+     *              End the container layer and composite the result back to the original main
+     *
+     * @param  {IBlendMode} blend_mode
+     * @param  {boolean} use_filter
+     * @param  {Float32Array | null} matrix
+     * @param  {Float32Array | null} filter_bounds
+     * @param  {Float32Array | null} params
+     * @param  {string} filter_key
+     * @param  {boolean} updated
+     * @return {void}
+     * @method
+     * @public
+     */
+    containerEndLayer (
+        blend_mode: IBlendMode,
+        use_filter: boolean,
+        matrix: Float32Array | null,
+        filter_bounds: Float32Array | null,
+        params: Float32Array | null,
+        filter_key: string,
+        updated: boolean
+    ): void {
+        this.drawArraysInstanced();
+
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        this.ensureCommandEncoder();
+
+        const tempAttachment = this.$mainAttachmentObject as IAttachmentObject;
+        const tempName = this.containerLayerNames.pop() as string;
+
+        // mainを復元
+        this.$mainAttachmentObject = this.$containerLayerStack.pop() as IAttachmentObject;
+
+        const config = {
+            "device": this.device,
+            "commandEncoder": this.commandEncoder!,
+            "bufferManager": this.bufferManager,
+            "frameBufferManager": this.frameBufferManager,
+            "pipelineManager": this.pipelineManager,
+            "textureManager": this.textureManager
+        };
+
+        contextContainerEndLayerUseCase(
+            tempAttachment,
+            this.$mainAttachmentObject,
+            tempName,
+            blend_mode,
+            use_filter,
+            matrix, filter_bounds, params,
+            config,
+            this.bufferManager,
+            filter_key,
+            updated
+        );
+
+        // メインのアタッチメントをバインド
+        this.bind(this.$mainAttachmentObject);
     }
 
     /**

@@ -94,7 +94,7 @@ export const execute = (
     let stencil: IStencilBufferObject | null = null;
     let msaaStencil: IStencilBufferObject | null = null;
 
-    if (isAtlas || name === "main") {
+    if (isAtlas || name === "main" || mask) {
         const stencilTexture = device.createTexture({
             "size": { width, height },
             "format": "stencil8",
