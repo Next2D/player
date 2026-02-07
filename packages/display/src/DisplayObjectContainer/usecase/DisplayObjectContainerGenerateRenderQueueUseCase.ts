@@ -13,6 +13,7 @@ import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../D
 import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerGenerateClipQueueUseCase";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { execute as displayObjectContainerGetLayerBoundsUseCase } from "./DisplayObjectContainerGetLayerBoundsUseCase";
+import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { renderQueue } from "@next2d/render-queue";
 import {
     $clamp,
@@ -178,18 +179,25 @@ export const execute = <P extends DisplayObjectContainer>(
 
         const useFilfer = params.length > 0;
         if (useFilfer) {
-            const layerBounds = displayObjectContainerGetLayerBoundsUseCase(
+            const baseLayerBounds = displayObjectContainerGetLayerBoundsUseCase(
                 display_object_container
+            );
+            const layerBounds = displayObjectCalcBoundsMatrixService(
+                baseLayerBounds[0], baseLayerBounds[1],
+                baseLayerBounds[2], baseLayerBounds[3], tMatrix
             );
 
             renderQueue.push(
                 +useFilfer, +updated,
-                Math.ceil(layerBounds[2] - layerBounds[0]),
-                Math.ceil(layerBounds[3] - layerBounds[1]),
+                Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
+                Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
                 bounds[0], bounds[1], bounds[2], bounds[3],
                 params.length
             );
             renderQueue.set(new Float32Array(params));
+            
+            $poolBoundsArray(baseLayerBounds);
+            $poolBoundsArray(layerBounds);
         } else {
             renderQueue.push(0);
         }
