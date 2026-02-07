@@ -42,23 +42,35 @@ export const execute = (
     let matrix: Float32Array | null = null;
     let colorTransform: Float32Array | null = null;
     if (useLayer) {
-        
+
         layerWidth  = render_queue[index++];
         layerHeight = render_queue[index++];
 
         useFilter = Boolean(render_queue[index++]);
-        const filterCache = Boolean(render_queue[index++]);
-        uniqueKey = `${render_queue[index++]}`;
-        filterKey = `${render_queue[index++]}`;
-        if (filterCache) {
-            colorTransform = render_queue.subarray(index, index + 8);
-            index += 8;
-
-            console.log("todo: ", colorTransform);
-            return index;
-        }
 
         if (useFilter) {
+            // フィルターパス: filterCache/uniqueKey/filterKey を読む
+            const filterCache = Boolean(render_queue[index++]);
+            uniqueKey = `${render_queue[index++]}`;
+            filterKey = `${render_queue[index++]}`;
+            if (filterCache) {
+                filterBounds = render_queue.subarray(index, index + 4);
+                index += 4;
+
+                matrix = render_queue.subarray(index, index + 6);
+                index += 6;
+
+                colorTransform = render_queue.subarray(index, index + 8);
+                index += 8;
+
+                // キャッシュされたフィルターテクスチャを描画
+                $context.containerDrawCachedFilter(
+                    blendMode, matrix, colorTransform,
+                    filterBounds, uniqueKey, filterKey
+                );
+                return index;
+            }
+
             filterBounds = render_queue.subarray(index, index + 4);
             index += 4;
 
@@ -71,9 +83,14 @@ export const execute = (
             const length = render_queue[index++];
             filterParams = render_queue.subarray(index, index + length);
             index += length;
+
         } else {
+            // ブレンドのみパス: matrix + colorTransform
             matrix = render_queue.subarray(index, index + 6);
             index += 6;
+
+            colorTransform = render_queue.subarray(index, index + 8);
+            index += 8;
         }
     }
 
@@ -190,7 +207,8 @@ export const execute = (
         }
 
         // hidden
-        if (!render_queue[index++]) {
+        const hidden = render_queue[index++];
+        if (!hidden) {
             continue;
         }
 
@@ -214,7 +232,6 @@ export const execute = (
                 break;
 
             default:
-                console.error("unknown type", type);
                 break;
 
         }

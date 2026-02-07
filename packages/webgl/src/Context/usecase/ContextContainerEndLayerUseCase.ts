@@ -80,18 +80,23 @@ export const execute = (
             }
         }
 
+        if (!useCache) {
+            // レイヤーが有効な間にテクスチャを切り出し（リリース前に実行）
+            textureObject = frameBufferManagerGetTextureFromBoundsUseCase(
+                0, 0, layerAttachment.width, layerAttachment.height
+            );
+        }
+
         // mainを復元
         $context.$mainAttachmentObject = $containerLayerStack.pop() as IAttachmentObject;
 
         // 一時アタッチメントを解放
         frameBufferManagerReleaseAttachmentObjectUseCase(layerAttachment);
 
-        if (!useCache) {
+        // メインのアタッチメントをバインド（currentAttachmentObjectを更新）
+        $context.bind($context.$mainAttachmentObject as IAttachmentObject);
 
-            // レイヤー全体からテクスチャを切り出し
-            textureObject = frameBufferManagerGetTextureFromBoundsUseCase(
-                0, 0, layerAttachment.width, layerAttachment.height
-            );
+        if (!useCache) {
 
             // フィルターチェーンを適用
             $offset.x = 0;
@@ -240,13 +245,7 @@ export const execute = (
             if (unique_key) {
                 $cacheStore.set(unique_key, "fKey", filter_key);
                 $cacheStore.set(unique_key, "fTexture", textureObject);
-                $cacheStore.set(unique_key, "offsetX", $offset.x);
-                $cacheStore.set(unique_key, "offsetY", $offset.y);
             }
-
-        } else {
-            $offset.x = $cacheStore.get(unique_key, "offsetX") || 0;
-            $offset.y = $cacheStore.get(unique_key, "offsetY") || 0;
         }
 
         // フィルター結果をメインに描画
@@ -258,33 +257,36 @@ export const execute = (
             const boundsYMin = filter_bounds[1] * (scaleY / devicePixelRatio);
 
             $context.reset();
-            $context.setTransform(1, 0, 0, 1, matrix[4], matrix[5]);
             $context.globalCompositeOperation = blend_mode;
             blendDrawFilterToMainUseCase(
                 textureObject, color_transform as Float32Array,
-                boundsXMin - $offset.x,
-                boundsYMin - $offset.y
+                boundsXMin + matrix[4],
+                boundsYMin + matrix[5]
             );
         }
 
     } else {
 
-        // ブレンドのみの場合：一時アタッチメントのテクスチャを直接使用
-        textureObject = layerAttachment.texture as ITextureObject;
+        // ブレンドのみの場合：テクスチャを取得
+        textureObject = frameBufferManagerGetTextureFromBoundsUseCase(
+            0, 0, layerAttachment.width, layerAttachment.height
+        );
 
         // mainを復元
         $context.$mainAttachmentObject = $containerLayerStack.pop() as IAttachmentObject;
 
-        // 一時アタッチメントを解放（テクスチャは保持）
-        frameBufferManagerReleaseAttachmentObjectUseCase(layerAttachment, false);
+        // 一時アタッチメントを解放
+        frameBufferManagerReleaseAttachmentObjectUseCase(layerAttachment);
+
+        // メインのアタッチメントをバインド（currentAttachmentObjectを更新）
+        $context.bind($context.$mainAttachmentObject as IAttachmentObject);
 
         if (textureObject) {
             $context.reset();
-            $context.setTransform(1, 0, 0, 1, matrix[4], matrix[5]);
             $context.globalCompositeOperation = blend_mode;
             blendDrawFilterToMainUseCase(
                 textureObject, color_transform as Float32Array,
-                0, 0
+                matrix[4], matrix[5]
             );
 
             textureManagerReleaseTextureObjectUseCase(textureObject);

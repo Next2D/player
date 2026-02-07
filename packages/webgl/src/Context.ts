@@ -47,6 +47,7 @@ import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStroke
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
 import { execute as contextContainerBeginLayerUseCase } from "./Context/usecase/ContextContainerBeginLayerUseCase";
 import { execute as contextContainerEndLayerUseCase } from "./Context/usecase/ContextContainerEndLayerUseCase";
+import { execute as contextContainerDrawCachedFilterUseCase } from "./Context/usecase/ContextContainerDrawCachedFilterUseCase";
 import { execute as contextUpdateTransferBoundsService } from "./Context/service/ContextUpdateTransferBoundsService";
 import { execute as contextDrawFillUseCase } from "./Context/usecase/ContextDrawFillUseCase";
 import { execute as contextCreateImageBitmapService } from "./Context/service/ContextCreateImageBitmapService";
@@ -1169,6 +1170,34 @@ export class Context
             blend_mode, matrix, color_transform,
             use_filter, filter_bounds, filter_params,
             unique_key, filter_key
+        );
+    }
+
+    /**
+     * @description キャッシュされたコンテナフィルターテクスチャをメインに描画
+     *              Draw a cached container filter texture to the main attachment
+     *
+     * @param  {IBlendMode} blend_mode
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {Float32Array} filter_bounds
+     * @param  {string} unique_key
+     * @param  {string} filter_key
+     * @return {void}
+     * @method
+     * @public
+     */
+    containerDrawCachedFilter (
+        blend_mode: IBlendMode,
+        matrix: Float32Array,
+        color_transform: Float32Array,
+        filter_bounds: Float32Array,
+        unique_key: string,
+        filter_key: string
+    ): void {
+        contextContainerDrawCachedFilterUseCase(
+            blend_mode, matrix, color_transform,
+            filter_bounds, unique_key, filter_key
         );
     }
 

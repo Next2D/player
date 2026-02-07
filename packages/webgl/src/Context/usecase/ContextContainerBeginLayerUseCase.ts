@@ -1,9 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import { execute as frameBufferManagerGetAttachmentObjectUseCase } from "../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase";
-import {
-    $context,
-    $gl
-} from "../../WebGLUtil";
+import { $context } from "../../WebGLUtil";
 
 /**
  * @description コンテナレイヤーのスタック
@@ -29,8 +26,8 @@ export const execute = (width: number, height: number): void => {
     // 現在のmainAttachmentObjectをスタックに保存
     $containerLayerStack.push(mainAttachment);
 
-    // メインと同じサイズの一時アタッチメントを作成（MSAA）
-    const layerAttachment = frameBufferManagerGetAttachmentObjectUseCase(width, height, true);
+    // メインと同じサイズの一時アタッチメントを作成
+    const layerAttachment = frameBufferManagerGetAttachmentObjectUseCase(width, height, false);
 
     // 一時アタッチメントをmainに設定
     $context.$mainAttachmentObject = layerAttachment;

@@ -13,7 +13,6 @@ import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../D
 import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerGenerateClipQueueUseCase";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { execute as displayObjectContainerGetLayerBoundsUseCase } from "./DisplayObjectContainerGetLayerBoundsUseCase";
-import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayObject/service/DisplayObjectCalcBoundsMatrixService";
 import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerCalcBoundsMatrixUseCase";
 import { renderQueue } from "@next2d/render-queue";
 import { $cacheStore } from "@next2d/cache";
@@ -121,8 +120,8 @@ export const execute = <P extends DisplayObjectContainer>(
         const filterKey = $cacheStore.generateFilterKeys(
             tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3]
         );
-        let filterCache = $cacheStore.get(
-            `${display_object_container.instanceId}`, 
+        const filterCache = $cacheStore.get(
+            `${display_object_container.instanceId}`,
             `${filterKey}`
         );
 
@@ -159,12 +158,8 @@ export const execute = <P extends DisplayObjectContainer>(
                 updated = display_object_container.changed;
             }
 
-            const baseLayerBounds = displayObjectContainerGetLayerBoundsUseCase(
-                display_object_container
-            );
-            const layerBounds = displayObjectCalcBoundsMatrixService(
-                baseLayerBounds[0], baseLayerBounds[1],
-                baseLayerBounds[2], baseLayerBounds[3], tMatrix
+            const layerBounds = displayObjectContainerGetLayerBoundsUseCase(
+                display_object_container, matrix
             );
 
             if (filterCache) {
@@ -175,12 +170,24 @@ export const execute = <P extends DisplayObjectContainer>(
                         Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
                         Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
                         1, 1, display_object_container.instanceId, filterKey,
+                        bounds[0], bounds[1], bounds[2], bounds[3],
+                        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
                         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
                     );
+
+                    $poolBoundsArray(layerBounds);
+                    $poolBoundsArray(bounds);
+
+                    if (tColorTransform !== color_transform) {
+                        ColorTransform.release(tColorTransform);
+                    }
+                    if (tMatrix !== matrix) {
+                        Matrix.release(tMatrix);
+                    }
                     return ;
                 }
-                
+
                 // どこかで変更があったので、キャッシュを削除
                 $cacheStore.removeById(`${display_object_container.instanceId}`);
             }
@@ -191,21 +198,24 @@ export const execute = <P extends DisplayObjectContainer>(
                 Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
                 1, 0, display_object_container.instanceId, filterKey,
                 bounds[0], bounds[1], bounds[2], bounds[3],
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
+                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
                 tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                 tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
                 params.length
             );
             renderQueue.set(new Float32Array(params));
 
+            const fa0 = tMatrix[0];
+            const fa1 = tMatrix[1];
+            const fa2 = tMatrix[2];
+            const fa3 = tMatrix[3];
+            const faTx = tMatrix[4] - layerBounds[0];
+            const faTy = tMatrix[5] - layerBounds[1];
+
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-
-            tMatrix = $getFloat32Array6(
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 
-                -layerBounds[4], -layerBounds[5]
-            );
+            tMatrix = $getFloat32Array6(fa0, fa1, fa2, fa3, faTx, faTy);
 
             if (tColorTransform !== color_transform) {
                 ColorTransform.release(tColorTransform);
@@ -213,7 +223,6 @@ export const execute = <P extends DisplayObjectContainer>(
 
             tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
 
-            $poolBoundsArray(baseLayerBounds);
             $poolBoundsArray(layerBounds);
 
             $cacheStore.set(
@@ -229,26 +238,39 @@ export const execute = <P extends DisplayObjectContainer>(
                 // ブレンドモードのみのLayerモード
                 const layerBounds = displayObjectContainerCalcBoundsMatrixUseCase(
                     display_object_container,
-                    tMatrix
+                    matrix
                 );
 
+                const layerXMin = layerBounds[0];
+                const layerYMin = layerBounds[1];
+
                 renderQueue.push(
-                    1, 
-                    Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
-                    Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
+                    1,
+                    Math.ceil(Math.abs(layerBounds[2] - layerXMin)),
+                    Math.ceil(Math.abs(layerBounds[3] - layerYMin)),
                     0, // not use filter,
-                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5]
+                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerXMin, layerYMin,
+                    tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+                    tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
                 );
-                $poolBoundsArray(layerBounds);
+
+                const a0 = tMatrix[0];
+                const a1 = tMatrix[1];
+                const a2 = tMatrix[2];
+                const a3 = tMatrix[3];
+                const adjustedTx1 = tMatrix[4] - layerXMin;
+                const adjustedTy1 = tMatrix[5] - layerYMin;
 
                 if (tMatrix !== matrix) {
                     Matrix.release(tMatrix);
                 }
+                tMatrix = $getFloat32Array6(a0, a1, a2, a3, adjustedTx1, adjustedTy1);
+                $poolBoundsArray(layerBounds);
 
-                tMatrix = $getFloat32Array6(
-                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 
-                    -tMatrix[4], -tMatrix[5]
-                );
+                if (tColorTransform !== color_transform) {
+                    ColorTransform.release(tColorTransform);
+                }
+                tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
             }
         }
 
@@ -259,28 +281,39 @@ export const execute = <P extends DisplayObjectContainer>(
         } else {
             const layerBounds = displayObjectContainerCalcBoundsMatrixUseCase(
                 display_object_container,
-                tMatrix
+                matrix
             );
 
+            const layerXMin2 = layerBounds[0];
+            const layerYMin2 = layerBounds[1];
+
             renderQueue.push(
-                1, 
-                Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
-                Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
+                1,
+                Math.ceil(Math.abs(layerBounds[2] - layerXMin2)),
+                Math.ceil(Math.abs(layerBounds[3] - layerYMin2)),
                 0, // not use filter,
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
+                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerXMin2, layerYMin2,
                 tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                 tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
             );
-            $poolBoundsArray(layerBounds);
+
+            const b0 = tMatrix[0];
+            const b1 = tMatrix[1];
+            const b2 = tMatrix[2];
+            const b3 = tMatrix[3];
+            const adjustedTx2 = tMatrix[4] - layerXMin2;
+            const adjustedTy2 = tMatrix[5] - layerYMin2;
 
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
+            tMatrix = $getFloat32Array6(b0, b1, b2, b3, adjustedTx2, adjustedTy2);
+            $poolBoundsArray(layerBounds);
 
-            tMatrix = $getFloat32Array6(
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], 
-                -tMatrix[4], -tMatrix[5]
-            );
+            if (tColorTransform !== color_transform) {
+                ColorTransform.release(tColorTransform);
+            }
+            tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
         }
     }
 
