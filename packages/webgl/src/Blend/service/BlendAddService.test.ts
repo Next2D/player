@@ -1,8 +1,8 @@
 import { execute } from "./BlendAddService";
 import { describe, expect, it, vi } from "vitest";
 import {
-    $setFuncCode,
-    $getFuncCode
+    $funcCode,
+    $setFuncCode
 } from "../../Blend";
 
 describe("BlendAddService.js method test", () =>
@@ -26,8 +26,8 @@ describe("BlendAddService.js method test", () =>
         });
 
         $setFuncCode(600);
-        expect($getFuncCode()).toBe(600);
+        expect($funcCode).toBe(600);
         execute();
-        expect($getFuncCode()).toBe(611);
+        expect($funcCode).toBe(611);
     });
 });

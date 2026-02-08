@@ -73,7 +73,7 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) => {
             currentAttachmentObject: null,
             bind: vi.fn()
         },
-        $getDevicePixelRatio: vi.fn(() => 1)
+        $devicePixelRatio: 1
     };
 });
 

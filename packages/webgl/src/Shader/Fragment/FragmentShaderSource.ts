@@ -1,11 +1,3 @@
-/**
- * @description 頂点シェーダから受け取ったカラー情報をそのまま出力。
- *              Outputs the color information received from the vertex shader as it is.
- *
- * @return {string}
- * @method
- * @static
- */
 export const SOLID_FILL_COLOR = (): string =>
 {
     return `#version 300 es
@@ -19,14 +11,6 @@ void main() {
 }`;
 };
 
-/**
- * @description ビットマップの繰り返しではない場合の塗りつぶし。
- *              Filling when the bitmap is not repeated.
- *
- * @return {string}
- * @method
- * @static
- */
 export const BITMAP_CLIPPED = (): string =>
 {
     return `#version 300 es
@@ -46,14 +30,6 @@ void main() {
 }`;
 };
 
-/**
- * @description ビットマップの繰り返しの場合の塗りつぶし。
- *              Filling in the case of repeating the bitmap.
- *
- * @return {string}
- * @method
- * @static
- */
 export const BITMAP_PATTERN = (): string =>
 {
     return `#version 300 es
@@ -67,21 +43,12 @@ out vec4 o_color;
 
 void main() {
     vec2 uv = fract(vec2(v_uv.x, -v_uv.y) / u_mediump[0].xy);
-    
+
     vec4 src = texture(u_texture, uv);
     o_color = src;
 }`;
 };
 
-/**
- * @description マスク専用のシェーダ。Loop-Blinn法による高品質アンチエイリアシング。
- *              Shader dedicated to masks. High-quality anti-aliasing using Loop-Blinn method.
- *
- * @see GPU Gems 3, Chapter 25: Rendering Vector Art on the GPU
- * @return {string}
- * @method
- * @static
- */
 export const MASK = (): string =>
 {
     return `#version 300 es
@@ -107,14 +74,6 @@ void main() {
 }`;
 };
 
-/**
- * @description 矩形の塗りつぶし、カラーは固定。
- *              Fill the rectangle, the color is fixed.
- *
- * @return {string}
- * @method
- * @static
- */
 export const FILL_RECT_COLOR = (): string =>
 {
     return `#version 300 es

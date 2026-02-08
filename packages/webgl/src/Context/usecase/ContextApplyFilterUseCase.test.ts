@@ -55,7 +55,7 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
             globalCompositeOperation: "normal"
         },
         $getFloat32Array6: vi.fn((...args: number[]) => new Float32Array(args)),
-        $getDevicePixelRatio: vi.fn(() => 1),
+        $devicePixelRatio: 1,
         $multiplyMatrices: vi.fn(() => new Float32Array([1, 0, 0, 1, 0, 0])),
         $poolFloat32Array6: vi.fn()
     };

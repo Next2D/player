@@ -13,7 +13,7 @@ import { execute as blendResetService } from "../../../Blend/service/BlendResetS
 import { $offset } from "../../../Filter";
 import {
     $context,
-    $getDevicePixelRatio
+    $devicePixelRatio
 } from "../../../WebGLUtil";
 
 /**
@@ -50,7 +50,7 @@ export const execute = (
     const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
-    const devicePixelRatio = $getDevicePixelRatio();
+    const devicePixelRatio = $devicePixelRatio;
     const baseBlurX = blur_x * (xScale / devicePixelRatio);
     const baseBlurY = blur_y * (yScale / devicePixelRatio);
 

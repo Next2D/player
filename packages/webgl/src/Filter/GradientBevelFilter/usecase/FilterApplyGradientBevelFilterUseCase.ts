@@ -12,7 +12,7 @@ import { execute as filterApplyBitmapFilterUseCase } from "../../BitmapFilter/us
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { $offset } from "../../../Filter";
 import {
-    $getDevicePixelRatio,
+    $devicePixelRatio,
     $context
 } from "../../../WebGLUtil";
 
@@ -67,7 +67,7 @@ export const execute = (
     const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
-    const devicePixelRatio = $getDevicePixelRatio();
+    const devicePixelRatio = $devicePixelRatio;
     const radian = angle * $Deg2Rad;
     const x = Math.cos(radian) * distance * (xScale / devicePixelRatio);
     const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);

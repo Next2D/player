@@ -1,8 +1,8 @@
 import type { ShaderManager } from "../../ShaderManager";
 import {
     $context,
-    $getViewportHeight,
-    $getViewportWidth
+    $viewportHeight,
+    $viewportWidth
 } from "../../../WebGLUtil";
 
 /**
@@ -37,6 +37,6 @@ export const execute = (
     highp[7] = height;
 
     // vertex: u_viewport
-    highp[8] = $getViewportWidth();
-    highp[9] = $getViewportHeight();
+    highp[8] = $viewportWidth;
+    highp[9] = $viewportHeight;
 };

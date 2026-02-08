@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject.ts";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment
+    $currentAttachment
 } from "../../FrameBufferManager.ts";
 
 describe("MaskEndMaskService.js method test", () =>
@@ -68,7 +68,7 @@ describe("MaskEndMaskService.js method test", () =>
                 },
                 "$context": {
                     get currentAttachmentObject() {
-                        return $getCurrentAttachment();
+                        return $currentAttachment;
                     }
                 }
             }

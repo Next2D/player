@@ -1,8 +1,8 @@
 import { execute } from "./BlendOperationUseCase";
 import { describe, expect, it, vi } from "vitest";
 import {
-    $setFuncCode,
-    $getFuncCode
+    $funcCode,
+    $setFuncCode
 } from "../../Blend";
 
 vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
@@ -26,48 +26,48 @@ describe("BlendOperationUseCase.js method test", () =>
     it("test case add", () =>
     {
         $setFuncCode(600);
-        expect($getFuncCode()).toBe(600);
+        expect($funcCode).toBe(600);
         execute("add");
-        expect($getFuncCode()).toBe(611);
+        expect($funcCode).toBe(611);
     });
 
     it("test case screen", () =>
     {
         $setFuncCode(600);
-        expect($getFuncCode()).toBe(600);
+        expect($funcCode).toBe(600);
         execute("screen");
-        expect($getFuncCode()).toBe(641);
+        expect($funcCode).toBe(641);
     });
 
     it("test case alpha", () =>
     {
         $setFuncCode(600);
-        expect($getFuncCode()).toBe(600);
+        expect($funcCode).toBe(600);
         execute("alpha");
-        expect($getFuncCode()).toBe(606);
+        expect($funcCode).toBe(606);
     });
 
     it("test case erase", () =>
     {
         $setFuncCode(600);
-        expect($getFuncCode()).toBe(600);
+        expect($funcCode).toBe(600);
         execute("erase");
-        expect($getFuncCode()).toBe(603);
+        expect($funcCode).toBe(603);
     });
 
     it("test case copy", () =>
     {
         $setFuncCode(600);
-        expect($getFuncCode()).toBe(600);
+        expect($funcCode).toBe(600);
         execute("copy");
-        expect($getFuncCode()).toBe(610);
+        expect($funcCode).toBe(610);
     });
 
     it("test case normal", () =>
     {
         $setFuncCode(600);
-        expect($getFuncCode()).toBe(600);
+        expect($funcCode).toBe(600);
         execute("normal");
-        expect($getFuncCode()).toBe(613);
+        expect($funcCode).toBe(613);
     });
 });

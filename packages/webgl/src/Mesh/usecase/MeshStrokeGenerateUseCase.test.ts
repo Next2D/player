@@ -10,8 +10,8 @@ vi.mock("../../WebGLUtil.ts", () => ({
         "$strokeStyle": new Float32Array([0, 0, 0, 1]),
         "$matrix": new Float32Array([1, 0, 0, 1, 0, 0, 0, 0, 1])
     },
-    "$getViewportWidth": () => 1024,
-    "$getViewportHeight": () => 1024,
+    "$viewportWidth": 1024,
+    "$viewportHeight": 1024,
     "$getArray": () => [],
     "$poolArray": () => {}
 }));

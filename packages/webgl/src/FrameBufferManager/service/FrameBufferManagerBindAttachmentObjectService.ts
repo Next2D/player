@@ -9,7 +9,7 @@ import {
     $setFramebufferBound,
     $setCurrentAttachment,
     $readFrameBuffer,
-    $useFramebufferBound
+    $isFramebufferBound
 } from "../../FrameBufferManager";
 
 /**
@@ -25,7 +25,7 @@ export const execute = (attachment_object: IAttachmentObject): void =>
 {
     $setCurrentAttachment(attachment_object);
 
-    if (!$useFramebufferBound()) {
+    if (!$isFramebufferBound) {
         $setFramebufferBound(true);
         $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
     }

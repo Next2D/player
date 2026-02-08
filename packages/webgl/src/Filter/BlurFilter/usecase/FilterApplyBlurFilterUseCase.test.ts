@@ -70,7 +70,7 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) => {
             reset: vi.fn(),
             setTransform: vi.fn()
         },
-        $getDevicePixelRatio: vi.fn(() => 1)
+        $devicePixelRatio: 1
     };
 });
 

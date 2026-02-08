@@ -4,8 +4,8 @@ import { execute as meshFillGenerateService } from "../service/MeshFillGenerateS
 import { $getMeshTempBuffer } from "../../Mesh";
 import {
     $context,
-    $getViewportWidth,
-    $getViewportHeight
+    $viewportWidth,
+    $viewportHeight
 } from "../../WebGLUtil";
 
 /**
@@ -32,8 +32,8 @@ export const execute = (
     const alpha = colorStyle[3];
 
     const matrix = $context.$matrix;
-    const width  = $getViewportWidth();
-    const height = $getViewportHeight();
+    const width  = $viewportWidth;
+    const height = $viewportHeight;
 
     const a  = matrix[0] / width;
     const c  = matrix[3] / width;

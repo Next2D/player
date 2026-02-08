@@ -1,9 +1,3 @@
-/**
- * @param  {number} index
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_FOCAL_POINT_ON = (index: number): string =>
 {
     return `
@@ -19,23 +13,11 @@ const STATEMENT_FOCAL_POINT_ON = (index: number): string =>
     float t = distance(focal, coord) / distance(focal, focal + dir * x);`;
 };
 
-/**
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_FOCAL_POINT_OFF = (): string =>
 {
     return "float t = length(coord);";
 };
 
-/**
- * @param  {number} index
- * @param  {boolean} has_focal_point
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_GRADIENT_TYPE_RADIAL = (index: number, has_focal_point: boolean): string =>
 {
     const focalPointStatement = has_focal_point
@@ -49,12 +31,6 @@ const STATEMENT_GRADIENT_TYPE_RADIAL = (index: number, has_focal_point: boolean)
 `;
 };
 
-/**
- * @param {number} index
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_GRADIENT_TYPE_LINEAR = (index: number): string =>
 {
     return `
@@ -67,16 +43,6 @@ const STATEMENT_GRADIENT_TYPE_LINEAR = (index: number): string =>
     float t = dot(ab, ap) / dot(ab, ab);`;
 };
 
-/**
- * @param  {number} highp_length
- * @param  {number} fragment_index
- * @param  {boolean} is_radial
- * @param  {boolean} has_focal_point
- * @param  {number} spread_method
- * @return {string}
- * @method
- * @private
- */
 export const GRADIENT_TEMPLATE = (
     highp_length: number,
     fragment_index: number,
@@ -111,10 +77,10 @@ precision highp float;
 
 uniform sampler2D u_texture;
 uniform vec4 u_highp[${highp_length}];
-    
+
 in vec2 v_uv;
 out vec4 o_color;
-    
+
 void main() {
     vec2 p = v_uv;
     ${gradientTypeStatement}

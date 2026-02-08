@@ -1,8 +1,3 @@
-/**
- * @return {string}
- * @method
- * @static
- */
 export const COLOR_MATRIX_FILTER_TEMPLATE = (): string =>
 {
     return `#version 300 es

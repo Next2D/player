@@ -1,7 +1,7 @@
 import type { ShaderManager } from "../../ShaderManager";
 import {
-    $getViewportWidth,
-    $getViewportHeight,
+    $viewportWidth,
+    $viewportHeight,
     $clamp
 } from "../../../WebGLUtil";
 
@@ -59,8 +59,8 @@ export const execute = (
     highp[19] = inverse_matrix[8];
 
     // vertex: u_viewport
-    highp[3] = $getViewportWidth();
-    highp[7] = $getViewportHeight();
+    highp[3] = $viewportWidth;
+    highp[7] = $viewportHeight;
 
     let index = 20;
     if (grid_data) {

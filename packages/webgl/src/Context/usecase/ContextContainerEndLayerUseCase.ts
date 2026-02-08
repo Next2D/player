@@ -19,7 +19,7 @@ import { $offset } from "../../Filter";
 import { $cacheStore } from "@next2d/cache";
 import {
     $context,
-    $getDevicePixelRatio
+    $devicePixelRatio
 } from "../../WebGLUtil";
 
 /**
@@ -238,7 +238,7 @@ export const execute = (
         if (textureObject) {
             const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
             const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-            const devicePixelRatio = $getDevicePixelRatio();
+            const devicePixelRatio = $devicePixelRatio;
             const boundsXMin = filter_bounds[0] * (scaleX / devicePixelRatio);
             const boundsYMin = filter_bounds[1] * (scaleY / devicePixelRatio);
 

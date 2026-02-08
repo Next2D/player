@@ -1,7 +1,7 @@
 import { $gl } from "../../WebGLUtil";
 import {
-    $setFuncCode,
-    $getFuncCode
+    $funcCode,
+    $setFuncCode
 } from "../../Blend";
 
 /**
@@ -14,7 +14,7 @@ import {
  */
 export const execute = (): void =>
 {
-    if ($getFuncCode() !== 603) {
+    if ($funcCode !== 603) {
         $setFuncCode(603);
         $gl.blendFunc($gl.ZERO, $gl.ONE_MINUS_SRC_ALPHA);
     }

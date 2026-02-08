@@ -6,8 +6,8 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) => {
     const mod = await importOriginal<typeof import("../../../WebGLUtil.ts")>();
     return {
         ...mod,
-        $getViewportWidth: vi.fn(() => 800),
-        $getViewportHeight: vi.fn(() => 600)
+        $viewportWidth: 800,
+        $viewportHeight: 600
     };
 });
 

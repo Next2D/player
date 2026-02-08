@@ -60,7 +60,7 @@ import {
 import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer,
-    $getCurrentAttachment,
+    $currentAttachment,
     $setAtlasFrameBuffer,
     $setBitmapFrameBuffer
 } from "./FrameBufferManager";
@@ -74,200 +74,28 @@ import {
     $setDevicePixelRatio
 } from "./WebGLUtil";
 
-/**
- * @description WebGL版、Next2Dのコンテキスト
- *              WebGL version, Next2D context
- *
- * @class
- */
 export class Context
 {
-    /**
-     * @description matrixのデータを保持するスタック
-     *              Stack to hold matrix data
-     *
-     * @type {Float32Array[]}
-     * @protected
-     */
     public readonly $stack: Float32Array[];
-
-    /**
-     * @description 2D変換行列
-     *              2D transformation matrix
-     *
-     * @type {Float32Array}
-     * @protected
-     */
     public readonly $matrix: Float32Array;
-
-    /**
-     * @description 背景色のR
-     *              Background color R
-     *
-     * @type {number}
-     * @protected
-     */
     public $clearColorR: number;
-
-    /**
-     * @description 背景色のG
-     *              Background color G
-     *
-     * @type {number}
-     * @protected
-     */
     public $clearColorG: number;
-
-    /**
-     * @description 背景色のB
-     *              Background color B
-     *
-     * @type {number}
-     * @protected
-     */
     public $clearColorB: number;
-
-    /**
-     * @description 背景色のA
-     *              Background color A
-     *
-     * @type {number}
-     * @protected
-     */
     public $clearColorA: number;
-
-    /**
-     * @description メインのアタッチメントオブジェクト
-     *              Main attachment object
-     *
-     * @type {IAttachmentObject}
-     * @protected
-     */
     public $mainAttachmentObject: IAttachmentObject | null;
-
-    /**
-     * @description アタッチメントオブジェクトを保持するスタック
-     *             Stack to hold attachment objects
-     *
-     * @type {IAttachmentObject[]}
-     * @protected
-     */
     public readonly $stackAttachmentObject: IAttachmentObject[];
-
-    /**
-     * @description グローバルアルファ
-     *              Global alpha
-     *
-     * @type {number}
-     * @default 1
-     * @public
-     */
     public globalAlpha: number;
-
-    /**
-     * @description 合成モード
-     *              composite mode
-     *
-     * @type {IBlendMode}
-     * @default "normal"
-     * @public
-     */
     public globalCompositeOperation: IBlendMode;
-
-    /**
-     * @description イメージのスムージング設定
-     *              Image smoothing setting
-     *
-     * @type {boolean}
-     * @default false
-     * @public
-     */
     public imageSmoothingEnabled: boolean;
-
-    /**
-     * @description 塗りつぶしのRGBAを保持するFloat32Array
-     *              Float32Array that holds the RGBA of the fill
-     *
-     * @type {Float32Array}
-     * @protected
-     */
     public $fillStyle: Float32Array;
-
-    /**
-     * @description 線のRGBAを保持するFloat32Array
-     *              Float32Array that holds the RGBA of the line
-     *
-     * @type {Float32Array}
-     * @protected
-     */
     public $strokeStyle: Float32Array;
-
-    /**
-     * @description マスクの描画範囲
-     *              Drawing range of the mask
-     *
-     * @type {IBounds}
-     * @protected
-     */
     public readonly maskBounds: IBounds;
-
-    /**
-     * @description ストロークの太さ
-     *              Stroke thickness
-     *
-     * @type {number}
-     * @default 1
-     * @public
-     */
     public thickness: number;
-
-    /**
-     * @description ストロークのキャップ
-     *              Stroke cap
-     *
-     * @type {number}
-     * @default 0
-     * @public
-     */
     public caps: number;
-
-    /**
-     * @description ストロークのジョイント
-     *              Stroke joint
-     *
-     * @type {number}
-     * @default 2
-     * @public
-     */
     public joints: number;
-
-    /**
-     * @description ストロークのマイターリミット
-     *              Stroke miter limit
-     *
-     * @type {number}
-     * @default 0
-     * @public
-     */
     public miterLimit: number;
-
-    /**
-     * @description 新しい描画がフレームバッファに書き込まれたかの状態管理フラグ
-     *              State management flag to check if new drawing has been written to the frame buffer
-     *
-     * @type {boolean}
-     * @default false
-     * @public
-     */
     public newDrawState: boolean = false;
 
-    /**
-     * @param {WebGL2RenderingContext} gl
-     * @param {number} samples
-     * @param {number} [device_pixel_ratio=1]
-     * @constructor
-     * @public
-     */
     constructor (
         gl: WebGL2RenderingContext,
         samples: number,
@@ -338,44 +166,16 @@ export class Context
         $setContext(this);
     }
 
-    /**
-     * @description 転送範囲をリセット
-     *              Reset the transfer range
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     clearTransferBounds (): void
     {
         $clearTransferBounds();
     }
 
-    /**
-     * @description 背景色を更新
-     *              Update background color
-     *
-     * @param  {number} red
-     * @param  {number} green
-     * @param  {number} blue
-     * @param  {number} alpha
-     * @return {void}
-     * @method
-     * @public
-     */
     updateBackgroundColor (red: number, green: number, blue: number, alpha: number): void
     {
         contextUpdateBackgroundColorService(this, red, green, blue, alpha);
     }
 
-    /**
-     * @description 背景色を指定カラーで塗りつぶす
-     *              Fill the background color with the specified color
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     fillBackgroundColor (): void
     {
         contextFillBackgroundColorService(
@@ -386,93 +186,31 @@ export class Context
         );
     }
 
-    /**
-     * @description メインcanvasのサイズを変更
-     *              Change the size of the main canvas
-     *
-     * @param  {number} width
-     * @param  {number} height
-     * @param  {boolean} [cache_clear=true]
-     * @return {void}
-     * @method
-     * @public
-     */
     resize (width: number, height: number, cache_clear: boolean = true): void
     {
         contextResizeUseCase(this, width, height, cache_clear);
     }
 
-    /**
-     * @description 指定範囲をクリアする
-     *              Clear the specified range
-     *
-     * @param  {number} x
-     * @param  {number} y
-     * @param  {number} w
-     * @param  {number} h
-     * @return {void}
-     * @method
-     * @purotected
-     */
     clearRect (x: number, y: number, w: number, h: number): void
     {
         contextClearRectUseCase(x, y, w, h);
     }
 
-    /**
-     * @description アタッチメントオブジェクトをバインド
-     *              Bind the attachment object
-     *
-     * @param {IAttachmentObject} attachment_object
-     * @return {void}
-     * @method
-     * @public
-     */
     bind (attachment_object: IAttachmentObject): void
     {
         contextBindUseCase(this, attachment_object);
     }
 
-    /**
-     * @description 現在の2D変換行列を保存
-     *             Save the current 2D transformation matrix
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     save (): void
     {
         contextSaveService(this);
     }
 
-    /**
-     * @description 2D変換行列を復元
-     *              Restore 2D transformation matrix
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     restore (): void
     {
         contextRestoreService(this);
     }
 
-    /**
-     * @description 2D変換行列を設定
-     *              Set 2D transformation matrix
-     *
-     * @param  {number} a
-     * @param  {number} b
-     * @param  {number} c
-     * @param  {number} d
-     * @param  {number} e
-     * @param  {number} f
-     * @return {void}
-     * @method
-     * @public
-     */
     setTransform (
         a: number, b: number, c: number,
         d: number, e: number, f: number
@@ -480,20 +218,6 @@ export class Context
         contextSetTransformService(this.$matrix, a, b, c, d, e, f);
     }
 
-    /**
-     * @description 現在の2D変換行列に対して乗算を行います。
-     *              Multiply the current 2D transformation matrix.
-     *
-     * @param  {number} a
-     * @param  {number} b
-     * @param  {number} c
-     * @param  {number} d
-     * @param  {number} e
-     * @param  {number} f
-     * @return {void}
-     * @method
-     * @public
-     */
     transform (
         a: number, b: number, c: number,
         d: number, e: number, f: number
@@ -501,27 +225,11 @@ export class Context
         contextTransformService(this, a, b, c, d, e, f);
     }
 
-    /**
-     * @description コンテキストの値を初期化する
-     *              Initialize the values of the context
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     reset (): void
     {
         contextResetService(this);
     }
 
-    /**
-     * @description パスを開始
-     *              Start the path
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     beginPath (): void
     {
         // reset color style
@@ -531,65 +239,21 @@ export class Context
         beginPath();
     }
 
-    /**
-     * @description パスを移動
-     *              Move the path
-     *
-     * @param  {number} x
-     * @param  {number} y
-     * @return {void}
-     * @method
-     * @public
-     */
     moveTo (x: number, y: number): void
     {
         moveTo(x, y);
     }
 
-    /**
-     * @description パスを線で結ぶ
-     *              Connect the path with a line
-     *
-     * @param  {number} x
-     * @param  {number} y
-     * @return {void}
-     * @method
-     * @public
-     */
     lineTo (x: number, y: number): void
     {
         lineTo(x, y);
     }
 
-    /**
-     * @description 二次ベジェ曲線を描画
-     *              Draw a quadratic Bezier curve
-     *
-     * @param  {number} cx
-     * @param  {number} cy
-     * @param  {number} x
-     * @param  {number} y
-     * @return {void}
-     * @method
-     * @public
-     */
     quadraticCurveTo (cx: number, cy: number, x: number, y: number): void
     {
         quadraticCurveTo(cx, cy, x, y);
     }
 
-    /**
-     * @description 塗りつぶしスタイルを設定
-     *              Set fill style
-     *
-     * @param  {number} red
-     * @param  {number} green
-     * @param  {number} blue
-     * @param  {number} alpha
-     * @return {void}
-     * @method
-     * @public
-     */
     fillStyle (red: number, green: number, blue: number, alpha: number): void
     {
         this.$fillStyle[0] = red;
@@ -598,18 +262,6 @@ export class Context
         this.$fillStyle[3] = alpha;
     }
 
-    /**
-     * @description 線のスタイルを設定
-     *              Set line style
-     *
-     * @param  {number} red
-     * @param  {number} green
-     * @param  {number} blue
-     * @param  {number} alpha
-     * @return {void}
-     * @method
-     * @public
-     */
     strokeStyle (red: number, green: number, blue: number, alpha: number): void
     {
         this.$strokeStyle[0] = red;
@@ -618,81 +270,26 @@ export class Context
         this.$strokeStyle[3] = alpha;
     }
 
-    /**
-     * @description パスを閉じる
-     *              Close the path
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     closePath (): void
     {
         closePath();
     }
 
-    /**
-     * @description 円弧を描画
-     *              Draw an arc
-     *
-     * @param {number} x
-     * @param {number} y
-     * @param {number} radius
-     * @return {void}
-     * @method
-     * @public
-     */
     arc (x: number, y: number, radius: number): void
     {
         arc(x, y, radius);
     }
 
-    /**
-     * @description 3次ベジェ曲線を描画
-     *              Draw a cubic Bezier curve
-     *
-     * @param  {number} cx1
-     * @param  {number} cy1
-     * @param  {number} cx2
-     * @param  {number} cy2
-     * @param  {number} x
-     * @param  {number} y
-     * @return {void}
-     * @method
-     * @public
-     */
     bezierCurveTo (cx1: number, cy1: number, cx2: number, cy2: number, x: number, y: number): void
     {
         bezierCurveTo(cx1, cy1, cx2, cy2, x, y);
     }
 
-    /**
-     * @description 塗りつぶしを実行
-     *              Perform fill
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     fill (): void
     {
         contextFillUseCase("fill");
     }
 
-    /**
-     * @description グラデーションの塗りつぶしを実行
-     *              Perform gradient fill
-     *
-     * @param  {number} type
-     * @param  {array} stops
-     * @param  {Float32Array} matrix
-     * @param  {number} spread
-     * @param  {number} interpolation
-     * @param  {number} focal
-     * @return {void}
-     * @method
-     * @public
-     */
     gradientFill (
         type: number,
         stops: number[],
@@ -707,20 +304,6 @@ export class Context
         );
     }
 
-    /**
-     * @description 塗りのピクセルデータを描画
-     *              Draw pixel data of the fill
-     *
-     * @param  {Uint8Array} pixels
-     * @param  {Float32Array} matrix
-     * @param  {number} width
-     * @param  {number} height
-     * @param  {boolean} repeat
-     * @param  {boolean} smooth
-     * @return {void}
-     * @method
-     * @public
-     */
     bitmapFill (
         pixels: Uint8Array,
         matrix: Float32Array,
@@ -734,33 +317,11 @@ export class Context
         );
     }
 
-    /**
-     * @description 線の描画を実行
-     *              Perform line drawing
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     stroke (): void
     {
         contextStrokeUseCase();
     }
 
-    /**
-     * @description 線のグラデーションを実行
-     *              Perform gradient of the line
-     *
-     * @param  {number} type
-     * @param  {array} stops
-     * @param  {Float32Array} matrix
-     * @param  {number} spread
-     * @param  {number} interpolation
-     * @param  {number} focal
-     * @return {void}
-     * @method
-     * @public
-     */
     gradientStroke (
         type: number,
         stops: number[],
@@ -775,20 +336,6 @@ export class Context
         );
     }
 
-    /**
-     * @description 線のピクセルデータを描画
-     *              Draw pixel data of the line
-     *
-     * @param  {Uint8Array} pixels
-     * @param  {Float32Array} matrix
-     * @param  {number} width
-     * @param  {number} height
-     * @param  {boolean} repeat
-     * @param  {boolean} smooth
-     * @return {void}
-     * @method
-     * @public
-     */
     bitmapStroke (
         pixels: Uint8Array,
         matrix: Float32Array,
@@ -802,83 +349,31 @@ export class Context
         );
     }
 
-    /**
-     * @description マスク処理を実行
-     *              Perform mask processing
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     clip (): void
     {
         contextClipUseCase();
     }
 
-    /**
-     * @description 現在のアタッチメントオブジェクトを取得
-     *              Get the current attachment object
-     *
-     * @return {IAttachmentObject | null}
-     * @readonly
-     * @public
-     */
     get currentAttachmentObject (): IAttachmentObject | null
     {
-        return $getCurrentAttachment();
+        return $currentAttachment;
     }
 
-    /**
-     * @description アトラス専用のアタッチメントオブジェクトを取得
-     *              Get the attachment object for the atlas
-     *
-     * @return {IAttachmentObject}
-     * @readonly
-     * @public
-     */
     get atlasAttachmentObject (): IAttachmentObject
     {
         return $getAtlasAttachmentObject();
     }
 
-    /**
-     * @description キャッシュするポジションのノードを作成
-     *              Create a node for the position to cache
-     *
-     * @param  {number} width
-     * @param  {number} height
-     * @return {Node}
-     * @method
-     * @public
-     */
     createNode (width: number, height: number): Node
     {
         return atlasManagerCreateNodeService(width, height);
     }
 
-    /**
-     * @description 指定のノードを削除
-     *              Remove the specified node
-     *
-     * @param  {Node} node
-     * @return {void}
-     * @method
-     * @public
-     */
     removeNode (node: Node): void
     {
         atlasManagerRemoveNodeService(node);
     }
 
-    /**
-     * @description 指定のノード範囲で描画を開始
-     *              Start drawing in the specified node range
-     *
-     * @param  {Node} node
-     * @return {void}
-     * @method
-     * @public
-     */
     beginNodeRendering (node: Node): void
     {
         this.newDrawState = true;
@@ -886,45 +381,16 @@ export class Context
         contextBeginNodeRenderingService(node.x, node.y, node.w, node.h);
     }
 
-    /**
-     * @description 指定のノード範囲で描画を終了
-     *              End drawing in the specified node range
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     endNodeRendering (): void
     {
         contextEndNodeRenderingService();
     }
 
-    /**
-     * @description 塗りの描画を実行
-     *              Perform fill drawing
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     drawFill (): void
     {
         contextDrawFillUseCase();
     }
 
-    /**
-     * @description インスタンスを描画
-     *              Draw an instance
-     *
-     * @param  {number} x_min
-     * @param  {number} y_min
-     * @param  {number} x_max
-     * @param  {number} y_max
-     * @param  {Float32Array} color_transform
-     * @return {void}
-     * @method
-     * @public
-     */
     drawDisplayObject (
         node: Node,
         x_min: number,
@@ -939,101 +405,36 @@ export class Context
         );
     }
 
-    /**
-     * @description インスタンス配列を描画
-     *              Draw an instance array
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     drawArraysInstanced (): void
     {
         blnedDrawArraysInstancedUseCase();
     }
 
-    /**
-     * @description インスタンス配列をクリア
-     *              Clear the instance array
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     clearArraysInstanced (): void
     {
         blnedClearArraysInstancedUseCase();
     }
 
-    /**
-     * @description フレームバッファの描画情報をキャンバスに転送
-     *              Transfer the drawing information of the frame buffer to the canvas
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     transferMainCanvas (): void
     {
         frameBufferManagerTransferMainCanvasService();
     }
 
-    /**
-     * @description ピクセルバッファをNodeの指定箇所に転送
-     *              Transfer the pixel buffer to the specified location of the Node
-     *
-     * @param  {Node} node
-     * @param  {Uint8Array} pixels
-     * @return {void}
-     * @method
-     * @public
-     */
     drawPixels (node: Node, pixels: Uint8Array): void
     {
         contextDrawPixelsUseCase(node, pixels);
     }
 
-    /**
-     * @description OffscreenCanvasをNodeの指定箇所に転送
-     *              Transfer the OffscreenCanvas to the specified location of the Node
-     *
-     * @param  {Node} node
-     * @param  {OffscreenCanvas | ImageBitmap} element
-     * @param  {boolean} _flipY - WebGPU互換用（WebGLでは未使用）
-     * @return {void}
-     * @method
-     * @public
-     */
     drawElement (node: Node, element: OffscreenCanvas | ImageBitmap, _flipY: boolean = false): void
     {
         contextDrawElementUseCase(node, element);
     }
 
-    /**
-     * @description マスクを開始準備
-     *              Prepare to start drawing the mask
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     beginMask (): void
     {
         maskBeginMaskService();
     }
 
-    /**
-     * @description マスクの描画を開始
-     *              Start drawing the mask
-     *
-     * @param  {number} x_min
-     * @param  {number} y_min
-     * @param  {number} x_max
-     * @param  {number} y_max
-     * @return {void}
-     * @method
-     * @public
-     */
     setMaskBounds (
         x_min: number,
         y_min: number,
@@ -1043,65 +444,22 @@ export class Context
         maskSetMaskBoundsService(x_min, y_min, x_max, y_max);
     }
 
-    /**
-     * @description マスクの描画を終了
-     *              End mask drawing
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     endMask (): void
     {
         maskEndMaskService();
     }
 
-    /**
-     * @description マスクの終了処理
-     *              Mask end processing
-     *
-     * @return {void}
-     * @method
-     * @public
-     */
     leaveMask (): void
     {
         this.drawArraysInstanced();
         maskLeaveMaskUseCase();
     }
 
-    /**
-     * @description グリッドの描画データをセット
-     *              Set the grid drawing data
-     *
-     * @param  {Float32Array} grid_data
-     * @return {void}
-     * @method
-     * @public
-     */
     useGrid (grid_data: Float32Array | null): void
     {
         contextUseGridService(grid_data);
     }
 
-    /**
-     * @description フィルターを適用
-     *              Apply the filter
-     *
-     * @param  {Node} node
-     * @param  {string} unique_key
-     * @param  {boolean} updated
-     * @param  {number} width
-     * @param  {number} height
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {IBlendMode} blend_mode
-     * @param  {Float32Array} bounds
-     * @param  {Float32Array} params
-     * @return {void}
-     * @method
-     * @public
-     */
     applyFilter (
         node: Node,
         unique_key: string,
@@ -1124,38 +482,12 @@ export class Context
         );
     }
 
-    /**
-     * @description コンテナのフィルター/ブレンド用のレイヤーを開始
-     *              Begin a container layer for filter/blend processing
-     *
-     * @param  {number} width
-     * @param  {number} height
-     * @return {void}
-     * @method
-     * @public
-     */
     containerBeginLayer (width: number, height: number): void
     {
         this.drawArraysInstanced();
         contextContainerBeginLayerUseCase(width, height);
     }
 
-    /**
-     * @description コンテナのフィルター/ブレンド用レイヤーを終了し、結果を元のメインに合成
-     *              End the container layer and composite the result back to the original main
-     *
-     * @param  {IBlendMode} blend_mode
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array | null} color_transform
-     * @param  {boolean} use_filter
-     * @param  {Float32Array | null} filter_bounds
-     * @param  {Float32Array | null} filter_params
-     * @param  {string} unique_key
-     * @param  {string} filter_key
-     * @return {void}
-     * @method
-     * @public
-     */
     containerEndLayer (
         blend_mode: IBlendMode,
         matrix: Float32Array,
@@ -1173,20 +505,6 @@ export class Context
         );
     }
 
-    /**
-     * @description キャッシュされたコンテナフィルターテクスチャをメインに描画
-     *              Draw a cached container filter texture to the main attachment
-     *
-     * @param  {IBlendMode} blend_mode
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {Float32Array} filter_bounds
-     * @param  {string} unique_key
-     * @param  {string} filter_key
-     * @return {void}
-     * @method
-     * @public
-     */
     containerDrawCachedFilter (
         blend_mode: IBlendMode,
         matrix: Float32Array,
@@ -1201,16 +519,6 @@ export class Context
         );
     }
 
-    /**
-     * @description 現在のメインのframe bufferからImageBitmapを生成
-     *              Generate an ImageBitmap from the current main frame buffer
-     *
-     * @param  {number} width
-     * @param  {number} height
-     * @return {Promise<ImageBitmap>}
-     * @method
-     * @public
-     */
     async createImageBitmap (width: number, height: number): Promise<ImageBitmap>
     {
         return await contextCreateImageBitmapService(width, height);

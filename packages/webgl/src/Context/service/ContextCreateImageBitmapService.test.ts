@@ -60,7 +60,7 @@ describe("ContextCreateImageBitmapService.js method test", () =>
 
         vi.mock("../../FrameBufferManager", () => ({
             $readFrameBuffer: {},
-            $getPixelFrameBuffer: vi.fn(() => ({}))
+            $pixelFrameBuffer: {}
         }));
 
         global.createImageBitmap = vi.fn(async () => ({}) as any);

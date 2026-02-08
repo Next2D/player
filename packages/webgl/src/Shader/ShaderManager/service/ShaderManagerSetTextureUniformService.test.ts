@@ -9,8 +9,8 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) => {
         $context: {
             $matrix: new Float32Array([1, 0, 0, 1, 10, 20, 0, 0, 1])
         },
-        $getViewportWidth: vi.fn(() => 800),
-        $getViewportHeight: vi.fn(() => 600)
+        $viewportWidth: 800,
+        $viewportHeight: 600
     };
 });
 

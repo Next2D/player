@@ -18,15 +18,15 @@ import { execute as variantsBlendMatrixTextureShaderService } from "../../Shader
 import { execute as shaderManagerSetMatrixTextureUniformService } from "../../Shader/ShaderManager/service/ShaderManagerSetMatrixTextureUniformService";
 import {
     $context,
-    $getViewportHeight,
-    $getViewportWidth
+    $viewportHeight,
+    $viewportWidth
 } from "../../WebGLUtil";
 import {
-    $getCurrentBlendMode,
+    $currentBlendMode,
     $setCurrentBlendMode
 } from "../../Blend";
 import {
-    $getCurrentAtlasIndex,
+    $currentAtlasIndex,
     $setCurrentAtlasIndex
 } from "../../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
@@ -74,14 +74,14 @@ export const execute = (
         case "erase":
         case "copy":
             {
-                if ($getCurrentBlendMode() !== $context.globalCompositeOperation
-                    || $getCurrentAtlasIndex() !== node.index
+                if ($currentBlendMode !== $context.globalCompositeOperation
+                    || $currentAtlasIndex !== node.index
                 ) {
                     // 異なるフレームバッファになるので、切り替え前にメインバッファに描画を実行
-                    $setActiveAtlasIndex($getCurrentAtlasIndex());
+                    $setActiveAtlasIndex($currentAtlasIndex);
 
                     const currentOperation = $context.globalCompositeOperation;
-                    $context.globalCompositeOperation = $getCurrentBlendMode();
+                    $context.globalCompositeOperation = $currentBlendMode;
                     $context.newDrawState = true;
                     $context.drawArraysInstanced();
                     $context.newDrawState = true;
@@ -98,19 +98,13 @@ export const execute = (
                 // 描画するまで配列に変数を保持
                 const shaderInstancedManager = variantsBlendInstanceShaderService();
 
-                renderQueue.push(
-                    // texture rectangle (vec4)
+                renderQueue.pushDisplayObjectBuffer(
                     node.x / $RENDER_MAX_SIZE, node.y / $RENDER_MAX_SIZE,
                     node.w / $RENDER_MAX_SIZE, node.h / $RENDER_MAX_SIZE,
-                    // texture width, height and viewport width, height (vec4)
-                    node.w, node.h, $getViewportWidth(), $getViewportHeight(),
-                    // matrix tx, ty (vec2)
+                    node.w, node.h, $viewportWidth, $viewportHeight,
                     matrix[6], matrix[7],
-                    // matrix scale0, rotate0, scale1, rotate1 (vec4)
                     matrix[0], matrix[1], matrix[3], matrix[4],
-                    // mulColor (vec4)
                     ct0, ct1, ct2, ct3,
-                    // addColor (vec4)
                     ct4, ct5, ct6, ct7
                 );
                 shaderInstancedManager.count++;

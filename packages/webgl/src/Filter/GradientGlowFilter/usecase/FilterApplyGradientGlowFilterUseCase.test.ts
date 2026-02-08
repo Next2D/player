@@ -36,7 +36,7 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) => {
     const mod = await importOriginal<typeof import("../../../WebGLUtil.ts")>();
     return {
         ...mod,
-        $getDevicePixelRatio: vi.fn(() => 1)
+        $devicePixelRatio: 1
     };
 });
 

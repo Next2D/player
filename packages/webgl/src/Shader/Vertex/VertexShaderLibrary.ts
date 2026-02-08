@@ -1,11 +1,3 @@
-/**
- * @description グリッドがオフの場合の頂点シェーダー
- *              Vertex shader when grid is off
- *
- * @return {string}
- * @method
- * @static
- */
 export const FUNCTION_GRID_OFF = (): string =>
 {
     return `
@@ -15,15 +7,6 @@ vec2 applyMatrix(in vec2 vertex) {
 }`;
 };
 
-/**
- * @description グリッドがオンの場合の頂点シェーダー
- *              Vertex shader when grid is on
- *
- * @param  {number} index
- * @return {STRing}
- * @method
- * @static
- */
 export const FUNCTION_GRID_ON = (index: number): string =>
 {
     return `
@@ -43,7 +26,7 @@ vec2 applyMatrix(in vec2 vertex) {
     vec2 parent_size   = vec2(u_highp[${index + 4}].w, u_highp[${index + 5}].w);
     vec4 grid_min = u_highp[${index + 6}];
     vec4 grid_max = u_highp[${index + 7}];
-    
+
     vec2 position = (parent_matrix * vec3(vertex, 1.0)).xy;
     position = (position - parent_offset) / parent_size;
 

@@ -3,8 +3,8 @@ import { execute } from "./FrameBufferManagerUnBindAttachmentObjectService.ts";
 import { describe, expect, it, vi } from "vitest";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment,
-    $useFramebufferBound,
+    $currentAttachment,
+    $isFramebufferBound,
     $setFramebufferBound
 } from "../../FrameBufferManager.ts";
 
@@ -49,13 +49,13 @@ describe("FrameBufferManagerUnBindAttachmentObjectService.js method test", () =>
         } as unknown as IAttachmentObject;
 
         $setCurrentAttachment(attachmentObject);
-        expect($getCurrentAttachment()).toBe(attachmentObject);
+        expect($currentAttachment).toBe(attachmentObject);
 
         $setFramebufferBound(true);
-        expect($useFramebufferBound()).toBe(true);
+        expect($isFramebufferBound).toBe(true);
 
         execute();
-        expect($useFramebufferBound()).toBe(false);
-        expect($getCurrentAttachment()).toBe(null);
+        expect($isFramebufferBound).toBe(false);
+        expect($currentAttachment).toBe(null);
     });
 });

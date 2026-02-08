@@ -24,7 +24,7 @@ import { $offset } from "../../Filter";
 import {
     $context,
     $getFloat32Array6,
-    $getDevicePixelRatio,
+    $devicePixelRatio,
     $multiplyMatrices,
     $poolFloat32Array6
 } from "../../WebGLUtil";
@@ -308,7 +308,7 @@ export const execute = (
 
     if (textureObject) {
 
-        const devicePixelRatio = $getDevicePixelRatio();
+        const devicePixelRatio = $devicePixelRatio;
         const xMin = bounds[0] * (scaleX / devicePixelRatio);
         const yMin = bounds[1] * (scaleY / devicePixelRatio);
 

@@ -7,7 +7,7 @@ import {
     $gl
 } from "../../WebGLUtil";
 import {
-    $getDrawBitmapFrameBuffer,
+    $drawBitmapFramebuffer,
     $readFrameBuffer
 } from "../../FrameBufferManager";
 
@@ -42,8 +42,7 @@ export const execute = (
     const mainAttachmentObject = $context.$mainAttachmentObject as IAttachmentObject;
     $context.bind(mainAttachmentObject);
 
-    const drawBitmapFrameBuffer = $getDrawBitmapFrameBuffer();
-    $gl.bindFramebuffer($gl.FRAMEBUFFER, drawBitmapFrameBuffer);
+    $gl.bindFramebuffer($gl.FRAMEBUFFER, $drawBitmapFramebuffer);
 
     // 描画先のテクスチャを更新
     if (!$mainTextureObject
@@ -63,7 +62,7 @@ export const execute = (
 
     $gl.bindFramebuffer($gl.FRAMEBUFFER, null);
     $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, $readFrameBuffer);
-    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, drawBitmapFrameBuffer);
+    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, $drawBitmapFramebuffer);
 
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(

@@ -3,7 +3,7 @@ import { execute as filterApplyBlurFilterUseCase } from "../../BlurFilter/usecas
 import { execute as filterApplyBitmapFilterUseCase } from "../../BitmapFilter/usecase/FilterApplyBitmapFilterUseCase";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { $offset } from "../../../Filter";
-import { $getDevicePixelRatio } from "../../../WebGLUtil";
+import { $devicePixelRatio } from "../../../WebGLUtil";
 
 /**
  * @type {number}
@@ -69,7 +69,7 @@ export const execute = (
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
     // shadow point
-    const devicePixelRatio = $getDevicePixelRatio();
+    const devicePixelRatio = $devicePixelRatio;
     const radian = angle * $Deg2Rad;
     const x = Math.cos(radian) * distance * (xScale / devicePixelRatio);
     const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);

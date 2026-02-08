@@ -2,7 +2,7 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IColorBufferObject } from "../../interface/IColorBufferObject";
 import type { IStencilBufferObject } from "../../interface/IStencilBufferObject";
 import type { Context } from "../../Context";
-import { $getCurrentAttachment } from "../../FrameBufferManager";
+import { $currentAttachment } from "../../FrameBufferManager";
 import { execute as frameBufferManagerBindAttachmentObjectService } from "../../FrameBufferManager/service/FrameBufferManagerBindAttachmentObjectService";
 import { execute as maskBindUseCase } from "../../Mask/usecase/MaskBindUseCase";
 import {
@@ -23,7 +23,7 @@ import {
 export const execute = (context: Context, attachment_object: IAttachmentObject): void =>
 {
     // fixed logic
-    const currentAttachment = $getCurrentAttachment();
+    const currentAttachment = $currentAttachment;
     if (currentAttachment
         && attachment_object.id === currentAttachment.id
     ) {

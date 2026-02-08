@@ -1,6 +1,6 @@
 import {
     $getActiveTransferBounds,
-    $getActiveAtlasIndex
+    $activeAtlasIndex
 } from "../../AtlasManager";
 import {
     $gl,
@@ -36,7 +36,7 @@ export const execute = (): void =>
     );
     $setFramebufferBound(false);
 
-    const atlasIdx = $getActiveAtlasIndex();
+    const atlasIdx = $activeAtlasIndex;
     const bounds = $getActiveTransferBounds(atlasIdx);
 
     $gl.enable($gl.SCISSOR_TEST);

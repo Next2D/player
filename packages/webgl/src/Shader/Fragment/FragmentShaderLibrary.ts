@@ -1,8 +1,3 @@
-/**
- * @return {string}
- * @method
- * @static
- */
 export const FUNCTION_IS_INSIDE = (): string =>
 {
     return `
@@ -11,12 +6,6 @@ float isInside(in vec2 uv) {
 }`;
 };
 
-/**
- * @param  {number} mediump_index
- * @return {string}
- * @method
- * @static
- */
 export const STATEMENT_COLOR_TRANSFORM_ON = (mediump_index: number): string =>
 {
     return `

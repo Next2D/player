@@ -4,7 +4,7 @@ import { execute } from "./ContextBindUseCase";
 import { describe, expect, it, vi } from "vitest";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment
+    $currentAttachment
 } from "../../FrameBufferManager";
 
 describe("ContextBindUseCase.js method test", () =>
@@ -51,7 +51,7 @@ describe("ContextBindUseCase.js method test", () =>
         } as unknown as WebGL2RenderingContext;
 
         $setCurrentAttachment(null);
-        expect($getCurrentAttachment()).toBe(null);
+        expect($currentAttachment).toBe(null);
 
         const context = new Context(mockGL, 4);
         const attachment_object: IAttachmentObject = {
@@ -78,7 +78,7 @@ describe("ContextBindUseCase.js method test", () =>
 
         execute(context, attachment_object);
 
-        expect($getCurrentAttachment()).toBe(attachment_object);
+        expect($currentAttachment).toBe(attachment_object);
         expect(attachment_object.stencil?.dirty).toBe(false);
     });
 });

@@ -38,7 +38,7 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
 });
 
 vi.mock("../../FrameBufferManager.ts", () => ({
-    $getDrawBitmapFrameBuffer: vi.fn(() => "drawBitmapFrameBuffer"),
+    $drawBitmapFramebuffer: "drawBitmapFrameBuffer",
     $readFrameBuffer: "readFrameBuffer"
 }));
 

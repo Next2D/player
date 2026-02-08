@@ -3,7 +3,7 @@ import { $rootNodes } from "../../AtlasManager";
 import { $RENDER_MAX_SIZE } from "../../WebGLUtil";
 import { TexturePacker } from "@next2d/texture-packer";
 import {
-    $getActiveAtlasIndex,
+    $activeAtlasIndex,
     $setActiveAtlasIndex
 } from "../../AtlasManager";
 
@@ -19,7 +19,7 @@ import {
  */
 export const execute = (width: number, height: number): Node =>
 {
-    const index = $getActiveAtlasIndex();
+    const index = $activeAtlasIndex;
     if (!$rootNodes[index]) {
         $rootNodes[index] = new TexturePacker(index, $RENDER_MAX_SIZE, $RENDER_MAX_SIZE);
     }

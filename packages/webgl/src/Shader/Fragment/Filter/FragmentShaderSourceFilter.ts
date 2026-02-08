@@ -1,11 +1,5 @@
 import { FUNCTION_IS_INSIDE } from "../FragmentShaderLibrary";
 
-/**
- * @param  {number} index
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_BASE_TEXTURE_TRANSFORM = (index: number): string =>
 {
     return `
@@ -17,11 +11,6 @@ const STATEMENT_BASE_TEXTURE_TRANSFORM = (index: number): string =>
 `;
 };
 
-/**
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_BLUR_TEXTURE = (): string =>
 {
     return `
@@ -29,12 +18,6 @@ const STATEMENT_BLUR_TEXTURE = (): string =>
 `;
 };
 
-/**
- * @param  {number} index
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_BLUR_TEXTURE_TRANSFORM = (index: number): string =>
 {
     return `
@@ -46,12 +29,6 @@ const STATEMENT_BLUR_TEXTURE_TRANSFORM = (index: number): string =>
 `;
 };
 
-/**
- * @param  {number} offset
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_GLOW_STRENGTH = (offset: number): string =>
 {
     const index     = Math.floor(offset / 4);
@@ -62,12 +39,6 @@ const STATEMENT_GLOW_STRENGTH = (offset: number): string =>
 `;
 };
 
-/**
- * @param  {number} index
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_GLOW_SOLID_COLOR = (index: number): string =>
 {
     return `
@@ -76,12 +47,6 @@ const STATEMENT_GLOW_SOLID_COLOR = (index: number): string =>
 `;
 };
 
-/**
- * @param  {boolean} transforms_base
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_GLOW_GRADIENT_COLOR = (transforms_base: boolean): string =>
 {
     return `
@@ -89,17 +54,6 @@ const STATEMENT_GLOW_GRADIENT_COLOR = (transforms_base: boolean): string =>
 `;
 };
 
-/**
- * @param  {boolean} is_inner
- * @param  {boolean} transforms_base
- * @param  {boolean} applies_strength
- * @param  {boolean} is_gradient
- * @param  {number} color_index
- * @param  {number} strength_offset
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_GLOW = (
     is_inner: boolean,
     transforms_base: boolean,
@@ -128,11 +82,6 @@ const STATEMENT_GLOW = (
 `;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_BLUR_TEXTURE_2 = (): string =>
 {
     return `
@@ -140,11 +89,6 @@ const STATEMENT_BLUR_TEXTURE_2 = (): string =>
 `;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_BLUR_TEXTURE_TRANSFORM_2 = (): string =>
 {
     return `
@@ -153,12 +97,6 @@ const STATEMENT_BLUR_TEXTURE_TRANSFORM_2 = (): string =>
 `;
 };
 
-/**
- * @param  {boolean} offset
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_BEVEL_STRENGTH = (offset: number): string =>
 {
     const index     = Math.floor(offset / 4);
@@ -171,12 +109,6 @@ const STATEMENT_BEVEL_STRENGTH = (offset: number): string =>
 `;
 };
 
-/**
- * @param  {number} index
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_BEVEL_SOLID_COLOR = (index: number): string =>
 {
     return `
@@ -186,12 +118,6 @@ const STATEMENT_BEVEL_SOLID_COLOR = (index: number): string =>
 `;
 };
 
-/**
- * @param  {boolean} transforms_base
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_BEVEL_GRADIENT_COLOR = (transforms_base: boolean): string =>
 {
     return `
@@ -202,20 +128,6 @@ const STATEMENT_BEVEL_GRADIENT_COLOR = (transforms_base: boolean): string =>
 `;
 };
 
-/**
- * @param  {number}  textures_length
- * @param  {number}  mediump_length
- * @param  {boolean} transforms_base
- * @param  {boolean} transforms_blur
- * @param  {boolean} is_glow
- * @param  {string}  type
- * @param  {boolean} knockout
- * @param  {boolean} applies_strength
- * @param  {boolean} is_gradient
- * @return {string}
- * @method
- * @static
- */
 export const BITMAP_FILTER_TEMPLATE = (
     textures_length: number,
     mediump_length: number,
@@ -303,17 +215,6 @@ void main() {
 }`;
 };
 
-/**
- * @param  {string}  transforms_base
- * @param  {boolean} transforms_blur
- * @param  {boolean} applies_strength
- * @param  {boolean} is_gradient
- * @param  {number}  color_index
- * @param  {number}  strength_offset
- * @return {string}
- * @method
- * @static
- */
 const STATEMENT_BEVEL = (
     transforms_base: boolean,
     transforms_blur: boolean,

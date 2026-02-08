@@ -2,9 +2,9 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IColorBufferObject } from "../../interface/IColorBufferObject";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment,
+    $currentAttachment,
     $setFramebufferBound,
-    $useFramebufferBound
+    $isFramebufferBound
 } from "../../FrameBufferManager";
 import {
     $activeTextureUnit,
@@ -64,16 +64,16 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         };
 
         $setFramebufferBound(false);
-        expect($useFramebufferBound()).toBe(false);
+        expect($isFramebufferBound).toBe(false);
         $setCurrentAttachment(null);
-        expect($getCurrentAttachment()).toBe(null);
+        expect($currentAttachment).toBe(null);
         $setActiveTextureUnit(-1);
         expect($activeTextureUnit).toBe(-1);
 
         execute(attachmentObject);
 
-        expect($getCurrentAttachment()).toBe(attachmentObject);
-        expect($useFramebufferBound()).toBe(true);
+        expect($currentAttachment).toBe(attachmentObject);
+        expect($isFramebufferBound).toBe(true);
         expect($activeTextureUnit).toBe(0);
     });
 
@@ -127,16 +127,16 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         };
     
         $setFramebufferBound(false);
-        expect($useFramebufferBound()).toBe(false);
+        expect($isFramebufferBound).toBe(false);
         $setCurrentAttachment(null);
-        expect($getCurrentAttachment()).toBe(null);
+        expect($currentAttachment).toBe(null);
         $setActiveTextureUnit(-1);
         expect($activeTextureUnit).toBe(-1);
 
         execute(attachmentObject);
 
-        expect($getCurrentAttachment()).toBe(attachmentObject);
-        expect($useFramebufferBound()).toBe(true);
+        expect($currentAttachment).toBe(attachmentObject);
+        expect($isFramebufferBound).toBe(true);
         expect($activeTextureUnit).toBe(-1);
     });
 });

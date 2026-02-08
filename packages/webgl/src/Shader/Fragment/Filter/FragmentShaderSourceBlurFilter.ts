@@ -1,9 +1,3 @@
-/**
- * @param  {number} half_blur
- * @return {string}
- * @method
- * @static
- */
 export const BLUR_FILTER_TEMPLATE = (half_blur: number): string =>
 {
     const halfBlurFixed = half_blur.toFixed(1);

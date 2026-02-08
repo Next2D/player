@@ -27,13 +27,13 @@ describe("FrameBufferManagerGetTextureFromNodeUseCase.js method test", () =>
         });
 
         vi.mock("../../FrameBufferManager", () => ({
-            $getDrawBitmapFrameBuffer: vi.fn(() => "drawFrameBuffer"),
-            $getReadBitmapFrameBuffer: vi.fn(() => "readFrameBuffer"),
+            $drawBitmapFramebuffer: "drawFrameBuffer",
+            $readBitmapFramebuffer: "readFrameBuffer",
             $readFrameBuffer: "readFrameBuffer"
         }));
 
         vi.mock("../../AtlasManager", () => ({
-            $getActiveAtlasIndex: vi.fn(() => 0),
+            $activeAtlasIndex: 0,
             $setActiveAtlasIndex: vi.fn(),
             $getAtlasTextureObject: vi.fn(() => ({
                 resource: "atlasTexture"
