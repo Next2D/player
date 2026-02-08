@@ -2361,8 +2361,7 @@ export class Context
     ): void {
         // WebGPU display object drawing
         // インスタンス配列に追加
-        const canvasWidth = this.canvasContext.canvas.width;
-        const canvasHeight = this.canvasContext.canvas.height;
+        // WebGL版と同じ: ビューポートサイズを使用（コンテナレイヤー時はレイヤーサイズ）
         const renderMaxSize = WebGPUUtil.getRenderMaxSize();
 
         addDisplayObjectToInstanceArray(
@@ -2371,8 +2370,8 @@ export class Context
             color_transform,
             this.$matrix,
             this.globalCompositeOperation,
-            canvasWidth,
-            canvasHeight,
+            this.viewportWidth,
+            this.viewportHeight,
             renderMaxSize,
             this.globalAlpha  // WebGL版と同じ: globalAlphaを渡す
         );
@@ -3111,14 +3110,15 @@ export class Context
         // コンテナのコンテンツサイズを保存（containerEndLayerでの抽出範囲計算に使用）
         this.containerLayerContentSizes.push({ width, height });
 
-        // メインと同じサイズのbgra8unormアタッチメントを作成（mask=trueでステンシル付き）
+        // WebGL版と同じ: コンテンツサイズのbgra8unormアタッチメントを作成（mask=trueでステンシル付き）
+        // children の transform は layerBounds で相対化されるため、コンテンツはレイヤー内の (0,0) から描画される
         const layerName = `container_layer_${this.containerLayerCounter++}`;
         this.containerLayerNames.push(layerName);
 
         const tempAttachment = this.frameBufferManager.createAttachment(
             layerName,
-            mainAttachment.width,
-            mainAttachment.height,
+            width,
+            height,
             mainAttachment.msaa,
             true
         );
@@ -3257,10 +3257,9 @@ export class Context
         const boundsXMin = filter_bounds[0] * (scaleX / devicePixelRatio);
         const boundsYMin = filter_bounds[1] * (scaleY / devicePixelRatio);
 
-        const cachedOffsetX = $cacheStore.get(unique_key, "offsetX") || 0;
-        const cachedOffsetY = $cacheStore.get(unique_key, "offsetY") || 0;
-        const drawX = Math.floor(boundsXMin + matrix[4] - cachedOffsetX);
-        const drawY = Math.floor(boundsYMin + matrix[5] - cachedOffsetY);
+        // WebGL版と同じ: boundsXMin + matrix[4] で絶対位置（$offsetは使わない）
+        const drawX = Math.floor(boundsXMin + matrix[4]);
+        const drawY = Math.floor(boundsYMin + matrix[5]);
 
         // シンプルなブレンドモード判定
         const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;

@@ -265,6 +265,16 @@ export class FrameBufferManager
             if (att.texture) {
                 this.texturePool.release(att.texture.resource);
             }
+            // MSAA/stencilリソースはプール対象外のため直接破棄
+            if (att.msaaTexture) {
+                att.msaaTexture.resource.destroy();
+            }
+            if (att.stencil) {
+                att.stencil.resource.destroy();
+            }
+            if (att.msaaStencil) {
+                att.msaaStencil.resource.destroy();
+            }
         }
         this.pendingReleases = [];
     }

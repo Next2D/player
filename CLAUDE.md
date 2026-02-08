@@ -98,6 +98,32 @@ Key rendering features:
 - Filter/blend effects rendered to texture cache
 - Mask rendering with stencil buffer
 
+## WebGL/WebGPU Renderer Switching
+
+The renderer backend is controlled by the `useWebGPU` flag in:
+`packages/renderer/src/Command/service/CommandInitializeContextService.ts`
+
+- `const useWebGPU: boolean = true;` → WebGPU renderer
+- `const useWebGPU: boolean = false;` → WebGL renderer
+
+E2E tests use whichever renderer is set by this flag. To compare WebGL vs WebGPU output:
+1. Set `useWebGPU = false`, run e2e tests for WebGL snapshots
+2. Set `useWebGPU = true`, run e2e tests for WebGPU snapshots
+3. Compare the generated snapshots
+
+### E2E Tests
+
+E2E tests use Playwright. Run from the `e2e/` directory:
+```bash
+cd e2e
+npx playwright test tests/sprite.spec.ts --project=webgl --update-snapshots
+npx playwright test tests/sprite.spec.ts --project=webgpu --update-snapshots
+```
+
+Snapshots are saved to:
+- `e2e/snapshots/webgl/{spec}-snapshots/`
+- `e2e/snapshots/webgpu/{spec}-snapshots/`
+
 ## Requirements
 
 - Node.js >= v22.x

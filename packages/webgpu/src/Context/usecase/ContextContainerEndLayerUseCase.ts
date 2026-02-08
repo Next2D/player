@@ -58,9 +58,13 @@ const copyRegionToFilterAttachment = (
     }
 
     const scaleX = width / srcAttachment.width;
-    const scaleY = height / srcAttachment.height;
     const offsetX = x / srcAttachment.width;
-    const offsetY = y / srcAttachment.height;
+
+    // ComplexBlendCopyVertexはOpenGL座標系のtexCoord（Y軸反転）を使用するため、
+    // UV uniformでY反転を補正して正しい向きの出力を得る
+    // texCoord.y=1(fb上端) → uv.y=y/H(ソース上端), texCoord.y=0(fb下端) → uv.y=(y+h)/H(ソース下端)
+    const scaleY = -(height / srcAttachment.height);
+    const offsetY = (y + height) / srcAttachment.height;
 
     const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
@@ -559,26 +563,18 @@ export const execute = (
         // 常に新鮮なテクスチャを抽出してフィルターを適用する
         // （キャッシュはディスプレイレイヤーのcontainerDrawCachedFilterで管理）
 
-        // コンテナのコンテンツ領域を計算
-        // WebGPUではレイヤーがメインと同じサイズのため、コンテンツ位置を特定して抽出する
-        // matrix[4], matrix[5] = コンテナのスクリーン座標位置
-        const extractX = Math.max(0, Math.floor(matrix[4]));
-        const extractY = Math.max(0, Math.floor(matrix[5]));
-        const extractW = Math.min(contentWidth, tempAttachment.width - extractX);
-        const extractH = Math.min(contentHeight, tempAttachment.height - extractY);
-
-        if (extractW <= 0 || extractH <= 0) {
-            config.frameBufferManager.destroyAttachment(tempName);
-            return;
-        }
-
-        // コンテナの一時アタッチメント(bgra8unorm)からフィルター用(rgba8unorm)にコピー
+        // WebGL版と同じ: レイヤー全体をフィルター用にコピー
+        // レイヤーはコンテンツサイズで作成され、childrenは相対座標で描画されているため
+        // (0, 0, layerWidth, layerHeight) = コンテンツ全体
         let filterAttachment = copyRegionToFilterAttachment(
-            config, tempAttachment, extractX, extractY, extractW, extractH
+            config, tempAttachment,
+            0, 0, tempAttachment.width, tempAttachment.height
         );
 
-        // 一時アタッチメントを破棄
-        config.frameBufferManager.destroyAttachment(tempName);
+        // 一時アタッチメントを遅延解放（コマンドバッファsubmit後に解放）
+        // destroyAttachmentは即座にGPUテクスチャを破棄するため、
+        // コマンドエンコーダに記録済みのレンダーパスが参照するテクスチャが無効になる
+        config.frameBufferManager.releaseTemporaryAttachment(tempAttachment);
 
         // フィルターチェーンを適用
         const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
@@ -590,8 +586,6 @@ export const execute = (
         if (uniqueKey) {
             $cacheStore.set(uniqueKey, "fKey", filterKey);
             $cacheStore.set(uniqueKey, "fTexture", filterAttachment);
-            $cacheStore.set(uniqueKey, "offsetX", $offset.x);
-            $cacheStore.set(uniqueKey, "offsetY", $offset.y);
         }
 
         // フィルター結果をメインに描画
@@ -601,9 +595,9 @@ export const execute = (
             const boundsXMin = filterBounds[0] * (scaleX / devicePixelRatio);
             const boundsYMin = filterBounds[1] * (scaleY / devicePixelRatio);
 
-            // WebGL版と同じ: boundsXMin + matrix[4] で絶対位置、$offset分を引く
-            const drawX = boundsXMin + matrix[4] - $offset.x;
-            const drawY = boundsYMin + matrix[5] - $offset.y;
+            // WebGL版と同じ: boundsXMin + matrix[4] で絶対位置
+            const drawX = boundsXMin + matrix[4];
+            const drawY = boundsYMin + matrix[5];
 
             drawFilterResultToMain(
                 config, filterAttachment, mainAttachment,
@@ -618,18 +612,19 @@ export const execute = (
 
     } else {
 
-        // ブレンドのみ：一時アタッチメント全体をフィルター用にコピーしてメインに描画
+        // ブレンドのみ：レイヤー全体をフィルター用にコピーしてメインに描画
         const fullAttachment = copyRegionToFilterAttachment(
             config, tempAttachment,
             0, 0, tempAttachment.width, tempAttachment.height
         );
 
-        // 一時アタッチメントを破棄
-        config.frameBufferManager.destroyAttachment(tempName);
+        // 一時アタッチメントを遅延解放（コマンドバッファsubmit後に解放）
+        config.frameBufferManager.releaseTemporaryAttachment(tempAttachment);
 
+        // WebGL版と同じ: matrix[4], matrix[5] = layerBounds の絶対位置に描画
         drawFilterResultToMain(
             config, fullAttachment, mainAttachment,
-            blendMode, 0, 0, bufferManager
+            blendMode, matrix[4], matrix[5], bufferManager
         );
 
         config.frameBufferManager.releaseTemporaryAttachment(fullAttachment);
