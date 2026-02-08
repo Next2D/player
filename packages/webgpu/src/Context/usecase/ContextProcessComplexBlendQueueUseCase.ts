@@ -301,15 +301,15 @@ export const execute = (
             bufferManager
         );
 
-        // 3. カラートランスフォームを準備
+        // 3. カラートランスフォームを準備（add値は生値、WebGL版と同じ）
         const ct = new Float32Array([
             color_transform[0],
             color_transform[1],
             color_transform[2],
             global_alpha,
-            color_transform[4] / 255,
-            color_transform[5] / 255,
-            color_transform[6] / 255,
+            color_transform[4],
+            color_transform[5],
+            color_transform[6],
             0
         ]);
 

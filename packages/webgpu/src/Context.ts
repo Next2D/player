@@ -3276,7 +3276,7 @@ export class Context
             if (ctPipeline && ctBindGroupLayout && ctAttachment.texture) {
                 const ctUniformData = new Float32Array([
                     color_transform[0], color_transform[1], color_transform[2], color_transform[3],
-                    color_transform[4] / 255, color_transform[5] / 255, color_transform[6] / 255, 0
+                    color_transform[4], color_transform[5], color_transform[6], 0
                 ]);
                 const ctUniformBuffer = this.bufferManager.acquireUniformBuffer(32);
                 this.device.queue.writeBuffer(ctUniformBuffer, 0, ctUniformData);

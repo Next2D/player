@@ -62,13 +62,10 @@ struct CopyUniforms {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let filterStart = uniforms.offset;
-    let filterEnd = uniforms.offset + uniforms.scale;
-    let uv = (input.texCoord - filterStart) / uniforms.scale;
+    let uv = input.texCoord * uniforms.scale + uniforms.offset;
     let clampedUv = clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0));
     let color = textureSample(inputTexture, textureSampler, clampedUv);
-    let inBounds = input.texCoord.x >= filterStart.x && input.texCoord.x <= filterEnd.x &&
-                   input.texCoord.y >= filterStart.y && input.texCoord.y <= filterEnd.y;
+    let inBounds = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
     return select(vec4<f32>(0.0, 0.0, 0.0, 0.0), color, inBounds);
 }
 `;

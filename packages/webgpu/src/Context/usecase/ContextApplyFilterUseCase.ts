@@ -68,10 +68,10 @@ const applyColorTransform = (
     }
 
     // uniform: mul(vec4) + add(vec4) = 32 bytes
-    // add値は0-255スケールなので255で割って0-1に正規化（WebGLの複雑ブレンドパスと同じ）
+    // add値は0-255スケールの生値をそのまま渡す（WebGLのフィルターCTパスと同じ）
     const uniformData = new Float32Array([
         colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
-        colorTransform[4] / 255, colorTransform[5] / 255, colorTransform[6] / 255, 0
+        colorTransform[4], colorTransform[5], colorTransform[6], 0
     ]);
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
     config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
@@ -397,10 +397,10 @@ const drawFilterToMain = (
         const sampler = config.textureManager.createSampler("filter_output_sampler", true);
 
         // UV座標の設定
-        // 負の描画位置の場合、uvOffset を設定してテクスチャの左端/上端をスキップ
-        // uvScale = 1 - uvOffset でテクスチャの残り部分をカバー
-        const uvScaleX = 1 - uvOffsetX;
-        const uvScaleY = 1 - uvOffsetY;
+        // viewportをdrawWidth/drawHeightに合わせるため、uvScaleでテクスチャの表示範囲を制御
+        // uv = texCoord * scale + offset で texCoord[0,1] → uv[uvOffset, uvOffset+uvScale]
+        const uvScaleX = drawWidth / filter_attachment.width;
+        const uvScaleY = drawHeight / filter_attachment.height;
         const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
         const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
         config.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
@@ -428,8 +428,8 @@ const drawFilterToMain = (
         // ScissorはGPUIntegerCoordinate必須のため整数化し、viewport領域を包含する
         const vpX = Math.max(0, drawX);
         const vpY = Math.max(0, drawY);
-        const vpW = Math.max(1, filter_attachment.width);
-        const vpH = Math.max(1, filter_attachment.height);
+        const vpW = Math.max(1, drawWidth);
+        const vpH = Math.max(1, drawHeight);
         const scissorX = Math.max(0, Math.floor(vpX));
         const scissorY = Math.max(0, Math.floor(vpY));
         const scissorW = Math.max(1, Math.min(Math.ceil(vpX + vpW) - scissorX, mainWidth - scissorX));
@@ -455,15 +455,15 @@ const drawFilterToMain = (
             drawX, drawY, drawWidth, drawHeight
         );
 
-        // 2. カラートランスフォームを準備（WebGL版と同じフォーマット）
+        // 2. カラートランスフォームを準備（WebGL版と同じ：add値は生値）
         const ct = new Float32Array([
             color_transform[0],      // mulR
             color_transform[1],      // mulG
             color_transform[2],      // mulB
             color_transform[3],      // mulA (globalAlpha)
-            color_transform[4] / 255, // addR
-            color_transform[5] / 255, // addG
-            color_transform[6] / 255, // addB
+            color_transform[4],      // addR
+            color_transform[5],      // addG
+            color_transform[6],      // addB
             0                        // addA
         ]);
 

@@ -68,7 +68,7 @@ const applyColorTransform = (
 
     const uniformData = new Float32Array([
         colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
-        colorTransform[4] / 255, colorTransform[5] / 255, colorTransform[6] / 255, 0
+        colorTransform[4], colorTransform[5], colorTransform[6], 0
     ]);
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
     config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
@@ -255,8 +255,8 @@ const drawFilterResultToMain = (
 
         const sampler = config.textureManager.createSampler("container_output_sampler", true);
 
-        const uvScaleX = 1 - uvOffsetX;
-        const uvScaleY = 1 - uvOffsetY;
+        const uvScaleX = drawWidth / filterAttachment.width;
+        const uvScaleY = drawHeight / filterAttachment.height;
         const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
         const uniformBuffer = bufferManager.acquireUniformBuffer(16);
         config.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
@@ -279,8 +279,8 @@ const drawFilterResultToMain = (
         // Viewportはfloat値でサブピクセル精度を維持（WebGLのsetTransform相当）
         const vpX = Math.max(0, drawX);
         const vpY = Math.max(0, drawY);
-        const vpW = Math.max(1, filterAttachment.width);
-        const vpH = Math.max(1, filterAttachment.height);
+        const vpW = Math.max(1, drawWidth);
+        const vpH = Math.max(1, drawHeight);
         const scissorX = Math.max(0, Math.floor(vpX));
         const scissorY = Math.max(0, Math.floor(vpY));
         const scissorW = Math.max(1, Math.min(Math.ceil(vpX + vpW) - scissorX, mainWidth - scissorX));
