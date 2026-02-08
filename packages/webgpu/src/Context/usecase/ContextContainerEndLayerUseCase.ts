@@ -29,6 +29,75 @@ const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
 const $identityColorTransform = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
 /**
+ * @description ColorTransformが恒等変換かどうかをチェック
+ *
+ * @param {Float32Array | null} ct [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
+ * @return {boolean}
+ */
+const isIdentityColorTransform = (ct: Float32Array | null): boolean => {
+    if (!ct) {
+        return true;
+    }
+    return ct[0] === 1 && ct[1] === 1 && ct[2] === 1 && ct[3] === 1
+        && ct[4] === 0 && ct[5] === 0 && ct[6] === 0 && ct[7] === 0;
+};
+
+/**
+ * @description フィルター結果にColorTransformを適用
+ *
+ * @param {ILocalFilterConfig} config
+ * @param {IAttachmentObject} attachment
+ * @param {Float32Array} colorTransform [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
+ * @return {IAttachmentObject}
+ */
+const applyColorTransform = (
+    config: ILocalFilterConfig,
+    attachment: IAttachmentObject,
+    colorTransform: Float32Array
+): IAttachmentObject => {
+    const ctAttachment = config.frameBufferManager.createTemporaryAttachment(
+        attachment.width, attachment.height
+    );
+
+    const pipeline = config.pipelineManager.getPipeline("color_transform");
+    const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
+
+    if (!pipeline || !bindGroupLayout || !attachment.texture || !ctAttachment.texture) {
+        return attachment;
+    }
+
+    const uniformData = new Float32Array([
+        colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
+        colorTransform[4] / 255, colorTransform[5] / 255, colorTransform[6] / 255, 0
+    ]);
+    const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
+    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+    const sampler = config.textureManager.createSampler("container_ct_sampler", false);
+
+    const bindGroup = config.device.createBindGroup({
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": attachment.texture.view }
+        ]
+    });
+
+    const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+        ctAttachment.texture.view, 0, 0, 0, 0, "clear"
+    );
+
+    const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(pipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.draw(6, 1, 0, 0);
+    passEncoder.end();
+
+    return ctAttachment;
+};
+
+/**
  * @description コンテナの一時アタッチメント(bgra8unorm)から領域をフィルター用(rgba8unorm)にコピー
  *
  * @param {ILocalFilterConfig} config
@@ -549,7 +618,7 @@ export const execute = (
     tempName: string,
     blendMode: IBlendMode,
     matrix: Float32Array,
-    _colorTransform: Float32Array | null,
+    colorTransform: Float32Array | null,
     useFilter: boolean,
     filterBounds: Float32Array | null,
     params: Float32Array | null,
@@ -594,6 +663,15 @@ export const execute = (
 
         // フィルター結果をメインに描画
         if (filterAttachment) {
+            // ColorTransformが恒等変換でない場合、描画用に一時コピーを作成してCTを適用
+            // キャッシュにはフィルター結果のみ保存（CTは毎フレーム適用する）
+            let drawAttachment = filterAttachment;
+            let ctAttachment: IAttachmentObject | null = null;
+            if (!isIdentityColorTransform(colorTransform)) {
+                ctAttachment = applyColorTransform(config, filterAttachment, colorTransform!);
+                drawAttachment = ctAttachment;
+            }
+
             const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
             const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
             const boundsXMin = filterBounds[0] * (scaleX / devicePixelRatio);
@@ -604,11 +682,15 @@ export const execute = (
             const drawY = boundsYMin + matrix[5];
 
             drawFilterResultToMain(
-                config, filterAttachment, mainAttachment,
+                config, drawAttachment, mainAttachment,
                 blendMode, drawX, drawY, bufferManager
             );
 
-            // キャッシュされていないアタッチメントのみ解放
+            // CT一時アタッチメントを解放
+            if (ctAttachment) {
+                config.frameBufferManager.releaseTemporaryAttachment(ctAttachment);
+            }
+            // キャッシュされていないフィルター結果のみ解放
             if (!uniqueKey) {
                 config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
             }
@@ -617,13 +699,20 @@ export const execute = (
     } else {
 
         // ブレンドのみ：レイヤー全体をフィルター用にコピーしてメインに描画
-        const fullAttachment = copyRegionToFilterAttachment(
+        let fullAttachment = copyRegionToFilterAttachment(
             config, tempAttachment,
             0, 0, tempAttachment.width, tempAttachment.height
         );
 
         // 一時アタッチメントを遅延解放（コマンドバッファsubmit後に解放）
         config.frameBufferManager.releaseTemporaryAttachment(tempAttachment);
+
+        // ColorTransformが恒等変換でない場合、適用
+        if (!isIdentityColorTransform(colorTransform)) {
+            const ctAttachment = applyColorTransform(config, fullAttachment, colorTransform!);
+            config.frameBufferManager.releaseTemporaryAttachment(fullAttachment);
+            fullAttachment = ctAttachment;
+        }
 
         // WebGL版と同じ: matrix[4], matrix[5] = layerBounds の絶対位置に描画
         drawFilterResultToMain(

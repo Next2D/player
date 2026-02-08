@@ -18,6 +18,7 @@ import {
     TextureCopyFragment,
     BlurTextureCopyFragment,
     FilterOutputFragment,
+    ColorTransformFragment,
     ColorMatrixFilterFragment,
     NodeClearFragment,
     PositionedTextureFragment,
@@ -369,6 +370,15 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     static getFilterOutputFragmentShader (): string
     {
         return FilterOutputFragment;
+    }
+
+    /**
+     * @description ColorTransform適用用フラグメントシェーダー
+     * @return {string}
+     */
+    static getColorTransformFragmentShader (): string
+    {
+        return ColorTransformFragment;
     }
 
     /**

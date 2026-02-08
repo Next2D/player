@@ -73,6 +73,38 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+export const ColorTransformFragment = /* wgsl */`
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texCoord: vec2<f32>,
+}
+
+struct ColorTransformUniforms {
+    mul: vec4<f32>,
+    add: vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> ct: ColorTransformUniforms;
+@group(0) @binding(1) var textureSampler: sampler;
+@group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+@fragment
+fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+    var color = textureSample(inputTexture, textureSampler, input.texCoord);
+
+    // Unpremultiply
+    color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
+
+    // Apply ColorTransform (same as WebGL: src * mul + add)
+    color = clamp(color * ct.mul + ct.add, vec4<f32>(0.0), vec4<f32>(1.0));
+
+    // Premultiply
+    color = vec4<f32>(color.rgb * color.a, color.a);
+
+    return color;
+}
+`;
+
 export const ColorMatrixFilterFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

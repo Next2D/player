@@ -31,6 +31,76 @@ const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
 const Y_FLIP_UNIFORM = new Float32Array([1, -1, 0, 1]);
 
 /**
+ * @description ColorTransformが恒等変換かどうかをチェック
+ *              Check if ColorTransform is identity
+ *
+ * @param {Float32Array} ct [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
+ * @return {boolean}
+ */
+const isIdentityColorTransform = (ct: Float32Array): boolean => {
+    return ct[0] === 1 && ct[1] === 1 && ct[2] === 1 && ct[3] === 1
+        && ct[4] === 0 && ct[5] === 0 && ct[6] === 0 && ct[7] === 0;
+};
+
+/**
+ * @description フィルター結果にColorTransformを適用
+ *              Apply ColorTransform to filter result (WebGL版と同じ: unpremultiply → mul+add → premultiply)
+ *
+ * @param {ILocalFilterConfig} config
+ * @param {IAttachmentObject} attachment
+ * @param {Float32Array} colorTransform [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
+ * @return {IAttachmentObject}
+ */
+const applyColorTransform = (
+    config: ILocalFilterConfig,
+    attachment: IAttachmentObject,
+    colorTransform: Float32Array
+): IAttachmentObject => {
+    const ctAttachment = config.frameBufferManager.createTemporaryAttachment(
+        attachment.width, attachment.height
+    );
+
+    const pipeline = config.pipelineManager.getPipeline("color_transform");
+    const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
+
+    if (!pipeline || !bindGroupLayout || !attachment.texture || !ctAttachment.texture) {
+        return attachment;
+    }
+
+    // uniform: mul(vec4) + add(vec4) = 32 bytes
+    // add値は0-255スケールなので255で割って0-1に正規化（WebGLの複雑ブレンドパスと同じ）
+    const uniformData = new Float32Array([
+        colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
+        colorTransform[4] / 255, colorTransform[5] / 255, colorTransform[6] / 255, 0
+    ]);
+    const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
+    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+    const sampler = config.textureManager.createSampler("color_transform_sampler", false);
+
+    const bindGroup = config.device.createBindGroup({
+        "layout": bindGroupLayout,
+        "entries": [
+            { "binding": 0, "resource": { "buffer": uniformBuffer } },
+            { "binding": 1, "resource": sampler },
+            { "binding": 2, "resource": attachment.texture.view }
+        ]
+    });
+
+    const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+        ctAttachment.texture.view, 0, 0, 0, 0, "clear"
+    );
+
+    const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(pipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.draw(6, 1, 0, 0);
+    passEncoder.end();
+
+    return ctAttachment;
+};
+
+/**
  * @description ノードからテクスチャをアタッチメントとして取得
  *              Get texture from node as attachment
  *
@@ -878,6 +948,14 @@ export const execute = (
                 }
                 break;
         }
+    }
+
+    // ColorTransformが恒等変換でない場合、フィルター結果に適用
+    // WebGL版と同じ: フィルターチェーン適用後、メイン描画前にColorTransformを適用
+    if (!isIdentityColorTransform(color_transform)) {
+        const ctAttachment = applyColorTransform(config, filterAttachment, color_transform);
+        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+        filterAttachment = ctAttachment;
     }
 
     // フィルター適用後のテクスチャをメインキャンバスに描画

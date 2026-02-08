@@ -3219,7 +3219,7 @@ export class Context
     containerDrawCachedFilter (
         blend_mode: IBlendMode,
         matrix: Float32Array,
-        _color_transform: Float32Array,
+        color_transform: Float32Array,
         filter_bounds: Float32Array,
         unique_key: string,
         filter_key: string
@@ -3250,6 +3250,55 @@ export class Context
         const mainAttachment = this.$mainAttachmentObject as IAttachmentObject;
         if (!mainAttachment || !mainAttachment.texture) {
             return;
+        }
+
+        // ColorTransformが恒等変換でない場合、キャッシュのコピーにCTを適用
+        let drawAttachment = cachedAttachment;
+        let ctAttachment: IAttachmentObject | null = null;
+        const isIdentityCt = color_transform[0] === 1 && color_transform[1] === 1
+            && color_transform[2] === 1 && color_transform[3] === 1
+            && color_transform[4] === 0 && color_transform[5] === 0
+            && color_transform[6] === 0 && color_transform[7] === 0;
+        if (!isIdentityCt) {
+            const ctConfig = {
+                "device": this.device,
+                "commandEncoder": this.commandEncoder!,
+                "bufferManager": this.bufferManager,
+                "frameBufferManager": this.frameBufferManager,
+                "pipelineManager": this.pipelineManager,
+                "textureManager": this.textureManager
+            };
+            ctAttachment = this.frameBufferManager.createTemporaryAttachment(
+                cachedAttachment.width, cachedAttachment.height
+            );
+            const ctPipeline = this.pipelineManager.getPipeline("color_transform");
+            const ctBindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
+            if (ctPipeline && ctBindGroupLayout && ctAttachment.texture) {
+                const ctUniformData = new Float32Array([
+                    color_transform[0], color_transform[1], color_transform[2], color_transform[3],
+                    color_transform[4] / 255, color_transform[5] / 255, color_transform[6] / 255, 0
+                ]);
+                const ctUniformBuffer = this.bufferManager.acquireUniformBuffer(32);
+                this.device.queue.writeBuffer(ctUniformBuffer, 0, ctUniformData);
+                const ctSampler = this.textureManager.createSampler("cached_ct_sampler", false);
+                const ctBindGroup = this.device.createBindGroup({
+                    "layout": ctBindGroupLayout,
+                    "entries": [
+                        { "binding": 0, "resource": { "buffer": ctUniformBuffer } },
+                        { "binding": 1, "resource": ctSampler },
+                        { "binding": 2, "resource": cachedAttachment.texture.view }
+                    ]
+                });
+                const ctRenderPass = this.frameBufferManager.createRenderPassDescriptor(
+                    ctAttachment.texture.view, 0, 0, 0, 0, "clear"
+                );
+                const ctPass = this.commandEncoder!.beginRenderPass(ctRenderPass);
+                ctPass.setPipeline(ctPipeline);
+                ctPass.setBindGroup(0, ctBindGroup);
+                ctPass.draw(6, 1, 0, 0);
+                ctPass.end();
+                drawAttachment = ctAttachment;
+            }
         }
 
         const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
@@ -3299,7 +3348,7 @@ export class Context
             "entries": [
                 { "binding": 0, "resource": { "buffer": uniformBuffer } },
                 { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": cachedAttachment.texture.view }
+                { "binding": 2, "resource": drawAttachment.texture!.view }
             ]
         });
 
@@ -3311,14 +3360,17 @@ export class Context
 
         const vpX = Math.max(0, drawX);
         const vpY = Math.max(0, drawY);
-        const vpW = Math.max(1, cachedAttachment.width);
-        const vpH = Math.max(1, cachedAttachment.height);
+        const vpW = Math.max(1, drawAttachment.width);
+        const vpH = Math.max(1, drawAttachment.height);
         const mainWidth = mainAttachment.width;
         const mainHeight = mainAttachment.height;
         const scissorW = Math.max(1, Math.min(vpW, mainWidth - vpX));
         const scissorH = Math.max(1, Math.min(vpH, mainHeight - vpY));
 
         if (scissorW <= 0 || scissorH <= 0 || vpX >= mainWidth || vpY >= mainHeight) {
+            if (ctAttachment) {
+                this.frameBufferManager.releaseTemporaryAttachment(ctAttachment);
+            }
             return;
         }
 
@@ -3329,6 +3381,11 @@ export class Context
         passEncoder.setScissorRect(vpX, vpY, scissorW, scissorH);
         passEncoder.draw(6, 1, 0, 0);
         passEncoder.end();
+
+        // CT一時アタッチメントを解放
+        if (ctAttachment) {
+            this.frameBufferManager.releaseTemporaryAttachment(ctAttachment);
+        }
 
         this.bind(mainAttachment);
     }

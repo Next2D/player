@@ -79,7 +79,7 @@ export class PipelineManager
         ...Array.from({ "length": 16 }, (_, i): [string, string] => [`blur_filter_${i + 1}`, "blur_filter"]),
         ["blur_filter", "blur_filter"],
         // texture_copy グループ（多数のパイプラインを含む）
-        ["texture_copy", "texture_copy"], ["texture_copy_rgba8", "texture_copy"],
+        ["texture_copy", "texture_copy"], ["texture_copy_rgba8", "texture_copy"], ["color_transform", "texture_copy"],
         ["texture_erase", "texture_copy"], ["blur_texture_copy", "texture_copy"],
         ["filter_blend", "texture_copy"], ["texture_copy_bgra", "texture_copy"],
         ["filter_output", "texture_copy"], ["filter_output_add", "texture_copy"],
@@ -2491,6 +2491,12 @@ export class PipelineManager
         ));
         this.pipelines.set("texture_copy_rgba8", this.createFullscreenQuadPipeline(
             pipelineLayout, vertexShaderModule, fragmentShaderModule, "rgba8unorm", BLEND_REPLACE
+        ));
+
+        // ColorTransform適用パイプライン（フィルター出力にColorTransformを適用）
+        const colorTransformFragmentModule = this.getOrCreateShaderModule("colorTransformFragment", ShaderSource.getColorTransformFragmentShader());
+        this.pipelines.set("color_transform", this.createFullscreenQuadPipeline(
+            pipelineLayout, vertexShaderModule, colorTransformFragmentModule, "rgba8unorm", BLEND_REPLACE
         ));
 
         // Erase/Blur用テクスチャコピー（BlurTextureCopyFragmentShader: 範囲外透明処理）
