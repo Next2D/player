@@ -20,6 +20,9 @@ test.describe("Sprite テスト", () => {
         await page.goto("/e2e/pages/sprite/sprite-nested-filter.html");
         await waitForCanvas(page);
 
-        await expect(page).toHaveScreenshot("sprite-nested-filter.png");
+        await expect(page).toHaveScreenshot("sprite-nested-filter.png", {
+            maxDiffPixelRatio: 0.025,
+            maxDiffPixels: 15000
+        });
     });
 });

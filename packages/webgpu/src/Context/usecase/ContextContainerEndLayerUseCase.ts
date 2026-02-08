@@ -119,8 +119,9 @@ const drawFilterResultToMain = (
         return;
     }
 
-    let drawX = Math.floor(x);
-    let drawY = Math.floor(y);
+    // WebGLと同じサブピクセル精度を維持するため、Math.floorを使用しない
+    let drawX = x;
+    let drawY = y;
     let drawWidth = filterAttachment.width;
     let drawHeight = filterAttachment.height;
 
@@ -206,14 +207,17 @@ const drawFilterResultToMain = (
             colorView, 0, 0, 0, 0, "load", resolveTarget
         );
 
-        const vpX = Math.max(0, Math.floor(drawX));
-        const vpY = Math.max(0, Math.floor(drawY));
+        // Viewportはfloat値でサブピクセル精度を維持（WebGLのsetTransform相当）
+        const vpX = Math.max(0, drawX);
+        const vpY = Math.max(0, drawY);
         const vpW = Math.max(1, filterAttachment.width);
         const vpH = Math.max(1, filterAttachment.height);
-        const scissorW = Math.max(1, Math.min(vpW, mainWidth - vpX));
-        const scissorH = Math.max(1, Math.min(vpH, mainHeight - vpY));
+        const scissorX = Math.max(0, Math.floor(vpX));
+        const scissorY = Math.max(0, Math.floor(vpY));
+        const scissorW = Math.max(1, Math.min(Math.ceil(vpX + vpW) - scissorX, mainWidth - scissorX));
+        const scissorH = Math.max(1, Math.min(Math.ceil(vpY + vpH) - scissorY, mainHeight - scissorY));
 
-        if (scissorW <= 0 || scissorH <= 0 || vpX >= mainWidth || vpY >= mainHeight) {
+        if (scissorW <= 0 || scissorH <= 0 || scissorX >= mainWidth || scissorY >= mainHeight) {
             return;
         }
 
@@ -221,7 +225,7 @@ const drawFilterResultToMain = (
         passEncoder.setPipeline(pipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.setViewport(vpX, vpY, vpW, vpH, 0, 1);
-        passEncoder.setScissorRect(vpX, vpY, scissorW, scissorH);
+        passEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
         passEncoder.draw(6, 1, 0, 0);
         passEncoder.end();
 

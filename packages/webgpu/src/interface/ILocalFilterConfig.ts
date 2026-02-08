@@ -1,3 +1,4 @@
+import type { IAttachmentObject } from "./IAttachmentObject";
 import type { BufferManager } from "../BufferManager";
 import type { FrameBufferManager } from "../FrameBufferManager";
 import type { PipelineManager } from "../Shader/PipelineManager";
@@ -14,4 +15,5 @@ export interface ILocalFilterConfig {
     frameBufferManager: FrameBufferManager;
     pipelineManager: PipelineManager;
     textureManager: TextureManager;
+    mainAttachment?: IAttachmentObject;
 }

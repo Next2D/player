@@ -3062,7 +3062,8 @@ export class Context
             "bufferManager": this.bufferManager,
             "frameBufferManager": this.frameBufferManager,
             "pipelineManager": this.pipelineManager,
-            "textureManager": this.textureManager
+            "textureManager": this.textureManager,
+            "mainAttachment": this.$mainAttachmentObject as IAttachmentObject
         };
 
         contextApplyFilterUseCase(

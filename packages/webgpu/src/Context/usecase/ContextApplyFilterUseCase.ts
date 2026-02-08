@@ -244,14 +244,17 @@ const drawFilterToMain = (
     _buffer_manager: BufferManager
 ): void => {
     // メインアタッチメントに描画
-    const mainAttachment = config.frameBufferManager.getAttachment("main");
+    // コンテナレイヤー内ではconfig.mainAttachmentがコンテナのテンポラリアタッチメントを指す
+    const mainAttachment = config.mainAttachment || config.frameBufferManager.getAttachment("main");
     if (!mainAttachment || !mainAttachment.texture || !filter_attachment.texture) {
         return;
     }
 
     // 描画位置とサイズを計算
-    let drawX = Math.floor(x);
-    let drawY = Math.floor(y);
+    // WebGLと同じサブピクセル精度を維持するため、Math.floorを使用しない
+    // Math.floorを使うと -0.012 → -1 になり、1ピクセル余分にクリップされてしまう
+    let drawX = x;
+    let drawY = y;
     let drawWidth = filter_attachment.width;
     let drawHeight = filter_attachment.height;
 
@@ -351,18 +354,19 @@ const drawFilterToMain = (
             resolveTarget
         );
 
-        // テスト: 描画位置とサイズをログ出力相当（描画が行われているか確認）
-        const vpX = Math.max(0, Math.floor(drawX));
-        const vpY = Math.max(0, Math.floor(drawY));
+        // Viewportはfloat値でサブピクセル精度を維持（WebGLのsetTransform相当）
+        // ScissorはGPUIntegerCoordinate必須のため整数化し、viewport領域を包含する
+        const vpX = Math.max(0, drawX);
+        const vpY = Math.max(0, drawY);
         const vpW = Math.max(1, filter_attachment.width);
         const vpH = Math.max(1, filter_attachment.height);
-        const scissorX = vpX;
-        const scissorY = vpY;
-        const scissorW = Math.max(1, Math.min(vpW, mainWidth - vpX));
-        const scissorH = Math.max(1, Math.min(vpH, mainHeight - vpY));
+        const scissorX = Math.max(0, Math.floor(vpX));
+        const scissorY = Math.max(0, Math.floor(vpY));
+        const scissorW = Math.max(1, Math.min(Math.ceil(vpX + vpW) - scissorX, mainWidth - scissorX));
+        const scissorH = Math.max(1, Math.min(Math.ceil(vpY + vpH) - scissorY, mainHeight - scissorY));
 
         // 描画が有効な範囲内でのみ実行
-        if (scissorW <= 0 || scissorH <= 0 || vpX >= mainWidth || vpY >= mainHeight) {
+        if (scissorW <= 0 || scissorH <= 0 || scissorX >= mainWidth || scissorY >= mainHeight) {
             return;
         }
 
