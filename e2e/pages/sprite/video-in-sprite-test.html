@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Video in Sprite Debug</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 400, 60);
+        const { Video } = next2d.media;
+        const { Shape, Sprite } = next2d.display;
+        const { TextField, TextFormat } = next2d.text;
+        const { GlowFilter, BlurFilter } = next2d.filters;
+
+        const videoPath = "/e2e/fixtures/videos/movie.mp4";
+        const videoScale = 0.2;
+        const allVideos = [];
+
+        const labelFormat = new TextFormat();
+        labelFormat.size = 11;
+        labelFormat.color = 0xFFFFFF;
+
+        const createLabel = (text, x, y) => {
+            const label = new TextField();
+            label.x = x;
+            label.y = y;
+            label.width = 300;
+            label.height = 16;
+            label.defaultTextFormat = labelFormat;
+            label.text = text;
+            root.addChild(label);
+        };
+
+        // Test 1: Video at root (should work)
+        createLabel("1. Root Video (reference)", 20, 5);
+        {
+            const video = new Video();
+            video.x = 20;
+            video.y = 25;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.src = videoPath;
+            root.addChild(video);
+            allVideos.push(video);
+        }
+
+        // Test 2: Video in Sprite WITHOUT filter
+        createLabel("2. Video in Sprite (no filter)", 200, 5);
+        {
+            const sprite = new Sprite();
+            sprite.x = 200;
+            sprite.y = 25;
+
+            const bg = new Shape();
+            bg.graphics.beginFill(0x003366, 0.5).drawRect(-5, -5, 140, 90).endFill();
+            sprite.addChild(bg);
+
+            const video = new Video();
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.src = videoPath;
+            sprite.addChild(video);
+            allVideos.push(video);
+
+            root.addChild(sprite);
+        }
+
+        // Test 3: Video ONLY in filtered Sprite (no Shape)
+        createLabel("3. Video ONLY in filtered Sprite", 400, 5);
+        {
+            const sprite = new Sprite();
+            sprite.x = 400;
+            sprite.y = 25;
+
+            const video = new Video();
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.src = videoPath;
+            sprite.addChild(video);
+            allVideos.push(video);
+
+            sprite.filters = [new GlowFilter(0xFF0000, 1.0, 8, 8, 2, 1)];
+            root.addChild(sprite);
+        }
+
+        // Test 4: Video with own filter in filtered Sprite
+        createLabel("4. Filtered Video in filtered Sprite", 20, 205);
+        {
+            const sprite = new Sprite();
+            sprite.x = 20;
+            sprite.y = 225;
+
+            const bg = new Shape();
+            bg.graphics.beginFill(0x003366, 0.5).drawRect(-5, -5, 140, 90).endFill();
+            sprite.addChild(bg);
+
+            const video = new Video();
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = [new BlurFilter(3, 3, 1)];
+            video.src = videoPath;
+            sprite.addChild(video);
+            allVideos.push(video);
+
+            sprite.filters = [new GlowFilter(0xFF0000, 1.0, 8, 8, 2, 1)];
+            root.addChild(sprite);
+        }
+
+        // Test 5: Video at root with filter (should work)
+        createLabel("5. Root Video with filter (reference)", 200, 205);
+        {
+            const video = new Video();
+            video.x = 200;
+            video.y = 225;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = [new BlurFilter(3, 3, 1)];
+            video.src = videoPath;
+            root.addChild(video);
+            allVideos.push(video);
+        }
+
+        // Video setup
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (video.loaded && !video.paused) {
+                    resolve();
+                } else {
+                    video.addEventListener("complete", () => resolve());
+                }
+            });
+        }));
+
+        const SEEK_TIME = 1.0;
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (!video.$videoElement) {
+                    resolve();
+                    return;
+                }
+                const onSeeked = () => {
+                    video.$videoElement.removeEventListener("seeked", onSeeked);
+                    video.pause();
+                    resolve();
+                };
+                video.$videoElement.addEventListener("seeked", onSeeked);
+                video.seek(SEEK_TIME);
+            });
+        }));
+
+        const applyChanges = (displayObject) => {
+            displayObject.changed = true;
+            let parent = displayObject.parent;
+            while (parent && !parent.changed) {
+                parent.changed = true;
+                parent = parent.parent;
+            }
+        };
+
+        allVideos.forEach((video) => {
+            if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                applyChanges(video);
+            }
+        });
+
+        await new Promise((resolve) => {
+            let frameCount = 0;
+            const waitFrames = () => {
+                allVideos.forEach((video) => {
+                    if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                        applyChanges(video);
+                    }
+                });
+                frameCount++;
+                if (frameCount >= 10) {
+                    resolve();
+                } else {
+                    requestAnimationFrame(waitFrames);
+                }
+            };
+            requestAnimationFrame(waitFrames);
+        });
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

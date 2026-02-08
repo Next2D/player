@@ -368,17 +368,17 @@ const applyFilterChain = (
 
             case 3: // ConvolutionFilter
                 {
-                    const convMatrixX = params[idx++];
-                    const convMatrixY = params[idx++];
-                    const convLength = convMatrixX * convMatrixY;
-                    const convMatrix = new Float32Array(convLength);
-                    for (let i = 0; i < convLength; i++) {
+                    const matrixX = params[idx++];
+                    const matrixY = params[idx++];
+                    const length = matrixX * matrixY;
+                    const convMatrix = new Float32Array(length);
+                    for (let i = 0; i < length; i++) {
                         convMatrix[i] = params[idx++];
                     }
 
                     const newAtt = filterApplyConvolutionFilterUseCase(
                         filterAttachment,
-                        convMatrixX, convMatrixY, convMatrix,
+                        matrixX, matrixY, convMatrix,
                         params[idx++], params[idx++],
                         Boolean(params[idx++]), Boolean(params[idx++]),
                         params[idx++], params[idx++],
@@ -522,10 +522,15 @@ const applyFilterChain = (
  * @param {IAttachmentObject} mainAttachment - 復元済みの元のメインアタッチメント
  * @param {string} tempName - 一時アタッチメントの名前（destroyAttachment用）
  * @param {IBlendMode} blendMode
+ * @param {Float32Array} matrix
+ * @param {Float32Array | null} colorTransform
  * @param {boolean} useFilter
- * @param {Float32Array | null} matrix
  * @param {Float32Array | null} filterBounds
  * @param {Float32Array | null} params
+ * @param {string} uniqueKey
+ * @param {string} filterKey
+ * @param {number} contentWidth - コンテナのコンテンツ幅
+ * @param {number} contentHeight - コンテナのコンテンツ高さ
  * @param {ILocalFilterConfig} config
  * @param {BufferManager} bufferManager
  * @return {void}
@@ -535,80 +540,70 @@ export const execute = (
     mainAttachment: IAttachmentObject,
     tempName: string,
     blendMode: IBlendMode,
+    matrix: Float32Array,
+    _colorTransform: Float32Array | null,
     useFilter: boolean,
-    matrix: Float32Array | null,
     filterBounds: Float32Array | null,
     params: Float32Array | null,
+    uniqueKey: string,
+    filterKey: string,
+    contentWidth: number,
+    contentHeight: number,
     config: ILocalFilterConfig,
-    bufferManager: BufferManager,
-    filter_key: string,
-    updated: boolean
+    bufferManager: BufferManager
 ): void => {
 
     if (useFilter && matrix && filterBounds && params) {
 
-        // キャッシュ判定
-        const matrixKey = $cacheStore.generateFilterKeys(
-            matrix[0], matrix[1], matrix[2], matrix[3]
-        );
+        // containerEndLayerが呼ばれる＝ディスプレイレイヤーがコンテンツ変更を検出して再レンダリングを要求
+        // 常に新鮮なテクスチャを抽出してフィルターを適用する
+        // （キャッシュはディスプレイレイヤーのcontainerDrawCachedFilterで管理）
 
-        let useCache = false;
-        let filterAttachment: IAttachmentObject | null = null;
+        // コンテナのコンテンツ領域を計算
+        // WebGPUではレイヤーがメインと同じサイズのため、コンテンツ位置を特定して抽出する
+        // matrix[4], matrix[5] = コンテナのスクリーン座標位置
+        const extractX = Math.max(0, Math.floor(matrix[4]));
+        const extractY = Math.max(0, Math.floor(matrix[5]));
+        const extractW = Math.min(contentWidth, tempAttachment.width - extractX);
+        const extractH = Math.min(contentHeight, tempAttachment.height - extractY);
 
-        if (filter_key) {
-            const cachedKey = $cacheStore.get(filter_key, "fKey");
-            if (cachedKey === matrixKey) {
-                const cachedAttachment = $cacheStore.get(filter_key, "fTexture") as IAttachmentObject;
-                if (updated) {
-                    // キャッシュ無効化：古いアタッチメントを解放
-                    if (cachedAttachment) {
-                        config.frameBufferManager.releaseTemporaryAttachment(cachedAttachment);
-                    }
-                } else if (cachedAttachment) {
-                    // キャッシュヒット：フィルターチェーンをスキップ
-                    useCache = true;
-                    filterAttachment = cachedAttachment;
-                    $offset.x = $cacheStore.get(filter_key, "offsetX") || 0;
-                    $offset.y = $cacheStore.get(filter_key, "offsetY") || 0;
-                }
-            }
+        if (extractW <= 0 || extractH <= 0) {
+            config.frameBufferManager.destroyAttachment(tempName);
+            return;
         }
 
-        // 一時アタッチメントを破棄（キャッシュヒット/ミスに関わらず必要）
+        // コンテナの一時アタッチメント(bgra8unorm)からフィルター用(rgba8unorm)にコピー
+        let filterAttachment = copyRegionToFilterAttachment(
+            config, tempAttachment, extractX, extractY, extractW, extractH
+        );
+
+        // 一時アタッチメントを破棄
         config.frameBufferManager.destroyAttachment(tempName);
 
-        if (!useCache) {
+        // フィルターチェーンを適用
+        const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
+        filterAttachment = applyFilterChain(
+            filterAttachment, matrix, params, devicePixelRatio, config
+        );
 
-            // コンテナの一時アタッチメント(bgra8unorm)からフィルター用(rgba8unorm)にコピー
-            filterAttachment = copyRegionToFilterAttachment(
-                config, tempAttachment, xMin, yMin, width, height
-            );
-
-            // フィルターチェーンを適用
-            const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
-            filterAttachment = applyFilterChain(
-                filterAttachment, matrix, params, devicePixelRatio, config
-            );
-
-            // キャッシュに保存
-            if (filter_key) {
-                $cacheStore.set(filter_key, "fKey", matrixKey);
-                $cacheStore.set(filter_key, "fTexture", filterAttachment);
-                $cacheStore.set(filter_key, "offsetX", $offset.x);
-                $cacheStore.set(filter_key, "offsetY", $offset.y);
-            }
+        // キャッシュに保存
+        if (uniqueKey) {
+            $cacheStore.set(uniqueKey, "fKey", filterKey);
+            $cacheStore.set(uniqueKey, "fTexture", filterAttachment);
+            $cacheStore.set(uniqueKey, "offsetX", $offset.x);
+            $cacheStore.set(uniqueKey, "offsetY", $offset.y);
         }
 
         // フィルター結果をメインに描画
         if (filterAttachment) {
-            const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
             const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
             const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
             const boundsXMin = filterBounds[0] * (scaleX / devicePixelRatio);
             const boundsYMin = filterBounds[1] * (scaleY / devicePixelRatio);
 
-            const drawX = xMin + boundsXMin - $offset.x;
-            const drawY = yMin + boundsYMin - $offset.y;
+            // WebGL版と同じ: boundsXMin + matrix[4] で絶対位置、$offset分を引く
+            const drawX = boundsXMin + matrix[4] - $offset.x;
+            const drawY = boundsYMin + matrix[5] - $offset.y;
 
             drawFilterResultToMain(
                 config, filterAttachment, mainAttachment,
@@ -616,7 +611,7 @@ export const execute = (
             );
 
             // キャッシュされていないアタッチメントのみ解放
-            if (!filter_key) {
+            if (!uniqueKey) {
                 config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
             }
         }

@@ -67,25 +67,14 @@ export const execute = (
 
     if (use_filter && filter_bounds && filter_params) {
 
-        // キャッシュ判定
-        let useCache = false;
-        if (unique_key) {
-            const cachedKey = $cacheStore.get(unique_key, "fKey");
-            if (cachedKey === filter_key) {
-                const cachedTexture = $cacheStore.get(unique_key, "fTexture") as ITextureObject;
-                if (cachedTexture) {
-                    useCache = true;
-                    textureObject = cachedTexture;
-                }
-            }
-        }
+        // containerEndLayerが呼ばれる＝ディスプレイレイヤーがコンテンツ変更を検出して再レンダリングを要求
+        // 常に新鮮なテクスチャを抽出してフィルターを適用する
+        // （キャッシュはディスプレイレイヤーのcontainerDrawCachedFilterで管理）
 
-        if (!useCache) {
-            // レイヤーが有効な間にテクスチャを切り出し（リリース前に実行）
-            textureObject = frameBufferManagerGetTextureFromBoundsUseCase(
-                0, 0, layerAttachment.width, layerAttachment.height
-            );
-        }
+        // レイヤーが有効な間にテクスチャを切り出し（リリース前に実行）
+        textureObject = frameBufferManagerGetTextureFromBoundsUseCase(
+            0, 0, layerAttachment.width, layerAttachment.height
+        );
 
         // mainを復元
         $context.$mainAttachmentObject = $containerLayerStack.pop() as IAttachmentObject;
@@ -96,156 +85,153 @@ export const execute = (
         // メインのアタッチメントをバインド（currentAttachmentObjectを更新）
         $context.bind($context.$mainAttachmentObject as IAttachmentObject);
 
-        if (!useCache) {
+        // フィルターチェーンを適用
+        $offset.x = 0;
+        $offset.y = 0;
 
-            // フィルターチェーンを適用
-            $offset.x = 0;
-            $offset.y = 0;
+        for (let idx = 0; filter_params.length > idx; ) {
 
-            for (let idx = 0; filter_params.length > idx; ) {
+            const type = filter_params[idx++];
+            switch (type) {
 
-                const type = filter_params[idx++];
-                switch (type) {
+                case 0: // BevelFilter
+                    textureObject = filterApplyBevelFilterUseCase(
+                        textureObject, matrix,
+                        filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                        filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                        filter_params[idx++], filter_params[idx++], filter_params[idx++], Boolean(filter_params[idx++])
+                    );
+                    break;
 
-                    case 0: // BevelFilter
-                        textureObject = filterApplyBevelFilterUseCase(
-                            textureObject, matrix,
-                            filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
-                            filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
-                            filter_params[idx++], filter_params[idx++], filter_params[idx++], Boolean(filter_params[idx++])
-                        );
-                        break;
+                case 1: // BlurFilter
+                    textureObject = filterApplyBlurFilterUseCase(
+                        textureObject, matrix,
+                        filter_params[idx++], filter_params[idx++], filter_params[idx++]
+                    );
+                    break;
 
-                    case 1: // BlurFilter
-                        textureObject = filterApplyBlurFilterUseCase(
-                            textureObject, matrix,
-                            filter_params[idx++], filter_params[idx++], filter_params[idx++]
-                        );
-                        break;
+                case 2: // ColorMatrixFilter
+                    for (let i = 0; i < 20; ++i) {
+                        $colorMatrixBuffer[i] = filter_params[idx++];
+                    }
+                    textureObject = filterApplyColorMatrixFilterUseCase(
+                        textureObject,
+                        $colorMatrixBuffer
+                    );
+                    break;
 
-                    case 2: // ColorMatrixFilter
-                        for (let i = 0; i < 20; ++i) {
-                            $colorMatrixBuffer[i] = filter_params[idx++];
-                        }
-                        textureObject = filterApplyColorMatrixFilterUseCase(
-                            textureObject,
-                            $colorMatrixBuffer
-                        );
-                        break;
+                case 3: // ConvolutionFilter
+                    {
+                        const matrixX = filter_params[idx++];
+                        const matrixY = filter_params[idx++];
+                        const length = matrixX * matrixY;
+                        const convMatrix = filter_params.subarray(idx, idx + length);
+                        idx += length;
 
-                    case 3: // ConvolutionFilter
-                        {
-                            const matrixX = filter_params[idx++];
-                            const matrixY = filter_params[idx++];
-                            const length = matrixX * matrixY;
-                            const convMatrix = filter_params.subarray(idx, idx + length);
-                            idx += length;
-
-                            textureObject = filterApplyConvolutionFilterUseCase(
-                                textureObject, matrixX, matrixY, convMatrix,
-                                filter_params[idx++], filter_params[idx++],
-                                Boolean(filter_params[idx++]), Boolean(filter_params[idx++]),
-                                filter_params[idx++], filter_params[idx++]
-                            );
-                        }
-                        break;
-
-                    case 4: // DisplacementMapFilter
-                        {
-                            const length = filter_params[idx++];
-                            const buffer = new Uint8Array(length);
-                            buffer.set(filter_params.subarray(idx, idx + length));
-                            idx += length;
-
-                            textureObject = filterApplyDisplacementMapFilterUseCase(
-                                textureObject, buffer,
-                                filter_params[idx++], filter_params[idx++],
-                                filter_params[idx++], filter_params[idx++],
-                                filter_params[idx++], filter_params[idx++],
-                                filter_params[idx++], filter_params[idx++],
-                                filter_params[idx++], filter_params[idx++],
-                                filter_params[idx++]
-                            );
-                        }
-                        break;
-
-                    case 5: // DropShadowFilter
-                        textureObject = filterApplyDropShadowFilterUseCase(
-                            textureObject, matrix,
-                            filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
-                            filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
-                            Boolean(filter_params[idx++]), Boolean(filter_params[idx++]), Boolean(filter_params[idx++])
-                        );
-                        break;
-
-                    case 6: // GlowFilter
-                        textureObject = filterApplyGlowFilterUseCase(
-                            textureObject, matrix,
-                            filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                        textureObject = filterApplyConvolutionFilterUseCase(
+                            textureObject, matrixX, matrixY, convMatrix,
                             filter_params[idx++], filter_params[idx++],
-                            Boolean(filter_params[idx++]), Boolean(filter_params[idx++])
+                            Boolean(filter_params[idx++]), Boolean(filter_params[idx++]),
+                            filter_params[idx++], filter_params[idx++]
                         );
-                        break;
+                    }
+                    break;
 
-                    case 7: // GradientBevelFilter
-                        {
-                            const distance = filter_params[idx++];
-                            const angle    = filter_params[idx++];
+                case 4: // DisplacementMapFilter
+                    {
+                        const length = filter_params[idx++];
+                        const buffer = new Uint8Array(length);
+                        buffer.set(filter_params.subarray(idx, idx + length));
+                        idx += length;
 
-                            let length = filter_params[idx++];
-                            const colors = filter_params.subarray(idx, idx + length);
-                            idx += length;
+                        textureObject = filterApplyDisplacementMapFilterUseCase(
+                            textureObject, buffer,
+                            filter_params[idx++], filter_params[idx++],
+                            filter_params[idx++], filter_params[idx++],
+                            filter_params[idx++], filter_params[idx++],
+                            filter_params[idx++], filter_params[idx++],
+                            filter_params[idx++], filter_params[idx++],
+                            filter_params[idx++]
+                        );
+                    }
+                    break;
 
-                            length = filter_params[idx++];
-                            const alphas = filter_params.subarray(idx, idx + length);
-                            idx += length;
+                case 5: // DropShadowFilter
+                    textureObject = filterApplyDropShadowFilterUseCase(
+                        textureObject, matrix,
+                        filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                        filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                        Boolean(filter_params[idx++]), Boolean(filter_params[idx++]), Boolean(filter_params[idx++])
+                    );
+                    break;
 
-                            length = filter_params[idx++];
-                            const ratios = filter_params.subarray(idx, idx + length);
-                            idx += length;
+                case 6: // GlowFilter
+                    textureObject = filterApplyGlowFilterUseCase(
+                        textureObject, matrix,
+                        filter_params[idx++], filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                        filter_params[idx++], filter_params[idx++],
+                        Boolean(filter_params[idx++]), Boolean(filter_params[idx++])
+                    );
+                    break;
 
-                            textureObject = filterApplyGradientBevelFilterUseCase(
-                                textureObject, matrix,
-                                distance, angle, colors, alphas, ratios,
-                                filter_params[idx++], filter_params[idx++], filter_params[idx++],
-                                filter_params[idx++], filter_params[idx++], Boolean(filter_params[idx++])
-                            );
-                        }
-                        break;
+                case 7: // GradientBevelFilter
+                    {
+                        const distance = filter_params[idx++];
+                        const angle    = filter_params[idx++];
 
-                    case 8: // GradientGlowFilter
-                        {
-                            const distance = filter_params[idx++];
-                            const angle    = filter_params[idx++];
+                        let length = filter_params[idx++];
+                        const colors = filter_params.subarray(idx, idx + length);
+                        idx += length;
 
-                            let length = filter_params[idx++];
-                            const colors = filter_params.subarray(idx, idx + length);
-                            idx += length;
+                        length = filter_params[idx++];
+                        const alphas = filter_params.subarray(idx, idx + length);
+                        idx += length;
 
-                            length = filter_params[idx++];
-                            const alphas = filter_params.subarray(idx, idx + length);
-                            idx += length;
+                        length = filter_params[idx++];
+                        const ratios = filter_params.subarray(idx, idx + length);
+                        idx += length;
 
-                            length = filter_params[idx++];
-                            const ratios = filter_params.subarray(idx, idx + length);
-                            idx += length;
+                        textureObject = filterApplyGradientBevelFilterUseCase(
+                            textureObject, matrix,
+                            distance, angle, colors, alphas, ratios,
+                            filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                            filter_params[idx++], filter_params[idx++], Boolean(filter_params[idx++])
+                        );
+                    }
+                    break;
 
-                            textureObject = filterApplyGradientGlowFilterUseCase(
-                                textureObject, matrix,
-                                distance, angle, colors, alphas, ratios,
-                                filter_params[idx++], filter_params[idx++], filter_params[idx++],
-                                filter_params[idx++], filter_params[idx++], Boolean(filter_params[idx++])
-                            );
-                        }
-                        break;
-                }
+                case 8: // GradientGlowFilter
+                    {
+                        const distance = filter_params[idx++];
+                        const angle    = filter_params[idx++];
+
+                        let length = filter_params[idx++];
+                        const colors = filter_params.subarray(idx, idx + length);
+                        idx += length;
+
+                        length = filter_params[idx++];
+                        const alphas = filter_params.subarray(idx, idx + length);
+                        idx += length;
+
+                        length = filter_params[idx++];
+                        const ratios = filter_params.subarray(idx, idx + length);
+                        idx += length;
+
+                        textureObject = filterApplyGradientGlowFilterUseCase(
+                            textureObject, matrix,
+                            distance, angle, colors, alphas, ratios,
+                            filter_params[idx++], filter_params[idx++], filter_params[idx++],
+                            filter_params[idx++], filter_params[idx++], Boolean(filter_params[idx++])
+                        );
+                    }
+                    break;
             }
+        }
 
-            // キャッシュに保存
-            if (unique_key) {
-                $cacheStore.set(unique_key, "fKey", filter_key);
-                $cacheStore.set(unique_key, "fTexture", textureObject);
-            }
+        // キャッシュに保存
+        if (unique_key) {
+            $cacheStore.set(unique_key, "fKey", filter_key);
+            $cacheStore.set(unique_key, "fTexture", textureObject);
         }
 
         // フィルター結果をメインに描画

@@ -4,6 +4,7 @@ import type { IBounds } from "./interface/IBounds";
 import type { IPath } from "./interface/IPath";
 import type { Node } from "@next2d/texture-packer";
 import { TexturePacker } from "@next2d/texture-packer";
+import { $cacheStore } from "@next2d/cache";
 import { WebGPUUtil, $setContext } from "./WebGPUUtil";
 import { PathCommand } from "./PathCommand";
 import { BufferManager } from "./BufferManager";
@@ -139,6 +140,7 @@ export class Context
     private readonly $containerLayerStack: IAttachmentObject[] = [];
     private containerLayerNames: string[] = [];
     private containerLayerCounter: number = 0;
+    private containerLayerContentSizes: { width: number; height: number }[] = [];
 
     // マスク描画モードフラグ（beginMask〜endMask間でtrue）
     private inMaskMode: boolean = false;
@@ -3088,7 +3090,7 @@ export class Context
      * @method
      * @public
      */
-    containerBeginLayer (): void
+    containerBeginLayer (width: number, height: number): void
     {
         this.drawArraysInstanced();
 
@@ -3105,6 +3107,9 @@ export class Context
 
         const mainAttachment = this.$mainAttachmentObject as IAttachmentObject;
         this.$containerLayerStack.push(mainAttachment);
+
+        // コンテナのコンテンツサイズを保存（containerEndLayerでの抽出範囲計算に使用）
+        this.containerLayerContentSizes.push({ width, height });
 
         // メインと同じサイズのbgra8unormアタッチメントを作成（mask=trueでステンシル付き）
         const layerName = `container_layer_${this.containerLayerCounter++}`;
@@ -3127,24 +3132,26 @@ export class Context
      *              End the container layer and composite the result back to the original main
      *
      * @param  {IBlendMode} blend_mode
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array | null} color_transform
      * @param  {boolean} use_filter
-     * @param  {Float32Array | null} matrix
      * @param  {Float32Array | null} filter_bounds
-     * @param  {Float32Array | null} params
+     * @param  {Float32Array | null} filter_params
+     * @param  {string} unique_key
      * @param  {string} filter_key
-     * @param  {boolean} updated
      * @return {void}
      * @method
      * @public
      */
     containerEndLayer (
         blend_mode: IBlendMode,
+        matrix: Float32Array,
+        color_transform: Float32Array | null,
         use_filter: boolean,
-        matrix: Float32Array | null,
         filter_bounds: Float32Array | null,
-        params: Float32Array | null,
-        filter_key: string,
-        updated: boolean
+        filter_params: Float32Array | null,
+        unique_key: string,
+        filter_key: string
     ): void {
         this.drawArraysInstanced();
 
@@ -3158,6 +3165,7 @@ export class Context
 
         const tempAttachment = this.$mainAttachmentObject as IAttachmentObject;
         const tempName = this.containerLayerNames.pop() as string;
+        const contentSize = this.containerLayerContentSizes.pop() || { "width": tempAttachment.width, "height": tempAttachment.height };
 
         // mainを復元
         this.$mainAttachmentObject = this.$containerLayerStack.pop() as IAttachmentObject;
@@ -3176,16 +3184,153 @@ export class Context
             this.$mainAttachmentObject,
             tempName,
             blend_mode,
+            matrix,
+            color_transform,
             use_filter,
-            matrix, filter_bounds, params,
-            config,
-            this.bufferManager,
+            filter_bounds,
+            filter_params,
+            unique_key,
             filter_key,
-            updated
+            contentSize.width,
+            contentSize.height,
+            config,
+            this.bufferManager
         );
 
         // メインのアタッチメントをバインド
         this.bind(this.$mainAttachmentObject);
+    }
+
+    /**
+     * @description キャッシュされたコンテナフィルターテクスチャをメインに描画
+     *              Draw a cached container filter texture to the main attachment
+     *
+     * @param  {IBlendMode} blend_mode
+     * @param  {Float32Array} matrix
+     * @param  {Float32Array} color_transform
+     * @param  {Float32Array} filter_bounds
+     * @param  {string} unique_key
+     * @param  {string} filter_key
+     * @return {void}
+     * @method
+     * @public
+     */
+    containerDrawCachedFilter (
+        blend_mode: IBlendMode,
+        matrix: Float32Array,
+        _color_transform: Float32Array,
+        filter_bounds: Float32Array,
+        unique_key: string,
+        filter_key: string
+    ): void {
+        const cachedKey = $cacheStore.get(unique_key, "fKey");
+        if (cachedKey !== filter_key) {
+            return;
+        }
+
+        const cachedAttachment = $cacheStore.get(unique_key, "fTexture") as IAttachmentObject;
+        if (!cachedAttachment || !cachedAttachment.texture) {
+            return;
+        }
+
+        this.drawArraysInstanced();
+
+        if (!this.frameStarted) {
+            this.beginFrame();
+        }
+
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        this.ensureCommandEncoder();
+
+        const mainAttachment = this.$mainAttachmentObject as IAttachmentObject;
+        if (!mainAttachment || !mainAttachment.texture) {
+            return;
+        }
+
+        const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
+        const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
+        const boundsXMin = filter_bounds[0] * (scaleX / devicePixelRatio);
+        const boundsYMin = filter_bounds[1] * (scaleY / devicePixelRatio);
+
+        const cachedOffsetX = $cacheStore.get(unique_key, "offsetX") || 0;
+        const cachedOffsetY = $cacheStore.get(unique_key, "offsetY") || 0;
+        const drawX = Math.floor(boundsXMin + matrix[4] - cachedOffsetX);
+        const drawY = Math.floor(boundsYMin + matrix[5] - cachedOffsetY);
+
+        // シンプルなブレンドモード判定
+        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        let pipelineName: string;
+        switch (blend_mode) {
+            case "add":
+                pipelineName = useMsaa ? "filter_output_add_msaa" : "filter_output_add";
+                break;
+            case "screen":
+                pipelineName = useMsaa ? "filter_output_screen_msaa" : "filter_output_screen";
+                break;
+            case "alpha":
+                pipelineName = useMsaa ? "filter_output_alpha_msaa" : "filter_output_alpha";
+                break;
+            case "erase":
+                pipelineName = useMsaa ? "filter_output_erase_msaa" : "filter_output_erase";
+                break;
+            default:
+                pipelineName = useMsaa ? "filter_output_msaa" : "filter_output";
+                break;
+        }
+
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
+        if (!pipeline || !bindGroupLayout) {
+            return;
+        }
+
+        const sampler = this.textureManager.createSampler("cached_filter_sampler", true);
+        const uniformData = new Float32Array([1, 1, 0, 0]);
+        const uniformBuffer = this.bufferManager.acquireUniformBuffer(16);
+        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+
+        const bindGroup = this.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": cachedAttachment.texture.view }
+            ]
+        });
+
+        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
+        const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
+        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+            colorView, 0, 0, 0, 0, "load", resolveTarget
+        );
+
+        const vpX = Math.max(0, drawX);
+        const vpY = Math.max(0, drawY);
+        const vpW = Math.max(1, cachedAttachment.width);
+        const vpH = Math.max(1, cachedAttachment.height);
+        const mainWidth = mainAttachment.width;
+        const mainHeight = mainAttachment.height;
+        const scissorW = Math.max(1, Math.min(vpW, mainWidth - vpX));
+        const scissorH = Math.max(1, Math.min(vpH, mainHeight - vpY));
+
+        if (scissorW <= 0 || scissorH <= 0 || vpX >= mainWidth || vpY >= mainHeight) {
+            return;
+        }
+
+        const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        passEncoder.setPipeline(pipeline);
+        passEncoder.setBindGroup(0, bindGroup);
+        passEncoder.setViewport(vpX, vpY, vpW, vpH, 0, 1);
+        passEncoder.setScissorRect(vpX, vpY, scissorW, scissorH);
+        passEncoder.draw(6, 1, 0, 0);
+        passEncoder.end();
+
+        this.bind(mainAttachment);
     }
 
     /**

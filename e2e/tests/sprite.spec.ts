@@ -15,4 +15,11 @@ test.describe("Sprite テスト", () => {
 
         await expect(page).toHaveScreenshot("sprite-blend.png");
     });
+
+    test("Sprite ネストフィルター + ColorTransform", async ({ page }) => {
+        await page.goto("/e2e/pages/sprite/sprite-nested-filter.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("sprite-nested-filter.png");
+    });
 });

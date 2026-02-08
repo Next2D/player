@@ -21,6 +21,9 @@ export const $containerLayerStack: IAttachmentObject[] = [];
  */
 export const execute = (width: number, height: number): void => {
 
+    // レイヤー切り替え前に、今のメインFBOに対する未描画のインスタンスをフラッシュ
+    $context.drawArraysInstanced();
+
     const mainAttachment = $context.$mainAttachmentObject as IAttachmentObject;
 
     // 現在のmainAttachmentObjectをスタックに保存

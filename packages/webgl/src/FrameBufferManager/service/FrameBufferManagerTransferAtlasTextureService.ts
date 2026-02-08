@@ -36,7 +36,9 @@ export const execute = (): void =>
     );
     $setFramebufferBound(false);
 
-    const bounds = $getActiveTransferBounds($getActiveAtlasIndex());
+    const atlasIdx = $getActiveAtlasIndex();
+    const bounds = $getActiveTransferBounds(atlasIdx);
+
     $gl.enable($gl.SCISSOR_TEST);
     $gl.scissor(
         bounds[0], bounds[1],
