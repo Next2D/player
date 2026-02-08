@@ -5,7 +5,7 @@ import type { FrameBufferManager } from "../../FrameBufferManager";
 import type { TextureManager } from "../../TextureManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
-import { $getCurrentBlendMode } from "../../Blend";
+import { $currentBlendMode } from "../../Blend";
 import { renderQueue } from "@next2d/render-queue";
 import {
     $isMaskTestEnabled,
@@ -13,26 +13,9 @@ import {
 } from "../../Mask";
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
-/**
- * @description インスタンスBindGroupキャッシュ
- */
 let $cachedBindGroup: GPUBindGroup | null = null;
 let $cachedAtlasView: GPUTextureView | null = null;
 
-/**
- * @description インスタンス配列を描画
- *              Draw instanced arrays
- *
- * @param {GPUDevice} device
- * @param {GPUCommandEncoder} commandEncoder
- * @param {GPURenderPassEncoder | null} renderPassEncoder - 現在のレンダーパス（必要に応じて終了される）
- * @param {IAttachmentObject} mainAttachment - メインアタッチメント（ステンシル付き）
- * @param {BufferManager} bufferManager
- * @param {FrameBufferManager} frameBufferManager
- * @param {TextureManager} textureManager
- * @param {PipelineManager} pipelineManager
- * @return {GPURenderPassEncoder | null} - 終了したレンダーパス
- */
 export const execute = (
     device: GPUDevice,
     command_encoder: GPUCommandEncoder,
@@ -59,7 +42,7 @@ export const execute = (
     const maskReference = $getMaskStencilReference();
 
     // 現在のブレンドモードを取得
-    const blendMode: IBlendMode = $getCurrentBlendMode();
+    const blendMode: IBlendMode = $currentBlendMode;
 
     // ブレンドモードに応じたパイプライン名を生成
     // simpleBlendModes: normal, layer, add, screen, alpha, erase, copy
@@ -77,7 +60,7 @@ export const execute = (
                 return "instanced_copy";
             default:
                 // normal, layer
-                return "instanced_normal";
+                return "instanced";
         }
     };
 

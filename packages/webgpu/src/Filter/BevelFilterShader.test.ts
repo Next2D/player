@@ -17,14 +17,14 @@ describe("BevelFilterShader", () =>
         {
             const shader = getBevelFilterFragmentShader("inner", false, false);
 
-            expect(shader).toContain("Inner");
+            expect(shader).toContain("filterColor * baseAlpha");
         });
 
         it("should return a valid shader for outer type", () =>
         {
             const shader = getBevelFilterFragmentShader("outer", false, false);
 
-            expect(shader).toContain("Outer");
+            expect(shader).toContain("filterColor * (1.0 - baseAlpha)");
         });
 
         it("should contain @vertex attribute", () =>

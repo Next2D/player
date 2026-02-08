@@ -1,24 +1,5 @@
 import type { PipelineManager } from "../../Shader/PipelineManager";
 
-/**
- * @description 2パスステンシルフィル（メインキャンバス用）
- *              Pass 1: Front面でインクリメント、Back面でデクリメント（1回の描画で両面処理）
- *              Pass 2: ステンシル値 != 0 の部分に色を描画
- *
- *              WebGL版と同じアルゴリズム（bgra8unorm、Y軸反転あり）
- *              MSAA + alphaToCoverageによりアンチエイリアスを実現
- *
- *              WebGL版:
- *              - stencilOpSeparate(FRONT, INCR_WRAP) + stencilOpSeparate(BACK, DECR_WRAP)
- *              - stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
- *              - SAMPLE_ALPHA_TO_COVERAGE有効
- *
- * @param {GPURenderPassEncoder} renderPassEncoder
- * @param {PipelineManager} pipelineManager
- * @param {GPUBuffer} vertexBuffer
- * @param {number} vertexCount
- * @return {void}
- */
 export const execute = (
     render_pass_encoder: GPURenderPassEncoder,
     pipeline_manager: PipelineManager,

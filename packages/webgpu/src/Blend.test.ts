@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
     $setCurrentBlendMode,
-    $getCurrentBlendMode,
+    $currentBlendMode,
     $setFuncCode,
-    $getFuncCode,
+    $funcCode,
     $getBlendState
 } from "./Blend";
 
@@ -20,25 +20,25 @@ describe("Blend", () =>
         it("should default to normal", () =>
         {
             $setCurrentBlendMode("normal");
-            expect($getCurrentBlendMode()).toBe("normal");
+            expect($currentBlendMode).toBe("normal");
         });
 
         it("should set and get blend mode", () =>
         {
             $setCurrentBlendMode("add");
-            expect($getCurrentBlendMode()).toBe("add");
+            expect($currentBlendMode).toBe("add");
 
             $setCurrentBlendMode("screen");
-            expect($getCurrentBlendMode()).toBe("screen");
+            expect($currentBlendMode).toBe("screen");
 
             $setCurrentBlendMode("alpha");
-            expect($getCurrentBlendMode()).toBe("alpha");
+            expect($currentBlendMode).toBe("alpha");
 
             $setCurrentBlendMode("erase");
-            expect($getCurrentBlendMode()).toBe("erase");
+            expect($currentBlendMode).toBe("erase");
 
             $setCurrentBlendMode("copy");
-            expect($getCurrentBlendMode()).toBe("copy");
+            expect($currentBlendMode).toBe("copy");
         });
     });
 
@@ -47,16 +47,16 @@ describe("Blend", () =>
         it("should default to 0", () =>
         {
             $setFuncCode(0);
-            expect($getFuncCode()).toBe(0);
+            expect($funcCode).toBe(0);
         });
 
         it("should set and get func code", () =>
         {
             $setFuncCode(123);
-            expect($getFuncCode()).toBe(123);
+            expect($funcCode).toBe(123);
 
             $setFuncCode(456);
-            expect($getFuncCode()).toBe(456);
+            expect($funcCode).toBe(456);
         });
     });
 

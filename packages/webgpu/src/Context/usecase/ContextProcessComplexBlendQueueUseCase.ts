@@ -73,10 +73,6 @@ const copyTextureRegionViaRenderPass = (
     passEncoder.end();
 };
 
-/**
- * @description 結果をmainAttachmentにレンダーパスで描画（アルファブレンド）
- *              位置変換付きシェーダーを使用して指定位置に描画
- */
 const drawToMainAttachment = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,
@@ -135,10 +131,6 @@ const drawToMainAttachment = (
     passEncoder.end();
 };
 
-/**
- * @description 複雑なブレンドモードのキューを処理
- *              Process complex blend mode queue
- */
 export const execute = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,

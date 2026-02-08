@@ -1,10 +1,7 @@
-import { WgslIsInside } from "../common/SharedWgsl";
+import { WgslIsInside, WgslVertexOutput } from "../common/SharedWgsl";
 
 export const GlowFilterFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct GlowUniforms {
     color: vec4<f32>,
@@ -47,10 +44,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const DropShadowFilterFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct DropShadowUniforms {
     color: vec4<f32>,
@@ -105,10 +99,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const GradientGlowFilterFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct GradientGlowUniforms {
     strength: f32,
@@ -165,10 +156,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const GradientBevelFilterFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct GradientBevelUniforms {
     strength: f32,
@@ -236,10 +224,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const BevelFilterFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct BevelUniforms {
     highlightColor: vec4<f32>,
@@ -296,10 +281,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const BevelBaseFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct BevelBaseUniforms {
     offset: vec2<f32>,

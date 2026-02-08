@@ -2,23 +2,6 @@ import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { $isMaskDrawing, $getMaskStencilReference } from "../../Mask";
 
-/**
- * @description 単純なフィル（ステンシルなし、キャンバス描画用）
- *              Simple fill without stencil for canvas rendering
- *
- * @param {GPUDevice} device
- * @param {GPURenderPassEncoder} renderPassEncoder
- * @param {BufferManager} bufferManager
- * @param {PipelineManager} pipelineManager
- * @param {GPUBuffer} vertexBuffer
- * @param {number} vertexCount
- * @param {number} viewportWidth
- * @param {number} viewportHeight
- * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
- * @param {boolean} useStencilPipeline - マスクモード時にステンシル付きパイプラインを使用
- * @param {number} clipLevel - マスク描画時のクリップレベル（1-8）
- * @return {void}
- */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

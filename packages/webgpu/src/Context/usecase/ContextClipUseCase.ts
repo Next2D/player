@@ -6,23 +6,6 @@ import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillG
 import { execute as maskUnionMaskService } from "../../Mask/service/MaskUnionMaskService";
 import { $clipLevels } from "../../Mask";
 
-/**
- * @description マスク処理を実行
- *              WebGL版と同様にステンシルバッファを使用したクリッピング
- *              ビット単位のステンシル操作でネストされたマスクをサポート
- *              Execute clipping using stencil buffer (same as WebGL version)
- *
- * @param {GPURenderPassEncoder} render_pass_encoder
- * @param {BufferManager} buffer_manager
- * @param {PipelineManager} pipeline_manager
- * @param {IAttachmentObject} current_attachment - 現在のアタッチメント
- * @param {IPath[]} path_vertices - パス頂点
- * @param {Float32Array} context_matrix - コンテキストの変換行列
- * @param {Float32Array} fill_style - 塗りつぶしスタイル [r, g, b, a]
- * @param {number} global_alpha - グローバルアルファ値
- * @param {boolean} is_main_attachment - メインアタッチメントへの描画かどうか
- * @return {void}
- */
 export const execute = (
     render_pass_encoder: GPURenderPassEncoder,
     buffer_manager: BufferManager,

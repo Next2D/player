@@ -8,35 +8,8 @@ import {
     $getMaskStencilReference
 } from "../../Mask";
 
-/**
- * @description ビットマップ用サンプラーキャッシュ (smooth|repeat -> sampler)
- */
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
-/**
- * @description ビットマップの塗りつぶしを実行
- *              Execute bitmap fill
- *
- * @param {GPUDevice} device
- * @param {GPURenderPassEncoder} renderPassEncoder
- * @param {BufferManager} bufferManager
- * @param {PipelineManager} pipelineManager
- * @param {IPath[]} pathVertices - パス頂点
- * @param {Float32Array} contextMatrix - コンテキストの変換行列
- * @param {Float32Array} fillStyle - 塗りつぶしスタイル [r, g, b, a]
- * @param {Uint8Array} pixels - ピクセルデータ
- * @param {Float32Array} bitmapMatrix - ビットマップ変換行列 [a, b, c, d, tx, ty]
- * @param {number} width - ビットマップ幅
- * @param {number} height - ビットマップ高さ
- * @param {boolean} repeat - 繰り返し
- * @param {boolean} smooth - スムージング
- * @param {number} viewportWidth
- * @param {number} viewportHeight
- * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
- * @param {boolean} useStencilPipeline - マスクモード時にステンシル付きパイプラインを使用
- * @param {number} clipLevel - マスク描画時のクリップレベル（1-8）
- * @return {GPUTexture | null} - ビットマップテクスチャ（フレーム終了時に解放が必要）
- */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

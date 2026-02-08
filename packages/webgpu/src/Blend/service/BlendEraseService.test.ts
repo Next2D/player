@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { execute } from "./BlendEraseService";
-import { $setFuncCode, $getFuncCode } from "../../Blend";
+import { $setFuncCode, $funcCode } from "../../Blend";
 
 describe("BlendEraseService", () =>
 {
@@ -24,7 +24,7 @@ describe("BlendEraseService", () =>
 
         execute();
 
-        expect($getFuncCode()).toBe(501);
+        expect($funcCode).toBe(501);
     });
 
     it("should return false when already set to erase (501)", () =>
@@ -42,7 +42,7 @@ describe("BlendEraseService", () =>
 
         execute();
 
-        expect($getFuncCode()).toBe(501);
+        expect($funcCode).toBe(501);
     });
 
     it("should return true when changing from screen mode", () =>
@@ -52,6 +52,6 @@ describe("BlendEraseService", () =>
         const result = execute();
 
         expect(result).toBe(true);
-        expect($getFuncCode()).toBe(501);
+        expect($funcCode).toBe(501);
     });
 });

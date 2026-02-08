@@ -6,10 +6,6 @@ import { execute as attachmentManagerGetAttachmentObjectUseCase } from "./Attach
 import { execute as attachmentManagerReleaseAttachmentUseCase } from "./AttachmentManager/usecase/AttachmentManagerReleaseAttachmentUseCase";
 import { execute as attachmentManagerCreateRenderPassDescriptorService } from "./AttachmentManager/service/AttachmentManagerCreateRenderPassDescriptorService";
 
-/**
- * @description オフスクリーンレンダリング用アタッチメントマネージャー
- *              Attachment manager for offscreen rendering
- */
 export class AttachmentManager
 {
     private device: GPUDevice;
@@ -20,10 +16,6 @@ export class AttachmentManager
     private idCounter: { attachmentId: number; textureId: number; stencilId: number };
     private currentAttachment: IAttachmentObject | null;
 
-    /**
-     * @param {GPUDevice} device
-     * @constructor
-     */
     constructor(device: GPUDevice)
     {
         this.device = device;
@@ -35,14 +27,6 @@ export class AttachmentManager
         this.currentAttachment = null;
     }
 
-    /**
-     * @description アタッチメントオブジェクトを取得
-     * WebGL: FrameBufferManagerGetAttachmentObjectUseCase
-     * @param {number} width
-     * @param {number} height
-     * @param {boolean} msaa - マルチサンプリング
-     * @return {IAttachmentObject}
-     */
     getAttachmentObject(
         width: number,
         height: number,
@@ -62,55 +46,26 @@ export class AttachmentManager
         );
     }
 
-    /**
-     * @description アタッチメントをバインド（現在のアタッチメントとして設定）
-     * WebGL: FrameBufferManagerBindAttachmentObjectService
-     * @param {IAttachmentObject} attachment
-     * @return {void}
-     */
     bindAttachment(attachment: IAttachmentObject): void
     {
         this.currentAttachment = attachment;
     }
 
-    /**
-     * @description 現在のアタッチメントを取得
-     * @return {IAttachmentObject | null}
-     */
     getCurrentAttachment(): IAttachmentObject | null
     {
         return this.currentAttachment;
     }
 
-    /**
-     * @description 現在のアタッチメントオブジェクトを取得（プロパティ形式）
-     *              Get the current attachment object (as property)
-     *
-     * @return {IAttachmentObject | null}
-     * @readonly
-     * @public
-     */
     get currentAttachmentObject(): IAttachmentObject | null
     {
         return this.currentAttachment;
     }
 
-    /**
-     * @description アタッチメントをアンバインド
-     * WebGL: FrameBufferManagerUnBindAttachmentObjectService
-     * @return {void}
-     */
     unbindAttachment(): void
     {
         this.currentAttachment = null;
     }
 
-    /**
-     * @description アタッチメントを解放してプールに返却
-     * WebGL: FrameBufferManagerReleaseAttachmentObjectUseCase
-     * @param {IAttachmentObject} attachment
-     * @return {void}
-     */
     releaseAttachment(attachment: IAttachmentObject): void
     {
         attachmentManagerReleaseAttachmentUseCase(
@@ -122,16 +77,6 @@ export class AttachmentManager
         );
     }
 
-    /**
-     * @description レンダーパスディスクリプタを作成
-     * @param {IAttachmentObject} attachment
-     * @param {number} r
-     * @param {number} g
-     * @param {number} b
-     * @param {number} a
-     * @param {GPULoadOp} loadOp
-     * @return {GPURenderPassDescriptor}
-     */
     createRenderPassDescriptor(
         attachment: IAttachmentObject,
         r: number,
@@ -151,13 +96,8 @@ export class AttachmentManager
         );
     }
 
-    /**
-     * @description すべてのリソースを破棄
-     * @return {void}
-     */
     dispose(): void
     {
-        // テクスチャプールを破棄
         for (const pool of this.texturePool.values()) {
             for (const textureObj of pool) {
                 textureObj.resource.destroy();
@@ -165,19 +105,16 @@ export class AttachmentManager
         }
         this.texturePool.clear();
 
-        // カラーバッファプールを破棄
         for (const color of this.colorBufferPool) {
             color.resource.destroy();
         }
         this.colorBufferPool = [];
 
-        // ステンシルバッファプールを破棄
         for (const stencil of this.stencilBufferPool) {
             stencil.resource.destroy();
         }
         this.stencilBufferPool = [];
 
-        // アタッチメントプールを破棄
         for (const attachment of this.attachmentPool) {
             if (attachment.texture) {
                 attachment.texture.resource.destroy();

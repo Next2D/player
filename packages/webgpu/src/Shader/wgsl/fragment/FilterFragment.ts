@@ -1,8 +1,7 @@
+import { WgslVertexOutput } from "../common/SharedWgsl";
+
 export const TextureCopyFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct CopyUniforms {
     scale: vec2<f32>,
@@ -21,10 +20,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const BlurTextureCopyFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct CopyUniforms {
     scale: vec2<f32>,
@@ -46,10 +42,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const FilterOutputFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct CopyUniforms {
     scale: vec2<f32>,
@@ -71,10 +64,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const ColorTransformFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct ColorTransformUniforms {
     mul: vec4<f32>,
@@ -98,10 +88,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const ColorMatrixFilterFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct ColorMatrixUniforms {
     matrix: mat4x4<f32>,
@@ -133,10 +120,7 @@ fn main() -> @location(0) vec4<f32> {
 `;
 
 export const PositionedTextureFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 @group(0) @binding(1) var textureSampler: sampler;
 @group(0) @binding(2) var inputTexture: texture_2d<f32>;
@@ -148,10 +132,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 
 export const BitmapSyncFragment = /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 @group(0) @binding(1) var textureSampler: sampler;
 @group(0) @binding(2) var inputTexture: texture_2d<f32>;

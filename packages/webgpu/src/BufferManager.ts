@@ -10,10 +10,6 @@ import { execute as cleanupStorageBuffersUseCase } from "./BufferManager/usecase
 import { execute as bufferManagerCreateIndirectBufferService } from "./BufferManager/service/BufferManagerCreateIndirectBufferService";
 import { execute as updateIndirectBuffer } from "./BufferManager/service/BufferManagerUpdateIndirectBufferService";
 
-/**
- * @description WebGPUバッファマネージャー
- *              WebGPU buffer manager with buffer pooling support
- */
 export class BufferManager
 {
     private device: GPUDevice;
@@ -26,10 +22,6 @@ export class BufferManager
     private frameNumber: number;
     private unitRectBuffer: GPUBuffer | null;
 
-    /**
-     * @param {GPUDevice} device
-     * @constructor
-     */
     constructor (device: GPUDevice)
     {
         this.device = device;
@@ -43,12 +35,6 @@ export class BufferManager
         this.unitRectBuffer = null;
     }
 
-    /**
-     * @description 頂点バッファを作成
-     * @param {string} name
-     * @param {Float32Array} data
-     * @return {GPUBuffer}
-     */
     createVertexBuffer (name: string, data: Float32Array): GPUBuffer
     {
         const buffer = this.device.createBuffer({
@@ -64,12 +50,6 @@ export class BufferManager
         return buffer;
     }
 
-    /**
-     * @description Uniformバッファを作成
-     * @param {string} name
-     * @param {number} size
-     * @return {GPUBuffer}
-     */
     createUniformBuffer (name: string, size: number): GPUBuffer
     {
         const buffer = this.device.createBuffer({
@@ -81,12 +61,6 @@ export class BufferManager
         return buffer;
     }
 
-    /**
-     * @description Uniformバッファを更新
-     * @param {string} name
-     * @param {Float32Array} data
-     * @return {void}
-     */
     updateUniformBuffer (name: string, data: Float32Array): void
     {
         const buffer = this.uniformBuffers.get(name);
@@ -95,45 +69,21 @@ export class BufferManager
         }
     }
 
-    /**
-     * @description 頂点バッファを取得
-     * @param {string} name
-     * @return {GPUBuffer | undefined}
-     */
     getVertexBuffer (name: string): GPUBuffer | undefined
     {
         return this.vertexBuffers.get(name);
     }
 
-    /**
-     * @description Uniformバッファを取得
-     * @param {string} name
-     * @return {GPUBuffer | undefined}
-     */
     getUniformBuffer (name: string): GPUBuffer | undefined
     {
         return this.uniformBuffers.get(name);
     }
 
-    /**
-     * @description 矩形の頂点データを作成
-     * @param {number} x
-     * @param {number} y
-     * @param {number} width
-     * @param {number} height
-     * @return {Float32Array}
-     */
     createRectVertices (x: number, y: number, width: number, height: number): Float32Array
     {
         return bufferManagerCreateRectVerticesService(x, y, width, height);
     }
 
-    /**
-     * @description プールから頂点バッファを取得（または新規作成）
-     * @param {number} requiredSize
-     * @param {Float32Array} [data]
-     * @return {GPUBuffer}
-     */
     acquireVertexBuffer (requiredSize: number, data?: Float32Array): GPUBuffer
     {
         return bufferManagerAcquireVertexBufferUseCase(
@@ -144,21 +94,11 @@ export class BufferManager
         );
     }
 
-    /**
-     * @description 頂点バッファをプールに返却
-     * @param {GPUBuffer} buffer
-     * @return {void}
-     */
     releaseVertexBuffer (buffer: GPUBuffer): void
     {
         bufferManagerReleaseVertexBufferService(this.vertexBufferBuckets, buffer);
     }
 
-    /**
-     * @description プールからユニフォームバッファを取得（または新規作成）
-     * @param {number} requiredSize
-     * @return {GPUBuffer}
-     */
     acquireUniformBuffer (requiredSize: number): GPUBuffer
     {
         return bufferManagerAcquireUniformBufferUseCase(
@@ -168,21 +108,11 @@ export class BufferManager
         );
     }
 
-    /**
-     * @description ユニフォームバッファをプールに返却
-     * @param {GPUBuffer} buffer
-     * @return {void}
-     */
     releaseUniformBuffer (buffer: GPUBuffer): void
     {
         bufferManagerReleaseUniformBufferService(this.uniformBufferBuckets, buffer);
     }
 
-    /**
-     * @description バッファを解放
-     * @param {string} name
-     * @return {void}
-     */
     destroyBuffer (name: string): void
     {
         const vertexBuffer = this.vertexBuffers.get(name);
@@ -198,10 +128,6 @@ export class BufferManager
         }
     }
 
-    /**
-     * @description すべてのバッファを解放
-     * @return {void}
-     */
     dispose (): void
     {
         for (const buffer of this.vertexBuffers.values()) {
@@ -244,10 +170,6 @@ export class BufferManager
         }
     }
 
-    /**
-     * @description プールの統計情報を取得
-     * @return {{ vertexPoolSize: number, uniformPoolSize: number }}
-     */
     getPoolStats (): { vertexPoolSize: number; uniformPoolSize: number }
     {
         let vertexCount = 0;
@@ -264,14 +186,8 @@ export class BufferManager
         };
     }
 
-    /**
-     * @description フレームごとの一時バッファをクリア
-     *              endFrame()で呼び出す
-     * @return {void}
-     */
     clearFrameBuffers (): void
     {
-        // 一時バッファを解放
         for (const buffer of this.vertexBuffers.values()) {
             buffer.destroy();
         }
@@ -282,28 +198,15 @@ export class BufferManager
         }
         this.uniformBuffers.clear();
 
-        // 全てのStorage Bufferを解放（次フレームで再利用可能にする）
-        // GPUがsubmit()で描画を完了した後なので、安全に解放できる
         this.releaseAllStorageBuffers();
 
-        // フレーム番号をインクリメント
         this.frameNumber++;
 
-        // 60フレームごとに古いStorage Bufferをクリーンアップ
         if (this.frameNumber % 60 === 0) {
             cleanupStorageBuffersUseCase(this.storageBufferPool, this.frameNumber);
         }
     }
 
-    /**
-     * @description 全てのStorage Bufferをプールに返却
-     *              Release all Storage Buffers back to pool
-     *
-     * フレーム終了時に呼び出す。GPUが描画を完了した後に
-     * 全てのバッファを次フレームで再利用可能にする。
-     *
-     * @return {void}
-     */
     releaseAllStorageBuffers (): void
     {
         for (const entry of this.storageBufferPool) {
@@ -311,16 +214,6 @@ export class BufferManager
         }
     }
 
-    /**
-     * @description プールからStorage Bufferを取得（または新規作成）
-     *              Acquire Storage Buffer from pool or create new one
-     *
-     * Storage Bufferは大きなインスタンスデータに最適。
-     * 動的更新が効率的で、Compute Shaderでも使用可能。
-     *
-     * @param {number} requiredSize - 必要なサイズ（バイト）
-     * @return {GPUBuffer}
-     */
     acquireStorageBuffer (requiredSize: number): GPUBuffer
     {
         return bufferManagerAcquireStorageBufferUseCase(
@@ -331,40 +224,16 @@ export class BufferManager
         );
     }
 
-    /**
-     * @description Storage Bufferをプールに返却
-     * @param {GPUBuffer} buffer
-     * @return {void}
-     */
     releaseStorageBuffer (buffer: GPUBuffer): void
     {
         releaseStorageBufferUseCase(this.storageBufferPool, buffer);
     }
 
-    /**
-     * @description Storage Bufferにデータを書き込む
-     * @param {GPUBuffer} buffer
-     * @param {Float32Array | Uint32Array} data
-     * @return {void}
-     */
     writeStorageBuffer (buffer: GPUBuffer, data: Float32Array | Uint32Array): void
     {
         this.device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, data.byteLength);
     }
 
-    /**
-     * @description Indirect Bufferを作成または取得
-     *              Create or get Indirect Buffer for draw indirect commands
-     *
-     * 注意: この方法は1フレーム内で1回のdrawIndirect呼び出しの場合のみ使用可能。
-     * 複数回呼び出す場合は createIndirectBuffer() を使用すること。
-     *
-     * @param {number} vertexCount - 頂点数
-     * @param {number} instanceCount - インスタンス数
-     * @param {number} [firstVertex=0] - 開始頂点インデックス
-     * @param {number} [firstInstance=0] - 開始インスタンスインデックス
-     * @return {GPUBuffer}
-     */
     getOrCreateIndirectBuffer (
         vertexCount: number,
         instanceCount: number,
@@ -392,20 +261,6 @@ export class BufferManager
         return this.indirectBuffer;
     }
 
-    /**
-     * @description 新しいIndirect Bufferを作成
-     *              Create a new Indirect Buffer for draw indirect commands
-     *
-     * 1フレーム内で複数回のdrawIndirect呼び出しがある場合に使用。
-     * 各呼び出しで独自のバッファを持つことで、
-     * queue.writeBufferによる更新競合を回避。
-     *
-     * @param {number} vertexCount - 頂点数
-     * @param {number} instanceCount - インスタンス数
-     * @param {number} [firstVertex=0] - 開始頂点インデックス
-     * @param {number} [firstInstance=0] - 開始インスタンスインデックス
-     * @return {GPUBuffer}
-     */
     createIndirectBuffer (
         vertexCount: number,
         instanceCount: number,
@@ -421,11 +276,6 @@ export class BufferManager
         );
     }
 
-    /**
-     * @description ユニット矩形バッファを取得（キャッシュ済み）
-     *              Get cached unit rect vertex buffer (0,0,1,1)
-     * @return {GPUBuffer}
-     */
     getUnitRectBuffer (): GPUBuffer
     {
         if (!this.unitRectBuffer) {
@@ -441,19 +291,11 @@ export class BufferManager
         return this.unitRectBuffer;
     }
 
-    /**
-     * @description 現在のフレーム番号を取得
-     * @return {number}
-     */
     getFrameNumber (): number
     {
         return this.frameNumber;
     }
 
-    /**
-     * @description Storage Bufferプールの統計情報を取得
-     * @return {{ storagePoolSize: number, storagePoolInUse: number }}
-     */
     getStoragePoolStats (): { storagePoolSize: number; storagePoolInUse: number }
     {
         const inUse = this.storageBufferPool.filter((e) => e.inUse).length;

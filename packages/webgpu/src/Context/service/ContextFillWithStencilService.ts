@@ -1,24 +1,5 @@
 import type { PipelineManager } from "../../Shader/PipelineManager";
 
-/**
- * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム）
- *              Pass 1: Front面でインクリメント、Back面でデクリメント（1回の描画で両面処理）
- *              Pass 2: ステンシル値 != 0 の部分に色を描画
- *
- *              注意: この関数はアトラス描画時のみ呼ばれる
- *              アトラスのステンシルはメインキャンバスのマスク処理とは独立
- *              メインキャンバスのマスク状態（$isMaskTestEnabled）は参照しない
- *
- *              WebGL版:
- *              - stencilOpSeparate(FRONT, INCR_WRAP) + stencilOpSeparate(BACK, DECR_WRAP)
- *              - stencilFunc(NOTEQUAL, 0) + stencilOp(KEEP, ZERO, ZERO)
- *
- * @param {GPURenderPassEncoder} renderPassEncoder
- * @param {PipelineManager} pipelineManager
- * @param {GPUBuffer} vertexBuffer
- * @param {number} vertexCount
- * @return {void}
- */
 export const execute = (
     render_pass_encoder: GPURenderPassEncoder,
     pipeline_manager: PipelineManager,

@@ -1,13 +1,5 @@
-/**
- * @description グローフィルターシェーダー
- *              Glow filter shader
- */
 export class GlowFilterShader
 {
-    /**
-     * @description グロー用のフラグメントシェーダー
-     * @return {string}
-     */
     static getFragmentShader(): string
     {
         return /* wgsl */`
@@ -31,23 +23,18 @@ export class GlowFilterShader
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var originalColor = textureSample(textureData, textureSampler, input.texCoord);
-                
-                // アルファ値でグローの強度を決定
+
                 let alpha = originalColor.a;
-                
-                // グローカラーを適用
+
                 var glowColor = uniforms.glowColor * uniforms.strength * alpha;
-                
-                // インナーグローかアウターグローか
+
                 if (uniforms.inner > 0.5) {
-                    // インナーグロー: 元の色とグローを合成
                     if (uniforms.knockout > 0.5) {
                         return glowColor;
                     } else {
                         return mix(originalColor, glowColor, alpha);
                     }
                 } else {
-                    // アウターグロー: 元の色とグローを加算合成
                     if (uniforms.knockout > 0.5) {
                         return vec4<f32>(glowColor.rgb, glowColor.a * (1.0 - alpha));
                     } else {
@@ -58,10 +45,6 @@ export class GlowFilterShader
         `;
     }
 
-    /**
-     * @description 頂点シェーダー
-     * @return {string}
-     */
     static getVertexShader(): string
     {
         return /* wgsl */`

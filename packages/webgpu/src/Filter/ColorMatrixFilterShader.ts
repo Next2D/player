@@ -1,13 +1,5 @@
-/**
- * @description カラーマトリックスフィルターシェーダー
- *              Color matrix filter shader
- */
 export class ColorMatrixFilterShader
 {
-    /**
-     * @description カラーマトリックス用のフラグメントシェーダー
-     * @return {string}
-     */
     static getFragmentShader(): string
     {
         return /* wgsl */`
@@ -28,22 +20,16 @@ export class ColorMatrixFilterShader
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
                 var color = textureSample(textureData, textureSampler, input.texCoord);
-                
-                // カラーマトリックス適用
+
                 var result = uniforms.matrix * color + uniforms.offset;
-                
-                // 0-1にクランプ
+
                 result = clamp(result, vec4<f32>(0.0), vec4<f32>(1.0));
-                
+
                 return result;
             }
         `;
     }
 
-    /**
-     * @description 頂点シェーダー
-     * @return {string}
-     */
     static getVertexShader(): string
     {
         return /* wgsl */`

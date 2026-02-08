@@ -1,32 +1,3 @@
-/**
- * @description ビットマップ変換行列を計算
- *              Compute bitmap transformation matrix
- *
- * WebGL版と同様の計算: inverse(context × bitmap) × context
- * これにより、ローカル座標からテクスチャ座標への正しい変換が可能になる。
- *
- * WebGLの処理:
- * 1. $context.save() - 現在のコンテキスト行列をスタックに保存
- * 2. $context.transform(bitmap) - context × bitmap を計算 ($context.$matrix に格納)
- *    ※ transform()は current × input の順序で乗算
- * 3. シェーダーで:
- *    - uv_matrix = $context.$stack[length-1] (変換前のコンテキスト行列)
- *    - inverse_matrix = inverse($context.$matrix) = inverse(context × bitmap)
- *    - v_uv = (inverse_matrix * uv_matrix * vertex).xy
- *    - 結果: inverse(context × bitmap) × context × vertex
- *
- * WebGPUでは: transformedPos = bitmapMatrix * worldPos
- * - worldPos = 元の頂点座標
- * - bitmapMatrix = inverse(context × bitmap) × context
- * - 結果: inverse(context × bitmap) × context × vertex
- *
- * @param {Float32Array} bitmap_matrix - ビットマップ行列 [a, b, c, d, tx, ty]
- *        変換: x' = a*x + c*y + tx, y' = b*x + d*y + ty (Flash Matrix形式)
- * @param {Float32Array} context_matrix - コンテキスト行列（列優先）[a, b, 0, c, d, 0, tx, ty, 1]
- *        変換: x' = a*x + c*y + tx, y' = b*x + d*y + ty
- *        ※ context_matrix[1]=b(y'にxが影響), context_matrix[3]=c(x'にyが影響)
- * @return {Float32Array} - 3x3行列（列優先）
- */
 export const execute = (bitmap_matrix: Float32Array, context_matrix: Float32Array): Float32Array => {
     // ビットマップ行列 [a, b, c, d, tx, ty]
     const ba = bitmap_matrix[0];

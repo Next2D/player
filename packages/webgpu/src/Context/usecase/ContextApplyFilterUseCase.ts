@@ -18,9 +18,6 @@ import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/Gr
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 
-/**
- * @description プリアロケートされたユニフォーム配列
- */
 const $uniform4 = new Float32Array(4);
 const $uniform6a = new Float32Array(6);
 const $uniform6b = new Float32Array(6);
@@ -35,39 +32,17 @@ const $entries3: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
-/**
- * @description シンプルなブレンドモード
- */
 const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
     "normal", "layer", "add", "screen", "alpha", "erase", "copy"
 ] as IBlendMode[]);
 
-/**
- * @description Y軸反転用ユニフォームデータ: scale=(1,-1), offset=(0,1)
- */
 const Y_FLIP_UNIFORM = new Float32Array([1, -1, 0, 1]);
 
-/**
- * @description ColorTransformが恒等変換かどうかをチェック
- *              Check if ColorTransform is identity
- *
- * @param {Float32Array} ct [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
- * @return {boolean}
- */
 const isIdentityColorTransform = (ct: Float32Array): boolean => {
     return ct[0] === 1 && ct[1] === 1 && ct[2] === 1 && ct[3] === 1
         && ct[4] === 0 && ct[5] === 0 && ct[6] === 0 && ct[7] === 0;
 };
 
-/**
- * @description フィルター結果にColorTransformを適用
- *              Apply ColorTransform to filter result (WebGL版と同じ: unpremultiply → mul+add → premultiply)
- *
- * @param {ILocalFilterConfig} config
- * @param {IAttachmentObject} attachment
- * @param {Float32Array} colorTransform [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
- * @return {IAttachmentObject}
- */
 const applyColorTransform = (
     config: ILocalFilterConfig,
     attachment: IAttachmentObject,
@@ -120,15 +95,6 @@ const applyColorTransform = (
     return ctAttachment;
 };
 
-/**
- * @description ノードからテクスチャをアタッチメントとして取得
- *              Get texture from node as attachment
- *
- * @param {Node} node
- * @param {GPUCommandEncoder} commandEncoder
- * @param {FrameBufferManager} frameBufferManager
- * @return {IAttachmentObject}
- */
 const getTextureFromNode = (
     node: Node,
     command_encoder: GPUCommandEncoder,
@@ -163,29 +129,10 @@ const getTextureFromNode = (
     return attachment;
 };
 
-/**
- * @description シンプルなブレンドモードかどうかをチェック
- *              Check if the blend mode is simple
- *
- * @param {IBlendMode} blendMode
- * @return {boolean}
- */
 const isSimpleBlendMode = (blendMode: IBlendMode): boolean => {
     return SIMPLE_BLEND_MODES.has(blendMode);
 };
 
-/**
- * @description メインアタッチメントから指定領域のテクスチャをコピー
- *              Copy texture region from main attachment
- *
- * @param {ILocalFilterConfig} config
- * @param {IAttachmentObject} mainAttachment
- * @param {number} x
- * @param {number} y
- * @param {number} width
- * @param {number} height
- * @return {IAttachmentObject}
- */
 const copyMainAttachmentRegion = (
     config: ILocalFilterConfig,
     mainAttachment: IAttachmentObject,
@@ -243,17 +190,6 @@ const copyMainAttachmentRegion = (
     return dstAttachment;
 };
 
-/**
- * @description ブレンド結果をメインアタッチメントに描画
- *              Draw blended result to main attachment
- *
- * @param {ILocalFilterConfig} config
- * @param {IAttachmentObject} srcAttachment
- * @param {IAttachmentObject} mainAttachment
- * @param {number} x
- * @param {number} y
- * @return {void}
- */
 const drawBlendResultToMain = (
     config: ILocalFilterConfig,
     srcAttachment: IAttachmentObject,
@@ -312,20 +248,6 @@ const drawBlendResultToMain = (
     passEncoder.end();
 };
 
-/**
- * @description フィルター結果をメインアタッチメントに描画
- *              Draw filter result to main attachment (WebGL版と同じフロー)
- *
- * @param {ILocalFilterConfig} config
- * @param {IAttachmentObject} filterAttachment
- * @param {Float32Array} colorTransform
- * @param {IBlendMode} blendMode
- * @param {number} x
- * @param {number} y
- * @param {GPUTextureView} _mainTextureView - 未使用（メインアタッチメントに描画）
- * @param {BufferManager} _bufferManager - 未使用（将来の拡張用）
- * @return {void}
- */
 const drawFilterToMain = (
     config: ILocalFilterConfig,
     filter_attachment: IAttachmentObject,
@@ -526,24 +448,6 @@ const drawFilterToMain = (
     }
 };
 
-/**
- * @description フィルターを適用
- *              Apply filters
- *
- * @param {Node} node
- * @param {number} width - スケール適用後の幅
- * @param {number} height - スケール適用後の高さ
- * @param {boolean} is_bitmap - ビットマップ（Video/Bitmap）かどうか
- * @param {Float32Array} matrix
- * @param {Float32Array} colorTransform
- * @param {IBlendMode} blendMode
- * @param {Float32Array} bounds
- * @param {Float32Array} params
- * @param {ILocalFilterConfig} config
- * @param {GPUTextureView} mainTextureView
- * @param {BufferManager} bufferManager
- * @return {void}
- */
 export const execute = (
     node: Node,
     width: number,

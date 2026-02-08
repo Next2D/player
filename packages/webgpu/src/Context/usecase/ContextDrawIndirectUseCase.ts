@@ -5,7 +5,7 @@ import type { FrameBufferManager } from "../../FrameBufferManager";
 import type { TextureManager } from "../../TextureManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
-import { $getCurrentBlendMode } from "../../Blend";
+import { $currentBlendMode } from "../../Blend";
 import { renderQueue } from "@next2d/render-queue";
 import {
     $isMaskTestEnabled,
@@ -13,35 +13,9 @@ import {
 } from "../../Mask";
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
-/**
- * @description インスタンスBindGroupキャッシュ
- */
 let $cachedBindGroup: GPUBindGroup | null = null;
 let $cachedAtlasView: GPUTextureView | null = null;
 
-/**
- * @description 最適化されたインスタンス描画
- *              Optimized instanced drawing with Storage Buffer and Indirect Drawing
- *
- * 最適化内容：
- * - Storage Buffer: メモリアロケーション削減、CPU負荷15-25%軽減
- *   - バッファプールから再利用、毎フレームの新規作成を回避
- *   - writeBuffer()による効率的なデータ更新
- * - Indirect Drawing: CPU-GPU間のコマンドオーバーヘッド5-15%削減
- *   - ドローコールのパラメータをGPUバッファから読み取り
- *
- * @param {GPUDevice} device
- * @param {GPUCommandEncoder} commandEncoder
- * @param {GPURenderPassEncoder | null} renderPassEncoder
- * @param {IAttachmentObject} mainAttachment
- * @param {BufferManager} bufferManager
- * @param {FrameBufferManager} frameBufferManager
- * @param {TextureManager} _textureManager
- * @param {PipelineManager} pipelineManager
- * @param {boolean} useIndirect - Indirect Drawingを使用するか
- * @param {boolean} useStorageBuffer - Storage Bufferを使用するか
- * @return {GPURenderPassEncoder | null}
- */
 export const execute = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,
@@ -70,7 +44,7 @@ export const execute = (
     const maskReference = $getMaskStencilReference();
 
     // 現在のブレンドモードを取得
-    const blendMode: IBlendMode = $getCurrentBlendMode();
+    const blendMode: IBlendMode = $currentBlendMode;
 
     // ブレンドモードに応じたパイプライン名を生成
     const getPipelineName = (mode: IBlendMode): string => {
@@ -87,7 +61,7 @@ export const execute = (
                 return "instanced_copy";
             default:
                 // normal, layer
-                return "instanced_normal";
+                return "instanced";
         }
     };
 

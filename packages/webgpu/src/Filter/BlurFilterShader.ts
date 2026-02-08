@@ -1,13 +1,5 @@
-/**
- * @description ブラーフィルターシェーダー
- *              Blur filter shader
- */
 export class BlurFilterShader
 {
-    /**
-     * @description ブラー用の頂点シェーダー
-     * @return {string}
-     */
     static getVertexShader(): string
     {
         return /* wgsl */`
@@ -31,10 +23,6 @@ export class BlurFilterShader
         `;
     }
 
-    /**
-     * @description 水平ブラー用のフラグメントシェーダー
-     * @return {string}
-     */
     static getHorizontalBlurShader(): string
     {
         return /* wgsl */`
@@ -59,31 +47,27 @@ export class BlurFilterShader
                 let texelSize = 1.0 / uniforms.textureWidth;
                 var color = vec4<f32>(0.0);
                 let blurRadius = i32(uniforms.blurSize);
-                
+
                 var totalWeight = 0.0;
-                
+
                 for (var i = -blurRadius; i <= blurRadius; i++) {
                     let offset = f32(i) * texelSize;
                     let weight = 1.0 - abs(f32(i)) / f32(blurRadius + 1);
-                    
+
                     let sampleCoord = vec2<f32>(
                         input.texCoord.x + offset,
                         input.texCoord.y
                     );
-                    
+
                     color += textureSample(textureData, textureSampler, sampleCoord) * weight;
                     totalWeight += weight;
                 }
-                
+
                 return color / totalWeight;
             }
         `;
     }
 
-    /**
-     * @description 垂直ブラー用のフラグメントシェーダー
-     * @return {string}
-     */
     static getVerticalBlurShader(): string
     {
         return /* wgsl */`
@@ -108,22 +92,22 @@ export class BlurFilterShader
                 let texelSize = 1.0 / uniforms.textureHeight;
                 var color = vec4<f32>(0.0);
                 let blurRadius = i32(uniforms.blurSize);
-                
+
                 var totalWeight = 0.0;
-                
+
                 for (var i = -blurRadius; i <= blurRadius; i++) {
                     let offset = f32(i) * texelSize;
                     let weight = 1.0 - abs(f32(i)) / f32(blurRadius + 1);
-                    
+
                     let sampleCoord = vec2<f32>(
                         input.texCoord.x,
                         input.texCoord.y + offset
                     );
-                    
+
                     color += textureSample(textureData, textureSampler, sampleCoord) * weight;
                     totalWeight += weight;
                 }
-                
+
                 return color / totalWeight;
             }
         `;

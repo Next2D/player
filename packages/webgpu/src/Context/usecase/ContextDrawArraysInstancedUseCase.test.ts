@@ -15,7 +15,7 @@ vi.mock("../../Blend/BlendInstancedManager", () => ({
 }));
 
 vi.mock("../../Blend", () => ({
-    "$getCurrentBlendMode": vi.fn(() => "normal")
+    "$currentBlendMode": "normal"
 }));
 
 vi.mock("@next2d/render-queue", () => ({
@@ -40,7 +40,7 @@ vi.mock("../../AtlasManager", () => ({
 }));
 
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
-import { $getCurrentBlendMode } from "../../Blend";
+import * as BlendModule from "../../Blend";
 import { $isMaskTestEnabled } from "../../Mask";
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
@@ -141,7 +141,7 @@ describe("ContextDrawArraysInstancedUseCase", () =>
             "count": 10,
             "clear": vi.fn()
         });
-        ($getCurrentBlendMode as ReturnType<typeof vi.fn>).mockReturnValue("normal");
+        (BlendModule as any).$currentBlendMode = "normal";
         ($isMaskTestEnabled as ReturnType<typeof vi.fn>).mockReturnValue(false);
     });
 
@@ -209,9 +209,9 @@ describe("ContextDrawArraysInstancedUseCase", () =>
 
     describe("pipeline selection based on blend mode", () =>
     {
-        it("should use instanced_normal for normal blend mode", () =>
+        it("should use instanced for normal blend mode", () =>
         {
-            ($getCurrentBlendMode as ReturnType<typeof vi.fn>).mockReturnValue("normal");
+            (BlendModule as any).$currentBlendMode = ("normal");
 
             const device = createMockDevice();
             const commandEncoder = createMockCommandEncoder();
@@ -232,12 +232,12 @@ describe("ContextDrawArraysInstancedUseCase", () =>
                 pipelineManager
             );
 
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("instanced_normal");
+            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("instanced");
         });
 
         it("should use instanced_add for add blend mode", () =>
         {
-            ($getCurrentBlendMode as ReturnType<typeof vi.fn>).mockReturnValue("add");
+            (BlendModule as any).$currentBlendMode = ("add");
 
             const device = createMockDevice();
             const commandEncoder = createMockCommandEncoder();
@@ -263,7 +263,7 @@ describe("ContextDrawArraysInstancedUseCase", () =>
 
         it("should use instanced_screen for screen blend mode", () =>
         {
-            ($getCurrentBlendMode as ReturnType<typeof vi.fn>).mockReturnValue("screen");
+            (BlendModule as any).$currentBlendMode = ("screen");
 
             const device = createMockDevice();
             const commandEncoder = createMockCommandEncoder();

@@ -1,22 +1,3 @@
-/**
- * @description グラデーション変換データを計算
- *              WebGL版と同様の計算を実装
- *
- * WebGL版のフロー:
- * - Linear: v_uv = position (生の頂点座標)
- *           linearPoints = $linearGradientXY(gradientMatrix) - グラデーション行列で計算
- *           シェーダーでは t = dot(ab, ap) / dot(ab, ab) を使用
- * - Radial: v_uv = (inverse(context * gradient) * context * position).xy
- *           = (inverse(combined) * context * position).xy
- *           WebGL版: context.transform(gradient) してから inverseMatrix = inverse($context.$matrix)
- *           シェーダーでは inverse_matrix * uv_matrix * position を計算
- *           ここで uv_matrix = prevContext (gradient適用前), inverse_matrix = inverse(context * gradient)
- *
- * @param {Float32Array} gradientMatrix - グラデーション行列 [a, b, c, d, tx, ty]
- * @param {Float32Array} contextMatrix - コンテキスト行列 (9要素: 3x3行列)
- * @param {number} type - グラデーションタイプ (0: linear, 1: radial)
- * @return {object} - { inverseMatrix: Float32Array, linearPoints: Float32Array | null }
- */
 export const execute = (
     gradientMatrix: Float32Array,
     contextMatrix: Float32Array,

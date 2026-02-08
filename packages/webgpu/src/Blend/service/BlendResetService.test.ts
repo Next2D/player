@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { execute } from "./BlendResetService";
-import { $setFuncCode, $getFuncCode } from "../../Blend";
+import { $setFuncCode, $funcCode } from "../../Blend";
 
 describe("BlendResetService", () =>
 {
@@ -24,7 +24,7 @@ describe("BlendResetService", () =>
 
         execute();
 
-        expect($getFuncCode()).toBe(613);
+        expect($funcCode).toBe(613);
     });
 
     it("should return false when already set to normal (613)", () =>
@@ -42,7 +42,7 @@ describe("BlendResetService", () =>
 
         execute();
 
-        expect($getFuncCode()).toBe(613);
+        expect($funcCode).toBe(613);
     });
 
     it("should return true when resetting from screen mode", () =>
@@ -52,7 +52,7 @@ describe("BlendResetService", () =>
         const result = execute();
 
         expect(result).toBe(true);
-        expect($getFuncCode()).toBe(613);
+        expect($funcCode).toBe(613);
     });
 
     it("should return true when resetting from erase mode", () =>
@@ -62,7 +62,7 @@ describe("BlendResetService", () =>
         const result = execute();
 
         expect(result).toBe(true);
-        expect($getFuncCode()).toBe(613);
+        expect($funcCode).toBe(613);
     });
 
     it("should return true when resetting from one-zero mode", () =>
@@ -72,6 +72,6 @@ describe("BlendResetService", () =>
         const result = execute();
 
         expect(result).toBe(true);
-        expect($getFuncCode()).toBe(613);
+        expect($funcCode).toBe(613);
     });
 });

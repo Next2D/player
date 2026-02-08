@@ -15,7 +15,7 @@ vi.mock("../../Blend/BlendInstancedManager", () => ({
 }));
 
 vi.mock("../../Blend", () => ({
-    "$getCurrentBlendMode": vi.fn(() => "normal")
+    "$currentBlendMode": "normal"
 }));
 
 vi.mock("@next2d/render-queue", () => ({
@@ -40,7 +40,7 @@ vi.mock("../../AtlasManager", () => ({
 }));
 
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
-import { $getCurrentBlendMode } from "../../Blend";
+import * as BlendModule from "../../Blend";
 
 describe("ContextDrawIndirectUseCase", () =>
 {
@@ -143,7 +143,7 @@ describe("ContextDrawIndirectUseCase", () =>
             "count": 10,
             "clear": vi.fn()
         });
-        ($getCurrentBlendMode as ReturnType<typeof vi.fn>).mockReturnValue("normal");
+        (BlendModule as any).$currentBlendMode = "normal";
     });
 
     describe("early exit conditions", () =>
@@ -305,15 +305,15 @@ describe("ContextDrawIndirectUseCase", () =>
             { "mode": "alpha", "expected": "instanced_alpha" },
             { "mode": "erase", "expected": "instanced_erase" },
             { "mode": "copy", "expected": "instanced_copy" },
-            { "mode": "layer", "expected": "instanced_normal" },
-            { "mode": "normal", "expected": "instanced_normal" }
+            { "mode": "layer", "expected": "instanced" },
+            { "mode": "normal", "expected": "instanced" }
         ];
 
         blendModes.forEach(({ mode, expected }) =>
         {
             it(`should use ${expected} pipeline for ${mode} blend mode`, () =>
             {
-                ($getCurrentBlendMode as ReturnType<typeof vi.fn>).mockReturnValue(mode);
+                (BlendModule as any).$currentBlendMode = mode;
 
                 const device = createMockDevice();
                 const commandEncoder = createMockCommandEncoder();

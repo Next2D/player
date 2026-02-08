@@ -23,3 +23,19 @@ export const WgslUnitQuadVertices = `
         vec2<f32>(1.0, 0.0),
         vec2<f32>(1.0, 1.0)
     );`;
+
+export const WgslVertexOutput = `
+struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+    @location(0) texCoord: vec2<f32>,
+}`;
+
+export const WgslFullscreenTexCoords = `
+    var texCoords = array<vec2<f32>, 6>(
+        vec2<f32>(0.0, 1.0),
+        vec2<f32>(1.0, 1.0),
+        vec2<f32>(0.0, 0.0),
+        vec2<f32>(0.0, 0.0),
+        vec2<f32>(1.0, 1.0),
+        vec2<f32>(1.0, 0.0)
+    );`;

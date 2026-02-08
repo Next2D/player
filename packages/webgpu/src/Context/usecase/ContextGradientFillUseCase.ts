@@ -9,35 +9,8 @@ import {
     $getMaskStencilReference
 } from "../../Mask";
 
-/**
- * @description グラデーション用サンプラーキャッシュ
- */
 let $gradientSampler: GPUSampler | null = null;
 
-/**
- * @description グラデーションの塗りつぶしを実行
- *              Execute gradient fill
- *
- * @param {GPUDevice} device
- * @param {GPURenderPassEncoder} renderPassEncoder
- * @param {BufferManager} bufferManager
- * @param {PipelineManager} pipelineManager
- * @param {IPath[]} pathVertices - パス頂点
- * @param {Float32Array} contextMatrix - コンテキストの変換行列
- * @param {Float32Array} fillStyle - 塗りつぶしスタイル [r, g, b, a]
- * @param {number} type - 0: linear, 1: radial
- * @param {number[]} stops - グラデーションストップ配列 [offset, R, G, B, A, ...]
- * @param {Float32Array} gradientMatrix - グラデーション変換行列 [a, b, c, d, tx, ty]
- * @param {number} spread - スプレッドメソッド (0: reflect, 1: repeat, 2: pad)
- * @param {number} interpolation - 補間方法 (0: RGB, 1: linearRGB)
- * @param {number} focal - ラジアルグラデーションのフォーカルポイント
- * @param {number} viewportWidth
- * @param {number} viewportHeight
- * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
- * @param {boolean} useStencilPipeline - マスクモード時にステンシル付きパイプラインを使用
- * @param {number} clipLevel - マスク描画時のクリップレベル（1-8）
- * @return {GPUTexture | null} - LUTテクスチャ（フレーム終了時に解放が必要）
- */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

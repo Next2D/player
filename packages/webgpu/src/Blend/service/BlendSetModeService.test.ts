@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { execute } from "./BlendSetModeService";
-import { $getCurrentBlendMode, $setCurrentBlendMode } from "../../Blend";
+import { $currentBlendMode, $setCurrentBlendMode } from "../../Blend";
 
 describe("BlendSetModeService", () =>
 {
@@ -13,53 +13,53 @@ describe("BlendSetModeService", () =>
     {
         execute("normal");
 
-        expect($getCurrentBlendMode()).toBe("normal");
+        expect($currentBlendMode).toBe("normal");
     });
 
     it("should set blend mode to add", () =>
     {
         execute("add");
 
-        expect($getCurrentBlendMode()).toBe("add");
+        expect($currentBlendMode).toBe("add");
     });
 
     it("should set blend mode to screen", () =>
     {
         execute("screen");
 
-        expect($getCurrentBlendMode()).toBe("screen");
+        expect($currentBlendMode).toBe("screen");
     });
 
     it("should set blend mode to alpha", () =>
     {
         execute("alpha");
 
-        expect($getCurrentBlendMode()).toBe("alpha");
+        expect($currentBlendMode).toBe("alpha");
     });
 
     it("should set blend mode to erase", () =>
     {
         execute("erase");
 
-        expect($getCurrentBlendMode()).toBe("erase");
+        expect($currentBlendMode).toBe("erase");
     });
 
     it("should set blend mode to copy", () =>
     {
         execute("copy");
 
-        expect($getCurrentBlendMode()).toBe("copy");
+        expect($currentBlendMode).toBe("copy");
     });
 
     it("should change mode from one to another", () =>
     {
         execute("add");
-        expect($getCurrentBlendMode()).toBe("add");
+        expect($currentBlendMode).toBe("add");
 
         execute("screen");
-        expect($getCurrentBlendMode()).toBe("screen");
+        expect($currentBlendMode).toBe("screen");
 
         execute("normal");
-        expect($getCurrentBlendMode()).toBe("normal");
+        expect($currentBlendMode).toBe("normal");
     });
 });

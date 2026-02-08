@@ -1,13 +1,5 @@
-/**
- * @description ドロップシャドウフィルターシェーダー
- *              Drop shadow filter shader
- */
 export class DropShadowFilterShader
 {
-    /**
-     * @description ドロップシャドウ用のフラグメントシェーダー
-     * @return {string}
-     */
     static getFragmentShader(): string
     {
         return /* wgsl */`
@@ -33,52 +25,42 @@ export class DropShadowFilterShader
 
             @fragment
             fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-                // 元のテクスチャから色を取得
                 var originalColor = textureSample(textureData, textureSampler, input.texCoord);
-                
-                // シャドウの位置を計算
+
                 let radian = uniforms.angle * 3.14159265 / 180.0;
                 let offsetX = cos(radian) * uniforms.distance / 100.0;
                 let offsetY = sin(radian) * uniforms.distance / 100.0;
-                
+
                 let shadowCoord = vec2<f32>(
                     input.texCoord.x + offsetX,
                     input.texCoord.y + offsetY
                 );
-                
-                // シャドウ位置のアルファ値を取得
+
                 var shadowAlpha = textureSample(textureData, textureSampler, shadowCoord).a;
-                
-                // シャドウカラーを適用
+
                 var shadowColor = vec4<f32>(
                     uniforms.shadowColor.rgb,
                     shadowAlpha * uniforms.shadowColor.a * uniforms.strength
                 );
-                
-                // 内側シャドウか外側シャドウか
+
                 if (uniforms.inner > 0.5) {
-                    // 内側シャドウ
                     let alpha = originalColor.a;
                     shadowColor.a *= alpha;
-                    
+
                     if (uniforms.knockout > 0.5) {
                         return shadowColor;
                     } else {
                         return mix(shadowColor, originalColor, alpha);
                     }
                 } else {
-                    // 外側シャドウ（ドロップシャドウ）
                     if (uniforms.hideObject > 0.5) {
-                        // オブジェクトを隠してシャドウのみ表示
                         return shadowColor * (1.0 - originalColor.a);
                     } else if (uniforms.knockout > 0.5) {
-                        // ノックアウト: シャドウのみ
                         return shadowColor;
                     } else {
-                        // 通常: オブジェクトとシャドウを合成
                         let combinedAlpha = originalColor.a + shadowColor.a * (1.0 - originalColor.a);
                         if (combinedAlpha > 0.0) {
-                            let rgb = (originalColor.rgb * originalColor.a + 
+                            let rgb = (originalColor.rgb * originalColor.a +
                                       shadowColor.rgb * shadowColor.a * (1.0 - originalColor.a)) / combinedAlpha;
                             return vec4<f32>(rgb, combinedAlpha);
                         } else {
@@ -90,10 +72,6 @@ export class DropShadowFilterShader
         `;
     }
 
-    /**
-     * @description 頂点シェーダー
-     * @return {string}
-     */
     static getVertexShader(): string
     {
         return /* wgsl */`

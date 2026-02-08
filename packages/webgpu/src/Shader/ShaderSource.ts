@@ -33,290 +33,161 @@ import {
     BevelFilterFragment,
     BevelBaseFragment
 } from "./wgsl/fragment/EffectFragment";
-import { WgslIsInside } from "./wgsl/common/SharedWgsl";
+import { WgslIsInside, WgslVertexOutput } from "./wgsl/common/SharedWgsl";
 
-/**
- * @description WebGPU用の基本的なシェーダーソース
- *              Basic shader sources for WebGPU
- */
 export class ShaderSource
 {
-    /**
-     * @description 単色塗りつぶし用頂点シェーダー（17 floats頂点フォーマット）
-     * @return {string}
-     */
     static getFillVertexShader (): string
     {
         return FillVertex;
     }
 
-    /**
-     * @description 単色塗りつぶし用頂点シェーダー（メインアタッチメント用）
-     * @return {string}
-     */
     static getFillMainVertexShader (): string
     {
         return FillMainVertex;
     }
 
-    /**
-     * @description 単色塗りつぶし用フラグメントシェーダー（1パスLoop-Blinn）
-     * @return {string}
-     */
     static getFillFragmentShader (): string
     {
         return FillFragment;
     }
 
-    /**
-     * @description ステンシル書き込み用頂点シェーダー（アトラス用）
-     * @return {string}
-     */
     static getStencilWriteVertexShader (): string
     {
         return StencilWriteVertex;
     }
 
-    /**
-     * @description ステンシル書き込み用頂点シェーダー（メインアタッチメント用）
-     * @return {string}
-     */
     static getStencilWriteMainVertexShader (): string
     {
         return StencilWriteMainVertex;
     }
 
-    /**
-     * @description ステンシル書き込み用フラグメントシェーダー（Pass1）
-     * @return {string}
-     */
     static getStencilWriteFragmentShader (): string
     {
         return StencilWriteFragment;
     }
 
-    /**
-     * @description ステンシルフィル用頂点シェーダー（Pass2）
-     * @return {string}
-     */
     static getStencilFillVertexShader (): string
     {
         return StencilFillVertex;
     }
 
-    /**
-     * @description ステンシルフィル用頂点シェーダー（メインアタッチメント用、Pass2）
-     * @return {string}
-     */
     static getStencilFillMainVertexShader (): string
     {
         return StencilFillMainVertex;
     }
 
-    /**
-     * @description ステンシルフィル用フラグメントシェーダー（Pass2）
-     * @return {string}
-     */
     static getStencilFillFragmentShader (): string
     {
         return StencilFillFragment;
     }
 
-    /**
-     * @description マスク用頂点シェーダー（ベジェ曲線）
-     * @return {string}
-     */
     static getMaskVertexShader (): string
     {
         return MaskVertex;
     }
 
-    /**
-     * @description マスク用フラグメントシェーダー（ベジェ曲線アンチエイリアシング）
-     * @return {string}
-     */
     static getMaskFragmentShader (): string
     {
         return MaskFragment;
     }
 
-    /**
-     * @description 基本的な頂点シェーダー（ストローク用、アトラスターゲット）
-     * @return {string}
-     */
     static getBasicVertexShader (): string
     {
         return BasicVertex;
     }
 
-    /**
-     * @description 基本的な頂点シェーダー（ストローク用、メインアタッチメント）
-     * @return {string}
-     */
     static getBasicMainVertexShader (): string
     {
         return BasicMainVertex;
     }
 
-    /**
-     * @description 基本的なフラグメントシェーダー（単色塗りつぶし）
-     * @return {string}
-     */
     static getBasicFragmentShader (): string
     {
         return BasicFragment;
     }
 
-    /**
-     * @description テクスチャ用フラグメントシェーダー
-     * @return {string}
-     */
     static getTextureFragmentShader (): string
     {
         return TextureFragment;
     }
 
-    /**
-     * @description インスタンス描画用頂点シェーダー
-     * @return {string}
-     */
     static getInstancedVertexShader (): string
     {
         return InstancedVertex;
     }
 
-    /**
-     * @description インスタンス描画用フラグメントシェーダー（アトラステクスチャから描画）
-     * @return {string}
-     */
     static getInstancedFragmentShader (): string
     {
         return InstancedFragment;
     }
 
-    /**
-     * @description グラデーションフィル用頂点シェーダー（行列変換でUV座標を計算）
-     * @return {string}
-     */
     static getGradientFillVertexShader (): string
     {
         return GradientFillVertex;
     }
 
-    /**
-     * @description グラデーションフィル用頂点シェーダー（メインアタッチメント用）
-     * @return {string}
-     */
     static getGradientFillMainVertexShader (): string
     {
         return GradientFillMainVertex;
     }
 
-    /**
-     * @description グラデーションフィル用フラグメントシェーダー
-     * @return {string}
-     */
     static getGradientFillFragmentShader (): string
     {
         return GradientFillFragment;
     }
 
-    /**
-     * @description 2パスステンシルフィル用グラデーションフラグメントシェーダー（bezierチェックなし）
-     *              Pass 1でステンシルに書き込み済みのため、Pass 2ではbezierチェックは不要
-     * @return {string}
-     */
     static getGradientFillStencilFragmentShader (): string
     {
         return GradientFillStencilFragment;
     }
 
-    /**
-     * @description グラデーション用フラグメントシェーダー（レガシー）
-     * @return {string}
-     */
     static getGradientFragmentShader (): string
     {
         return GradientFragment;
     }
 
-    /**
-     * @description ビットマップフィル用頂点シェーダー（行列変換でUV座標を計算）
-     * @return {string}
-     */
     static getBitmapFillVertexShader (): string
     {
         return BitmapFillVertex;
     }
 
-    /**
-     * @description ビットマップフィル用頂点シェーダー（メインアタッチメント用）
-     * @return {string}
-     */
     static getBitmapFillMainVertexShader (): string
     {
         return BitmapFillMainVertex;
     }
 
-    /**
-     * @description ビットマップフィル用フラグメントシェーダー
-     * @return {string}
-     */
     static getBitmapFillFragmentShader (): string
     {
         return BitmapFillFragment;
     }
 
-    /**
-     * @description ブレンドモード用フラグメントシェーダー
-     * @return {string}
-     */
     static getBlendFragmentShader (): string
     {
         return BlendGenericFragment;
     }
 
-    /**
-     * @description ブラーフィルター用頂点シェーダー
-     * @return {string}
-     */
     static getBlurFilterVertexShader (): string
     {
         return BlurFilterVertex;
     }
 
-    /**
-     * @description Bitmap同期用頂点シェーダー（UV Y反転なし）
-     * @return {string}
-     */
     static getBitmapSyncVertexShader (): string
     {
         return BitmapSyncVertex;
     }
 
-    /**
-     * @description Bitmap同期用フラグメントシェーダー
-     * @return {string}
-     */
     static getBitmapSyncFragmentShader (): string
     {
         return BitmapSyncFragment;
     }
 
-    /**
-     * @description ブラーフィルター用フラグメントシェーダー
-     * @param {number} halfBlur - 半分のブラー値（サンプル数の決定に使用）
-     * @return {string}
-     */
     static getBlurFilterFragmentShader (halfBlur: number): string
     {
         const halfBlurFixed = halfBlur.toFixed(1);
 
         return /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct BlurUniforms {
     offset: vec2<f32>,
@@ -346,113 +217,61 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
     }
 
-    /**
-     * @description テクスチャコピー用フラグメントシェーダー
-     * @return {string}
-     */
     static getTextureCopyFragmentShader (): string
     {
         return TextureCopyFragment;
     }
 
-    /**
-     * @description ブラーフィルター用テクスチャコピーシェーダー
-     * @return {string}
-     */
     static getBlurTextureCopyFragmentShader (): string
     {
         return BlurTextureCopyFragment;
     }
 
-    /**
-     * @description フィルター出力用フラグメントシェーダー
-     * @return {string}
-     */
     static getFilterOutputFragmentShader (): string
     {
         return FilterOutputFragment;
     }
 
-    /**
-     * @description ColorTransform適用用フラグメントシェーダー
-     * @return {string}
-     */
     static getColorTransformFragmentShader (): string
     {
         return ColorTransformFragment;
     }
 
-    /**
-     * @description ColorMatrixフィルター用フラグメントシェーダー
-     * @return {string}
-     */
     static getColorMatrixFilterFragmentShader (): string
     {
         return ColorMatrixFilterFragment;
     }
 
-    /**
-     * @description Glowフィルター用フラグメントシェーダー
-     * @return {string}
-     */
     static getGlowFilterFragmentShader (): string
     {
         return GlowFilterFragment;
     }
 
-    /**
-     * @description DropShadowフィルター用フラグメントシェーダー
-     * @return {string}
-     */
     static getDropShadowFilterFragmentShader (): string
     {
         return DropShadowFilterFragment;
     }
 
-    /**
-     * @description GradientGlowフィルター用フラグメントシェーダー
-     * @return {string}
-     */
     static getGradientGlowFilterFragmentShader (): string
     {
         return GradientGlowFilterFragment;
     }
 
-    /**
-     * @description GradientBevelフィルター用フラグメントシェーダー
-     * @return {string}
-     */
     static getGradientBevelFilterFragmentShader (): string
     {
         return GradientBevelFilterFragment;
     }
 
-    /**
-     * @description Bevelフィルター用フラグメントシェーダー
-     * @return {string}
-     */
     static getBevelFilterFragmentShader (): string
     {
         return BevelFilterFragment;
     }
 
-    /**
-     * @description ベベルベース生成用フラグメントシェーダー
-     * @return {string}
-     */
     static getBevelBaseFragmentShader (): string
     {
         return BevelBaseFragment;
     }
 
-    /**
-     * @description ConvolutionFilter用フラグメントシェーダー
-     * @param {number} matrixX - カーネル行列の幅
-     * @param {number} matrixY - カーネル行列の高さ
-     * @param {boolean} preserveAlpha - アルファを保持するかどうか
-     * @param {boolean} clamp - 境界をクランプするかどうか
-     * @return {string}
-     */
     static getConvolutionFilterFragmentShader (
         matrixX: number,
         matrixY: number,
@@ -493,10 +312,7 @@ struct ConvolutionUniforms {
 @group(0) @binding(1) var sourceSampler: sampler;
 @group(0) @binding(2) var sourceTexture: texture_2d<f32>;
 
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 ${WgslIsInside}
 
@@ -563,20 +379,11 @@ fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
 `;
     }
 
-    /**
-     * @description 複雑なブレンドモード用フラグメントシェーダーを取得
-     * @return {string}
-     */
     static getComplexBlendFragmentShader (): string
     {
         return ShaderSource.getUnifiedComplexBlendFragmentShader();
     }
 
-    /**
-     * @description ブレンドモード名からモード番号を取得
-     * @param {string} blendMode
-     * @return {number}
-     */
     static getBlendModeIndex (blendMode: string): number
     {
         switch (blendMode) {
@@ -588,22 +395,14 @@ fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
             case "hardlight": return 5;
             case "difference": return 6;
             case "invert":    return 7;
-            default:          return 1; // fallback to multiply
+            default:          return 1;
         }
     }
 
-    /**
-     * @description 統一された複雑ブレンドフラグメントシェーダー
-     *              全8モードをuniform分岐で処理する単一シェーダー
-     * @return {string}
-     */
     static getUnifiedComplexBlendFragmentShader (): string
     {
         return /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 struct BlendUniforms {
     mulColor: vec4<f32>,
@@ -637,36 +436,36 @@ fn blend(src: vec4<f32>, dst: vec4<f32>, mode: i32) -> vec4<f32> {
     var blended: vec3<f32>;
 
     switch (mode) {
-        case 0: { // subtract
+        case 0: {
             blended = dstRgb - srcRgb;
         }
-        case 2: { // lighten
+        case 2: {
             blended = mix(srcRgb, dstRgb, step(srcRgb, dstRgb));
         }
-        case 3: { // darken
+        case 3: {
             blended = mix(srcRgb, dstRgb, step(dstRgb, srcRgb));
         }
-        case 4: { // overlay
+        case 4: {
             let mul = srcRgb * dstRgb;
             let c1 = 2.0 * mul;
             let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
             blended = mix(c1, c2, step(vec3<f32>(0.5), dstRgb));
         }
-        case 5: { // hardlight
+        case 5: {
             let mul = srcRgb * dstRgb;
             let c1 = 2.0 * mul;
             let c2 = 2.0 * (srcRgb + dstRgb - mul) - 1.0;
             blended = mix(c1, c2, step(vec3<f32>(0.5), srcRgb));
         }
-        case 6: { // difference
+        case 6: {
             blended = abs(srcRgb - dstRgb);
         }
-        case 7: { // invert
+        case 7: {
             let ib = dst - dst * src.a;
             let ic = vec4<f32>(src.a - dst.rgb * src.a, src.a);
             return ib + ic;
         }
-        default: { // fallback
+        default: {
             blended = srcRgb;
         }
     }
@@ -693,13 +492,6 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
     }
 
-    /**
-     * @description DisplacementMapFilterフラグメントシェーダー
-     * @param {number} componentX - X方向のチャンネル
-     * @param {number} componentY - Y方向のチャンネル
-     * @param {number} mode - モード
-     * @return {string}
-     */
     static getDisplacementMapFilterFragmentShader (
         componentX: number,
         componentY: number,
@@ -794,10 +586,7 @@ sourceColor = textureSample(srcTexture, textureSampler, fract(uv));
 }`;
 
         return /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 ${uniformsStruct}
 
@@ -822,100 +611,56 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
     }
 
-    /**
-     * @description ノードクリア用頂点シェーダー
-     * @return {string}
-     */
     static getNodeClearVertexShader (): string
     {
         return NodeClearVertex;
     }
 
-    /**
-     * @description ノードクリア用フラグメントシェーダー
-     * @return {string}
-     */
     static getNodeClearFragmentShader (): string
     {
         return NodeClearFragment;
     }
 
-    /**
-     * @description 位置変換付きテクスチャ描画用頂点シェーダー
-     * @return {string}
-     */
     static getPositionedTextureVertexShader (): string
     {
         return PositionedTextureVertex;
     }
 
-    /**
-     * @description スケール変換用頂点シェーダー（複雑なブレンドモードでスケールが適用されている場合に使用）
-     * @return {string}
-     */
     static getTextureScaleVertexShader (): string
     {
         return TextureScaleVertex;
     }
 
-    /**
-     * @description フィルター処理用スケール変換頂点シェーダー（Video/Bitmap用、Y軸反転あり）
-     * @return {string}
-     */
     static getTextureScaleBlendVertexShader (): string
     {
         return TextureScaleBlendVertex;
     }
 
-    /**
-     * @description 複雑なブレンドモード用スケール変換頂点シェーダー（Y軸反転なし）
-     * @return {string}
-     */
     static getComplexBlendScaleVertexShader (): string
     {
         return ComplexBlendScaleVertex;
     }
 
-    /**
-     * @description 複雑なブレンドモード用フルスクリーンクワッド頂点シェーダー（Y軸反転なし）
-     * @return {string}
-     */
     static getComplexBlendVertexShader (): string
     {
         return ComplexBlendVertex;
     }
 
-    /**
-     * @description 複雑なブレンドモード用テクスチャコピー頂点シェーダー（Y軸反転なし）
-     * @return {string}
-     */
     static getComplexBlendCopyVertexShader (): string
     {
         return ComplexBlendCopyVertex;
     }
 
-    /**
-     * @description 複雑なブレンドモード結果描画用頂点シェーダー（Y軸反転なし）
-     * @return {string}
-     */
     static getComplexBlendOutputVertexShader (): string
     {
         return ComplexBlendOutputVertex;
     }
 
-    /**
-     * @description フィルター＋複雑なブレンドモード結果描画用頂点シェーダー（Y軸反転あり）
-     * @return {string}
-     */
     static getFilterComplexBlendOutputVertexShader (): string
     {
         return FilterComplexBlendOutputVertex;
     }
 
-    /**
-     * @description 位置変換付きテクスチャ描画用フラグメントシェーダー
-     * @return {string}
-     */
     static getPositionedTextureFragmentShader (): string
     {
         return PositionedTextureFragment;

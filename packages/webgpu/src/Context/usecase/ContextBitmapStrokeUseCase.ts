@@ -4,35 +4,8 @@ import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshBitmapStrokeGenerateUseCase } from "../../Mesh/usecase/MeshBitmapStrokeGenerateUseCase";
 import { execute as contextComputeBitmapMatrixService } from "../service/ContextComputeBitmapMatrixService";
 
-/**
- * @description ビットマップ用サンプラーキャッシュ (smooth|repeat -> sampler)
- */
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
-/**
- * @description ビットマップ線の描画を実行（WebGL版と同じ仕様）
- *              Execute bitmap stroke (same specification as WebGL)
- *
- * @param {GPUDevice} device
- * @param {GPURenderPassEncoder} renderPassEncoder
- * @param {BufferManager} bufferManager
- * @param {PipelineManager} pipelineManager
- * @param {IPath[]} vertices - パス配列 [x, y, isCurve, ...]
- * @param {number} thickness - 線の太さ（フル値、内部で/2される）
- * @param {Float32Array} contextMatrix - コンテキストの変換行列
- * @param {Float32Array} strokeStyle - 線スタイル [r, g, b, a]
- * @param {Uint8Array} pixels - ピクセルデータ
- * @param {Float32Array} bitmapMatrix - ビットマップ変換行列 [a, b, c, d, tx, ty]
- * @param {number} width - ビットマップ幅
- * @param {number} height - ビットマップ高さ
- * @param {boolean} repeat - 繰り返し
- * @param {boolean} smooth - スムージング
- * @param {number} viewportWidth
- * @param {number} viewportHeight
- * @param {boolean} useAtlasTarget - アトラスターゲットを使用するかどうか
- * @param {boolean} useStencilPipeline - ステンシル互換パイプラインを使用するかどうか
- * @return {GPUTexture | null} - ビットマップテクスチャ（フレーム終了時に解放が必要）
- */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

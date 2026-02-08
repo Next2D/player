@@ -1,7 +1,7 @@
 import type { Node } from "@next2d/texture-packer";
 import type { IComplexBlendItem } from "../interface/IComplexBlendItem";
 import { ShaderInstancedManager } from "../Shader/ShaderInstancedManager";
-import { $getCurrentBlendMode, $setCurrentBlendMode } from "../Blend";
+import { $currentBlendMode, $setCurrentBlendMode } from "../Blend";
 import { $getCurrentAtlasIndex, $setCurrentAtlasIndex, $setActiveAtlasIndex } from "../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
 import { $context } from "../WebGPUUtil";
@@ -114,7 +114,7 @@ export const addDisplayObjectToInstanceArray = (
 
     if (SIMPLE_BLEND_MODES.has(blend_mode)) {
         // ブレンドモードまたはアトラスインデックスが変わった場合
-        if ($getCurrentBlendMode() !== blend_mode || $getCurrentAtlasIndex() !== node.index) {
+        if ($currentBlendMode !== blend_mode || $getCurrentAtlasIndex() !== node.index) {
             // 異なるブレンドモード/アトラスになるので、切り替え前にバッチを描画
             if ($context) {
                 $setActiveAtlasIndex($getCurrentAtlasIndex());

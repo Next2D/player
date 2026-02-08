@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { execute } from "./BlendAlphaService";
-import { $setFuncCode, $getFuncCode } from "../../Blend";
+import { $setFuncCode, $funcCode } from "../../Blend";
 
 describe("BlendAlphaService", () =>
 {
@@ -24,7 +24,7 @@ describe("BlendAlphaService", () =>
 
         execute();
 
-        expect($getFuncCode()).toBe(401);
+        expect($funcCode).toBe(401);
     });
 
     it("should return false when already set to alpha (401)", () =>
@@ -42,7 +42,7 @@ describe("BlendAlphaService", () =>
 
         execute();
 
-        expect($getFuncCode()).toBe(401);
+        expect($funcCode).toBe(401);
     });
 
     it("should return true when changing from normal mode", () =>
@@ -52,6 +52,6 @@ describe("BlendAlphaService", () =>
         const result = execute();
 
         expect(result).toBe(true);
-        expect($getFuncCode()).toBe(401);
+        expect($funcCode).toBe(401);
     });
 });

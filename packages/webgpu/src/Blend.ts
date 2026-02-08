@@ -3,88 +3,20 @@ import type { IBlendState } from "./interface/IBlendState";
 
 export type { IBlendState };
 
-/**
- * @description 現在設定されているブレンドモード
- *              The currently set blend mode
- *
- * @type {IBlendMode}
- * @default "normal"
- * @private
- */
-let $currentBlendMode: IBlendMode = "normal";
+export let $currentBlendMode: IBlendMode = "normal";
 
-/**
- * @description ブレンド機能コード（パイプライン再利用判定用）
- *              Blend function code (for pipeline reuse determination)
- *
- * @type {number}
- * @private
- */
-let $funcCode: number = 0;
+export let $funcCode: number = 0;
 
-/**
- * @description ブレンドモード情報を更新
- *              Update blend mode information
- *
- * @param  {string} blend_mode
- * @return {void}
- * @method
- * @protected
- */
 export const $setCurrentBlendMode = (blend_mode: IBlendMode): void =>
 {
     $currentBlendMode = blend_mode;
 };
 
-/**
- * @description 現在設定されているブレンドモードを返却
- *              Returns the currently set blend mode
- *
- * @return {IBlendMode}
- * @method
- * @protected
- */
-export const $getCurrentBlendMode = (): IBlendMode =>
-{
-    return $currentBlendMode;
-};
-
-/**
- * @description ブレンド機能コードを設定
- *              Set the blend function code
- *
- * @param  {number} code
- * @return {void}
- * @method
- * @protected
- */
 export const $setFuncCode = (code: number): void =>
 {
     $funcCode = code;
 };
 
-/**
- * @description ブレンド機能コードを取得
- *              Get the blend function code
- *
- * @return {number}
- * @method
- * @protected
- */
-export const $getFuncCode = (): number =>
-{
-    return $funcCode;
-};
-
-/**
- * @description ブレンドモードからWebGPUブレンドステートを取得
- *              Get WebGPU blend state from blend mode
- *
- * @param  {IBlendMode} mode
- * @return {IBlendState}
- * @method
- * @protected
- */
 export const $getBlendState = (mode: IBlendMode): IBlendState =>
 {
     switch (mode) {

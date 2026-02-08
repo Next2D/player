@@ -1,22 +1,3 @@
-/**
- * @description BitmapFilter用WGSLシェーダーソース
- *              WGSL shader source for BitmapFilter
- *
- *              BitmapFilterは汎用的なフィルター合成シェーダーで、
- *              Glow、DropShadow、Bevel、GradientGlow、GradientBevelなどで使用される
- */
-
-/**
- * @description BitmapFilter用フラグメントシェーダーを生成
- * @param {boolean} transformsBase - ベーステクスチャの座標変換が必要か
- * @param {boolean} transformsBlur - ブラーテクスチャの座標変換が必要か
- * @param {boolean} isGlow - グロー効果かどうか（false=ベベル）
- * @param {string} type - "full", "inner", "outer"
- * @param {boolean} knockout - ノックアウト効果
- * @param {boolean} appliesStrength - 強度適用するか
- * @param {boolean} isGradient - グラデーションカラーを使用するか
- * @return {string}
- */
 export const getBitmapFilterFragmentShader = (
     transformsBase: boolean,
     transformsBlur: boolean,
@@ -27,15 +8,12 @@ export const getBitmapFilterFragmentShader = (
     isGradient: boolean
 ): string => {
     const isInner = type === "inner";
-    // isOuter and isFull used implicitly in switch statement
 
-    // バインディングインデックスの計算
-    let textureBindingIndex = 2; // 0=uniforms, 1=sampler, 2から開始
+    let textureBindingIndex = 2;
     const blurTextureBinding = textureBindingIndex++;
     const baseTextureBinding = transformsBase ? textureBindingIndex++ : -1;
     const gradientTextureBinding = isGradient ? textureBindingIndex++ : -1;
 
-    // ユニフォームの構造体
     let uniformsStruct = `struct BitmapFilterUniforms {
 `;
     if (transformsBase) {
@@ -65,7 +43,6 @@ export const getBitmapFilterFragmentShader = (
     }
     uniformsStruct += "}";
 
-    // テクスチャバインディング
     let textureBindings = `
 @group(0) @binding(0) var<uniform> uniforms: BitmapFilterUniforms;
 @group(0) @binding(1) var sourceSampler: sampler;
@@ -80,7 +57,6 @@ export const getBitmapFilterFragmentShader = (
 @group(0) @binding(${gradientTextureBinding}) var gradientTexture: texture_2d<f32>;`;
     }
 
-    // ベーステクスチャの取得
     let baseStatement = "";
     if (transformsBase) {
         baseStatement = `
@@ -90,7 +66,6 @@ export const getBitmapFilterFragmentShader = (
     let base = mix(vec4<f32>(0.0), textureSample(baseTexture, sourceSampler, uv), isInside(uv));`;
     }
 
-    // ブラーテクスチャの取得
     let blurStatement = "";
     if (transformsBlur) {
         blurStatement = `
@@ -103,10 +78,8 @@ export const getBitmapFilterFragmentShader = (
     var blur = textureSample(blurTexture, sourceSampler, input.texCoord);`;
     }
 
-    // カラー処理
     let colorStatement = "";
     if (isGlow) {
-        // グロー処理
         if (isInner) {
             colorStatement += `
     blur.a = 1.0 - blur.a;`;
@@ -125,7 +98,6 @@ export const getBitmapFilterFragmentShader = (
     blur = color * blur.a;`;
         }
     } else {
-        // ベベル処理
         if (transformsBlur) {
             colorStatement += `
     let pq = (vec2<f32>(1.0) - input.texCoord) * blurScale - blurOffset;
@@ -163,7 +135,6 @@ export const getBitmapFilterFragmentShader = (
         }
     }
 
-    // モード別の出力式
     let modeExpression = "";
     switch (type) {
         case "outer":
@@ -182,7 +153,6 @@ export const getBitmapFilterFragmentShader = (
             break;
     }
 
-    // base変数が必要かどうか
     const needsBase = transformsBase || (type === "outer" || type === "full" && !knockout);
     let baseDecl = "";
     if (needsBase && !transformsBase) {
@@ -242,17 +212,6 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 };
 
-/**
- * @description BitmapFilter用のシェーダーキーを生成
- * @param {boolean} transformsBase
- * @param {boolean} transformsBlur
- * @param {boolean} isGlow
- * @param {string} type
- * @param {boolean} knockout
- * @param {boolean} appliesStrength
- * @param {boolean} isGradient
- * @return {string}
- */
 export const getBitmapFilterShaderKey = (
     transformsBase: boolean,
     transformsBlur: boolean,

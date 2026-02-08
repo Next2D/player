@@ -1,22 +1,3 @@
-/**
- * @description BevelFilter用WGSLシェーダーソース
- *              WGSL shader source for BevelFilter
- *
- *              ベベルフィルターは、ハイライトとシャドウを使って
- *              立体的なエンボス効果を作成する
- */
-
-/**
- * @description BevelFilter用フラグメントシェーダーを生成
- *              タイプによって処理が異なる
- *              - full: 外側と内側の両方にベベル効果
- *              - inner: オブジェクト内部のみ
- *              - outer: オブジェクト外部のみ
- * @param {string} type - "full", "inner", "outer"
- * @param {boolean} knockout - ノックアウト効果
- * @param {boolean} isGradient - グラデーションベベルかどうか
- * @return {string}
- */
 export const getBevelFilterFragmentShader = (
     type: string,
     knockout: boolean,
@@ -25,45 +6,35 @@ export const getBevelFilterFragmentShader = (
     const isInner = type === "inner";
     const isOuter = type === "outer";
 
-    // グラデーション用のテクスチャバインディング
     const gradientBinding = isGradient ? `
 @group(0) @binding(4) var gradientTexture: texture_2d<f32>;` : "";
 
-    // カラー計算
     const colorCalculation = isGradient ? `
-    // グラデーションLUTからカラーを取得
     let gradientCoord = vec2<f32>(blurAlpha, 0.5);
     var filterColor = textureSample(gradientTexture, sourceSampler, gradientCoord);
 ` : `
-    // ハイライトとシャドウのブレンド
     let highlightWeight = clamp(blurAlpha * 2.0, 0.0, 1.0);
     let shadowWeight = clamp((1.0 - blurAlpha) * 2.0, 0.0, 1.0);
     var filterColor = uniforms.highlightColor * highlightWeight + uniforms.shadowColor * shadowWeight;
 `;
 
-    // タイプ別の処理
     let typeProcessing = "";
     if (isInner) {
         typeProcessing = `
-    // Inner: オブジェクト内部のみ、基底アルファでマスク
     let baseAlpha = textureSample(baseTexture, sourceSampler, baseTexCoord).a;
     filterColor = filterColor * baseAlpha;
     ${knockout ? "let finalColor = filterColor;" : "let finalColor = mix(baseColor, filterColor, filterColor.a);"}
 `;
     } else if (isOuter) {
         typeProcessing = `
-    // Outer: オブジェクト外部のみ
     let baseAlpha = textureSample(baseTexture, sourceSampler, baseTexCoord).a;
     filterColor = filterColor * (1.0 - baseAlpha);
     ${knockout ? "let finalColor = filterColor;" : "let finalColor = filterColor + baseColor * (1.0 - filterColor.a);"}
 `;
     } else {
-        // full
         typeProcessing = knockout ? `
-    // Full + Knockout: ベベル効果のみ
     let finalColor = filterColor;
 ` : `
-    // Full: ベベル効果 + 元画像
     let finalColor = filterColor + baseColor * (1.0 - filterColor.a);
 `;
     }
@@ -121,16 +92,13 @@ fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
 
 @fragment
 fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
-    // テクスチャ座標の変換
     let blurTexCoord = input.texCoord * uniforms.blurTexCoordScale + uniforms.blurTexCoordOffset;
     let baseTexCoord = input.texCoord * uniforms.baseTexCoordScale + uniforms.baseTexCoordOffset;
 
-    // ブラーテクスチャからアルファを取得
     let blurColor = textureSample(blurTexture, sourceSampler, blurTexCoord);
     var blurAlpha = blurColor.a * uniforms.strength;
     blurAlpha = clamp(blurAlpha, 0.0, 1.0);
 
-    // 基底テクスチャから色を取得
     let baseColor = textureSample(baseTexture, sourceSampler, baseTexCoord);
 
     ${colorCalculation}
@@ -141,13 +109,6 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 `;
 };
 
-/**
- * @description BevelFilter用のシェーダーキーを生成
- * @param {string} type - "full", "inner", "outer"
- * @param {boolean} knockout
- * @param {boolean} isGradient
- * @return {string}
- */
 export const getBevelFilterShaderKey = (
     type: string,
     knockout: boolean,

@@ -1,10 +1,7 @@
-import { WgslFullscreenPositions, WgslUnitQuadVertices } from "../common/SharedWgsl";
+import { WgslFullscreenPositions, WgslUnitQuadVertices, WgslVertexOutput } from "../common/SharedWgsl";
 
 const createFullscreenQuadVertex = (yFlipTexCoord: boolean): string => /* wgsl */`
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) texCoord: vec2<f32>,
-}
+${WgslVertexOutput}
 
 @vertex
 fn main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {

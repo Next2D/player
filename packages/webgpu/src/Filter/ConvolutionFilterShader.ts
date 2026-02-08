@@ -1,20 +1,3 @@
-/**
- * @description ConvolutionFilter用WGSLシェーダーソース
- *              WGSL shader source for ConvolutionFilter
- *
- *              畳み込みフィルターは、カーネル行列を使用して画像処理を行う
- *              シャープ化、エッジ検出、エンボスなどの効果を実現
- */
-
-/**
- * @description ConvolutionFilter用フラグメントシェーダーを生成
- *              Generate fragment shader for ConvolutionFilter
- * @param {number} matrixX - カーネル行列の幅
- * @param {number} matrixY - カーネル行列の高さ
- * @param {boolean} preserveAlpha - アルファを保持するかどうか
- * @param {boolean} clamp - 境界をクランプするかどうか
- * @return {string}
- */
 export const getConvolutionFilterFragmentShader = (
     matrixX: number,
     matrixY: number,
@@ -25,19 +8,16 @@ export const getConvolutionFilterFragmentShader = (
     const halfY = Math.floor(matrixY * 0.5);
     const size = matrixX * matrixY;
 
-    // マトリックス要素を取得するコードを生成
     let matrixStatement = "";
     for (let idx = 0; idx < size; idx++) {
         matrixStatement += `
     result = result + getWeightedColor(${idx}, getMatrixWeight(${idx}));`;
     }
 
-    // アルファ保持のステートメント
     const preserveAlphaStatement = preserveAlpha
         ? "result.a = textureSample(sourceTexture, sourceSampler, input.texCoord).a;"
         : "";
 
-    // クランプ外の処理
     const clampStatement = clamp
         ? ""
         : `
@@ -87,7 +67,6 @@ fn getWeightedColor(i: i32, weight: f32) -> vec4<f32> {
     var uv = input.texCoord + offset * rcpSize;
 
     var color = textureSample(sourceTexture, sourceSampler, uv);
-    // Unpremultiply
     color = vec4<f32>(color.rgb / max(0.0001, color.a), color.a);
     ${clampStatement}
 
@@ -135,21 +114,12 @@ fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
     result = clamp(result * rcpDivisor + bias, vec4<f32>(0.0), vec4<f32>(1.0));
     ${preserveAlphaStatement}
 
-    // Premultiply
     result = vec4<f32>(result.rgb * result.a, result.a);
     return result;
 }
 `;
 };
 
-/**
- * @description ConvolutionFilter用のシェーダーキーを生成
- * @param {number} matrixX
- * @param {number} matrixY
- * @param {boolean} preserveAlpha
- * @param {boolean} clamp
- * @return {string}
- */
 export const getConvolutionFilterShaderKey = (
     matrixX: number,
     matrixY: number,

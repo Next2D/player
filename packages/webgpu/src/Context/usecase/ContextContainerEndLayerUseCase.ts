@@ -16,9 +16,6 @@ import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/Gr
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 
-/**
- * @description プリアロケートされたユニフォーム配列
- */
 const $uniform4 = new Float32Array(4);
 const $uniform8 = new Float32Array(8);
 const $uniform20 = new Float32Array(20);
@@ -30,24 +27,12 @@ const $entries3: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
-/**
- * @description シンプルなブレンドモード
- */
 const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
     "normal", "layer", "add", "screen", "alpha", "erase", "copy"
 ] as IBlendMode[]);
 
-/**
- * @description 恒等カラートランスフォーム
- */
 const $identityColorTransform = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
-/**
- * @description ColorTransformが恒等変換かどうかをチェック
- *
- * @param {Float32Array | null} ct [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
- * @return {boolean}
- */
 const isIdentityColorTransform = (ct: Float32Array | null): boolean => {
     if (!ct) {
         return true;
@@ -56,14 +41,6 @@ const isIdentityColorTransform = (ct: Float32Array | null): boolean => {
         && ct[4] === 0 && ct[5] === 0 && ct[6] === 0 && ct[7] === 0;
 };
 
-/**
- * @description フィルター結果にColorTransformを適用
- *
- * @param {ILocalFilterConfig} config
- * @param {IAttachmentObject} attachment
- * @param {Float32Array} colorTransform [mulR, mulG, mulB, mulA, addR, addG, addB, addA]
- * @return {IAttachmentObject}
- */
 const applyColorTransform = (
     config: ILocalFilterConfig,
     attachment: IAttachmentObject,
@@ -114,17 +91,6 @@ const applyColorTransform = (
     return ctAttachment;
 };
 
-/**
- * @description コンテナの一時アタッチメント(bgra8unorm)から領域をフィルター用(rgba8unorm)にコピー
- *
- * @param {ILocalFilterConfig} config
- * @param {IAttachmentObject} srcAttachment - コンテナの一時アタッチメント(bgra8unorm)
- * @param {number} x
- * @param {number} y
- * @param {number} width
- * @param {number} height
- * @return {IAttachmentObject}
- */
 const copyRegionToFilterAttachment = (
     config: ILocalFilterConfig,
     srcAttachment: IAttachmentObject,
@@ -181,18 +147,6 @@ const copyRegionToFilterAttachment = (
     return dstAttachment;
 };
 
-/**
- * @description フィルター結果をメインアタッチメントに描画
- *
- * @param {ILocalFilterConfig} config
- * @param {IAttachmentObject} filterAttachment - rgba8unormフィルター結果
- * @param {IAttachmentObject} mainAttachment - 描画先メインアタッチメント
- * @param {IBlendMode} blendMode
- * @param {number} x
- * @param {number} y
- * @param {BufferManager} bufferManager
- * @return {void}
- */
 const drawFilterResultToMain = (
     config: ILocalFilterConfig,
     filterAttachment: IAttachmentObject,
@@ -393,16 +347,6 @@ const drawFilterResultToMain = (
     }
 };
 
-/**
- * @description フィルターチェーンを適用
- *
- * @param {IAttachmentObject} filterAttachment
- * @param {Float32Array} matrix
- * @param {Float32Array} params
- * @param {number} devicePixelRatio
- * @param {ILocalFilterConfig} config
- * @return {IAttachmentObject}
- */
 const applyFilterChain = (
     filterAttachment: IAttachmentObject,
     matrix: Float32Array,
@@ -629,27 +573,6 @@ const applyFilterChain = (
     return filterAttachment;
 };
 
-/**
- * @description コンテナのフィルター/ブレンド用レイヤーを終了し、結果を元のメインに合成
- *              End the container layer and composite the result back to the original main
- *
- * @param {IAttachmentObject} tempAttachment - コンテナの一時アタッチメント(bgra8unorm)
- * @param {IAttachmentObject} mainAttachment - 復元済みの元のメインアタッチメント
- * @param {string} tempName - 一時アタッチメントの名前（destroyAttachment用）
- * @param {IBlendMode} blendMode
- * @param {Float32Array} matrix
- * @param {Float32Array | null} colorTransform
- * @param {boolean} useFilter
- * @param {Float32Array | null} filterBounds
- * @param {Float32Array | null} params
- * @param {string} uniqueKey
- * @param {string} filterKey
- * @param {number} contentWidth - コンテナのコンテンツ幅
- * @param {number} contentHeight - コンテナのコンテンツ高さ
- * @param {ILocalFilterConfig} config
- * @param {BufferManager} bufferManager
- * @return {void}
- */
 export const execute = (
     tempAttachment: IAttachmentObject,
     mainAttachment: IAttachmentObject,
