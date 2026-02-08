@@ -1,3 +1,5 @@
+import { WgslIsInside } from "../common/SharedWgsl";
+
 export const GlowFilterFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
@@ -66,32 +68,24 @@ struct DropShadowUniforms {
 @group(0) @binding(1) var textureSampler: sampler;
 @group(0) @binding(2) var blurTexture: texture_2d<f32>;
 @group(0) @binding(3) var baseTexture: texture_2d<f32>;
-
-fn isInside(uv: vec2<f32>) -> f32 {
-    let s = step(vec4<f32>(0.0, uv.x, 0.0, uv.y), vec4<f32>(uv.x, 1.0, uv.y, 1.0));
-    return step(4.0, dot(s, vec4<f32>(1.0, 1.0, 1.0, 1.0)));
-}
+${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    // WebGL版と同じ: UV変換+isInsideでハード境界クリッピング
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
     let baseColor = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
 
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
     let blur = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
 
-    // WebGL版と同じ: innerの場合、アルファを反転してエッジのみにシャドウを適用
     var rawAlpha = blur.a;
     if (uniforms.inner > 0.5) {
         rawAlpha = 1.0 - rawAlpha;
     }
     let shadowAlpha = clamp(rawAlpha * uniforms.strength, 0.0, 1.0);
-    // WebGL版と同じ: blur = color * blur.a → alphaチャンネルにcolor.a(=alpha)を乗算
     let shadowColor = vec4<f32>(uniforms.color.rgb * shadowAlpha, uniforms.color.a * shadowAlpha);
 
     if (uniforms.inner > 0.5) {
-        // WebGL版: source-atop blend = src * dst.a + dst * (1 - src.a)
         let innerShadow = shadowColor * baseColor.a;
         if (uniforms.knockout > 0.5) {
             return innerShadow;
@@ -132,23 +126,16 @@ struct GradientGlowUniforms {
 @group(0) @binding(2) var blurTexture: texture_2d<f32>;
 @group(0) @binding(3) var baseTexture: texture_2d<f32>;
 @group(0) @binding(4) var gradientLUT: texture_2d<f32>;
-
-fn isInside(uv: vec2<f32>) -> f32 {
-    let s = step(vec4<f32>(0.0, uv.x, 0.0, uv.y), vec4<f32>(uv.x, 1.0, uv.y, 1.0));
-    return step(4.0, dot(s, vec4<f32>(1.0, 1.0, 1.0, 1.0)));
-}
+${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    // WebGL版と同じ: UV変換+isInsideでハード境界クリッピング
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
     let base = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
 
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
     var blur = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
 
-    // WebGL版と同じ: gradient glowではinner alpha反転しない
-    // (非gradient GlowFilterではinver反転するが、gradient版ではLUTが空間マッピングを制御)
     blur.a = clamp(blur.a * uniforms.strength, 0.0, 1.0);
     let glowColor = textureSample(gradientLUT, textureSampler, vec2<f32>(blur.a, 0.5));
     var result: vec4<f32>;
@@ -161,9 +148,6 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
             result = base - base * glowColor.a + glowColor;
         }
     } else if (glowType < 1.5) {
-        // inner (type = 1)
-        // WebGL版: baseを描画後にsource-atop blendでglowColorを合成
-        // source-atop: result = src * dst.a + dst * (1 - src.a)
         if (knockout) {
             result = glowColor * base.a;
         } else {
@@ -202,23 +186,16 @@ struct GradientBevelUniforms {
 @group(0) @binding(2) var blurTexture: texture_2d<f32>;
 @group(0) @binding(3) var baseTexture: texture_2d<f32>;
 @group(0) @binding(4) var gradientLUT: texture_2d<f32>;
-
-fn isInside(uv: vec2<f32>) -> f32 {
-    let s = step(vec4<f32>(0.0, uv.x, 0.0, uv.y), vec4<f32>(uv.x, 1.0, uv.y, 1.0));
-    return step(4.0, dot(s, vec4<f32>(1.0, 1.0, 1.0, 1.0)));
-}
+${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    // WebGL版と同じ: UV変換+isInsideでハード境界クリッピング
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
     let base = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
 
-    // WebGL版と同じ: UV変換+isInsideでブラーサンプリング
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
     let blur1 = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
 
-    // WebGL版と同じ: ミラーは出力座標系で反転してからUV変換
     let mirrorUV = (1.0 - input.texCoord) * uniforms.blurScale - uniforms.blurOffset;
     let blur2 = textureSample(blurTexture, textureSampler, mirrorUV) * isInside(mirrorUV);
 
@@ -235,22 +212,18 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let knockout = uniforms.knockout > 0.5;
 
     if (bevelType < 0.5) {
-        // full (type = 0)
         if (knockout) {
             result = bevelColor;
         } else {
             result = base - base * bevelColor.a + bevelColor;
         }
     } else if (bevelType < 1.5) {
-        // inner (type = 1)
-        // WebGL版: source-atop blend = src * dst.a + dst * (1 - src.a)
         if (knockout) {
             result = bevelColor * base.a;
         } else {
             result = bevelColor * base.a + base * (1.0 - bevelColor.a);
         }
     } else {
-        // outer (type = 2)
         if (knockout) {
             result = bevelColor - bevelColor * base.a;
         } else {
@@ -285,53 +258,32 @@ struct BevelUniforms {
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let base = textureSample(baseTexture, textureSampler, input.texCoord);
-
-    // WebGL版と同様: blur1は通常座標、blur2は反転座標でサンプル
     let blur1 = textureSample(blurTexture, textureSampler, input.texCoord);
     let blur2 = textureSample(blurTexture, textureSampler, 1.0 - input.texCoord);
 
-    // ハイライトとシャドウのアルファを計算
     var highlightAlpha = blur1.a - blur2.a;
     var shadowAlpha = blur2.a - blur1.a;
+    highlightAlpha = clamp(highlightAlpha * uniforms.strength, 0.0, 1.0);
+    shadowAlpha = clamp(shadowAlpha * uniforms.strength, 0.0, 1.0);
 
-    // strengthを適用
-    highlightAlpha *= uniforms.strength;
-    shadowAlpha *= uniforms.strength;
-
-    // クランプ
-    highlightAlpha = clamp(highlightAlpha, 0.0, 1.0);
-    shadowAlpha = clamp(shadowAlpha, 0.0, 1.0);
-
-    // ベベルカラーを計算
     let bevelColor = uniforms.highlightColor * highlightAlpha + uniforms.shadowColor * shadowAlpha;
-
-    // タイプに応じて合成
-    // WebGL版ではinner型にsource-atop blending（result = src * dst.a + dst * (1 - src.a)）を使用
-    // WebGPU版では単一パスで合成するため、シェーダー内で同等の計算を行う
     var result: vec4<f32>;
     let bevelType = uniforms.bevelType;
     let knockout = uniforms.knockout > 0.5;
 
     if (bevelType < 0.5) {
-        // full (type = 0)
         if (knockout) {
             result = bevelColor;
         } else {
             result = base - base * bevelColor.a + bevelColor;
         }
     } else if (bevelType < 1.5) {
-        // inner (type = 1)
-        // WebGL版: base描画後にsource-atop blendでbevelColorを合成
-        // source-atop: result = src * dst.a + dst * (1 - src.a)
-        // = bevelColor * base.a + base * (1 - bevelColor.a)
-        // これによりbase.a=0の領域にはベベルが漏れない
         if (knockout) {
             result = bevelColor * base.a;
         } else {
             result = bevelColor * base.a + base * (1.0 - bevelColor.a);
         }
     } else {
-        // outer (type = 2)
         if (knockout) {
             result = bevelColor - bevelColor * base.a;
         } else {
@@ -357,11 +309,7 @@ struct BevelBaseUniforms {
 @group(0) @binding(0) var<uniform> uniforms: BevelBaseUniforms;
 @group(0) @binding(1) var textureSampler: sampler;
 @group(0) @binding(2) var sourceTexture: texture_2d<f32>;
-
-fn isInside(uv: vec2<f32>) -> f32 {
-    let s = step(vec4<f32>(0.0, uv.x, 0.0, uv.y), vec4<f32>(uv.x, 1.0, uv.y, 1.0));
-    return step(4.0, dot(s, vec4<f32>(1.0, 1.0, 1.0, 1.0)));
-}
+${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {

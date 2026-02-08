@@ -36,7 +36,6 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     if (uniforms.repeat > 0.5) {
         uv = fract(uv);
     }
-    // repeat: falseの場合、サンプラーのclamp-to-edgeでクランプされる（WebGL版と同じ動作）
     let bitmapColor = textureSample(bitmapTexture, bitmapSampler, uv);
     let alpha = bitmapColor.a * input.color.a;
     return vec4<f32>(bitmapColor.rgb * input.color.a, alpha);

@@ -89,13 +89,8 @@ struct ColorTransformUniforms {
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     var color = textureSample(inputTexture, textureSampler, input.texCoord);
 
-    // Unpremultiply
     color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
-
-    // Apply ColorTransform (same as WebGL: src * mul + add)
     color = clamp(color * ct.mul + ct.add, vec4<f32>(0.0), vec4<f32>(1.0));
-
-    // Premultiply
     color = vec4<f32>(color.rgb * color.a, color.a);
 
     return color;
@@ -121,14 +116,9 @@ struct ColorMatrixUniforms {
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     var color = textureSample(inputTexture, textureSampler, input.texCoord);
 
-    // Unpremultiply（WebGL版と同じ処理）
     color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
-
-    // カラーマトリックス適用
     var result = uniforms.matrix * color + uniforms.offset;
     result = clamp(result, vec4<f32>(0.0), vec4<f32>(1.0));
-
-    // Premultiply
     result = vec4<f32>(result.rgb * result.a, result.a);
 
     return result;
@@ -157,8 +147,6 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
-// Bitmap同期用fragment shader
-// vertex shaderで計算されたUV座標をそのまま使用
 export const BitmapSyncFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

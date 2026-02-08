@@ -9,6 +9,31 @@ import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApp
 const DEG_TO_RAD: number = Math.PI / 180;
 
 /**
+ * @description プリアロケートされたFloat32Array
+ */
+const $uniform8 = new Float32Array(8);
+const $uniform12 = new Float32Array(12);
+
+/**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
+ */
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
+/**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング4つ)
+ */
+const $entries4: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView },
+    { "binding": 3, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
  */
 const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
@@ -102,27 +127,29 @@ export const execute = (
         const offsetX = x * 2 / baseWidth;
         const offsetY = y * 2 / baseHeight;
 
-        const eraseUniformData = new Float32Array([
-            1.0, 1.0,         // scale
-            offsetX, offsetY, // offset（正のオフセット）
-            0, 0, 0, 0        // padding
-        ]);
+        $uniform8[0] = 1.0;
+        $uniform8[1] = 1.0;
+        $uniform8[2] = offsetX;
+        $uniform8[3] = offsetY;
+        $uniform8[4] = 0;
+        $uniform8[5] = 0;
+        $uniform8[6] = 0;
+        $uniform8[7] = 0;
 
         const eraseUniformBuffer = config.bufferManager
-            ? config.bufferManager.acquireUniformBuffer(eraseUniformData.byteLength)
+            ? config.bufferManager.acquireUniformBuffer($uniform8.byteLength)
             : device.createBuffer({
-                "size": eraseUniformData.byteLength,
+                "size": $uniform8.byteLength,
                 "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
             });
-        device.queue.writeBuffer(eraseUniformBuffer, 0, eraseUniformData);
+        device.queue.writeBuffer(eraseUniformBuffer, 0, $uniform8);
 
+        ($entries3[0].resource as GPUBufferBinding).buffer = eraseUniformBuffer;
+        $entries3[1].resource = eraseSampler;
+        $entries3[2].resource = sourceAttachment.texture!.view;
         const eraseBindGroup = device.createBindGroup({
             "layout": eraseBindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": eraseUniformBuffer } },
-                { "binding": 1, "resource": eraseSampler },
-                { "binding": 2, "resource": sourceAttachment.texture!.view }
-            ]
+            "entries": $entries3
         });
 
         const erasePassDescriptor = frameBufferManager.createRenderPassDescriptor(
@@ -184,22 +211,26 @@ export const execute = (
     const [hr, hg, hb, ha] = intToRGBA(highlightColor, highlightAlpha);
     const [sr, sg, sb, sa] = intToRGBA(shadowColor, shadowAlpha);
 
-    const uniformData = new Float32Array([
-        hr, hg, hb, ha,
-        sr, sg, sb, sa,
-        strength,
-        isInner ? 1.0 : 0.0,
-        knockout ? 1.0 : 0.0,
-        type
-    ]);
+    $uniform12[0] = hr;
+    $uniform12[1] = hg;
+    $uniform12[2] = hb;
+    $uniform12[3] = ha;
+    $uniform12[4] = sr;
+    $uniform12[5] = sg;
+    $uniform12[6] = sb;
+    $uniform12[7] = sa;
+    $uniform12[8] = strength;
+    $uniform12[9] = isInner ? 1.0 : 0.0;
+    $uniform12[10] = knockout ? 1.0 : 0.0;
+    $uniform12[11] = type;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        ? config.bufferManager.acquireUniformBuffer($uniform12.byteLength)
         : device.createBuffer({
-            "size": uniformData.byteLength,
+            "size": $uniform12.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
 
     // 元テクスチャを適切な位置にコピーした一時テクスチャを作成
     const baseTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
@@ -256,14 +287,13 @@ export const execute = (
     }
 
     // バインドグループを作成（4バインディング: uniform, sampler, blur, base）
+    ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries4[1].resource = sampler;
+    $entries4[2].resource = blurTextureForComposite.texture!.view;
+    $entries4[3].resource = baseTextureForComposite.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": blurTextureForComposite.texture!.view },
-            { "binding": 3, "resource": baseTextureForComposite.texture!.view }
-        ]
+        "entries": $entries4
     });
 
     // レンダーパスを実行

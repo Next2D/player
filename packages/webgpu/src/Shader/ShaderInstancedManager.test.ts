@@ -20,50 +20,11 @@ describe("ShaderInstancedManager", () =>
 
     describe("constructor", () =>
     {
-        it("should create instance with pipeline name", () =>
-        {
-            const manager = new ShaderInstancedManager("testPipeline");
-
-            expect(manager.pipelineName).toBe("testPipeline");
-        });
-
-        it("should set isAtlas to true by default", () =>
-        {
-            const manager = new ShaderInstancedManager("testPipeline");
-
-            expect(manager.isAtlas).toBe(true);
-        });
-
-        it("should allow setting isAtlas to false", () =>
-        {
-            const manager = new ShaderInstancedManager("testPipeline", false);
-
-            expect(manager.isAtlas).toBe(false);
-        });
-
         it("should initialize count to 0", () =>
         {
-            const manager = new ShaderInstancedManager("testPipeline");
+            const manager = new ShaderInstancedManager();
 
             expect(manager.count).toBe(0);
-        });
-    });
-
-    describe("pipelineName", () =>
-    {
-        it("should be readonly", () =>
-        {
-            const manager = new ShaderInstancedManager("myPipeline");
-
-            expect(manager.pipelineName).toBe("myPipeline");
-        });
-
-        it("should preserve the exact name given", () =>
-        {
-            const name = "fill_gradient_atlas";
-            const manager = new ShaderInstancedManager(name);
-
-            expect(manager.pipelineName).toBe(name);
         });
     });
 
@@ -71,7 +32,7 @@ describe("ShaderInstancedManager", () =>
     {
         it("should be mutable", () =>
         {
-            const manager = new ShaderInstancedManager("testPipeline");
+            const manager = new ShaderInstancedManager();
 
             manager.count = 10;
             expect(manager.count).toBe(10);
@@ -85,7 +46,7 @@ describe("ShaderInstancedManager", () =>
     {
         it("should reset count to 0", () =>
         {
-            const manager = new ShaderInstancedManager("testPipeline");
+            const manager = new ShaderInstancedManager();
             manager.count = 50;
 
             manager.clear();
@@ -95,7 +56,7 @@ describe("ShaderInstancedManager", () =>
 
         it("should reset renderQueue offset to 0", () =>
         {
-            const manager = new ShaderInstancedManager("testPipeline");
+            const manager = new ShaderInstancedManager();
             (renderQueue as any).offset = 100;
 
             manager.clear();
@@ -105,7 +66,7 @@ describe("ShaderInstancedManager", () =>
 
         it("should reset both count and offset simultaneously", () =>
         {
-            const manager = new ShaderInstancedManager("testPipeline");
+            const manager = new ShaderInstancedManager();
             manager.count = 25;
             (renderQueue as any).offset = 50;
 

@@ -3,6 +3,21 @@ import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { ShaderSource } from "../../Shader/ShaderSource";
 
 /**
+ * @description プリアロケートされたFloat32Array (サイズ12: 最大48バイト)
+ */
+const $uniform12 = new Float32Array(12);
+
+/**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング4つ)
+ */
+const $entries4: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView },
+    { "binding": 3, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ）
  */
 const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
@@ -13,26 +28,15 @@ const intToRGBA = (color: number, alpha: number): [number, number, number, numbe
 };
 
 /**
+ * @description パイプラインキャッシュ（キー: componentX,componentY,mode）
+ */
+const $pipelineCache = new Map<string, {
+    pipeline: GPURenderPipeline;
+    bindGroupLayout: GPUBindGroupLayout;
+}>();
+
+/**
  * @description ディスプレイスメントマップフィルターを適用
- *              Apply displacement map filter
- *
- * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
- * @param  {Float32Array} matrix - 変換行列
- * @param  {Uint8Array} bitmapBuffer - マップビットマップデータ
- * @param  {number} bitmapWidth - マップビットマップ幅
- * @param  {number} bitmapHeight - マップビットマップ高さ
- * @param  {number} mapPointX - マップポイントX
- * @param  {number} mapPointY - マップポイントY
- * @param  {number} componentX - X方向コンポーネント (1=RED, 2=GREEN, 4=BLUE, 8=ALPHA)
- * @param  {number} componentY - Y方向コンポーネント
- * @param  {number} scaleX - X方向スケール
- * @param  {number} scaleY - Y方向スケール
- * @param  {number} mode - モード (0=clamp, 1=color, 2=wrap, 3=ignore)
- * @param  {number} color - 置換色
- * @param  {number} alpha - 置換アルファ
- * @param  {number} devicePixelRatio - デバイスピクセル比
- * @param  {IDisplacementMapConfig} config - WebGPUリソース設定
- * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
     sourceAttachment: IAttachmentObject,
@@ -78,139 +82,135 @@ export const execute = (
         { "width": bitmapWidth, "height": bitmapHeight }
     );
 
-    // 動的にシェーダーを生成
-    const fragmentShaderCode = ShaderSource.getDisplacementMapFilterFragmentShader(
-        componentX, componentY, mode
-    );
+    // パイプラインをキャッシュから取得または作成
+    const cacheKey = `${componentX},${componentY},${mode}`;
+    let cached = $pipelineCache.get(cacheKey);
+    if (!cached) {
+        const fragmentShaderCode = ShaderSource.getDisplacementMapFilterFragmentShader(
+            componentX, componentY, mode
+        );
 
-    const vertexShaderModule = device.createShaderModule({
-        "code": ShaderSource.getBlurFilterVertexShader()
-    });
+        const vertexShaderModule = device.createShaderModule({
+            "code": ShaderSource.getBlurFilterVertexShader()
+        });
 
-    const fragmentShaderModule = device.createShaderModule({
-        "code": fragmentShaderCode
-    });
+        const fragmentShaderModule = device.createShaderModule({
+            "code": fragmentShaderCode
+        });
 
-    // バインドグループレイアウトを作成
-    const bindGroupLayout = device.createBindGroupLayout({
-        "entries": [
-            {
-                "binding": 0,
-                "visibility": GPUShaderStage.FRAGMENT,
-                "buffer": { "type": "uniform" }
-            },
-            {
-                "binding": 1,
-                "visibility": GPUShaderStage.FRAGMENT,
-                "sampler": {}
-            },
-            {
-                "binding": 2,
-                "visibility": GPUShaderStage.FRAGMENT,
-                "texture": {}
-            },
-            {
-                "binding": 3,
-                "visibility": GPUShaderStage.FRAGMENT,
-                "texture": {}
-            }
-        ]
-    });
-
-    const pipelineLayout = device.createPipelineLayout({
-        "bindGroupLayouts": [bindGroupLayout]
-    });
-
-    // パイプラインを作成
-    const pipeline = device.createRenderPipeline({
-        "layout": pipelineLayout,
-        "vertex": {
-            "module": vertexShaderModule,
-            "entryPoint": "main",
-            "buffers": []
-        },
-        "fragment": {
-            "module": fragmentShaderModule,
-            "entryPoint": "main",
-            "targets": [{
-                "format": "rgba8unorm",
-                "blend": {
-                    "color": {
-                        "srcFactor": "one",
-                        "dstFactor": "one-minus-src-alpha",
-                        "operation": "add"
-                    },
-                    "alpha": {
-                        "srcFactor": "one",
-                        "dstFactor": "one-minus-src-alpha",
-                        "operation": "add"
-                    }
+        const bindGroupLayout = device.createBindGroupLayout({
+            "entries": [
+                {
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
+                },
+                {
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
+                },
+                {
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
+                },
+                {
+                    "binding": 3,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
-            }]
-        },
-        "primitive": {
-            "topology": "triangle-list",
-            "cullMode": "none"
-        }
-    });
+            ]
+        });
+
+        const pipelineLayout = device.createPipelineLayout({
+            "bindGroupLayouts": [bindGroupLayout]
+        });
+
+        const pipeline = device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexShaderModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": fragmentShaderModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            }
+        });
+
+        cached = { pipeline, bindGroupLayout };
+        $pipelineCache.set(cacheKey, cached);
+    }
 
     // サンプラーを作成
     const sampler = textureManager.createSampler("displacement_sampler", true);
 
     // ユニフォームバッファを作成
-    // uvToStScale: vec2<f32> (8 bytes)
-    // uvToStOffset: vec2<f32> (8 bytes)
-    // scale: vec2<f32> (8 bytes)
-    // padding: vec2<f32> (8 bytes)
-    // substituteColor: vec4<f32> (16 bytes) - mode === 1 の場合のみ
-    // Total: 32 or 48 bytes
     const needsSubstituteColor = mode === 1;
     const uniformSize = needsSubstituteColor ? 48 : 32;
-    const uniformData = new Float32Array(uniformSize / 4);
 
     // uvToStScale
-    uniformData[0] = baseWidth / bitmapWidth;
-    uniformData[1] = baseHeight / bitmapHeight;
+    $uniform12[0] = baseWidth / bitmapWidth;
+    $uniform12[1] = baseHeight / bitmapHeight;
 
     // uvToStOffset
-    uniformData[2] = mapPointX / bitmapWidth;
-    uniformData[3] = (baseHeight - bitmapHeight - mapPointY) / bitmapHeight;
+    $uniform12[2] = mapPointX / bitmapWidth;
+    $uniform12[3] = (baseHeight - bitmapHeight - mapPointY) / bitmapHeight;
 
     // scale
-    // WebGPU: Y-flip補正後のtexCoordはY方向がWebGLと逆なので、scale.yの符号を反転
-    uniformData[4] = scaleX / baseWidth;
-    uniformData[5] = scaleY / baseHeight;
+    $uniform12[4] = scaleX / baseWidth;
+    $uniform12[5] = scaleY / baseHeight;
 
     // padding
-    uniformData[6] = 0;
-    uniformData[7] = 0;
+    $uniform12[6] = 0;
+    $uniform12[7] = 0;
 
     // substituteColor (mode === 1 の場合)
     if (needsSubstituteColor) {
         const [r, g, b, a] = intToRGBA(color, alpha);
-        uniformData[8] = r;
-        uniformData[9] = g;
-        uniformData[10] = b;
-        uniformData[11] = a;
+        $uniform12[8] = r;
+        $uniform12[9] = g;
+        $uniform12[10] = b;
+        $uniform12[11] = a;
     }
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        ? config.bufferManager.acquireUniformBuffer(uniformSize)
         : device.createBuffer({
-            "size": uniformData.byteLength,
+            "size": uniformSize,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform12, 0, uniformSize / 4);
 
     // バインドグループを作成
+    ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries4[1].resource = sampler;
+    $entries4[2].resource = sourceAttachment.texture!.view;
+    $entries4[3].resource = mapTexture.createView();
     const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": sourceAttachment.texture!.view },
-            { "binding": 3, "resource": mapTexture.createView() }
-        ]
+        "layout": cached.bindGroupLayout,
+        "entries": $entries4
     });
 
     // レンダーパスを実行
@@ -219,13 +219,10 @@ export const execute = (
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-    passEncoder.setPipeline(pipeline);
+    passEncoder.setPipeline(cached.pipeline);
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
-    // Note: mapTexture is not destroyed here - it will be garbage collected after GPU submission
 
     return destAttachment;
 };

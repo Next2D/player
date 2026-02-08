@@ -7,10 +7,19 @@ import { getComplexBlendQueue, clearComplexBlendQueue } from "../../Blend/BlendI
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
-/**
- * @description レンダーパスベースでテクスチャ領域をコピー
- *              Copy texture region using render pass (for format conversion)
- */
+// プリアロケート配列
+const $uniform4 = new Float32Array(4);
+const $uniform6 = new Float32Array(6);
+const $uniform8 = new Float32Array(8);
+const $uniform12 = new Float32Array(12);
+
+// プリアロケート BindGroup Entry 配列
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
 const copyTextureRegionViaRenderPass = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,
@@ -34,24 +43,21 @@ const copyTextureRegionViaRenderPass = (
         return;
     }
 
-    const scaleX = copyWidth / srcWidth;
-    const scaleY = copyHeight / srcHeight;
-    const offsetX = srcX / srcWidth;
-    const offsetY = srcY / srcHeight;
-
-    const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
+    $uniform4[0] = copyWidth / srcWidth;
+    $uniform4[1] = copyHeight / srcHeight;
+    $uniform4[2] = srcX / srcWidth;
+    $uniform4[3] = srcY / srcHeight;
     const uniformBuffer = bufferManager.acquireUniformBuffer(16);
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
 
     const sampler = textureManager.createSampler("complex_blend_copy_sampler", false);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = srcView;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": srcView }
-        ]
+        "entries": $entries3
     });
 
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
@@ -92,24 +98,25 @@ const drawToMainAttachment = (
         return;
     }
 
-    const uniformData = new Float32Array([
-        dstX, dstY,
-        srcAttachment.width, srcAttachment.height,
-        mainAttachment.width, mainAttachment.height,
-        0, 0
-    ]);
+    $uniform8[0] = dstX;
+    $uniform8[1] = dstY;
+    $uniform8[2] = srcAttachment.width;
+    $uniform8[3] = srcAttachment.height;
+    $uniform8[4] = mainAttachment.width;
+    $uniform8[5] = mainAttachment.height;
+    $uniform8[6] = 0;
+    $uniform8[7] = 0;
     const uniformBuffer = bufferManager.acquireUniformBuffer(32);
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
 
     const sampler = textureManager.createSampler("complex_blend_output_sampler", false);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = srcAttachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": srcAttachment.texture!.view }
-        ]
+        "entries": $entries3
     });
 
     const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
@@ -201,12 +208,12 @@ export const execute = (
                 const halfNodeW = node.w / 2;
                 const halfNodeH = node.h / 2;
 
-                const tMatrix = new Float32Array([
-                    matrix[0], matrix[1],
-                    matrix[3], matrix[4],
-                    -halfNodeW * matrix[0] - halfNodeH * matrix[3] + halfW,
-                    -halfNodeW * matrix[1] - halfNodeH * matrix[4] + halfH
-                ]);
+                $uniform6[0] = matrix[0];
+                $uniform6[1] = matrix[1];
+                $uniform6[2] = matrix[3];
+                $uniform6[3] = matrix[4];
+                $uniform6[4] = -halfNodeW * matrix[0] - halfNodeH * matrix[3] + halfW;
+                $uniform6[5] = -halfNodeW * matrix[1] - halfNodeH * matrix[4] + halfH;
 
                 const originalAttachment = frameBufferManager.createTemporaryAttachment(node.w, node.h);
                 commandEncoder.copyTextureToTexture(
@@ -221,23 +228,28 @@ export const execute = (
                     { "width": node.w, "height": node.h }
                 );
 
-                const uniformData = new Float32Array([
-                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
-                    node.w, node.h,
-                    blendWidth, blendHeight,
-                    0, 0
-                ]);
+                $uniform12[0] = $uniform6[0];
+                $uniform12[1] = $uniform6[1];
+                $uniform12[2] = $uniform6[2];
+                $uniform12[3] = $uniform6[3];
+                $uniform12[4] = $uniform6[4];
+                $uniform12[5] = $uniform6[5];
+                $uniform12[6] = node.w;
+                $uniform12[7] = node.h;
+                $uniform12[8] = blendWidth;
+                $uniform12[9] = blendHeight;
+                $uniform12[10] = 0;
+                $uniform12[11] = 0;
                 const uniformBuffer = bufferManager.acquireUniformBuffer(48);
-                device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+                device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
 
                 const sampler = textureManager.createSampler("scale_sampler", true);
+                ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+                $entries3[1].resource = sampler;
+                $entries3[2].resource = originalAttachment.texture!.view;
                 const bindGroup = device.createBindGroup({
                     "layout": scaleBindGroupLayout,
-                    "entries": [
-                        { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                        { "binding": 1, "resource": sampler },
-                        { "binding": 2, "resource": originalAttachment.texture!.view }
-                    ]
+                    "entries": $entries3
                 });
 
                 const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
@@ -301,24 +313,22 @@ export const execute = (
             bufferManager
         );
 
-        // 3. カラートランスフォームを準備（add値は生値、WebGL版と同じ）
-        const ct = new Float32Array([
-            color_transform[0],
-            color_transform[1],
-            color_transform[2],
-            global_alpha,
-            color_transform[4],
-            color_transform[5],
-            color_transform[6],
-            0
-        ]);
+        // 3. カラートランスフォームを準備（add値は生値）
+        $uniform8[0] = color_transform[0];
+        $uniform8[1] = color_transform[1];
+        $uniform8[2] = color_transform[2];
+        $uniform8[3] = global_alpha;
+        $uniform8[4] = color_transform[4];
+        $uniform8[5] = color_transform[5];
+        $uniform8[6] = color_transform[6];
+        $uniform8[7] = 0;
 
         // 4. 複雑なブレンドを適用
         const blendedAttachment = blendApplyComplexBlendUseCase(
             srcAttachment,
             dstAttachment,
             blend_mode,
-            ct,
+            $uniform8,
             {
                 device,
                 commandEncoder,

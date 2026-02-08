@@ -26,8 +26,8 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
 
         expect(renderQueue.buffer[0]).toBe(1);
         expect(renderQueue.buffer[1]).toBe($RENDERER_CONTAINER_TYPE);
-        expect(renderQueue.buffer[2]).toBe(0);
-        expect(renderQueue.buffer[3]).toBe(11); // normal blendMode
+        expect(renderQueue.buffer[2]).toBe(11);
+        expect(renderQueue.buffer[3]).toBe(0); // normal blendMode
         expect(renderQueue.buffer[4]).toBe(0);
         expect(renderQueue.buffer[5]).toBe(movieClip.children.length);
         expect(renderQueue.buffer[6]).toBe(-1);

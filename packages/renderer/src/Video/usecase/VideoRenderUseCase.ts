@@ -62,7 +62,6 @@ export const execute = (
             $cacheStore.set(uniqueKey, `${cacheKey}`, node);
         }
 
-
         if (image_bitmaps && image_bitmaps.length) {
 
             // fixed logic
@@ -90,7 +89,6 @@ export const execute = (
             if (currentAttachment) {
                 $context.bind(currentAttachment as any);
             }
-        } else {
         }
     } else {
         node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;

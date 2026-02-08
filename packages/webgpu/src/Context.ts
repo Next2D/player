@@ -80,6 +80,42 @@ import { execute as contextContainerEndLayerUseCase } from "./Context/usecase/Co
 const $IDENTITY_UV = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
 /**
+ * @description save()/restore()用の Float32Array プール
+ */
+const $matrixPool: Float32Array[] = [];
+
+/**
+ * @description leaveMask() 用フルスクリーンメッシュ定数
+ */
+const $FULLSCREEN_MESH = new Float32Array([
+    // Triangle 1: (0,0), (1,0), (0,1)
+    0, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+    1, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+    0, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+    // Triangle 2: (1,0), (1,1), (0,1)
+    1, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+    1, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+    0, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1
+]);
+
+/**
+ * @description clearNodeArea() 用クワッド頂点定数
+ */
+const $QUAD_VERTICES = new Float32Array([
+    0, 0,  // 左上
+    1, 0,  // 右上
+    0, 1,  // 左下
+    1, 0,  // 右上
+    1, 1,  // 右下
+    0, 1   // 左下
+]);
+
+/**
+ * @description containerDrawCachedFilter() 用 CT uniform プリアロケート
+ */
+const $ctUniform8 = new Float32Array(8);
+
+/**
  * @description WebGPU版、Next2Dのコンテキスト
  *              WebGPU version, Next2D context
  *
@@ -361,7 +397,7 @@ export class Context
         for (const texture of this.frameTextures) {
             texture.destroy();
         }
-        this.frameTextures = [];
+        this.frameTextures.length = 0;
 
         // フレーム状態をリセット（リサイズ中は新しいフレームを開始できるようにする）
         this.frameStarted = false;
@@ -473,20 +509,20 @@ export class Context
      */
     save (): void
     {
-        const matrix = new Float32Array(9);
+        const matrix = $matrixPool.length > 0 ? $matrixPool.pop()! : new Float32Array(9);
         matrix.set(this.$matrix);
         this.$stack.push(matrix);
     }
 
     /**
      * @description 2D変換行列を復元
-     * @return {void}
      */
     restore (): void
     {
         const matrix = this.$stack.pop();
         if (matrix) {
             this.$matrix.set(matrix);
+            $matrixPool.push(matrix);
         }
     }
 
@@ -2265,21 +2301,10 @@ export class Context
             return;
         }
 
-        // フルスクリーンクワッド用の頂点データ（0-1空間）
-        // シェーダーで NDC (-1 to 1) に変換される
-        const quadVertices = new Float32Array([
-            0, 0,  // 左上
-            1, 0,  // 右上
-            0, 1,  // 左下
-            1, 0,  // 右上
-            1, 1,  // 右下
-            0, 1   // 左下
-        ]);
-
-        // 頂点バッファを作成
+        // 頂点バッファを作成（定数化済みクワッド頂点）
         const vertexBuffer = this.bufferManager.createVertexBuffer(
             "node_clear_quad",
-            quadVertices
+            $QUAD_VERTICES
         );
 
         // クリア描画を実行（シザーは+1pxで設定済み）
@@ -3260,24 +3285,21 @@ export class Context
             && color_transform[4] === 0 && color_transform[5] === 0
             && color_transform[6] === 0 && color_transform[7] === 0;
         if (!isIdentityCt) {
-            const ctConfig = {
-                "device": this.device,
-                "commandEncoder": this.commandEncoder!,
-                "bufferManager": this.bufferManager,
-                "frameBufferManager": this.frameBufferManager,
-                "pipelineManager": this.pipelineManager,
-                "textureManager": this.textureManager
-            };
             ctAttachment = this.frameBufferManager.createTemporaryAttachment(
                 cachedAttachment.width, cachedAttachment.height
             );
             const ctPipeline = this.pipelineManager.getPipeline("color_transform");
             const ctBindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
             if (ctPipeline && ctBindGroupLayout && ctAttachment.texture) {
-                const ctUniformData = new Float32Array([
-                    color_transform[0], color_transform[1], color_transform[2], color_transform[3],
-                    color_transform[4], color_transform[5], color_transform[6], 0
-                ]);
+                $ctUniform8[0] = color_transform[0];
+                $ctUniform8[1] = color_transform[1];
+                $ctUniform8[2] = color_transform[2];
+                $ctUniform8[3] = color_transform[3];
+                $ctUniform8[4] = color_transform[4];
+                $ctUniform8[5] = color_transform[5];
+                $ctUniform8[6] = color_transform[6];
+                $ctUniform8[7] = 0;
+                const ctUniformData = $ctUniform8;
                 const ctUniformBuffer = this.bufferManager.acquireUniformBuffer(32);
                 this.device.queue.writeBuffer(ctUniformBuffer, 0, ctUniformData);
                 const ctSampler = this.textureManager.createSampler("cached_ct_sampler", false);
@@ -3500,7 +3522,7 @@ export class Context
         for (const texture of this.frameTextures) {
             texture.destroy();
         }
-        this.frameTextures = [];
+        this.frameTextures.length = 0;
 
         // 次のフレーム用にクリア
         this.commandEncoder = null;
@@ -3945,17 +3967,7 @@ export class Context
                 // 17-float vertex buffer format for clip pipelines
                 // Format: position(2) + bezier(2) + color(4) + matrix(9) = 17 floats
                 // Matrix is identity: row0=(1,0,0), row1=(0,1,0), row2=(0,0,1)
-                const fullScreenMesh = new Float32Array([
-                    // Triangle 1: (0,0), (1,0), (0,1)
-                    0, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                    1, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                    0, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                    // Triangle 2: (1,0), (1,1), (0,1)
-                    1, 0, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                    1, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
-                    0, 1, 0.5, 0.5, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1
-                ]);
-                const meshBuffer = this.bufferManager.acquireVertexBuffer(fullScreenMesh.byteLength, fullScreenMesh);
+                const meshBuffer = this.bufferManager.acquireVertexBuffer($FULLSCREEN_MESH.byteLength, $FULLSCREEN_MESH);
 
                 passEncoder.setPipeline(pipeline);
                 passEncoder.setStencilReference(0); // 参照値0でREPLACE

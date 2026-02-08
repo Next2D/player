@@ -3,6 +3,15 @@ import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { ShaderSource } from "../../Shader/ShaderSource";
 
 /**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
+ */
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description 32bit整数からRGB値を抽出
  */
 const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
@@ -13,21 +22,15 @@ const intToRGBA = (color: number, alpha: number): [number, number, number, numbe
 };
 
 /**
+ * @description パイプラインキャッシュ（キー: matrixX,matrixY,preserveAlpha,clamp）
+ */
+const $pipelineCache = new Map<string, {
+    pipeline: GPURenderPipeline;
+    bindGroupLayout: GPUBindGroupLayout;
+}>();
+
+/**
  * @description コンボリューションフィルターを適用
- *              Apply convolution filter
- *
- * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
- * @param  {number} matrixX - 行列のX方向サイズ
- * @param  {number} matrixY - 行列のY方向サイズ
- * @param  {Float32Array} matrix - 畳み込み行列
- * @param  {number} divisor - 除数
- * @param  {number} bias - バイアス
- * @param  {boolean} preserveAlpha - アルファを保持するか
- * @param  {boolean} clamp - 範囲外をクランプするか
- * @param  {number} color - 範囲外の色
- * @param  {number} alpha - 範囲外のアルファ
- * @param  {IConvolutionConfig} config - WebGPUリソース設定
- * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
     sourceAttachment: IAttachmentObject,
@@ -51,88 +54,82 @@ export const execute = (
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
-    // 動的にシェーダーを生成
-    // ConvolutionFilterシェーダーはvertex(vs_main)とfragment(fs_main)の両方を含む
-    const shaderCode = ShaderSource.getConvolutionFilterFragmentShader(
-        matrixX, matrixY, preserveAlpha, clamp
-    );
+    // パイプラインをキャッシュから取得または作成
+    const cacheKey = `${matrixX},${matrixY},${preserveAlpha},${clamp}`;
+    let cached = $pipelineCache.get(cacheKey);
+    if (!cached) {
+        const shaderCode = ShaderSource.getConvolutionFilterFragmentShader(
+            matrixX, matrixY, preserveAlpha, clamp
+        );
 
-    const shaderModule = device.createShaderModule({
-        "code": shaderCode
-    });
+        const shaderModule = device.createShaderModule({ "code": shaderCode });
 
-    // マトリクスサイズを計算
-    const matrixSize = matrixX * matrixY;
-    const matrixArraySize = Math.ceil(matrixSize / 4);
-
-    // バインドグループレイアウトを作成
-    const bindGroupLayout = device.createBindGroupLayout({
-        "entries": [
-            {
-                "binding": 0,
-                "visibility": GPUShaderStage.FRAGMENT,
-                "buffer": { "type": "uniform" }
-            },
-            {
-                "binding": 1,
-                "visibility": GPUShaderStage.FRAGMENT,
-                "sampler": {}
-            },
-            {
-                "binding": 2,
-                "visibility": GPUShaderStage.FRAGMENT,
-                "texture": {}
-            }
-        ]
-    });
-
-    const pipelineLayout = device.createPipelineLayout({
-        "bindGroupLayouts": [bindGroupLayout]
-    });
-
-    // パイプラインを作成
-    const pipeline = device.createRenderPipeline({
-        "layout": pipelineLayout,
-        "vertex": {
-            "module": shaderModule,
-            "entryPoint": "vs_main",
-            "buffers": []
-        },
-        "fragment": {
-            "module": shaderModule,
-            "entryPoint": "fs_main",
-            "targets": [{
-                "format": "rgba8unorm",
-                "blend": {
-                    "color": {
-                        "srcFactor": "one",
-                        "dstFactor": "one-minus-src-alpha",
-                        "operation": "add"
-                    },
-                    "alpha": {
-                        "srcFactor": "one",
-                        "dstFactor": "one-minus-src-alpha",
-                        "operation": "add"
-                    }
+        const bindGroupLayout = device.createBindGroupLayout({
+            "entries": [
+                {
+                    "binding": 0,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform" }
+                },
+                {
+                    "binding": 1,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "sampler": {}
+                },
+                {
+                    "binding": 2,
+                    "visibility": GPUShaderStage.FRAGMENT,
+                    "texture": {}
                 }
-            }]
-        },
-        "primitive": {
-            "topology": "triangle-list",
-            "cullMode": "none"
-        }
-    });
+            ]
+        });
+
+        const pipelineLayout = device.createPipelineLayout({
+            "bindGroupLayouts": [bindGroupLayout]
+        });
+
+        const pipeline = device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": shaderModule,
+                "entryPoint": "vs_main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": shaderModule,
+                "entryPoint": "fs_main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        },
+                        "alpha": {
+                            "srcFactor": "one",
+                            "dstFactor": "one-minus-src-alpha",
+                            "operation": "add"
+                        }
+                    }
+                }]
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            }
+        });
+
+        cached = { pipeline, bindGroupLayout };
+        $pipelineCache.set(cacheKey, cached);
+    }
 
     // サンプラーを作成
     const sampler = textureManager.createSampler("convolution_sampler", true);
 
     // ユニフォームバッファを作成
-    // rcpSize: vec2<f32> (8 bytes)
-    // rcpDivisor: f32 (4 bytes)
-    // bias: f32 (4 bytes)
-    // substituteColor: vec4<f32> (16 bytes)
-    // matrix: array<vec4<f32>, N> (N * 16 bytes)
-    // Total: 32 + N * 16 bytes (16-byte alignment)
+    const matrixSize = matrixX * matrixY;
+    const matrixArraySize = Math.ceil(matrixSize / 4);
     const [r, g, b, a] = intToRGBA(color, alpha);
 
     // マトリクスを4要素ごとにまとめる
@@ -165,13 +162,12 @@ export const execute = (
     device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
     // バインドグループを作成
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = sourceAttachment.texture!.view;
     const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": sourceAttachment.texture!.view }
-        ]
+        "layout": cached.bindGroupLayout,
+        "entries": $entries3
     });
 
     // レンダーパスを実行
@@ -180,12 +176,10 @@ export const execute = (
     );
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-    passEncoder.setPipeline(pipeline);
+    passEncoder.setPipeline(cached.pipeline);
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 
     return destAttachment;
 };

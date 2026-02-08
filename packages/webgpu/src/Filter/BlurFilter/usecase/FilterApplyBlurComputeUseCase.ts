@@ -10,6 +10,20 @@ import {
 import { execute as executeFragmentBlur } from "../FilterApplyBlurFilterUseCase";
 
 /**
+ * @description プリアロケートされたFloat32Array (サイズ4)
+ */
+const $uniform4 = new Float32Array(4);
+
+/**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
+ */
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description Compute Shaderを使用したブラーフィルター
  *              Apply blur filter using Compute Shader
  *
@@ -179,22 +193,24 @@ const copyTextureToAttachment = (
     const scaledSourceWidth = source.width * bufferScaleX;
     const scaledSourceHeight = source.height * bufferScaleY;
 
-    const uniformData = new Float32Array([1, 1, 0, 0]);
+    $uniform4[0] = 1;
+    $uniform4[1] = 1;
+    $uniform4[2] = 0;
+    $uniform4[3] = 0;
     const uniformBuffer = bufferManager
-        ? bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        ? bufferManager.acquireUniformBuffer($uniform4.byteLength)
         : device.createBuffer({
-            "size": uniformData.byteLength,
+            "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = source.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": source.texture!.view }
-        ]
+        "entries": $entries3
     });
 
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
@@ -240,22 +256,24 @@ const upscaleTexture = (
         return;
     }
 
-    const uniformData = new Float32Array([1, 1, 0, 0]);
+    $uniform4[0] = 1;
+    $uniform4[1] = 1;
+    $uniform4[2] = 0;
+    $uniform4[3] = 0;
     const uniformBuffer = bufferManager
-        ? bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        ? bufferManager.acquireUniformBuffer($uniform4.byteLength)
         : device.createBuffer({
-            "size": uniformData.byteLength,
+            "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = source.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": source.texture!.view }
-        ]
+        "entries": $entries3
     });
 
     const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(

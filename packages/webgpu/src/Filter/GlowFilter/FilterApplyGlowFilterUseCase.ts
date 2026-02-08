@@ -4,6 +4,21 @@ import { $offset } from "../FilterOffset";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 
 /**
+ * @description プリアロケートされたFloat32Array (サイズ8)
+ */
+const $uniform8 = new Float32Array(8);
+
+/**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング4つ)
+ */
+const $entries4: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView },
+    { "binding": 3, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
  */
 const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
@@ -97,21 +112,22 @@ export const execute = (
     // _padding: f32 (4 bytes)
     // Total: 32 bytes
     const [r, g, b, a] = intToRGBA(color, alpha);
-    const uniformData = new Float32Array([
-        r, g, b, a,
-        strength,
-        inner ? 1.0 : 0.0,
-        knockout ? 1.0 : 0.0,
-        0.0 // padding
-    ]);
+    $uniform8[0] = r;
+    $uniform8[1] = g;
+    $uniform8[2] = b;
+    $uniform8[3] = a;
+    $uniform8[4] = strength;
+    $uniform8[5] = inner ? 1.0 : 0.0;
+    $uniform8[6] = knockout ? 1.0 : 0.0;
+    $uniform8[7] = 0.0;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        ? config.bufferManager.acquireUniformBuffer($uniform8.byteLength)
         : device.createBuffer({
-            "size": uniformData.byteLength,
+            "size": $uniform8.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
 
     // 元テクスチャを適切な位置にコピーした一時テクスチャを作成
     const baseTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
@@ -170,14 +186,13 @@ export const execute = (
     }
 
     // バインドグループを作成
+    ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries4[1].resource = sampler;
+    $entries4[2].resource = blurTextureForComposite.texture!.view;
+    $entries4[3].resource = baseTextureForComposite.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": blurTextureForComposite.texture!.view },
-            { "binding": 3, "resource": baseTextureForComposite.texture!.view }
-        ]
+        "entries": $entries4
     });
 
     // レンダーパスを実行

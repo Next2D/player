@@ -114,7 +114,7 @@ describe("FilterApplyConvolutionFilterUseCase", () =>
             expect(config.frameBufferManager.createTemporaryAttachment).toHaveBeenCalledWith(200, 150);
         });
 
-        it("should create shader modules", () =>
+        it("should create shader modules on first call (cached on subsequent)", () =>
         {
             const sourceAttachment = createMockAttachment();
             const matrix = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
@@ -125,7 +125,7 @@ describe("FilterApplyConvolutionFilterUseCase", () =>
                 3, 3,
                 matrix,
                 1, 0,
-                true, true,
+                true, false,  // unique: clamp=false
                 0x000000, 1.0,
                 config
             );
@@ -134,7 +134,7 @@ describe("FilterApplyConvolutionFilterUseCase", () =>
             expect(config.device.createShaderModule).toHaveBeenCalledTimes(1);
         });
 
-        it("should create bind group layout", () =>
+        it("should create bind group layout on first call (cached on subsequent)", () =>
         {
             const sourceAttachment = createMockAttachment();
             const matrix = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
@@ -142,7 +142,7 @@ describe("FilterApplyConvolutionFilterUseCase", () =>
 
             execute(
                 sourceAttachment,
-                3, 3,
+                5, 5,  // unique: matrixX=5, matrixY=5
                 matrix,
                 1, 0,
                 true, true,
@@ -161,7 +161,7 @@ describe("FilterApplyConvolutionFilterUseCase", () =>
             );
         });
 
-        it("should create render pipeline", () =>
+        it("should create render pipeline on first call (cached on subsequent)", () =>
         {
             const sourceAttachment = createMockAttachment();
             const matrix = new Float32Array([0, -1, 0, -1, 5, -1, 0, -1, 0]);
@@ -169,10 +169,10 @@ describe("FilterApplyConvolutionFilterUseCase", () =>
 
             execute(
                 sourceAttachment,
-                3, 3,
+                7, 7,  // unique: matrixX=7, matrixY=7
                 matrix,
                 1, 0,
-                true, true,
+                false, true,  // unique: preserveAlpha=false
                 0x000000, 1.0,
                 config
             );

@@ -1,17 +1,16 @@
+const $clearValue: GPUColorDict = { "r": 0, "g": 0, "b": 0, "a": 0 };
+const $colorAttachment: GPURenderPassColorAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "clearValue": $clearValue,
+    "loadOp": "clear",
+    "storeOp": "store"
+};
+const $descriptor: GPURenderPassDescriptor = {
+    "colorAttachments": [$colorAttachment]
+};
+
 /**
- * @description レンダーパス記述子を作成
- *              Create render pass descriptor
- *
- * @param  {GPUTextureView} view - テクスチャビュー（MSAAの場合はMSAAテクスチャビュー）
- * @param  {number} r
- * @param  {number} g
- * @param  {number} b
- * @param  {number} a
- * @param  {GPULoadOp} loadOp
- * @param  {GPUTextureView | null} resolveTarget - MSAA解決先テクスチャビュー（MSAAの場合のみ）
- * @return {GPURenderPassDescriptor}
- * @method
- * @protected
+ * @description レンダーパス記述子を作成（プリアロケート再利用）
  */
 export const execute = (
     view: GPUTextureView,
@@ -22,21 +21,12 @@ export const execute = (
     loadOp: GPULoadOp = "clear",
     resolveTarget: GPUTextureView | null = null
 ): GPURenderPassDescriptor => {
-    const colorAttachment: GPURenderPassColorAttachment = {
-        "view": view,
-        "clearValue": { r, g, b, a },
-        "loadOp": loadOp,
-        // MSAAでもstoreOpは"store"を使用（次のレンダーパスでloadするため）
-        // resolveTargetが設定されている場合、resolveは自動的に実行される
-        "storeOp": "store"
-    };
-
-    // MSAAの場合はresolveTargetを設定
-    if (resolveTarget) {
-        colorAttachment.resolveTarget = resolveTarget;
-    }
-
-    return {
-        "colorAttachments": [colorAttachment]
-    };
+    $colorAttachment.view = view;
+    $clearValue.r = r;
+    $clearValue.g = g;
+    $clearValue.b = b;
+    $clearValue.a = a;
+    $colorAttachment.loadOp = loadOp;
+    $colorAttachment.resolveTarget = resolveTarget ?? undefined;
+    return $descriptor;
 };

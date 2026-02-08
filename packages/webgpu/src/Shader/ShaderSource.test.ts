@@ -363,7 +363,8 @@ describe("ShaderSource", () =>
         {
             const shader = ShaderSource.getInstancedFragmentShader();
 
-            expect(shader).toContain("colorTransform");
+            expect(shader).toContain("mulColor");
+            expect(shader).toContain("addColor");
         });
     });
 

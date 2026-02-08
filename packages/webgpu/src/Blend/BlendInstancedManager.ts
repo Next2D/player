@@ -16,7 +16,17 @@ const SIMPLE_BLEND_MODES: ReadonlySet<string> = new Set([
 /**
  * @description 複雑なブレンドモード描画キュー
  */
-let $complexBlendQueue: IComplexBlendItem[] = [];
+const $complexBlendQueue: IComplexBlendItem[] = [];
+
+/**
+ * @description Float32Array(8) プール（color_transform 用）
+ */
+const $ct8Pool: Float32Array[] = [];
+
+/**
+ * @description Float32Array(9) プール（matrix 用）
+ */
+const $m9Pool: Float32Array[] = [];
 
 /**
  * @description 複雑なブレンドモードの描画キューを取得
@@ -33,7 +43,13 @@ export const getComplexBlendQueue = (): IComplexBlendItem[] =>
  */
 export const clearComplexBlendQueue = (): void =>
 {
-    $complexBlendQueue = [];
+    // プールに返却してから配列をクリア
+    for (let i = 0; i < $complexBlendQueue.length; i++) {
+        const item = $complexBlendQueue[i];
+        $ct8Pool.push(item.color_transform as Float32Array);
+        $m9Pool.push(item.matrix as Float32Array);
+    }
+    $complexBlendQueue.length = 0;
 };
 
 /**
@@ -50,7 +66,7 @@ export const getInstancedShaderManager = (): ShaderInstancedManager =>
 {
     const key = "blend_instanced";
     if (!shaderManagers.has(key)) {
-        shaderManagers.set(key, new ShaderInstancedManager("instanced", true));
+        shaderManagers.set(key, new ShaderInstancedManager());
     }
     return shaderManagers.get(key)!;
 };
@@ -139,15 +155,19 @@ export const addDisplayObjectToInstanceArray = (
             $context.drawArraysInstanced();
         }
 
-        // キューに追加して後で処理
+        // キューに追加して後で処理（プールからFloat32Arrayを再利用）
+        const ct = $ct8Pool.length > 0 ? $ct8Pool.pop()! : new Float32Array(8);
+        ct.set(color_transform);
+        const m = $m9Pool.length > 0 ? $m9Pool.pop()! : new Float32Array(9);
+        m.set(matrix);
         $complexBlendQueue.push({
             node,
             x_min,
             y_min,
             x_max,
             y_max,
-            "color_transform": new Float32Array(color_transform),
-            "matrix": new Float32Array(matrix),
+            "color_transform": ct,
+            "matrix": m,
             blend_mode,
             viewport_width,
             viewport_height,

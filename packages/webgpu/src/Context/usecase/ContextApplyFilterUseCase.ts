@@ -19,6 +19,23 @@ import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 
 /**
+ * @description プリアロケートされたユニフォーム配列
+ */
+const $uniform4 = new Float32Array(4);
+const $uniform6a = new Float32Array(6);
+const $uniform6b = new Float32Array(6);
+const $uniform8 = new Float32Array(8);
+const $uniform12 = new Float32Array(12);
+const $uniform20 = new Float32Array(20);
+
+// プリアロケート BindGroup Entry 配列
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description シンプルなブレンドモード
  */
 const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
@@ -69,22 +86,25 @@ const applyColorTransform = (
 
     // uniform: mul(vec4) + add(vec4) = 32 bytes
     // add値は0-255スケールの生値をそのまま渡す（WebGLのフィルターCTパスと同じ）
-    const uniformData = new Float32Array([
-        colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
-        colorTransform[4], colorTransform[5], colorTransform[6], 0
-    ]);
+    $uniform8[0] = colorTransform[0];
+    $uniform8[1] = colorTransform[1];
+    $uniform8[2] = colorTransform[2];
+    $uniform8[3] = colorTransform[3];
+    $uniform8[4] = colorTransform[4];
+    $uniform8[5] = colorTransform[5];
+    $uniform8[6] = colorTransform[6];
+    $uniform8[7] = 0;
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
-    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    config.device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
 
     const sampler = config.textureManager.createSampler("color_transform_sampler", false);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = attachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": attachment.texture.view }
-        ]
+        "entries": $entries3
     });
 
     const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
@@ -191,19 +211,21 @@ const copyMainAttachmentRegion = (
     const offsetX = x / mainAttachment.width;
     const offsetY = y / mainAttachment.height;
 
-    const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
+    $uniform4[0] = scaleX;
+    $uniform4[1] = scaleY;
+    $uniform4[2] = offsetX;
+    $uniform4[3] = offsetY;
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
-    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    config.device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
 
     const sampler = config.textureManager.createSampler("filter_copy_sampler", false);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = mainAttachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": mainAttachment.texture.view }
-        ]
+        "entries": $entries3
     });
 
     const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
@@ -251,24 +273,25 @@ const drawBlendResultToMain = (
     }
 
     // ユニフォームデータ: offset, size, viewport, padding
-    const uniformData = new Float32Array([
-        x, y,                                         // offset (描画位置)
-        srcAttachment.width, srcAttachment.height,    // size (テクスチャサイズ)
-        mainAttachment.width, mainAttachment.height,  // viewport (ビューポートサイズ)
-        0, 0                                          // padding (16バイトアライメント)
-    ]);
+    $uniform8[0] = x;
+    $uniform8[1] = y;
+    $uniform8[2] = srcAttachment.width;
+    $uniform8[3] = srcAttachment.height;
+    $uniform8[4] = mainAttachment.width;
+    $uniform8[5] = mainAttachment.height;
+    $uniform8[6] = 0;
+    $uniform8[7] = 0;
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
-    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    config.device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
 
     const sampler = config.textureManager.createSampler("filter_blend_output_sampler", false);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = srcAttachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": srcAttachment.texture.view }
-        ]
+        "entries": $entries3
     });
 
     // メインアタッチメントへの描画（loadで既存内容を保持）
@@ -386,12 +409,17 @@ const drawFilterToMain = (
                 break;
         }
 
-        const pipeline = config.pipelineManager.getPipeline(pipelineName);
-        const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
+        let pipeline = config.pipelineManager.getPipeline(pipelineName);
+        let bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
 
         if (!pipeline || !bindGroupLayout) {
             // フォールバック
             pipelineName = useMsaa ? "filter_output_msaa" : "filter_output";
+            pipeline = config.pipelineManager.getPipeline(pipelineName);
+            bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
+            if (!pipeline || !bindGroupLayout) {
+                return;
+            }
         }
 
         const sampler = config.textureManager.createSampler("filter_output_sampler", true);
@@ -401,17 +429,19 @@ const drawFilterToMain = (
         // uv = texCoord * scale + offset で texCoord[0,1] → uv[uvOffset, uvOffset+uvScale]
         const uvScaleX = drawWidth / filter_attachment.width;
         const uvScaleY = drawHeight / filter_attachment.height;
-        const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
+        $uniform4[0] = uvScaleX;
+        $uniform4[1] = uvScaleY;
+        $uniform4[2] = uvOffsetX;
+        $uniform4[3] = uvOffsetY;
         const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
-        config.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+        config.device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
 
+        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+        $entries3[1].resource = sampler;
+        $entries3[2].resource = filter_attachment.texture.view;
         const bindGroup = config.device.createBindGroup({
             "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": filter_attachment.texture.view }
-            ]
+            "entries": $entries3
         });
 
         // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
@@ -456,23 +486,21 @@ const drawFilterToMain = (
         );
 
         // 2. カラートランスフォームを準備（WebGL版と同じ：add値は生値）
-        const ct = new Float32Array([
-            color_transform[0],      // mulR
-            color_transform[1],      // mulG
-            color_transform[2],      // mulB
-            color_transform[3],      // mulA (globalAlpha)
-            color_transform[4],      // addR
-            color_transform[5],      // addG
-            color_transform[6],      // addB
-            0                        // addA
-        ]);
+        $uniform8[0] = color_transform[0];  // mulR
+        $uniform8[1] = color_transform[1];  // mulG
+        $uniform8[2] = color_transform[2];  // mulB
+        $uniform8[3] = color_transform[3];  // mulA (globalAlpha)
+        $uniform8[4] = color_transform[4];  // addR
+        $uniform8[5] = color_transform[5];  // addG
+        $uniform8[6] = color_transform[6];  // addB
+        $uniform8[7] = 0;                   // addA
 
         // 3. 複雑なブレンドを適用
         const blendedAttachment = blendApplyComplexBlendUseCase(
             filter_attachment,
             dstAttachment,
             blend_mode,
-            ct,
+            $uniform8,
             {
                 "device": config.device,
                 "commandEncoder": config.commandEncoder,
@@ -554,13 +582,12 @@ export const execute = (
             const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
             config.device.queue.writeBuffer(uniformBuffer, 0, Y_FLIP_UNIFORM);
 
+            ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+            $entries3[1].resource = sampler;
+            $entries3[2].resource = filterAttachment.texture.view;
             const bindGroup = config.device.createBindGroup({
                 "layout": flipBindGroupLayout,
-                "entries": [
-                    { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                    { "binding": 1, "resource": sampler },
-                    { "binding": 2, "resource": filterAttachment.texture.view }
-                ]
+                "entries": $entries3
             });
 
             const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
@@ -593,24 +620,33 @@ export const execute = (
     const d3 = is_bitmap ? scaleY * Math.cos(radianY) : Math.cos(radianY);
 
     // 変換行列を計算（WebGL版と同じ）
-    const a = new Float32Array([a0, b1, c2, d3, width / 2, height / 2]);
-    const b = new Float32Array([1, 0, 0, 1, -node.w / 2, -node.h / 2]);
+    $uniform6a[0] = a0;
+    $uniform6a[1] = b1;
+    $uniform6a[2] = c2;
+    $uniform6a[3] = d3;
+    $uniform6a[4] = width / 2;
+    $uniform6a[5] = height / 2;
+
+    $uniform6b[0] = 1;
+    $uniform6b[1] = 0;
+    $uniform6b[2] = 0;
+    $uniform6b[3] = 1;
+    $uniform6b[4] = -node.w / 2;
+    $uniform6b[5] = -node.h / 2;
 
     // 行列乗算: a * b
-    const tMatrix = new Float32Array([
-        a[0] * b[0] + a[2] * b[1],
-        a[1] * b[0] + a[3] * b[1],
-        a[0] * b[2] + a[2] * b[3],
-        a[1] * b[2] + a[3] * b[3],
-        a[0] * b[4] + a[2] * b[5] + a[4],
-        a[1] * b[4] + a[3] * b[5] + a[5]
-    ]);
+    const tMatrix0 = $uniform6a[0] * $uniform6b[0] + $uniform6a[2] * $uniform6b[1];
+    const tMatrix1 = $uniform6a[1] * $uniform6b[0] + $uniform6a[3] * $uniform6b[1];
+    const tMatrix2 = $uniform6a[0] * $uniform6b[2] + $uniform6a[2] * $uniform6b[3];
+    const tMatrix3 = $uniform6a[1] * $uniform6b[2] + $uniform6a[3] * $uniform6b[3];
+    const tMatrix4 = $uniform6a[0] * $uniform6b[4] + $uniform6a[2] * $uniform6b[5] + $uniform6a[4];
+    const tMatrix5 = $uniform6a[1] * $uniform6b[4] + $uniform6a[3] * $uniform6b[5] + $uniform6a[5];
 
     let offsetX = 0;
     let offsetY = 0;
 
     // スケール・回転変換が必要な場合（WebGL版と同じ条件）
-    if (tMatrix[0] !== 1 || tMatrix[1] !== 0 || tMatrix[2] !== 0 || tMatrix[3] !== 1) {
+    if (tMatrix0 !== 1 || tMatrix1 !== 0 || tMatrix2 !== 0 || tMatrix3 !== 1) {
         // スケール変換用のアタッチメントを作成
         const scaledAttachment = config.frameBufferManager.createTemporaryAttachment(width, height);
 
@@ -622,23 +658,28 @@ export const execute = (
 
         if (scalePipeline && scaleBindGroupLayout) {
             // ユニフォームデータ: matrix (6 floats) + srcSize (2 floats) + dstSize (2 floats) + padding (2 floats)
-            const uniformData = new Float32Array([
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
-                node.w, node.h,
-                width, height,
-                0, 0 // padding
-            ]);
+            $uniform12[0] = tMatrix0;
+            $uniform12[1] = tMatrix1;
+            $uniform12[2] = tMatrix2;
+            $uniform12[3] = tMatrix3;
+            $uniform12[4] = tMatrix4;
+            $uniform12[5] = tMatrix5;
+            $uniform12[6] = node.w;
+            $uniform12[7] = node.h;
+            $uniform12[8] = width;
+            $uniform12[9] = height;
+            $uniform12[10] = 0;
+            $uniform12[11] = 0;
             const uniformBuffer = config.bufferManager.acquireUniformBuffer(48);
-            config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+            config.device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
 
             const sampler = config.textureManager.createSampler("filter_scale_sampler", true);
+            ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+            $entries3[1].resource = sampler;
+            $entries3[2].resource = filterAttachment.texture!.view;
             const bindGroup = config.device.createBindGroup({
                 "layout": scaleBindGroupLayout,
-                "entries": [
-                    { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                    { "binding": 1, "resource": sampler },
-                    { "binding": 2, "resource": filterAttachment.texture!.view }
-                ]
+                "entries": $entries3
             });
 
             const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
@@ -653,8 +694,8 @@ export const execute = (
             passEncoder.draw(6, 1, 0, 0);
             passEncoder.end();
 
-            offsetX = tMatrix[4];
-            offsetY = tMatrix[5];
+            offsetX = tMatrix4;
+            offsetY = tMatrix5;
 
             // 元のアタッチメントを解放してスケール済みアタッチメントを使用
             config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
@@ -720,15 +761,29 @@ export const execute = (
 
             case 2: // ColorMatrixFilter
                 {
-                    const colorMatrix = new Float32Array([
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++]
-                    ]);
+                    $uniform20[0] = params[idx++];
+                    $uniform20[1] = params[idx++];
+                    $uniform20[2] = params[idx++];
+                    $uniform20[3] = params[idx++];
+                    $uniform20[4] = params[idx++];
+                    $uniform20[5] = params[idx++];
+                    $uniform20[6] = params[idx++];
+                    $uniform20[7] = params[idx++];
+                    $uniform20[8] = params[idx++];
+                    $uniform20[9] = params[idx++];
+                    $uniform20[10] = params[idx++];
+                    $uniform20[11] = params[idx++];
+                    $uniform20[12] = params[idx++];
+                    $uniform20[13] = params[idx++];
+                    $uniform20[14] = params[idx++];
+                    $uniform20[15] = params[idx++];
+                    $uniform20[16] = params[idx++];
+                    $uniform20[17] = params[idx++];
+                    $uniform20[18] = params[idx++];
+                    $uniform20[19] = params[idx++];
 
                     const newAttachment = filterApplyColorMatrixFilterUseCase(
-                        filterAttachment, colorMatrix, config
+                        filterAttachment, $uniform20, config
                     );
 
                     if (filterAttachment !== newAttachment) {

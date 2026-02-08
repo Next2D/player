@@ -33,6 +33,7 @@ import {
     BevelFilterFragment,
     BevelBaseFragment
 } from "./wgsl/fragment/EffectFragment";
+import { WgslIsInside } from "./wgsl/common/SharedWgsl";
 
 /**
  * @description WebGPU用の基本的なシェーダーソース
@@ -497,10 +498,7 @@ struct VertexOutput {
     @location(0) texCoord: vec2<f32>,
 }
 
-fn isInside(uv: vec2<f32>) -> f32 {
-    let inside = step(vec2<f32>(0.0), uv) * step(uv, vec2<f32>(1.0));
-    return inside.x * inside.y;
-}
+${WgslIsInside}
 
 fn getMatrixWeight(index: i32) -> f32 {
     let vecIndex = index / 4;
@@ -628,7 +626,6 @@ fn blend(src: vec4<f32>, dst: vec4<f32>, mode: i32) -> vec4<f32> {
     let a = src - src * dst.a;
     let b = dst - dst * src.a;
 
-    // mode 1: multiply (no early return needed)
     if (mode == 1) {
         let c = src * dst;
         return a + b + c;
@@ -809,20 +806,12 @@ ${uniformsStruct}
 @group(0) @binding(2) var srcTexture: texture_2d<f32>;
 @group(0) @binding(3) var mapTexture: texture_2d<f32>;
 
-fn isInside(uv: vec2<f32>) -> f32 {
-    // WebGL版と同じ: uv=1.0を範囲内として扱う
-    let s = step(vec2<f32>(0.0), uv) * step(uv, vec2<f32>(1.0));
-    return s.x * s.y;
-}
+${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    // WebGPU: Y-flip補正後のtexCoordはY=0が上、WebGLはY=0が下
-    // stはWebGL座標系(Y=0が下)に合わせて計算(isInsideやoffset計算用)
     let stCoord = vec2<f32>(input.texCoord.x, 1.0 - input.texCoord.y);
     let st = stCoord * uniforms.uvToStScale - uniforms.uvToStOffset;
-    // マップテクスチャサンプリング: WebGLはUNPACK_FLIP_Y=trueでY反転アップロード
-    // WebGPUのwriteTextureは反転なし → サンプリング時にY反転して補正
     let mapColor = textureSample(mapTexture, textureSampler, vec2<f32>(st.x, 1.0 - st.y));
     let offset = vec2<f32>(${cx}, ${cy}) - 0.5;
     let uv = input.texCoord + offset * uniforms.scale;

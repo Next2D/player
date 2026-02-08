@@ -10,6 +10,32 @@ import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
 const DEG_TO_RAD: number = Math.PI / 180;
 
 /**
+ * @description プリアロケートされたFloat32Array
+ */
+const $uniform4 = new Float32Array(4);
+const $uniform12 = new Float32Array(12);
+
+/**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
+ */
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
+/**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング5つ)
+ */
+const $entries5: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView },
+    { "binding": 3, "resource": null as unknown as GPUTextureView },
+    { "binding": 4, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description グラデーションベベルフィルターを適用
  *              Apply gradient bevel filter
  *
@@ -85,28 +111,25 @@ export const execute = (
     const bevelBaseSampler = textureManager.createSampler("bevel_base_sampler", true);
 
     // UV空間でのオフセット: (2x / baseWidth, 2y / baseHeight)
-    const bevelBaseUniformData = new Float32Array([
-        2 * x / baseWidth,
-        2 * y / baseHeight,
-        0.0,
-        0.0
-    ]);
+    $uniform4[0] = 2 * x / baseWidth;
+    $uniform4[1] = 2 * y / baseHeight;
+    $uniform4[2] = 0.0;
+    $uniform4[3] = 0.0;
 
     const bevelBaseUniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer(bevelBaseUniformData.byteLength)
+        ? config.bufferManager.acquireUniformBuffer($uniform4.byteLength)
         : device.createBuffer({
-            "size": bevelBaseUniformData.byteLength,
+            "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(bevelBaseUniformBuffer, 0, bevelBaseUniformData);
+    device.queue.writeBuffer(bevelBaseUniformBuffer, 0, $uniform4);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = bevelBaseUniformBuffer;
+    $entries3[1].resource = bevelBaseSampler;
+    $entries3[2].resource = sourceAttachment.texture!.view;
     const bevelBaseBindGroup = device.createBindGroup({
         "layout": bevelBaseLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": bevelBaseUniformBuffer } },
-            { "binding": 1, "resource": bevelBaseSampler },
-            { "binding": 2, "resource": sourceAttachment.texture!.view }
-        ]
+        "entries": $entries3
     });
 
     const bevelBaseRenderPass = frameBufferManager.createRenderPassDescriptor(
@@ -201,35 +224,36 @@ export const execute = (
     const sampler = textureManager.createSampler("gradient_bevel_sampler", true);
 
     // ユニフォームバッファ: 12 floats = 48 bytes
-    const uniformData = new Float32Array([
-        strength,
-        isInner ? 1.0 : 0.0,
-        knockout ? 1.0 : 0.0,
-        type,
-        baseScaleX, baseScaleY,
-        baseOffsetUVX, baseOffsetUVY,
-        blurScaleX, blurScaleY,
-        blurOffsetUVX, blurOffsetUVY
-    ]);
+    $uniform12[0] = strength;
+    $uniform12[1] = isInner ? 1.0 : 0.0;
+    $uniform12[2] = knockout ? 1.0 : 0.0;
+    $uniform12[3] = type;
+    $uniform12[4] = baseScaleX;
+    $uniform12[5] = baseScaleY;
+    $uniform12[6] = baseOffsetUVX;
+    $uniform12[7] = baseOffsetUVY;
+    $uniform12[8] = blurScaleX;
+    $uniform12[9] = blurScaleY;
+    $uniform12[10] = blurOffsetUVX;
+    $uniform12[11] = blurOffsetUVY;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer(uniformData.byteLength)
+        ? config.bufferManager.acquireUniformBuffer($uniform12.byteLength)
         : device.createBuffer({
-            "size": uniformData.byteLength,
+            "size": $uniform12.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
 
     // バインドグループを作成（オリジナルテクスチャを直接使用）
+    ($entries5[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries5[1].resource = sampler;
+    $entries5[2].resource = blurAttachment.texture!.view;
+    $entries5[3].resource = sourceAttachment.texture!.view;
+    $entries5[4].resource = lutView;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": blurAttachment.texture!.view },
-            { "binding": 3, "resource": sourceAttachment.texture!.view },
-            { "binding": 4, "resource": lutView }
-        ]
+        "entries": $entries5
     });
 
     // レンダーパスを実行

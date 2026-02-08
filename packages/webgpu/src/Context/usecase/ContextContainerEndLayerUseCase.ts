@@ -17,6 +17,20 @@ import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 
 /**
+ * @description プリアロケートされたユニフォーム配列
+ */
+const $uniform4 = new Float32Array(4);
+const $uniform8 = new Float32Array(8);
+const $uniform20 = new Float32Array(20);
+
+// プリアロケート BindGroup Entry 配列
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
+/**
  * @description シンプルなブレンドモード
  */
 const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
@@ -66,22 +80,25 @@ const applyColorTransform = (
         return attachment;
     }
 
-    const uniformData = new Float32Array([
-        colorTransform[0], colorTransform[1], colorTransform[2], colorTransform[3],
-        colorTransform[4], colorTransform[5], colorTransform[6], 0
-    ]);
+    $uniform8[0] = colorTransform[0];
+    $uniform8[1] = colorTransform[1];
+    $uniform8[2] = colorTransform[2];
+    $uniform8[3] = colorTransform[3];
+    $uniform8[4] = colorTransform[4];
+    $uniform8[5] = colorTransform[5];
+    $uniform8[6] = colorTransform[6];
+    $uniform8[7] = 0;
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
-    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    config.device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
 
     const sampler = config.textureManager.createSampler("container_ct_sampler", false);
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = attachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": attachment.texture.view }
-        ]
+        "entries": $entries3
     });
 
     const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
@@ -135,18 +152,20 @@ const copyRegionToFilterAttachment = (
     const scaleY = -(height / srcAttachment.height);
     const offsetY = (y + height) / srcAttachment.height;
 
-    const uniformData = new Float32Array([scaleX, scaleY, offsetX, offsetY]);
+    $uniform4[0] = scaleX;
+    $uniform4[1] = scaleY;
+    $uniform4[2] = offsetX;
+    $uniform4[3] = offsetY;
     const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
-    config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+    config.device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
 
     const sampler = config.textureManager.createSampler("container_copy_sampler", false);
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = srcAttachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": srcAttachment.texture.view }
-        ]
+        "entries": $entries3
     });
 
     const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
@@ -257,17 +276,19 @@ const drawFilterResultToMain = (
 
         const uvScaleX = drawWidth / filterAttachment.width;
         const uvScaleY = drawHeight / filterAttachment.height;
-        const uniformData = new Float32Array([uvScaleX, uvScaleY, uvOffsetX, uvOffsetY]);
+        $uniform4[0] = uvScaleX;
+        $uniform4[1] = uvScaleY;
+        $uniform4[2] = uvOffsetX;
+        $uniform4[3] = uvOffsetY;
         const uniformBuffer = bufferManager.acquireUniformBuffer(16);
-        config.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+        config.device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
 
+        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+        $entries3[1].resource = sampler;
+        $entries3[2].resource = filterAttachment.texture.view;
         const bindGroup = config.device.createBindGroup({
             "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": filterAttachment.texture.view }
-            ]
+            "entries": $entries3
         });
 
         const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
@@ -305,15 +326,17 @@ const drawFilterResultToMain = (
             config, mainAttachment, drawX, drawY, drawWidth, drawHeight
         );
 
-        const ct = new Float32Array([
-            $identityColorTransform[0], $identityColorTransform[1],
-            $identityColorTransform[2], $identityColorTransform[3],
-            $identityColorTransform[4] / 255, $identityColorTransform[5] / 255,
-            $identityColorTransform[6] / 255, 0
-        ]);
+        $uniform8[0] = $identityColorTransform[0];
+        $uniform8[1] = $identityColorTransform[1];
+        $uniform8[2] = $identityColorTransform[2];
+        $uniform8[3] = $identityColorTransform[3];
+        $uniform8[4] = $identityColorTransform[4] / 255;
+        $uniform8[5] = $identityColorTransform[5] / 255;
+        $uniform8[6] = $identityColorTransform[6] / 255;
+        $uniform8[7] = 0;
 
         const blendedAttachment = blendApplyComplexBlendUseCase(
-            filterAttachment, dstAttachment, blendMode, ct, {
+            filterAttachment, dstAttachment, blendMode, $uniform8, {
                 "device": config.device,
                 "commandEncoder": config.commandEncoder,
                 "bufferManager": config.bufferManager,
@@ -331,24 +354,25 @@ const drawFilterResultToMain = (
 
         if (resultPipeline && resultLayout && blendedAttachment.texture && mainAttachment.texture) {
 
-            const uniformData = new Float32Array([
-                drawX, drawY,
-                blendedAttachment.width, blendedAttachment.height,
-                mainAttachment.width, mainAttachment.height,
-                0, 0
-            ]);
+            $uniform8[0] = drawX;
+            $uniform8[1] = drawY;
+            $uniform8[2] = blendedAttachment.width;
+            $uniform8[3] = blendedAttachment.height;
+            $uniform8[4] = mainAttachment.width;
+            $uniform8[5] = mainAttachment.height;
+            $uniform8[6] = 0;
+            $uniform8[7] = 0;
             const uniformBuffer = bufferManager.acquireUniformBuffer(32);
-            config.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+            config.device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
 
             const sampler = config.textureManager.createSampler("container_blend_output_sampler", false);
 
+            ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+            $entries3[1].resource = sampler;
+            $entries3[2].resource = blendedAttachment.texture.view;
             const bindGroup = config.device.createBindGroup({
                 "layout": resultLayout,
-                "entries": [
-                    { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                    { "binding": 1, "resource": sampler },
-                    { "binding": 2, "resource": blendedAttachment.texture.view }
-                ]
+                "entries": $entries3
             });
 
             const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
@@ -427,14 +451,28 @@ const applyFilterChain = (
 
             case 2: // ColorMatrixFilter
                 {
-                    const colorMatrix = new Float32Array([
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++], params[idx++], params[idx++], params[idx++]
-                    ]);
+                    $uniform20[0] = params[idx++];
+                    $uniform20[1] = params[idx++];
+                    $uniform20[2] = params[idx++];
+                    $uniform20[3] = params[idx++];
+                    $uniform20[4] = params[idx++];
+                    $uniform20[5] = params[idx++];
+                    $uniform20[6] = params[idx++];
+                    $uniform20[7] = params[idx++];
+                    $uniform20[8] = params[idx++];
+                    $uniform20[9] = params[idx++];
+                    $uniform20[10] = params[idx++];
+                    $uniform20[11] = params[idx++];
+                    $uniform20[12] = params[idx++];
+                    $uniform20[13] = params[idx++];
+                    $uniform20[14] = params[idx++];
+                    $uniform20[15] = params[idx++];
+                    $uniform20[16] = params[idx++];
+                    $uniform20[17] = params[idx++];
+                    $uniform20[18] = params[idx++];
+                    $uniform20[19] = params[idx++];
                     const newAtt = filterApplyColorMatrixFilterUseCase(
-                        filterAttachment, colorMatrix, config
+                        filterAttachment, $uniform20, config
                     );
                     if (filterAttachment !== newAtt) {
                         config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
@@ -531,15 +569,15 @@ const applyFilterChain = (
 
                     const gbColorsLen = params[idx++];
                     const gbColors = new Float32Array(gbColorsLen);
-                    for (let i = 0; i < gbColorsLen; i++) gbColors[i] = params[idx++];
+                    for (let i = 0; i < gbColorsLen; i++) { gbColors[i] = params[idx++] }
 
                     const gbAlphasLen = params[idx++];
                     const gbAlphas = new Float32Array(gbAlphasLen);
-                    for (let i = 0; i < gbAlphasLen; i++) gbAlphas[i] = params[idx++];
+                    for (let i = 0; i < gbAlphasLen; i++) { gbAlphas[i] = params[idx++] }
 
                     const gbRatiosLen = params[idx++];
                     const gbRatios = new Float32Array(gbRatiosLen);
-                    for (let i = 0; i < gbRatiosLen; i++) gbRatios[i] = params[idx++];
+                    for (let i = 0; i < gbRatiosLen; i++) { gbRatios[i] = params[idx++] }
 
                     const newAtt = filterApplyGradientBevelFilterUseCase(
                         filterAttachment, matrix,
@@ -562,15 +600,15 @@ const applyFilterChain = (
 
                     const ggColorsLen = params[idx++];
                     const ggColors = new Float32Array(ggColorsLen);
-                    for (let i = 0; i < ggColorsLen; i++) ggColors[i] = params[idx++];
+                    for (let i = 0; i < ggColorsLen; i++) { ggColors[i] = params[idx++] }
 
                     const ggAlphasLen = params[idx++];
                     const ggAlphas = new Float32Array(ggAlphasLen);
-                    for (let i = 0; i < ggAlphasLen; i++) ggAlphas[i] = params[idx++];
+                    for (let i = 0; i < ggAlphasLen; i++) { ggAlphas[i] = params[idx++] }
 
                     const ggRatiosLen = params[idx++];
                     const ggRatios = new Float32Array(ggRatiosLen);
-                    for (let i = 0; i < ggRatiosLen; i++) ggRatios[i] = params[idx++];
+                    for (let i = 0; i < ggRatiosLen; i++) { ggRatios[i] = params[idx++] }
 
                     const newAtt = filterApplyGradientGlowFilterUseCase(
                         filterAttachment, matrix,

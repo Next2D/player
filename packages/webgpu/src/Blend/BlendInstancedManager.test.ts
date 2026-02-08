@@ -40,13 +40,14 @@ describe("BlendInstancedManager", () =>
             expect(queue1).toBe(queue2);
         });
 
-        it("should return new array after clear", () =>
+        it("should return same array after clear (reused)", () =>
         {
             const queue1 = getComplexBlendQueue();
             clearComplexBlendQueue();
             const queue2 = getComplexBlendQueue();
 
-            expect(queue1).not.toBe(queue2);
+            expect(queue1).toBe(queue2);
+            expect(queue2.length).toBe(0);
         });
     });
 

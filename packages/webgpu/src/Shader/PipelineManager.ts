@@ -2,6 +2,37 @@ import { ShaderSource } from "./ShaderSource";
 import { $samples } from "../WebGPUUtil";
 
 /**
+ * @description 17-float vertex buffer layout（fill, stencil, clip, gradient, bitmap 共通）
+ */
+const VERTEX_BUFFER_LAYOUT_17F: GPUVertexBufferLayout = {
+    "arrayStride": 17 * 4,
+    "attributes": [
+        { "shaderLocation": 0, "offset": 0, "format": "float32x2" },       // position
+        { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },   // bezier
+        { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },   // color
+        { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },   // matrix row 0
+        { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" },  // matrix row 1
+        { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }   // matrix row 2
+    ]
+};
+
+/**
+ * @description premultiplied alpha blend state（most pipelines で共通）
+ */
+const BLEND_PREMULTIPLIED_ALPHA: GPUBlendState = {
+    "color": {
+        "srcFactor": "one",
+        "dstFactor": "one-minus-src-alpha",
+        "operation": "add"
+    },
+    "alpha": {
+        "srcFactor": "one",
+        "dstFactor": "one-minus-src-alpha",
+        "operation": "add"
+    }
+};
+
+/**
  * @description WebGPUのパイプライン管理クラス
  *              WebGPU pipeline manager class
  */
@@ -180,55 +211,8 @@ export class PipelineManager
 
         const fragmentShaderModule = this.getOrCreateShaderModule("fillFragment", ShaderSource.getFillFragmentShader());
 
-        // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
-        const vertexBufferLayout: GPUVertexBufferLayout = {
-            "arrayStride": 17 * 4, // 17 floats (68 bytes)
-            "attributes": [
-                {
-                    "shaderLocation": 0,
-                    "offset": 0,
-                    "format": "float32x2" // position (2 floats)
-                },
-                {
-                    "shaderLocation": 1,
-                    "offset": 2 * 4,
-                    "format": "float32x2" // bezier (2 floats)
-                },
-                {
-                    "shaderLocation": 2,
-                    "offset": 4 * 4,
-                    "format": "float32x4" // color (4 floats)
-                },
-                {
-                    "shaderLocation": 3,
-                    "offset": 8 * 4,
-                    "format": "float32x3" // matrix row 0 (3 floats)
-                },
-                {
-                    "shaderLocation": 4,
-                    "offset": 11 * 4,
-                    "format": "float32x3" // matrix row 1 (3 floats)
-                },
-                {
-                    "shaderLocation": 5,
-                    "offset": 14 * 4,
-                    "format": "float32x3" // matrix row 2 (3 floats)
-                }
-            ]
-        };
-
-        const blendState: GPUBlendState = {
-            "color": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            },
-            "alpha": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            }
-        };
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const blendState = BLEND_PREMULTIPLIED_ALPHA;
 
         // アトラステクスチャ用パイプライン（rgba8unorm）- MSAA対応
         // ステンシル付きレンダーパスと互換性を持たせるためdepthStencilを追加
@@ -365,42 +349,7 @@ export class PipelineManager
      */
     private createStencilFillPipelines(): void
     {
-        // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
-        const vertexBufferLayout: GPUVertexBufferLayout = {
-            "arrayStride": 17 * 4, // 17 floats (68 bytes)
-            "attributes": [
-                {
-                    "shaderLocation": 0,
-                    "offset": 0,
-                    "format": "float32x2" // position (2 floats)
-                },
-                {
-                    "shaderLocation": 1,
-                    "offset": 2 * 4,
-                    "format": "float32x2" // bezier (2 floats)
-                },
-                {
-                    "shaderLocation": 2,
-                    "offset": 4 * 4,
-                    "format": "float32x4" // color (4 floats)
-                },
-                {
-                    "shaderLocation": 3,
-                    "offset": 8 * 4,
-                    "format": "float32x3" // matrix row 0 (3 floats)
-                },
-                {
-                    "shaderLocation": 4,
-                    "offset": 11 * 4,
-                    "format": "float32x3" // matrix row 1 (3 floats)
-                },
-                {
-                    "shaderLocation": 5,
-                    "offset": 14 * 4,
-                    "format": "float32x3" // matrix row 2 (3 floats)
-                }
-            ]
-        };
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
 
         // === Pass 1: ステンシル書き込み（WebGL版と同じ: 両面を1回の描画で処理） ===
         // Front面: INCR_WRAP, Back面: DECR_WRAP
@@ -775,18 +724,7 @@ export class PipelineManager
      */
     private createClipPipeline(): void
     {
-        // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
-        const vertexBufferLayout: GPUVertexBufferLayout = {
-            "arrayStride": 17 * 4,
-            "attributes": [
-                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },
-                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },
-                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },
-                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },
-                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" },
-                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }
-            ]
-        };
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
 
         // マスク書き込みパイプライン（ステンシル値を INVERT で書き込み）
         // WebGL版: gl.stencilOp(ZERO, INVERT, INVERT)
@@ -944,18 +882,7 @@ export class PipelineManager
      */
     private createMaskUnionPipelines(): void
     {
-        // 17 floats per vertex: position(2) + bezier(2) + color(4) + matrix(3+3+3)
-        const vertexBufferLayout: GPUVertexBufferLayout = {
-            "arrayStride": 17 * 4,
-            "attributes": [
-                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },
-                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },
-                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },
-                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },
-                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" },
-                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }
-            ]
-        };
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
 
         const vertexShaderModule = this.getOrCreateShaderModule("stencilWriteMainVertex", ShaderSource.getStencilWriteMainVertexShader());
         const fragmentShaderModule = this.getOrCreateShaderModule("stencilWriteFragment", ShaderSource.getStencilWriteFragmentShader());
@@ -1171,18 +1098,7 @@ export class PipelineManager
             ]
         };
 
-        const blendState: GPUBlendState = {
-            "color": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            },
-            "alpha": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            }
-        };
+        const blendState = BLEND_PREMULTIPLIED_ALPHA;
 
         // アトラステクスチャ用パイプライン（rgba8unorm）- MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({
@@ -1605,31 +1521,8 @@ export class PipelineManager
         // 2パスステンシルフィル用フラグメントシェーダー（bezierチェックなし）
         const stencilFragmentShaderModule = this.getOrCreateShaderModule("gradientFillStencilFragment", ShaderSource.getGradientFillStencilFragmentShader());
 
-        // 17 floats per vertex (fill用と同じ)
-        const vertexBufferLayout: GPUVertexBufferLayout = {
-            "arrayStride": 17 * 4,
-            "attributes": [
-                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },      // position
-                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },  // bezier
-                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },  // color
-                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },  // matrix row 0
-                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" }, // matrix row 1
-                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }  // matrix row 2
-            ]
-        };
-
-        const blendState: GPUBlendState = {
-            "color": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            },
-            "alpha": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            }
-        };
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const blendState = BLEND_PREMULTIPLIED_ALPHA;
 
         // アトラステクスチャ用（rgba8unorm）- ステンシルなし
         const pipelineRGBA = this.device.createRenderPipeline({
@@ -2015,31 +1908,8 @@ export class PipelineManager
 
         const fragmentShaderModule = this.getOrCreateShaderModule("bitmapFillFragment", ShaderSource.getBitmapFillFragmentShader());
 
-        // 17 floats per vertex (fill用と同じ)
-        const vertexBufferLayout: GPUVertexBufferLayout = {
-            "arrayStride": 17 * 4,
-            "attributes": [
-                { "shaderLocation": 0, "offset": 0, "format": "float32x2" },      // position
-                { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },  // bezier
-                { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },  // color
-                { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },  // matrix row 0
-                { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" }, // matrix row 1
-                { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }  // matrix row 2
-            ]
-        };
-
-        const blendState: GPUBlendState = {
-            "color": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            },
-            "alpha": {
-                "srcFactor": "one",
-                "dstFactor": "one-minus-src-alpha",
-                "operation": "add"
-            }
-        };
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const blendState = BLEND_PREMULTIPLIED_ALPHA;
 
         // アトラステクスチャ用（rgba8unorm）- ステンシルなし - MSAA対応
         const pipelineRGBA = this.device.createRenderPipeline({

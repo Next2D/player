@@ -1,18 +1,27 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 
+const $clearValue: GPUColorDict = { "r": 0, "g": 0, "b": 0, "a": 0 };
+const $colorAttachment: GPURenderPassColorAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "loadOp": "clear",
+    "storeOp": "store",
+    "clearValue": $clearValue
+};
+const $depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "depthLoadOp": "clear",
+    "depthStoreOp": "store",
+    "depthClearValue": 1.0,
+    "stencilLoadOp": "clear",
+    "stencilStoreOp": "store",
+    "stencilClearValue": 0
+};
+const $descriptor: GPURenderPassDescriptor = {
+    "colorAttachments": [$colorAttachment]
+};
+
 /**
- * @description レンダーパスディスクリプタを作成
- *              Create render pass descriptor
- *
- * @param  {IAttachmentObject} attachment
- * @param  {number} r
- * @param  {number} g
- * @param  {number} b
- * @param  {number} a
- * @param  {GPULoadOp} loadOp
- * @return {GPURenderPassDescriptor}
- * @method
- * @protected
+ * @description レンダーパスディスクリプタを作成（プリアロケート再利用）
  */
 export const execute = (
     attachment: IAttachmentObject,
@@ -22,35 +31,21 @@ export const execute = (
     a: number,
     loadOp: GPULoadOp = "clear"
 ): GPURenderPassDescriptor => {
-    // カラーアタッチメントはcolor.viewまたはtexture.viewを使用
     const colorView = attachment.color?.view ?? attachment.texture?.view;
     if (!colorView) {
         throw new Error("No color view available for render pass");
     }
-
-    const colorAttachment: GPURenderPassColorAttachment = {
-        "view": colorView,
-        loadOp,
-        "storeOp": "store",
-        "clearValue": { r, g, b, a }
-    };
-
-    const descriptor: GPURenderPassDescriptor = {
-        "colorAttachments": [colorAttachment]
-    };
-
-    // ステンシルアタッチメントを追加
+    $colorAttachment.view = colorView;
+    $colorAttachment.loadOp = loadOp;
+    $clearValue.r = r;
+    $clearValue.g = g;
+    $clearValue.b = b;
+    $clearValue.a = a;
     if (attachment.stencil?.view) {
-        descriptor.depthStencilAttachment = {
-            "view": attachment.stencil.view,
-            "depthLoadOp": "clear",
-            "depthStoreOp": "store",
-            "depthClearValue": 1.0,
-            "stencilLoadOp": "clear",
-            "stencilStoreOp": "store",
-            "stencilClearValue": 0
-        };
+        $depthStencilAttachment.view = attachment.stencil.view;
+        $descriptor.depthStencilAttachment = $depthStencilAttachment;
+    } else {
+        $descriptor.depthStencilAttachment = undefined;
     }
-
-    return descriptor;
+    return $descriptor;
 };

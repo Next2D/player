@@ -137,8 +137,7 @@ describe("BlendModeShader", () =>
         it("should implement screen blend formula", () =>
         {
             const shader = BlendModeShader.getScreenShader();
-            // Screen: src + dst - src * dst
-            expect(shader).toContain("src + dst - src * dst");
+            expect(shader).toContain("srcRgb + dstRgb - srcRgb * dstRgb");
         });
     });
 

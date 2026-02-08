@@ -156,22 +156,23 @@ describe("FilterApplyDisplacementMapFilterUseCase", () =>
             expect(config.device.queue.writeTexture).toHaveBeenCalled();
         });
 
-        it("should create shader modules", () =>
+        it("should create shader modules on first call (cached on subsequent)", () =>
         {
             const sourceAttachment = createMockAttachment();
             const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
             const bitmapBuffer = new Uint8Array(64 * 64 * 4);
             const config = createMockConfig();
 
+            // 異なるパラメータでキャッシュミスを発生させる
             execute(
                 sourceAttachment,
                 matrix,
                 bitmapBuffer,
                 64, 64,
                 0, 0,
-                1, 2,
+                4, 8,  // unique componentX, componentY
                 10, 10,
-                0,
+                2,     // unique mode
                 0x000000, 1.0,
                 1,
                 config
@@ -181,22 +182,23 @@ describe("FilterApplyDisplacementMapFilterUseCase", () =>
             expect(config.device.createShaderModule).toHaveBeenCalledTimes(2);
         });
 
-        it("should create render pipeline", () =>
+        it("should create render pipeline on first call (cached on subsequent)", () =>
         {
             const sourceAttachment = createMockAttachment();
             const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
             const bitmapBuffer = new Uint8Array(64 * 64 * 4);
             const config = createMockConfig();
 
+            // 異なるパラメータでキャッシュミスを発生させる
             execute(
                 sourceAttachment,
                 matrix,
                 bitmapBuffer,
                 64, 64,
                 0, 0,
-                1, 2,
+                2, 4,  // unique componentX, componentY
                 10, 10,
-                0,
+                3,     // unique mode
                 0x000000, 1.0,
                 1,
                 config
