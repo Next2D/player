@@ -2544,8 +2544,9 @@ export class Context
         const width = node.w;
         const height = node.h;
 
-        // レンダーパスがアクティブな場合は終了
+        // レンダーパスがアクティブな場合はマージンクリアしてから終了
         if (this.renderPassEncoder) {
+            this.ensureNodeAreaCleared();
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
@@ -2677,6 +2678,7 @@ export class Context
 
         const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
+        renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
         renderPass.setBindGroup(0, bindGroup);
         renderPass.draw(6);
@@ -2913,6 +2915,7 @@ export class Context
 
         const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
+        renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
         renderPass.setBindGroup(0, bindGroup);
         renderPass.draw(6);
@@ -3025,6 +3028,7 @@ export class Context
 
         const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
+        renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
         renderPass.setBindGroup(0, bindGroup);
         renderPass.draw(6);
