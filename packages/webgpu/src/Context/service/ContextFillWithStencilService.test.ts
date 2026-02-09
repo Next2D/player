@@ -175,7 +175,7 @@ describe("ContextFillWithStencilService", () =>
 
             expect(pipelineManager.getPipeline).toHaveBeenCalledTimes(2);
             expect(renderPassEncoder.setPipeline).toHaveBeenCalledTimes(2);
-            expect(renderPassEncoder.setVertexBuffer).toHaveBeenCalledTimes(2);
+            expect(renderPassEncoder.setVertexBuffer).toHaveBeenCalledTimes(1);
             expect(renderPassEncoder.draw).toHaveBeenCalledTimes(2);
         });
 

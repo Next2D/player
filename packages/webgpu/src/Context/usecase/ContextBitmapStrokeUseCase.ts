@@ -7,6 +7,8 @@ import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool"
 
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
+const $uniformData16 = new Float32Array(16);
+
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
@@ -80,31 +82,26 @@ export const execute = (
     const computedBitmapMatrix = contextComputeBitmapMatrixService(bitmap_matrix, context_matrix);
 
     // Uniformバッファを作成
-    const uniformData = new Float32Array(16);
-    // mat3x3 (WGSL column-major: 各列がvec4にパディング)
-    // 列構成: col0=(a,c,0), col1=(b,d,0), col2=(tx,ty,1)
-    // 変換: x' = a*x + b*y + tx, y' = c*x + d*y + ty
-    // computedBitmapMatrixは列優先 [a, c, 0, b, d, 0, tx, ty, 1] 形式
-    uniformData[0] = computedBitmapMatrix[0];  // col0.x = a
-    uniformData[1] = computedBitmapMatrix[1];  // col0.y = c
-    uniformData[2] = computedBitmapMatrix[2];  // col0.z = 0
-    uniformData[3] = 0; // padding
-    uniformData[4] = computedBitmapMatrix[3];  // col1.x = b
-    uniformData[5] = computedBitmapMatrix[4];  // col1.y = d
-    uniformData[6] = computedBitmapMatrix[5];  // col1.z = 0
-    uniformData[7] = 0; // padding
-    uniformData[8] = computedBitmapMatrix[6];  // col2.x = tx
-    uniformData[9] = computedBitmapMatrix[7];  // col2.y = ty
-    uniformData[10] = computedBitmapMatrix[8]; // col2.z = 1
-    uniformData[11] = 0; // padding
+    $uniformData16[0] = computedBitmapMatrix[0];  // col0.x = a
+    $uniformData16[1] = computedBitmapMatrix[1];  // col0.y = c
+    $uniformData16[2] = computedBitmapMatrix[2];  // col0.z = 0
+    $uniformData16[3] = 0; // padding
+    $uniformData16[4] = computedBitmapMatrix[3];  // col1.x = b
+    $uniformData16[5] = computedBitmapMatrix[4];  // col1.y = d
+    $uniformData16[6] = computedBitmapMatrix[5];  // col1.z = 0
+    $uniformData16[7] = 0; // padding
+    $uniformData16[8] = computedBitmapMatrix[6];  // col2.x = tx
+    $uniformData16[9] = computedBitmapMatrix[7];  // col2.y = ty
+    $uniformData16[10] = computedBitmapMatrix[8]; // col2.z = 1
+    $uniformData16[11] = 0; // padding
     // ビットマップパラメータ
-    uniformData[12] = width;
-    uniformData[13] = height;
-    uniformData[14] = repeat ? 1.0 : 0.0;
-    uniformData[15] = 0; // padding
+    $uniformData16[12] = width;
+    $uniformData16[13] = height;
+    $uniformData16[14] = repeat ? 1.0 : 0.0;
+    $uniformData16[15] = 0; // padding
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData16.byteLength);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniformData16.buffer, $uniformData16.byteOffset, $uniformData16.byteLength);
 
     // サンプラーを取得（キャッシュ済み）
     const samplerKey = `bitmap_${smooth ? "s" : "n"}_${repeat ? "r" : "c"}`;

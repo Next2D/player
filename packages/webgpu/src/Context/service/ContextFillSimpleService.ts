@@ -2,6 +2,8 @@ import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { $isMaskDrawing, $getMaskStencilReference } from "../../Mask";
 
+const $uniformData4 = new Float32Array(4);
+
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,
@@ -16,14 +18,13 @@ export const execute = (
     _clip_level: number = 1
 ): void => {
     // Uniform data: viewport size only (8 bytes → 16 bytes aligned)
-    const uniformData = new Float32Array(4);
-    uniformData[0] = viewport_width;
-    uniformData[1] = viewport_height;
-    uniformData[2] = 0;
-    uniformData[3] = 0;
+    $uniformData4[0] = viewport_width;
+    $uniformData4[1] = viewport_height;
+    $uniformData4[2] = 0;
+    $uniformData4[3] = 0;
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData4.byteLength);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniformData4.buffer, $uniformData4.byteOffset, $uniformData4.byteLength);
 
     // バインドグループを作成
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("fill");

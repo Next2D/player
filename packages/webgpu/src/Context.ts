@@ -645,13 +645,11 @@ export class Context
     }
 
     /**
-     * @description 塗りつぶしを実行（Loop-Blinn方式対応）
+     * @description 描画メソッド共通: レンダーパスの確保とノード領域クリア
+     *              fill(), stroke(), gradientFill(), bitmapFill(), gradientStroke(), bitmapStroke() で使用
      */
-    fill (): void
+    private ensureFillRenderPass (): void
     {
-        const pathVertices = this.pathCommand.$getVertices;
-        if (pathVertices.length === 0) { return }
-
         // フレームが開始されていない場合は開始
         if (!this.frameStarted) {
             this.beginFrame();
@@ -758,6 +756,17 @@ export class Context
         if (this.currentRenderTarget) {
             this.ensureNodeAreaCleared();
         }
+    }
+
+    /**
+     * @description 塗りつぶしを実行（Loop-Blinn方式対応）
+     */
+    fill (): void
+    {
+        const pathVertices = this.pathCommand.$getVertices;
+        if (pathVertices.length === 0) { return }
+
+        this.ensureFillRenderPass();
 
         // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
         const viewportWidth = this.viewportWidth;
@@ -935,110 +944,7 @@ export class Context
         const vertices = this.pathCommand.getVerticesForStroke();
         if (vertices.length === 0) { return }
 
-        // フレームが開始されていない場合は開始
-        if (!this.frameStarted) {
-            this.beginFrame();
-        }
-
-        // コマンドエンコーダーを確保
-        this.ensureCommandEncoder();
-
-        // 既存のレンダーパスがない場合のみ新規作成
-        if (!this.renderPassEncoder) {
-            // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
-            const textureView = this.getCurrentTextureView();
-            const attachment = $getAtlasAttachmentObject();
-
-            // MSAAテクスチャを使用するかどうか
-            const useMsaa = attachment?.msaa && attachment?.msaaTexture?.view;
-            const colorView = useMsaa ? attachment!.msaaTexture!.view : textureView;
-            const resolveTarget = useMsaa ? textureView : null;
-
-            // アトラスへの描画でステンシルが必要な場合はステンシル付きレンダーパスを作成
-            if (this.currentRenderTarget && attachment?.stencil?.view) {
-                // MSAAステンシルテクスチャを使用
-                const stencilView = useMsaa && attachment?.msaaStencil?.view
-                    ? attachment.msaaStencil.view
-                    : attachment.stencil.view;
-
-                // ステンシルは常にクリア（2パスフィル描画のため）
-                // 各描画ごとにステンシルを0からスタートする必要がある
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    colorView,
-                    stencilView,
-                    "load",
-                    "clear",  // ステンシルをクリア
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            } else if (!this.currentRenderTarget && ($isMaskTestEnabled() || $isMaskDrawing()) && this.$mainAttachmentObject?.stencil?.view) {
-                // マスク描画時またはマスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
-                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
-                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
-                const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
-                    ? this.$mainAttachmentObject.msaaStencil.view
-                    : this.$mainAttachmentObject.stencil.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
-
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    mainColorView,
-                    mainStencilView,
-                    "load",
-                    "load",  // ステンシルは既存の値を保持（マスク情報）
-                    mainResolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-                // マスクテスト時はステンシル参照値を設定
-                if ($isMaskTestEnabled()) {
-                    this.renderPassEncoder.setStencilReference($getMaskStencilReference());
-                }
-            } else if (!this.currentRenderTarget && this.$mainAttachmentObject) {
-                // メインアタッチメントへの通常描画（MSAA対応）
-                // 2パスステンシルフィルを使用するため、常にステンシル付きレンダーパスを作成
-                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
-                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
-
-                if (this.$mainAttachmentObject.stencil?.view) {
-                    // ステンシル付きレンダーパス（2パスステンシルフィル用）
-                    const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
-                        ? this.$mainAttachmentObject.msaaStencil.view
-                        : this.$mainAttachmentObject.stencil.view;
-
-                    const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                        mainColorView,
-                        mainStencilView,
-                        "load",
-                        "clear",  // ステンシルをクリア（各描画でステンシルを0からスタート）
-                        mainResolveTarget
-                    );
-                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-                } else {
-                    // ステンシルなし（フォールバック）
-                    const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                        mainColorView,
-                        0, 0, 0, 0,
-                        "load",
-                        mainResolveTarget
-                    );
-                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-                }
-            } else {
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    colorView,
-                    0, 0, 0, 0,
-                    "load",
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            }
-        }
-
-        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
-        // renderPassEncoder作成後に呼び出す必要がある
-        if (this.currentRenderTarget) {
-            this.ensureNodeAreaCleared();
-        }
+        this.ensureFillRenderPass();
 
         // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
         const viewportWidth = this.viewportWidth;
@@ -1484,64 +1390,7 @@ export class Context
         const pathVertices = this.pathCommand.$getVertices;
         if (pathVertices.length === 0) { return }
 
-        // フレームが開始されていない場合は開始
-        if (!this.frameStarted) {
-            this.beginFrame();
-        }
-
-        // コマンドエンコーダーを確保
-        this.ensureCommandEncoder();
-
-        // 既存のレンダーパスがない場合のみ新規作成
-        if (!this.renderPassEncoder) {
-            const textureView = this.getCurrentTextureView();
-
-            // メインキャンバス直接描画時はステンシル付きレンダーパスが必要
-            // 中抜き描画（hollow shape）を正しく処理するため
-            const needsMainStencil = !this.currentRenderTarget && this.$mainAttachmentObject?.stencil?.view;
-
-            // アトラス描画時もステンシル付きレンダーパスが必要（2パスステンシルフィル用）
-            const atlasAttachment = $getAtlasAttachmentObject();
-            const needsAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
-
-            if (needsMainStencil) {
-                // メインアタッチメント用ステンシルレンダーパス
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    this.$mainAttachmentObject!.texture!.view,
-                    this.$mainAttachmentObject!.stencil!.view,
-                    "load",
-                    "clear"  // ステンシルをクリア（中抜き描画用）
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-                // マスクテスト時はステンシル参照値を設定
-                if ($isMaskTestEnabled()) {
-                    this.renderPassEncoder.setStencilReference($getMaskStencilReference());
-                }
-            } else if (needsAtlasStencil) {
-                // アトラス描画時：ステンシル付きレンダーパス（2パスステンシルフィル用）
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    textureView,
-                    atlasAttachment!.stencil!.view,
-                    "load",
-                    "clear"  // ステンシルをクリア（中抜き描画用）
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            } else {
-                // ステンシル不要の通常レンダーパス
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    textureView,
-                    0, 0, 0, 0,
-                    "load"
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            }
-        }
-
-        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
-        // renderPassEncoder作成後に呼び出す必要がある
-        if (this.currentRenderTarget) {
-            this.ensureNodeAreaCleared();
-        }
+        this.ensureFillRenderPass();
 
         // WebGL版と同じ: ビューポートサイズ
         const viewportWidth = this.viewportWidth;
@@ -1598,73 +1447,10 @@ export class Context
         const pathVertices = this.pathCommand.$getVertices;
         if (pathVertices.length === 0) { return }
 
-        // フレームが開始されていない場合は開始
-        if (!this.frameStarted) {
-            this.beginFrame();
-        }
+        this.ensureFillRenderPass();
 
-        // コマンドエンコーダーを確保
-        this.ensureCommandEncoder();
-
-        // アトラスのアタッチメントを取得（レンダーパス作成とステンシル判定で使用）
+        // アトラスのアタッチメントを取得（ステンシル判定で使用）
         const atlasAttachment = $getAtlasAttachmentObject();
-
-        // 既存のレンダーパスがない場合のみ新規作成
-        if (!this.renderPassEncoder) {
-            const textureView = this.getCurrentTextureView();
-
-            // ステンシル付きレンダーパスが必要な場合を判定
-            // 1. メインアタッチメントへのマスク描画/テスト
-            const needsMainStencil = !this.currentRenderTarget && ($isMaskTestEnabled() || $isMaskDrawing()) && this.$mainAttachmentObject?.stencil?.view;
-            // 2. アトラスへの描画（2パスフィルレンダリング用）
-            const needsAtlasStencil = this.currentRenderTarget && atlasAttachment?.stencil?.view;
-
-            if (needsMainStencil) {
-                // メインアタッチメント用ステンシルレンダーパス
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    this.$mainAttachmentObject!.texture!.view,
-                    this.$mainAttachmentObject!.stencil!.view,
-                    "load",
-                    "load"  // ステンシルは既存の値を保持（マスク情報）
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-                // マスクテスト時はステンシル参照値を設定
-                if ($isMaskTestEnabled()) {
-                    this.renderPassEncoder.setStencilReference($getMaskStencilReference());
-                }
-            } else if (needsAtlasStencil) {
-                // アトラス用ステンシルレンダーパス（2パスフィルレンダリング用）
-                // MSAAテクスチャを使用するかどうか
-                const useMsaa = atlasAttachment.msaa && atlasAttachment.msaaTexture?.view;
-                const colorView = useMsaa ? atlasAttachment.msaaTexture!.view : textureView;
-                const atlasStencilView = useMsaa
-                    ? atlasAttachment.msaaStencil?.view || atlasAttachment.stencil!.view
-                    : atlasAttachment.stencil!.view;
-                const resolveTarget = useMsaa ? textureView : null;
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    colorView,
-                    atlasStencilView,
-                    "load",
-                    "clear",  // ステンシルはクリア（各描画で独立）
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            } else {
-                // ステンシル無しレンダーパス
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    textureView,
-                    0, 0, 0, 0,
-                    "load"
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            }
-        }
-
-        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
-        // renderPassEncoder作成後に呼び出す必要がある
-        if (this.currentRenderTarget) {
-            this.ensureNodeAreaCleared();
-        }
 
         // ステンシル付きレンダーパスかどうかを判定
         // - マスクモード時またはマスクテスト有効時（メインアタッチメントへの描画）
@@ -1722,70 +1508,10 @@ export class Context
         const vertices = this.pathCommand.getVerticesForStroke();
         if (vertices.length === 0) { return }
 
-        // フレームが開始されていない場合は開始
-        if (!this.frameStarted) {
-            this.beginFrame();
-        }
-
-        // コマンドエンコーダーを確保
-        this.ensureCommandEncoder();
+        this.ensureFillRenderPass();
 
         // アトラスのアタッチメントを取得（ステンシル判定で使用）
         const atlasAttachment = $getAtlasAttachmentObject();
-
-        // 既存のレンダーパスがない場合のみ新規作成
-        if (!this.renderPassEncoder) {
-            const textureView = this.getCurrentTextureView();
-
-            if (this.currentRenderTarget && atlasAttachment?.stencil?.view) {
-                // アトラス描画時：ステンシル付きレンダーパス（beginNodeRenderingと同じ構成）
-                const useMsaa = atlasAttachment.msaa && atlasAttachment.msaaTexture?.view;
-                const colorView = useMsaa ? atlasAttachment.msaaTexture!.view : textureView;
-                const stencilView = useMsaa && atlasAttachment.msaaStencil?.view
-                    ? atlasAttachment.msaaStencil.view
-                    : atlasAttachment.stencil.view;
-                const resolveTarget = useMsaa ? textureView : null;
-
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    colorView,
-                    stencilView,
-                    "load",
-                    "clear",
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            } else if (!this.currentRenderTarget && this.$mainAttachmentObject?.stencil?.view) {
-                // メインキャンバス描画時：ステンシル付きレンダーパス
-                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
-                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
-                const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
-                    ? this.$mainAttachmentObject.msaaStencil.view
-                    : this.$mainAttachmentObject.stencil.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
-
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    mainColorView,
-                    mainStencilView,
-                    "load",
-                    "clear",
-                    mainResolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            } else {
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    textureView,
-                    0, 0, 0, 0,
-                    "load"
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            }
-        }
-
-        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
-        // renderPassEncoder作成後に呼び出す必要がある
-        if (this.currentRenderTarget) {
-            this.ensureNodeAreaCleared();
-        }
 
         // レンダーパスがステンシルアタッチメントを持つ場合はステンシル互換パイプラインを使用
         const useAtlasStencil = !!(this.currentRenderTarget && atlasAttachment?.stencil?.view);
@@ -1839,70 +1565,10 @@ export class Context
         const vertices = this.pathCommand.getVerticesForStroke();
         if (vertices.length === 0) { return }
 
-        // フレームが開始されていない場合は開始
-        if (!this.frameStarted) {
-            this.beginFrame();
-        }
-
-        // コマンドエンコーダーを確保
-        this.ensureCommandEncoder();
+        this.ensureFillRenderPass();
 
         // アトラスのアタッチメントを取得（ステンシル判定で使用）
         const atlasAttachment = $getAtlasAttachmentObject();
-
-        // 既存のレンダーパスがない場合のみ新規作成
-        if (!this.renderPassEncoder) {
-            const textureView = this.getCurrentTextureView();
-
-            if (this.currentRenderTarget && atlasAttachment?.stencil?.view) {
-                // アトラス描画時：ステンシル付きレンダーパス（beginNodeRenderingと同じ構成）
-                const useMsaa = atlasAttachment.msaa && atlasAttachment.msaaTexture?.view;
-                const colorView = useMsaa ? atlasAttachment.msaaTexture!.view : textureView;
-                const stencilView = useMsaa && atlasAttachment.msaaStencil?.view
-                    ? atlasAttachment.msaaStencil.view
-                    : atlasAttachment.stencil.view;
-                const resolveTarget = useMsaa ? textureView : null;
-
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    colorView,
-                    stencilView,
-                    "load",
-                    "clear",
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            } else if (!this.currentRenderTarget && this.$mainAttachmentObject?.stencil?.view) {
-                // メインキャンバス描画時：ステンシル付きレンダーパス
-                const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
-                const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
-                const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
-                    ? this.$mainAttachmentObject.msaaStencil.view
-                    : this.$mainAttachmentObject.stencil.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
-
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    mainColorView,
-                    mainStencilView,
-                    "load",
-                    "clear",
-                    mainResolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            } else {
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    textureView,
-                    0, 0, 0, 0,
-                    "load"
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
-            }
-        }
-
-        // ノードレンダリング中の場合、最初の描画前にノード領域をクリア
-        // renderPassEncoder作成後に呼び出す必要がある
-        if (this.currentRenderTarget) {
-            this.ensureNodeAreaCleared();
-        }
 
         // レンダーパスがステンシルアタッチメントを持つ場合はステンシル互換パイプラインを使用
         const useAtlasStencil = !!(this.currentRenderTarget && atlasAttachment?.stencil?.view);

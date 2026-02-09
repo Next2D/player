@@ -12,6 +12,8 @@ import {
 
 let $gradientSampler: GPUSampler | null = null;
 
+const $uniformData20 = new Float32Array(20);
+
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
@@ -98,47 +100,39 @@ export const execute = (
     // - radius: f32 (4 bytes)
     // - linearPoints: vec4<f32> (16 bytes) - a.x, a.y, b.x, b.y
     // 合計: 80 bytes
-    const uniformData = new Float32Array(20);
-    // mat3x3 (WGSL column-major: 各列がvec4にパディング)
-    // inverseMatrixは行優先で格納されている: [a,b,0, c,d,0, tx,ty,1]
-    // WGSL mat3x3 * vec3(x,y,1) で正しいaffine変換を行うための列優先形式:
-    // col0: [a, c, 0]
-    // col1: [b, d, 0]
-    // col2: [tx, ty, 1]
-    // 結果: x' = a*x + b*y + tx, y' = c*x + d*y + ty
-    uniformData[0] = gradientData.inverseMatrix[0];  // column 0, row 0 (a)
-    uniformData[1] = gradientData.inverseMatrix[3];  // column 0, row 1 (c)
-    uniformData[2] = 0;                              // column 0, row 2 (0)
-    uniformData[3] = 0; // padding
-    uniformData[4] = gradientData.inverseMatrix[1];  // column 1, row 0 (b)
-    uniformData[5] = gradientData.inverseMatrix[4];  // column 1, row 1 (d)
-    uniformData[6] = 0;                              // column 1, row 2 (0)
-    uniformData[7] = 0; // padding
-    uniformData[8] = gradientData.inverseMatrix[6];  // column 2, row 0 (tx)
-    uniformData[9] = gradientData.inverseMatrix[7];  // column 2, row 1 (ty)
-    uniformData[10] = 1;                             // column 2, row 2 (1)
-    uniformData[11] = 0; // padding
+    $uniformData20[0] = gradientData.inverseMatrix[0];  // column 0, row 0 (a)
+    $uniformData20[1] = gradientData.inverseMatrix[3];  // column 0, row 1 (c)
+    $uniformData20[2] = 0;                              // column 0, row 2 (0)
+    $uniformData20[3] = 0; // padding
+    $uniformData20[4] = gradientData.inverseMatrix[1];  // column 1, row 0 (b)
+    $uniformData20[5] = gradientData.inverseMatrix[4];  // column 1, row 1 (d)
+    $uniformData20[6] = 0;                              // column 1, row 2 (0)
+    $uniformData20[7] = 0; // padding
+    $uniformData20[8] = gradientData.inverseMatrix[6];  // column 2, row 0 (tx)
+    $uniformData20[9] = gradientData.inverseMatrix[7];  // column 2, row 1 (ty)
+    $uniformData20[10] = 1;                             // column 2, row 2 (1)
+    $uniformData20[11] = 0; // padding
     // グラデーションパラメータ
-    uniformData[12] = type; // gradientType
+    $uniformData20[12] = type; // gradientType
     // focal point ratio を -0.975 ~ 0.975 にclamp（WebGL版と同じ）
-    uniformData[13] = Math.max(-0.975, Math.min(0.975, focal)); // focal
-    uniformData[14] = spread; // spread (0: reflect, 1: repeat, 2: pad)
-    uniformData[15] = 819.2; // radius（Radial用、WebGL版と同じ定数）
+    $uniformData20[13] = Math.max(-0.975, Math.min(0.975, focal)); // focal
+    $uniformData20[14] = spread; // spread (0: reflect, 1: repeat, 2: pad)
+    $uniformData20[15] = 819.2; // radius（Radial用、WebGL版と同じ定数）
     // Linear用の点a, b
     if (gradientData.linearPoints) {
-        uniformData[16] = gradientData.linearPoints[0]; // a.x
-        uniformData[17] = gradientData.linearPoints[1]; // a.y
-        uniformData[18] = gradientData.linearPoints[2]; // b.x
-        uniformData[19] = gradientData.linearPoints[3]; // b.y
+        $uniformData20[16] = gradientData.linearPoints[0]; // a.x
+        $uniformData20[17] = gradientData.linearPoints[1]; // a.y
+        $uniformData20[18] = gradientData.linearPoints[2]; // b.x
+        $uniformData20[19] = gradientData.linearPoints[3]; // b.y
     } else {
-        uniformData[16] = 0;
-        uniformData[17] = 0;
-        uniformData[18] = 0;
-        uniformData[19] = 0;
+        $uniformData20[16] = 0;
+        $uniformData20[17] = 0;
+        $uniformData20[18] = 0;
+        $uniformData20[19] = 0;
     }
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer(uniformData.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
+    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData20.byteLength);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniformData20.buffer, $uniformData20.byteOffset, $uniformData20.byteLength);
 
     // サンプラーを作成（キャッシュ済み）
     if (!$gradientSampler) {
@@ -187,7 +181,6 @@ export const execute = (
         if (gradientPipeline) {
             render_pass_encoder.setPipeline(gradientPipeline);
             render_pass_encoder.setStencilReference(0);
-            render_pass_encoder.setVertexBuffer(0, vertexBuffer);
             render_pass_encoder.setBindGroup(0, bindGroup);
             render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
         }
@@ -227,7 +220,6 @@ export const execute = (
     if (gradientPipeline) {
         render_pass_encoder.setPipeline(gradientPipeline);
         render_pass_encoder.setStencilReference(use_stencil_pipeline ? $getMaskStencilReference() : 0);
-        render_pass_encoder.setVertexBuffer(0, vertexBuffer);
         render_pass_encoder.setBindGroup(0, bindGroup);
         render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
     }

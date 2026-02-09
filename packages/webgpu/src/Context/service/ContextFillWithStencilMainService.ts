@@ -23,7 +23,6 @@ export const execute = (
     if (fillPipeline) {
         render_pass_encoder.setPipeline(fillPipeline);
         render_pass_encoder.setStencilReference(0);
-        render_pass_encoder.setVertexBuffer(0, vertex_buffer);
         render_pass_encoder.draw(vertex_count, 1, 0, 0);
     }
 };
