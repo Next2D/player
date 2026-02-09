@@ -14,12 +14,23 @@ const GPUTextureUsage = {
 };
 (globalThis as any).GPUTextureUsage = GPUTextureUsage;
 
-// Mock usecase and service modules
+// Mock usecase and service modules (bucket-based Map API)
 vi.mock("./TexturePool/usecase/TexturePoolAcquireUseCase", () => ({
-    "execute": vi.fn((device, pool, width, height, format, usage, currentFrame, maxPoolSize) => {
-        // Check for reusable texture in pool
-        for (const entry of pool) {
-            if (!entry.inUse && entry.width === width && entry.height === height) {
+    "execute": vi.fn((device, buckets, width, height, format, usage, currentFrame, maxPoolSize, totalCount) => {
+        // Power-of-2 bucket key
+        const po2W = Math.max(1, 1 << Math.ceil(Math.log2(width)));
+        const po2H = Math.max(1, 1 << Math.ceil(Math.log2(height)));
+        const key = `${po2W}_${po2H}_${format}`;
+
+        let bucket = buckets.get(key);
+        if (!bucket) {
+            bucket = [];
+            buckets.set(key, bucket);
+        }
+
+        // Check for reusable texture in bucket
+        for (const entry of bucket) {
+            if (!entry.inUse && entry.width === po2W && entry.height === po2H) {
                 entry.inUse = true;
                 entry.lastUsedFrame = currentFrame;
                 return entry.texture;
@@ -27,42 +38,51 @@ vi.mock("./TexturePool/usecase/TexturePoolAcquireUseCase", () => ({
         }
         // Create new texture
         const texture = {
-            "width": width,
-            "height": height,
+            "width": po2W,
+            "height": po2H,
             "format": format,
             "destroy": vi.fn()
         };
-        pool.push({
+        bucket.push({
             texture,
-            width,
-            height,
+            "width": po2W,
+            "height": po2H,
             format,
-            usage,
             "inUse": true,
             "lastUsedFrame": currentFrame
         });
+        totalCount[0]++;
         return texture;
     })
 }));
 
 vi.mock("./TexturePool/service/TexturePoolReleaseService", () => ({
-    "execute": vi.fn((pool, texture, currentFrame) => {
-        const entry = pool.find((e: any) => e.texture === texture);
-        if (entry) {
-            entry.inUse = false;
-            entry.lastUsedFrame = currentFrame;
+    "execute": vi.fn((buckets, texture, currentFrame) => {
+        for (const bucket of buckets.values()) {
+            const entry = bucket.find((e: any) => e.texture === texture);
+            if (entry) {
+                entry.inUse = false;
+                entry.lastUsedFrame = currentFrame;
+                return;
+            }
         }
     })
 }));
 
 vi.mock("./TexturePool/service/TexturePoolCleanupService", () => ({
-    "execute": vi.fn((pool, currentFrame, threshold) => {
+    "execute": vi.fn((buckets, currentFrame, threshold, totalCount) => {
         // Remove old unused textures
-        for (let i = pool.length - 1; i >= 0; i--) {
-            const entry = pool[i];
-            if (!entry.inUse && currentFrame - entry.lastUsedFrame > threshold) {
-                entry.texture.destroy();
-                pool.splice(i, 1);
+        for (const [key, bucket] of buckets.entries()) {
+            for (let i = bucket.length - 1; i >= 0; i--) {
+                const entry = bucket[i];
+                if (!entry.inUse && currentFrame - entry.lastUsedFrame > threshold) {
+                    entry.texture.destroy();
+                    bucket.splice(i, 1);
+                    totalCount[0]--;
+                }
+            }
+            if (bucket.length === 0) {
+                buckets.delete(key);
             }
         }
     })

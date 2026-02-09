@@ -39,8 +39,8 @@ describe("BufferManagerReleaseUniformBufferService", () =>
 
     it("should destroy buffer when bucket is full", () =>
     {
-        // Fill bucket to max (8)
-        for (let i = 0; i < 8; i++) {
+        // Fill bucket to max (32)
+        for (let i = 0; i < 32; i++) {
             const buf = createMockBuffer(256);
             execute(buckets, buf);
         }
@@ -48,8 +48,8 @@ describe("BufferManagerReleaseUniformBufferService", () =>
         const newBuffer = createMockBuffer(256);
         execute(buckets, newBuffer);
 
-        // Bucket stays at 8, new buffer destroyed
-        expect(buckets.get(256)!.length).toBe(8);
+        // Bucket stays at 32, new buffer destroyed
+        expect(buckets.get(256)!.length).toBe(32);
         expect(newBuffer.destroy).toHaveBeenCalled();
     });
 

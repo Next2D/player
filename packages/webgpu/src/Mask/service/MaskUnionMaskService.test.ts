@@ -6,12 +6,23 @@ import { execute } from "./MaskUnionMaskService";
 
 describe("MaskUnionMaskService", () =>
 {
+    const createMockDevice = () =>
+    {
+        return {
+            "queue": {
+                "writeBuffer": vi.fn()
+            },
+            "createBindGroup": vi.fn(() => ({ "label": "mockBindGroup" }))
+        } as unknown as GPUDevice;
+    };
+
     const createMockRenderPassEncoder = () =>
     {
         return {
             "setPipeline": vi.fn(),
             "setStencilReference": vi.fn(),
             "setVertexBuffer": vi.fn(),
+            "setBindGroup": vi.fn(),
             "draw": vi.fn()
         } as unknown as GPURenderPassEncoder;
     };
@@ -20,7 +31,8 @@ describe("MaskUnionMaskService", () =>
     {
         return {
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
-            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" }))
+            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
         } as unknown as BufferManager;
     };
 
@@ -29,10 +41,16 @@ describe("MaskUnionMaskService", () =>
         return {
             "getPipeline": vi.fn((name: string) => {
                 if (name.startsWith("mask_union_merge_") && hasMergePipeline) {
-                    return { "label": `mock_${name}` };
+                    return {
+                        "label": `mock_${name}`,
+                        "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
+                    };
                 }
                 if (name.startsWith("mask_union_clear_") && hasClearPipeline) {
-                    return { "label": `mock_${name}` };
+                    return {
+                        "label": `mock_${name}`,
+                        "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
+                    };
                 }
                 return null;
             })
@@ -66,19 +84,37 @@ describe("MaskUnionMaskService", () =>
     {
         it("should create vertex buffer with fullscreen rectangle data", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
             const attachment = createMockAttachment();
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
             const callArgs = (bufferManager.acquireVertexBuffer as ReturnType<typeof vi.fn>).mock.calls[0];
-            // Check vertex data size (Float32Array with 6 vertices * 17 floats each = 102 floats = 408 bytes)
-            expect(callArgs[0]).toBe(408);
+            // Check vertex data size (Float32Array with 6 vertices * 4 floats each = 24 floats = 96 bytes)
+            expect(callArgs[0]).toBe(96);
             const vertexData = callArgs[1] as Float32Array;
-            expect(vertexData.length).toBe(102);
+            expect(vertexData.length).toBe(24);
+        });
+    });
+
+    describe("uniform buffer creation", () =>
+    {
+        it("should create uniform buffer with FillUniforms data", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const attachment = createMockAttachment();
+
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
+
+            expect(bufferManager.acquireUniformBuffer).toHaveBeenCalled();
+            expect(device.queue.writeBuffer).toHaveBeenCalled();
         });
     });
 
@@ -86,12 +122,13 @@ describe("MaskUnionMaskService", () =>
     {
         it("should execute merge pass first then clear pass", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
             const attachment = createMockAttachment(3);
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             // Should request both pipelines
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("mask_union_merge_3");
@@ -104,12 +141,13 @@ describe("MaskUnionMaskService", () =>
 
         it("should set correct stencil references for merge pass", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
             const attachment = createMockAttachment(3);
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             // mask = 1 << (clipLevel - 1) = 1 << 2 = 4
             expect(renderPassEncoder.setStencilReference).toHaveBeenCalledWith(4);
@@ -119,15 +157,30 @@ describe("MaskUnionMaskService", () =>
 
         it("should calculate correct mask for different clip levels", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
             const attachment = createMockAttachment(5);
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             // mask = 1 << (5 - 1) = 1 << 4 = 16
             expect(renderPassEncoder.setStencilReference).toHaveBeenCalledWith(16);
+        });
+
+        it("should set bind groups for both passes", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const attachment = createMockAttachment(3);
+
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
+
+            expect(renderPassEncoder.setBindGroup).toHaveBeenCalledTimes(2);
+            expect(device.createBindGroup).toHaveBeenCalledTimes(2);
         });
     });
 
@@ -135,12 +188,13 @@ describe("MaskUnionMaskService", () =>
     {
         it("should skip merge pass when merge pipeline not found", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager(false, true);
             const attachment = createMockAttachment();
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             // Only clear pass should be executed
             expect(renderPassEncoder.draw).toHaveBeenCalledTimes(1);
@@ -148,12 +202,13 @@ describe("MaskUnionMaskService", () =>
 
         it("should skip clear pass when clear pipeline not found", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager(true, false);
             const attachment = createMockAttachment();
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             // Only merge pass should be executed
             expect(renderPassEncoder.draw).toHaveBeenCalledTimes(1);
@@ -161,12 +216,13 @@ describe("MaskUnionMaskService", () =>
 
         it("should skip both passes when no pipelines found", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager(false, false);
             const attachment = createMockAttachment();
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, attachment);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             // No drawing should occur
             expect(renderPassEncoder.draw).not.toHaveBeenCalled();
@@ -177,11 +233,12 @@ describe("MaskUnionMaskService", () =>
     {
         it("should return early when attachment is null", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
 
-            execute(renderPassEncoder, bufferManager, pipelineManager, null as unknown as IAttachmentObject);
+            execute(device, renderPassEncoder, bufferManager, pipelineManager, null as unknown as IAttachmentObject);
 
             expect(bufferManager.acquireVertexBuffer).not.toHaveBeenCalled();
             expect(renderPassEncoder.draw).not.toHaveBeenCalled();

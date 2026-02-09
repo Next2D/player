@@ -4,13 +4,7 @@ import { execute } from "./MeshFillGenerateService";
 
 describe("MeshFillGenerateService", () =>
 {
-    const FLOATS_PER_VERTEX = 17;
-
-    // Identity matrix
-    const identityMatrix = { a: 1, b: 0, c: 0, d: 1, tx: 0, ty: 0 };
-
-    // White color with full alpha
-    const whiteColor = { red: 1, green: 1, blue: 1, alpha: 1 };
+    const FLOATS_PER_VERTEX = 4;
 
     describe("basic vertex generation", () =>
     {
@@ -21,32 +15,18 @@ describe("MeshFillGenerateService", () =>
             const vertex: IPath = [0, 0, 0, 10, 10, 1, 20, 0, 0] as IPath;
             const buffer = new Float32Array(1000);
 
-            const newIndex = execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            const newIndex = execute(vertex, buffer, 0);
 
             expect(newIndex).toBeGreaterThan(0);
         });
 
-        it("should write 17 floats per vertex", () =>
+        it("should write 4 floats per vertex", () =>
         {
             // Triangle that triggers one iteration (bezier curve)
             const vertex: IPath = [0, 0, 0, 10, 10, 1, 20, 0, 0] as IPath;
             const buffer = new Float32Array(100);
 
-            const newIndex = execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            const newIndex = execute(vertex, buffer, 0);
 
             // Each iteration writes 3 vertices
             expect(newIndex).toBe(3);
@@ -57,66 +37,12 @@ describe("MeshFillGenerateService", () =>
             const vertex: IPath = [100, 200, 0, 10, 10, 1, 20, 0, 0] as IPath;
             const buffer = new Float32Array(100);
 
-            execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            execute(vertex, buffer, 0);
 
             // First vertex position comes from vertex[idx-3], vertex[idx-2]
             // idx starts at 3, so vertex[0] = 100, vertex[1] = 200
             expect(buffer[0]).toBe(100);
             expect(buffer[1]).toBe(200);
-        });
-
-        it("should write color at correct offset", () =>
-        {
-            const vertex: IPath = [0, 0, 0, 10, 10, 1, 20, 0, 0] as IPath;
-            const buffer = new Float32Array(100);
-
-            execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                0.5, 0.6, 0.7, 0.8
-            );
-
-            // Color starts at offset 4 (after position x, y and bezier u, v)
-            expect(buffer[4]).toBeCloseTo(0.5, 5); // red
-            expect(buffer[5]).toBeCloseTo(0.6, 5); // green
-            expect(buffer[6]).toBeCloseTo(0.7, 5); // blue
-            expect(buffer[7]).toBeCloseTo(0.8, 5); // alpha
-        });
-
-        it("should write matrix at correct offset", () =>
-        {
-            const vertex: IPath = [0, 0, 0, 10, 10, 1, 20, 0, 0] as IPath;
-            const buffer = new Float32Array(100);
-
-            execute(
-                vertex, buffer, 0,
-                2, 0.5, 0.3, 3, 100, 200,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
-
-            // Matrix starts at offset 8
-            // Row 0: a, b, 0
-            expect(buffer[8]).toBeCloseTo(2, 5);   // a
-            expect(buffer[9]).toBeCloseTo(0.5, 5); // b
-            expect(buffer[10]).toBeCloseTo(0, 5);  // 0
-            // Row 1: c, d, 0
-            expect(buffer[11]).toBeCloseTo(0.3, 5); // c
-            expect(buffer[12]).toBeCloseTo(3, 5);   // d
-            expect(buffer[13]).toBeCloseTo(0, 5);   // 0
-            // Row 2: tx, ty, 1
-            expect(buffer[14]).toBeCloseTo(100, 5); // tx
-            expect(buffer[15]).toBeCloseTo(200, 5); // ty
-            expect(buffer[16]).toBeCloseTo(1, 5);   // 1 (for affine transform)
         });
     });
 
@@ -127,14 +53,7 @@ describe("MeshFillGenerateService", () =>
             const vertex: IPath = [0, 0, 0, 10, 10, 1, 20, 0, 0] as IPath;
             const buffer = new Float32Array(100);
 
-            execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            execute(vertex, buffer, 0);
 
             // First vertex bezier coords (u=0, v=0)
             expect(buffer[2]).toBe(0);
@@ -158,14 +77,7 @@ describe("MeshFillGenerateService", () =>
             const vertex: IPath = [50, 50, 0, 10, 10, 0, 20, 20, 0] as IPath;
             const buffer = new Float32Array(100);
 
-            execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            execute(vertex, buffer, 0);
 
             // First vertex should be at start point (50, 50)
             expect(buffer[0]).toBe(50);
@@ -177,14 +89,7 @@ describe("MeshFillGenerateService", () =>
             const vertex: IPath = [50, 50, 0, 10, 10, 0, 20, 20, 0] as IPath;
             const buffer = new Float32Array(100);
 
-            execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            execute(vertex, buffer, 0);
 
             // All vertices should have (0.5, 0.5) for non-curve
             expect(buffer[2]).toBe(0.5);
@@ -200,15 +105,10 @@ describe("MeshFillGenerateService", () =>
             const buffer = new Float32Array(200);
 
             const newIndex = execute(
-                vertex, buffer, 2, // Start at index 2
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
+                vertex, buffer, 2 // Start at index 2
             );
 
-            // Should start at index 2 * 17 = 34
+            // Should start at index 2 * 4 = 8
             // Buffer before should be zeros
             expect(buffer[0]).toBe(0);
             expect(buffer[FLOATS_PER_VERTEX]).toBe(0);
@@ -225,14 +125,7 @@ describe("MeshFillGenerateService", () =>
             const vertex: IPath = [0, 0, 0, 10, 10, 1, 20, 0, 0] as IPath;
             const buffer = new Float32Array(100);
 
-            const newIndex = execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            const newIndex = execute(vertex, buffer, 0);
 
             // One triangle = 3 vertices
             expect(newIndex % 3).toBe(0);
@@ -247,14 +140,7 @@ describe("MeshFillGenerateService", () =>
             const vertex: IPath = [0, 0, 0, 10, 10] as IPath;
             const buffer = new Float32Array(100);
 
-            const newIndex = execute(
-                vertex, buffer, 0,
-                identityMatrix.a, identityMatrix.b,
-                identityMatrix.c, identityMatrix.d,
-                identityMatrix.tx, identityMatrix.ty,
-                whiteColor.red, whiteColor.green,
-                whiteColor.blue, whiteColor.alpha
-            );
+            const newIndex = execute(vertex, buffer, 0);
 
             expect(newIndex).toBe(0);
         });

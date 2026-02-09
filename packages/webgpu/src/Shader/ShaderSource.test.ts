@@ -20,23 +20,29 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@vertex");
         });
 
-        it("should define VertexInput struct with position, bezier, color, and matrix", () =>
+        it("should define VertexInput struct with position and bezier", () =>
         {
             const shader = ShaderSource.getFillVertexShader();
 
             expect(shader).toContain("struct VertexInput");
             expect(shader).toContain("position: vec2<f32>");
             expect(shader).toContain("bezier: vec2<f32>");
-            expect(shader).toContain("color: vec4<f32>");
-            expect(shader).toContain("matrix0: vec3<f32>");
         });
 
-        it("should define Uniforms struct with viewportSize", () =>
+        it("should define FillUniforms struct with color and matrix", () =>
         {
             const shader = ShaderSource.getFillVertexShader();
 
-            expect(shader).toContain("struct Uniforms");
-            expect(shader).toContain("viewportSize: vec2<f32>");
+            expect(shader).toContain("struct FillUniforms");
+            expect(shader).toContain("color: vec4<f32>");
+            expect(shader).toContain("matrix0: vec4<f32>");
+        });
+
+        it("should use yFlipSign override for Y-axis control", () =>
+        {
+            const shader = ShaderSource.getFillVertexShader();
+
+            expect(shader).toContain("yFlipSign");
         });
     });
 
@@ -57,11 +63,12 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@vertex");
         });
 
-        it("should include Y-axis inversion for main attachment", () =>
+        it("should return same shader as non-Main variant (uses @override yFlipSign)", () =>
         {
-            const shader = ShaderSource.getFillMainVertexShader();
+            const mainShader = ShaderSource.getFillMainVertexShader();
+            const atlasShader = ShaderSource.getFillVertexShader();
 
-            expect(shader).toContain("-ndc.y");
+            expect(mainShader).toBe(atlasShader);
         });
     });
 
@@ -87,6 +94,13 @@ describe("ShaderSource", () =>
             const shader = ShaderSource.getFillFragmentShader();
 
             expect(shader).toContain("bezier");
+        });
+
+        it("should use inverseSqrt for distance calculation", () =>
+        {
+            const shader = ShaderSource.getFillFragmentShader();
+
+            expect(shader).toContain("inverseSqrt");
         });
     });
 
@@ -125,11 +139,12 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@vertex");
         });
 
-        it("should include Y-axis inversion for main attachment", () =>
+        it("should return same shader as non-Main variant (uses @override yFlipSign)", () =>
         {
-            const shader = ShaderSource.getStencilWriteMainVertexShader();
+            const mainShader = ShaderSource.getStencilWriteMainVertexShader();
+            const atlasShader = ShaderSource.getStencilWriteVertexShader();
 
-            expect(shader).toContain("-ndc.y");
+            expect(mainShader).toBe(atlasShader);
         });
     });
 
@@ -266,11 +281,12 @@ describe("ShaderSource", () =>
             expect(shader).toContain("@vertex");
         });
 
-        it("should include Y-axis inversion", () =>
+        it("should return same shader as non-Main variant (uses @override yFlipSign)", () =>
         {
-            const shader = ShaderSource.getBasicMainVertexShader();
+            const mainShader = ShaderSource.getBasicMainVertexShader();
+            const atlasShader = ShaderSource.getBasicVertexShader();
 
-            expect(shader).toContain("-ndc.y");
+            expect(mainShader).toBe(atlasShader);
         });
     });
 
@@ -830,9 +846,9 @@ describe("ShaderSource", () =>
 
     describe("getComplexBlendFragmentShader", () =>
     {
-        it("should return a valid WGSL fragment shader for multiply mode", () =>
+        it("should return a valid WGSL fragment shader (unified)", () =>
         {
-            const shader = ShaderSource.getComplexBlendFragmentShader("multiply");
+            const shader = ShaderSource.getComplexBlendFragmentShader();
 
             expect(typeof shader).toBe("string");
             expect(shader.length).toBeGreaterThan(0);
@@ -840,82 +856,31 @@ describe("ShaderSource", () =>
 
         it("should contain @fragment attribute", () =>
         {
-            const shader = ShaderSource.getComplexBlendFragmentShader("multiply");
+            const shader = ShaderSource.getComplexBlendFragmentShader();
 
             expect(shader).toContain("@fragment");
         });
 
-        it("should return unified shader for all blend modes", () =>
+        it("should include blend function", () =>
         {
-            const multiply = ShaderSource.getComplexBlendFragmentShader("multiply");
-            const screen = ShaderSource.getComplexBlendFragmentShader("screen");
-            const overlay = ShaderSource.getComplexBlendFragmentShader("overlay");
-
-            expect(multiply).toBe(screen);
-            expect(multiply).toBe(overlay);
-        });
-
-        it("should support multiply blend mode", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader("multiply");
+            const shader = ShaderSource.getComplexBlendFragmentShader();
 
             expect(shader).toContain("fn blend");
         });
 
-        it("should support screen blend mode", () =>
+        it("should support step-based blend modes (lighten/darken)", () =>
         {
-            const shader = ShaderSource.getComplexBlendFragmentShader("screen");
-
-            expect(shader).toContain("fn blend");
-        });
-
-        it("should support lighten blend mode", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader("lighten");
+            const shader = ShaderSource.getComplexBlendFragmentShader();
 
             expect(shader).toContain("step(srcRgb, dstRgb)");
-        });
-
-        it("should support darken blend mode", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader("darken");
-
             expect(shader).toContain("step(dstRgb, srcRgb)");
         });
 
-        it("should support difference blend mode", () =>
+        it("should include blendMode uniform", () =>
         {
-            const shader = ShaderSource.getComplexBlendFragmentShader("difference");
+            const shader = ShaderSource.getComplexBlendFragmentShader();
 
-            expect(shader).toContain("fn blend");
-        });
-
-        it("should support subtract blend mode", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader("subtract");
-
-            expect(shader).toBeDefined();
-        });
-
-        it("should support invert blend mode", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader("invert");
-
-            expect(shader).toBeDefined();
-        });
-
-        it("should support overlay blend mode", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader("overlay");
-
-            expect(shader).toBeDefined();
-        });
-
-        it("should support hardlight blend mode", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader("hardlight");
-
-            expect(shader).toBeDefined();
+            expect(shader).toContain("blendMode");
         });
     });
 

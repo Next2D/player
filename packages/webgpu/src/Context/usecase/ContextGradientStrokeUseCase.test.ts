@@ -11,7 +11,7 @@ const GPUTextureUsage = {
 };
 (globalThis as any).GPUTextureUsage = GPUTextureUsage;
 
-// Mock MeshGradientStrokeGenerateUseCase
+// Mock MeshGradientStrokeGenerateUseCase - now only takes (vertices, thickness)
 vi.mock("../../Mesh/usecase/MeshGradientStrokeGenerateUseCase", () => ({
     "execute": vi.fn(() => ({
         "buffer": new Float32Array([0, 0, 1, 1, 2, 2]),
@@ -33,27 +33,37 @@ vi.mock("../service/ContextComputeGradientMatrixService", () => ({
     }))
 }));
 
+// Mock GradientLUTCache
+vi.mock("../../Gradient/GradientLUTCache", () => ({
+    "$getLUTFromCache": vi.fn(() => null),
+    "$putLUTToCache": vi.fn()
+}));
+
+// Mock FillTexturePool
+const mockFillTexture = {
+    "label": "mockFillTexture",
+    "createView": vi.fn(() => ({ "label": "mockView" })),
+    "destroy": vi.fn()
+};
+vi.mock("../../FillTexturePool", () => ({
+    "$acquireFillTexture": vi.fn(() => mockFillTexture)
+}));
+
 import { execute as meshGradientStrokeGenerateUseCase } from "../../Mesh/usecase/MeshGradientStrokeGenerateUseCase";
 
 describe("ContextGradientStrokeUseCase", () =>
 {
     const createMockDevice = () =>
     {
-        const mockTexture = {
-            "label": "mockLutTexture",
-            "createView": vi.fn(() => ({ "label": "mockView" })),
-            "destroy": vi.fn()
-        };
         return {
-            "createTexture": vi.fn(() => mockTexture),
+            "createTexture": vi.fn(),
             "queue": {
                 "writeTexture": vi.fn(),
                 "writeBuffer": vi.fn()
             },
             "createSampler": vi.fn(() => ({ "label": "mockSampler" })),
-            "createBindGroup": vi.fn(() => ({ "label": "mockBindGroup" })),
-            "_mockTexture": mockTexture
-        } as unknown as GPUDevice & { _mockTexture: any };
+            "createBindGroup": vi.fn(() => ({ "label": "mockBindGroup" }))
+        } as unknown as GPUDevice;
     };
 
     const createMockRenderPassEncoder = () =>
@@ -120,13 +130,14 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                true
+                true,
+                false
             );
 
             expect(result).toBe(null);
         });
 
-        it("should create LUT texture", () =>
+        it("should call meshGradientStrokeGenerateUseCase with only (vertices, thickness)", () =>
         {
             const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
@@ -149,18 +160,15 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                true
+                true,
+                false
             );
 
-            expect(device.createTexture).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    "size": { "width": 256, "height": 1 },
-                    "format": "rgba8unorm"
-                })
-            );
+            // meshGradientStrokeGenerateUseCase now only takes (vertices, thickness)
+            expect(meshGradientStrokeGenerateUseCase).toHaveBeenCalledWith(vertices, 10);
         });
 
-        it("should return LUT texture after drawing", () =>
+        it("should return null after drawing (LUT is cached, not returned)", () =>
         {
             const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
@@ -183,16 +191,18 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                true
+                true,
+                false
             );
 
-            expect(result).toBe(device._mockTexture);
+            // Source always returns null (LUT is cached via $putLUTToCache)
+            expect(result).toBe(null);
         });
     });
 
     describe("pipeline selection", () =>
     {
-        it("should use gradient_fill pipeline for atlas target", () =>
+        it("should use gradient_fill pipeline for atlas target without stencil", () =>
         {
             const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
@@ -215,13 +225,14 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                true  // useAtlasTarget
+                true,   // useAtlasTarget
+                false   // useStencilPipeline
             );
 
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill");
         });
 
-        it("should use gradient_fill_bgra pipeline for canvas target", () =>
+        it("should use gradient_fill_bgra pipeline for canvas target without stencil", () =>
         {
             const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
@@ -244,10 +255,41 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                false  // useAtlasTarget
+                false,  // useAtlasTarget
+                false   // useStencilPipeline
             );
 
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_bgra");
+        });
+
+        it("should use gradient_stroke_atlas pipeline for atlas target with stencil", () =>
+        {
+            const device = createMockDevice();
+            const renderPassEncoder = createMockRenderPassEncoder();
+            const bufferManager = createMockBufferManager();
+            const pipelineManager = createMockPipelineManager();
+            const vertices: IPath[] = [[0, 0, false, 100, 0, false]];
+            const stops = [0, 1, 0, 0, 1, 1, 0, 1, 0, 1];
+
+            execute(
+                device,
+                renderPassEncoder,
+                bufferManager,
+                pipelineManager,
+                vertices,
+                10,
+                new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+                new Float32Array([1, 1, 1, 1]),
+                0,
+                stops,
+                new Float32Array([1, 0, 0, 1, 0, 0]),
+                0, 0, 0,
+                800, 600,
+                true,   // useAtlasTarget
+                true    // useStencilPipeline
+            );
+
+            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_stroke_atlas");
         });
     });
 
@@ -276,11 +318,11 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                true
+                true,
+                false
             );
 
             expect(result).toBe(null);
-            expect(device._mockTexture.destroy).not.toHaveBeenCalled();
         });
 
         it("should return null when pipeline not found", () =>
@@ -306,11 +348,11 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                true
+                true,
+                false
             );
 
             expect(result).toBe(null);
-            expect(device._mockTexture.destroy).not.toHaveBeenCalled();
         });
     });
 
@@ -339,7 +381,8 @@ describe("ContextGradientStrokeUseCase", () =>
                 new Float32Array([1, 0, 0, 1, 0, 0]),
                 0, 0, 0,
                 800, 600,
-                true
+                true,
+                false
             );
 
             expect(renderPassEncoder.draw).toHaveBeenCalledWith(6, 1, 0, 0);

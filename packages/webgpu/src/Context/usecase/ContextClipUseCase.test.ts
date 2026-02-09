@@ -25,12 +25,23 @@ import { $clipLevels } from "../../Mask";
 
 describe("ContextClipUseCase", () =>
 {
+    const createMockDevice = () =>
+    {
+        return {
+            "queue": {
+                "writeBuffer": vi.fn()
+            },
+            "createBindGroup": vi.fn(() => ({ "label": "mockBindGroup" }))
+        } as unknown as GPUDevice;
+    };
+
     const createMockRenderPassEncoder = () =>
     {
         return {
             "setPipeline": vi.fn(),
             "setStencilReference": vi.fn(),
             "setVertexBuffer": vi.fn(),
+            "setBindGroup": vi.fn(),
             "draw": vi.fn()
         } as unknown as GPURenderPassEncoder;
     };
@@ -39,14 +50,18 @@ describe("ContextClipUseCase", () =>
     {
         return {
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
-            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" }))
+            "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
         } as unknown as BufferManager;
     };
 
     const createMockPipelineManager = (hasPipeline: boolean = true) =>
     {
         return {
-            "getPipeline": vi.fn(() => hasPipeline ? { "label": "mockPipeline" } : null)
+            "getPipeline": vi.fn(() => hasPipeline ? {
+                "label": "mockPipeline",
+                "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
+            } : null)
         } as unknown as PipelineManager;
     };
 
@@ -82,6 +97,7 @@ describe("ContextClipUseCase", () =>
     {
         it("should proceed with unknown clip level using fallback", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
@@ -89,6 +105,7 @@ describe("ContextClipUseCase", () =>
             const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
 
             execute(
+                device,
                 renderPassEncoder,
                 bufferManager,
                 pipelineManager,
@@ -106,6 +123,7 @@ describe("ContextClipUseCase", () =>
 
         it("should return early when path vertices is empty", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
@@ -113,6 +131,7 @@ describe("ContextClipUseCase", () =>
             const pathVertices: IPath[] = [];
 
             execute(
+                device,
                 renderPassEncoder,
                 bufferManager,
                 pipelineManager,
@@ -132,6 +151,7 @@ describe("ContextClipUseCase", () =>
     {
         it("should use clip_write pipeline for atlas attachment", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
@@ -139,6 +159,7 @@ describe("ContextClipUseCase", () =>
             const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
 
             execute(
+                device,
                 renderPassEncoder,
                 bufferManager,
                 pipelineManager,
@@ -155,6 +176,7 @@ describe("ContextClipUseCase", () =>
 
         it("should use clip_write_main_N pipeline for main attachment", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
@@ -162,6 +184,7 @@ describe("ContextClipUseCase", () =>
             const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
 
             execute(
+                device,
                 renderPassEncoder,
                 bufferManager,
                 pipelineManager,
@@ -178,6 +201,7 @@ describe("ContextClipUseCase", () =>
 
         it("should return early when pipeline not found", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager(false);
@@ -185,6 +209,7 @@ describe("ContextClipUseCase", () =>
             const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
 
             execute(
+                device,
                 renderPassEncoder,
                 bufferManager,
                 pipelineManager,
@@ -205,6 +230,7 @@ describe("ContextClipUseCase", () =>
     {
         it("should create vertex buffer and draw", () =>
         {
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
@@ -212,6 +238,7 @@ describe("ContextClipUseCase", () =>
             const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
 
             execute(
+                device,
                 renderPassEncoder,
                 bufferManager,
                 pipelineManager,
@@ -224,9 +251,12 @@ describe("ContextClipUseCase", () =>
             );
 
             expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
+            expect(bufferManager.acquireUniformBuffer).toHaveBeenCalled();
+            expect(device.queue.writeBuffer).toHaveBeenCalled();
             expect(renderPassEncoder.setPipeline).toHaveBeenCalled();
             expect(renderPassEncoder.setStencilReference).toHaveBeenCalledWith(0);
             expect(renderPassEncoder.setVertexBuffer).toHaveBeenCalledWith(0, expect.anything());
+            expect(renderPassEncoder.setBindGroup).toHaveBeenCalledWith(0, expect.anything());
             expect(renderPassEncoder.draw).toHaveBeenCalledWith(6, 1, 0, 0);
         });
     });
@@ -238,6 +268,7 @@ describe("ContextClipUseCase", () =>
             // Set up a high level
             ($clipLevels as Map<number, number>).set(10, 10);
 
+            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const bufferManager = createMockBufferManager();
             const pipelineManager = createMockPipelineManager();
@@ -245,6 +276,7 @@ describe("ContextClipUseCase", () =>
             const pathVertices: IPath[] = [[0, 0, false, 100, 0, false]];
 
             execute(
+                device,
                 renderPassEncoder,
                 bufferManager,
                 pipelineManager,

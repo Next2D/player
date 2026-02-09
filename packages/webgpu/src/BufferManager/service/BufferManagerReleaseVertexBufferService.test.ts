@@ -51,8 +51,8 @@ describe("BufferManagerReleaseVertexBufferService", () =>
 
     it("should destroy buffer when bucket is full", () =>
     {
-        // Fill bucket to max (8)
-        for (let i = 0; i < 8; i++) {
+        // Fill bucket to max (32)
+        for (let i = 0; i < 32; i++) {
             const buf = createMockBuffer(1024);
             execute(buckets, buf);
         }
@@ -60,8 +60,8 @@ describe("BufferManagerReleaseVertexBufferService", () =>
         const newBuffer = createMockBuffer(1024);
         execute(buckets, newBuffer);
 
-        // Bucket stays at 8, new buffer destroyed
-        expect(buckets.get(1024)!.length).toBe(8);
+        // Bucket stays at 32, new buffer destroyed
+        expect(buckets.get(1024)!.length).toBe(32);
         expect(newBuffer.destroy).toHaveBeenCalled();
     });
 
