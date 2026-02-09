@@ -52,6 +52,7 @@ const mockDevice = {
     createPipelineLayout: vi.fn().mockReturnValue({}),
     createSampler: vi.fn().mockReturnValue({}),
     createShaderModule: vi.fn().mockReturnValue({}),
+    createComputePipeline: vi.fn().mockReturnValue({}),
     createQuerySet: vi.fn().mockReturnValue({
         destroy: vi.fn()
     }),
@@ -87,7 +88,8 @@ vi.stubGlobal("GPUTextureUsage", {
     RENDER_ATTACHMENT: 16,
     TEXTURE_BINDING: 4,
     COPY_SRC: 1,
-    COPY_DST: 2
+    COPY_DST: 2,
+    STORAGE_BINDING: 8
 });
 
 vi.stubGlobal("GPUShaderStage", {

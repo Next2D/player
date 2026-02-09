@@ -51,7 +51,11 @@ describe("ContextClipUseCase", () =>
         return {
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
-            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
+            "dynamicUniform": {
+                "allocate": vi.fn(() => 0),
+                "getBuffer": vi.fn(() => ({ "label": "mockDynamicBuffer" }))
+            }
         } as unknown as BufferManager;
     };
 
@@ -61,7 +65,8 @@ describe("ContextClipUseCase", () =>
             "getPipeline": vi.fn(() => hasPipeline ? {
                 "label": "mockPipeline",
                 "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
-            } : null)
+            } : null),
+            "getBindGroupLayout": vi.fn(() => ({ "label": "mockDynamicLayout" }))
         } as unknown as PipelineManager;
     };
 
@@ -251,12 +256,11 @@ describe("ContextClipUseCase", () =>
             );
 
             expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
-            expect(bufferManager.acquireUniformBuffer).toHaveBeenCalled();
-            expect(device.queue.writeBuffer).toHaveBeenCalled();
+            expect(bufferManager.dynamicUniform.allocate).toHaveBeenCalled();
             expect(renderPassEncoder.setPipeline).toHaveBeenCalled();
             expect(renderPassEncoder.setStencilReference).toHaveBeenCalledWith(0);
             expect(renderPassEncoder.setVertexBuffer).toHaveBeenCalledWith(0, expect.anything());
-            expect(renderPassEncoder.setBindGroup).toHaveBeenCalledWith(0, expect.anything());
+            expect(renderPassEncoder.setBindGroup).toHaveBeenCalledWith(0, expect.anything(), [0]);
             expect(renderPassEncoder.draw).toHaveBeenCalledWith(6, 1, 0, 0);
         });
     });

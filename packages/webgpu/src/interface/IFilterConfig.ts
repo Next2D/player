@@ -1,4 +1,5 @@
 import type { IAttachmentObject } from "./IAttachmentObject";
+import type { ComputePipelineManager } from "../Compute/ComputePipelineManager";
 
 /**
  * @description フィルター処理の共通設定
@@ -26,4 +27,5 @@ export interface IFilterConfig {
     textureManager: {
         createSampler(name: string, smooth: boolean): GPUSampler;
     };
+    computePipelineManager?: ComputePipelineManager;
 }

@@ -12,6 +12,7 @@ import { TextureManager } from "./TextureManager";
 import { FrameBufferManager } from "./FrameBufferManager";
 import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
+import { ComputePipelineManager } from "./Compute/ComputePipelineManager";
 import {
     $rootNodes,
     $resetAtlas,
@@ -47,6 +48,8 @@ import {
 } from "./Gradient/GradientLUTCache";
 import {
     $releaseFillTexture,
+    $acquireRenderTexture,
+    $releaseRenderTexture,
     $clearFillTexturePool
 } from "./FillTexturePool";
 import {
@@ -185,6 +188,9 @@ export class Context
     // フレームごとのプール管理テクスチャ（endFrame()でプールに返却）
     private pooledTextures: GPUTexture[] = [];
 
+    // フレームごとのレンダーテクスチャプール管理（endFrame()でプールに返却）
+    private pooledRenderTextures: GPUTexture[] = [];
+
     // Current rendering target (could be main or atlas)
     private currentRenderTarget: GPUTextureView | null = null;
 
@@ -197,6 +203,7 @@ export class Context
     private textureManager: TextureManager;
     private frameBufferManager: FrameBufferManager;
     private pipelineManager: PipelineManager;
+    private computePipelineManager: ComputePipelineManager;
     private attachmentManager: AttachmentManager;
 
     public newDrawState: boolean = false;
@@ -213,6 +220,12 @@ export class Context
 
     // 現在のノードのシザー範囲（クリア後に戻すため）
     private currentNodeScissor: { x: number; y: number; w: number; h: number } | null = null;
+
+    // アトラスレンダーパス統合: 同一アトラスへの連続描画でパスを再利用
+    private nodeRenderPassAtlasIndex: number = -1;
+
+    // Dynamic Uniform BindGroup（fill/stencilパイプライン共有、フレームごとに1回作成）
+    private fillDynamicBindGroup: GPUBindGroup | null = null;
 
     // Storage Buffer + Indirect Drawing を使用するかどうか
     private useOptimizedInstancing: boolean = true;
@@ -287,6 +300,7 @@ export class Context
         this.pipelineManager = new PipelineManager(device, preferred_format);
         // 遅延パイプライン群を即座に先行作成（初回アクセス時のレイテンシ解消）
         this.pipelineManager.preloadLazyGroups();
+        this.computePipelineManager = new ComputePipelineManager(device);
         this.attachmentManager = new AttachmentManager(device);
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
@@ -416,6 +430,10 @@ export class Context
             $releaseFillTexture(texture);
         }
         this.pooledTextures.length = 0;
+        for (const texture of this.pooledRenderTextures) {
+            $releaseRenderTexture(texture);
+        }
+        this.pooledRenderTextures.length = 0;
         $clearFillTexturePool();
 
         // フレーム状態をリセット（リサイズ中は新しいフレームを開始できるようにする）
@@ -802,38 +820,64 @@ export class Context
         // 頂点バッファを取得（プールから再利用）
         const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
-        // color/matrixをuniformに書き込み
-        const uniformBuffer = this.writeFillUniform(
+        // color/matrixをDynamic Uniform Bufferに書き込み
+        const uniformOffset = this.writeFillUniform(
             this.$fillStyle[0], this.$fillStyle[1], this.$fillStyle[2], this.$fillStyle[3],
             this.$matrix[0], this.$matrix[1], this.$matrix[3], this.$matrix[4],
             this.$matrix[6], this.$matrix[7],
             viewportWidth, viewportHeight
         );
+        const bindGroup = this.getOrCreateFillDynamicBindGroup();
 
         // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
         const attachment = $getAtlasAttachmentObject();
         if (this.currentRenderTarget && attachment?.stencil?.view) {
-            this.fillWithStencil(vertexBuffer, mesh.indexCount, uniformBuffer);
+            this.fillWithStencil(vertexBuffer, mesh.indexCount, bindGroup, uniformOffset);
         } else if (!this.currentRenderTarget && !this.inMaskMode && !$isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
-            this.fillWithStencilMain(vertexBuffer, mesh.indexCount, uniformBuffer);
+            this.fillWithStencilMain(vertexBuffer, mesh.indexCount, bindGroup, uniformOffset);
         } else {
             const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
-            this.fillSimple(vertexBuffer, mesh.indexCount, useStencilPipeline, uniformBuffer);
+            this.fillSimple(vertexBuffer, mesh.indexCount, useStencilPipeline, bindGroup, uniformOffset);
         }
 
         // レンダーパスは終了しない（drawFill()またはendNodeRendering()で終了する）
     }
 
     /**
+     * @description Dynamic Uniform BindGroupを取得（フレーム内で初回呼び出し時に作成）
+     */
+    private getOrCreateFillDynamicBindGroup(): GPUBindGroup
+    {
+        if (!this.fillDynamicBindGroup) {
+            const layout = this.pipelineManager.getBindGroupLayout("fill_dynamic");
+            if (!layout) {
+                throw new Error("[WebGPU] fill_dynamic bind group layout not found");
+            }
+            this.fillDynamicBindGroup = this.device.createBindGroup({
+                "layout": layout,
+                "entries": [{
+                    "binding": 0,
+                    "resource": {
+                        "buffer": this.bufferManager.dynamicUniform.getBuffer(),
+                        "size": 256
+                    }
+                }]
+            });
+        }
+        return this.fillDynamicBindGroup;
+    }
+
+    /**
      * @description fill/stroke用のcolor/matrix uniformを書き込む
      * FillUniforms構造体: color(vec4) + matrix0(vec4) + matrix1(vec4) + matrix2(vec4) = 64 bytes
+     * @return Dynamic Uniform Buffer内のアライメント済みオフセット
      */
     private writeFillUniform(
         red: number, green: number, blue: number, alpha: number,
         a: number, b: number, c: number, d: number,
         tx: number, ty: number,
         viewportWidth: number, viewportHeight: number
-    ): GPUBuffer
+    ): number
     {
         // color
         $fillUniform16[0] = red;
@@ -856,9 +900,7 @@ export class Context
         $fillUniform16[14] = 1;
         $fillUniform16[15] = 0;
 
-        const uniformBuffer = this.bufferManager.acquireUniformBuffer($fillUniform16.byteLength);
-        this.device.queue.writeBuffer(uniformBuffer, 0, $fillUniform16.buffer, $fillUniform16.byteOffset, $fillUniform16.byteLength);
-        return uniformBuffer;
+        return this.bufferManager.dynamicUniform.allocate($fillUniform16);
     }
 
     /**
@@ -867,16 +909,17 @@ export class Context
     private fillWithStencil(
         vertexBuffer: GPUBuffer,
         vertexCount: number,
-        uniformBuffer: GPUBuffer
+        bindGroup: GPUBindGroup,
+        uniformOffset: number
     ): void
     {
         contextFillWithStencilService(
-            this.device,
             this.renderPassEncoder!,
             this.pipelineManager,
             vertexBuffer,
             vertexCount,
-            uniformBuffer
+            bindGroup,
+            uniformOffset
         );
     }
 
@@ -886,16 +929,17 @@ export class Context
     private fillWithStencilMain(
         vertexBuffer: GPUBuffer,
         vertexCount: number,
-        uniformBuffer: GPUBuffer
+        bindGroup: GPUBindGroup,
+        uniformOffset: number
     ): void
     {
         contextFillWithStencilMainService(
-            this.device,
             this.renderPassEncoder!,
             this.pipelineManager,
             vertexBuffer,
             vertexCount,
-            uniformBuffer
+            bindGroup,
+            uniformOffset
         );
     }
 
@@ -906,18 +950,19 @@ export class Context
         vertexBuffer: GPUBuffer,
         vertexCount: number,
         useStencilPipeline: boolean,
-        uniformBuffer: GPUBuffer
+        bindGroup: GPUBindGroup,
+        uniformOffset: number
     ): void
     {
         const clipLevel = this.$mainAttachmentObject?.clipLevel ?? 1;
 
         contextFillSimpleService(
-            this.device,
             this.renderPassEncoder!,
             this.pipelineManager,
             vertexBuffer,
             vertexCount,
-            uniformBuffer,
+            bindGroup,
+            uniformOffset,
             !!this.currentRenderTarget,
             useStencilPipeline,
             clipLevel
@@ -995,22 +1040,23 @@ export class Context
 
         const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
-        // color/matrixをuniformに書き込み
-        const uniformBuffer = this.writeFillUniform(
+        // color/matrixをDynamic Uniform Bufferに書き込み
+        const uniformOffset = this.writeFillUniform(
             this.$strokeStyle[0], this.$strokeStyle[1], this.$strokeStyle[2], this.$strokeStyle[3],
             this.$matrix[0], this.$matrix[1], this.$matrix[3], this.$matrix[4],
             this.$matrix[6], this.$matrix[7],
             viewportWidth, viewportHeight
         );
+        const bindGroup = this.getOrCreateFillDynamicBindGroup();
 
         const attachment = $getAtlasAttachmentObject();
         if (this.currentRenderTarget && attachment?.stencil?.view) {
-            this.fillWithStencil(vertexBuffer, mesh.indexCount, uniformBuffer);
+            this.fillWithStencil(vertexBuffer, mesh.indexCount, bindGroup, uniformOffset);
         } else if (!this.currentRenderTarget && !this.inMaskMode && !$isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
-            this.fillWithStencilMain(vertexBuffer, mesh.indexCount, uniformBuffer);
+            this.fillWithStencilMain(vertexBuffer, mesh.indexCount, bindGroup, uniformOffset);
         } else {
             const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
-            this.fillSimple(vertexBuffer, mesh.indexCount, useStencilPipeline, uniformBuffer);
+            this.fillSimple(vertexBuffer, mesh.indexCount, useStencilPipeline, bindGroup, uniformOffset);
         }
 
         // ストローク描画後はpathCommandをクリアする
@@ -1744,70 +1790,70 @@ export class Context
             this.beginFrame();
         }
 
-        // 既存のレンダーパスを終了
-        if (this.renderPassEncoder) {
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-        }
-
         // アトラステクスチャの該当箇所をレンダーターゲットに設定
-        // ノードのインデックスを使用して正しいアトラスを取得
         const attachment = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
         if (attachment && attachment.texture) {
-            this.currentRenderTarget = attachment.texture.view;
 
-            // WebGL版と同じ: ビューポートサイズはアトラスのサイズを使用
-            this.viewportWidth = attachment.width;
-            this.viewportHeight = attachment.height;
-
-            // コマンドエンコーダーを確保
-            this.ensureCommandEncoder();
-
-            // MSAAテクスチャを使用するかどうか
-            const useMsaa = attachment.msaa && attachment.msaaTexture?.view;
-            const colorView = useMsaa ? attachment.msaaTexture!.view : attachment.texture.view;
-            const resolveTarget = useMsaa ? attachment.texture.view : null;
-
-            // ステンシルバッファ付きレンダーパス（2パスステンシルフィル用）
-            if (attachment.stencil?.view) {
-                // MSAAステンシルテクスチャを使用
-                const stencilView = useMsaa && attachment.msaaStencil?.view
-                    ? attachment.msaaStencil.view
-                    : attachment.stencil.view;
-
-                const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
-                    colorView,
-                    stencilView,
-                    "load", // カラーは既存の内容を保持
-                    "clear", // ステンシルはクリア
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            // 同一アトラスへの連続描画ならレンダーパスを再利用
+            if (this.renderPassEncoder && this.nodeRenderPassAtlasIndex === node.index) {
+                // レンダーパスを再利用 — シザーレクトのみ更新
+                this.currentRenderTarget = attachment.texture.view;
+                this.viewportWidth = attachment.width;
+                this.viewportHeight = attachment.height;
             } else {
-                // ステンシルがない場合は通常のレンダーパス（フォールバック）
-                const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-                    colorView,
-                    0, 0, 0, 0,
-                    "load",
-                    resolveTarget
-                );
-                this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                // アトラスが変わった or パスがない → 新規作成
+                if (this.renderPassEncoder) {
+                    this.renderPassEncoder.end();
+                    this.renderPassEncoder = null;
+                }
+
+                this.currentRenderTarget = attachment.texture.view;
+                this.viewportWidth = attachment.width;
+                this.viewportHeight = attachment.height;
+
+                this.ensureCommandEncoder();
+
+                const useMsaa = attachment.msaa && attachment.msaaTexture?.view;
+                const colorView = useMsaa ? attachment.msaaTexture!.view : attachment.texture.view;
+                const resolveTarget = useMsaa ? attachment.texture.view : null;
+
+                if (attachment.stencil?.view) {
+                    const stencilView = useMsaa && attachment.msaaStencil?.view
+                        ? attachment.msaaStencil.view
+                        : attachment.stencil.view;
+
+                    const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
+                        colorView,
+                        stencilView,
+                        "load",
+                        "load",
+                        resolveTarget
+                    );
+                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                } else {
+                    const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                        colorView,
+                        0, 0, 0, 0,
+                        "load",
+                        resolveTarget
+                    );
+                    this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                }
+
+                this.nodeRenderPassAtlasIndex = node.index;
             }
 
             // シザーレクトで描画範囲を制限
-            // WebGL版と同じ: 描画範囲は (x, y, w, h)
             let scissorX = Math.max(0, node.x);
             let scissorY = Math.max(0, node.y);
             let scissorW = Math.min(node.w, attachment.width - scissorX);
             let scissorH = Math.min(node.h, attachment.height - scissorY);
 
-            // レンダーターゲット範囲内にクランプ
             scissorX = Math.min(scissorX, attachment.width);
             scissorY = Math.min(scissorY, attachment.height);
             scissorW = Math.max(0, Math.min(scissorW, attachment.width - scissorX));
             scissorH = Math.max(0, Math.min(scissorH, attachment.height - scissorY));
 
-            // ノードのシザー範囲を保存（クリア後に戻すため）
             this.$scissorRect.x = scissorX;
             this.$scissorRect.y = scissorY;
             this.$scissorRect.w = scissorW;
@@ -1815,11 +1861,9 @@ export class Context
             this.currentNodeScissor = this.$scissorRect;
 
             if (scissorW > 0 && scissorH > 0) {
-                // WebGL版と同じ: クリア時は +1px 拡張（右下方向のみ）
                 const clearW = Math.min(scissorW + 1, attachment.width - scissorX);
                 const clearH = Math.min(scissorH + 1, attachment.height - scissorY);
                 this.renderPassEncoder.setScissorRect(scissorX, scissorY, clearW, clearH);
-                // クリアは ensureNodeAreaCleared() で遅延実行
             }
         }
     }
@@ -1875,14 +1919,11 @@ export class Context
 
     /**
      * @description 指定のノード範囲で描画を終了
+     *              レンダーパスは終了しない（次のbeginNodeRenderingで再利用するため）
      */
     endNodeRendering (): void
     {
-        // レンダーパスを終了
-        if (this.renderPassEncoder) {
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-        }
+        // レンダーパスは終了しない（次のbeginNodeRenderingで同一アトラスなら再利用）
 
         // メインテクスチャに戻す
         this.currentRenderTarget = null;
@@ -1904,11 +1945,8 @@ export class Context
         // WebGPU版ではfill()が直接GPU描画するため、ここでfill()を再呼び出しする必要はない
         // （END_FILLコマンドからfill()は既に呼ばれている）
 
-        // drawFill()呼び出し後、レンダーパスを終了
-        if (this.renderPassEncoder) {
-            this.renderPassEncoder.end();
-            this.renderPassEncoder = null;
-        }
+        // レンダーパスは終了しない（アトラスレンダーパス統合で次のノードと共有する）
+        // stencil_fillパイプラインのpassOp: "zero"でステンシルは自動リセット済み
 
         // グリッドデータをクリア
         $terminateGrid();
@@ -1959,11 +1997,12 @@ export class Context
             this.beginFrame();
         }
 
-        // 既存のレンダーパスを終了
+        // 既存のレンダーパスを終了（アトラスパス統合をリセット）
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
+        this.nodeRenderPassAtlasIndex = -1;
 
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
@@ -2120,12 +2159,8 @@ export class Context
         height: number
     ): void
     {
-        // 一時テクスチャを作成
-        const tempTexture = this.device.createTexture({
-            "size": { "width": width, "height": height },
-            "format": "rgba8unorm",
-            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-        });
+        // 一時テクスチャをプールから取得
+        const tempTexture = $acquireRenderTexture(this.device, width, height);
 
         // ピクセルデータを一時テクスチャに書き込む
         const rowBytes = width * 4;
@@ -2144,13 +2179,13 @@ export class Context
 
         const pipeline = this.pipelineManager.getPipeline("bitmap_render_msaa");
         if (!pipeline) {
-            tempTexture.destroy();
+            $releaseRenderTexture(tempTexture);
             return;
         }
 
         const bindGroupLayout = this.pipelineManager.getBindGroupLayout("positioned_texture");
         if (!bindGroupLayout) {
-            tempTexture.destroy();
+            $releaseRenderTexture(tempTexture);
             return;
         }
 
@@ -2205,8 +2240,8 @@ export class Context
         renderPass.draw(6);
         renderPass.end();
 
-        // submit前にdestroyできないため、endFrame()で解放
-        this.frameTextures.push(tempTexture);
+        // endFrame()でプールに返却
+        this.pooledRenderTextures.push(tempTexture);
     }
 
     /**
@@ -2257,12 +2292,8 @@ export class Context
         flipY: boolean
     ): void
     {
-        // 一時テクスチャを作成
-        const tempTexture = this.device.createTexture({
-            "size": { "width": width, "height": height },
-            "format": "rgba8unorm",
-            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-        });
+        // 一時テクスチャをプールから取得
+        const tempTexture = $acquireRenderTexture(this.device, width, height);
 
         this.device.queue.copyExternalImageToTexture(
             {
@@ -2281,13 +2312,13 @@ export class Context
 
         const pipeline = this.pipelineManager.getPipeline("bitmap_render_msaa");
         if (!pipeline) {
-            tempTexture.destroy();
+            $releaseRenderTexture(tempTexture);
             return;
         }
 
         const bindGroupLayout = this.pipelineManager.getBindGroupLayout("positioned_texture");
         if (!bindGroupLayout) {
-            tempTexture.destroy();
+            $releaseRenderTexture(tempTexture);
             return;
         }
 
@@ -2342,7 +2373,8 @@ export class Context
         renderPass.draw(6);
         renderPass.end();
 
-        this.frameTextures.push(tempTexture);
+        // endFrame()でプールに返却
+        this.pooledRenderTextures.push(tempTexture);
     }
 
     /**
@@ -2357,12 +2389,8 @@ export class Context
         flipY: boolean
     ): void
     {
-        // 一時テクスチャを作成
-        const tempTexture = this.device.createTexture({
-            "size": { "width": width, "height": height },
-            "format": "rgba8unorm",
-            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-        });
+        // 一時テクスチャをプールから取得
+        const tempTexture = $acquireRenderTexture(this.device, width, height);
 
         // ImageBitmapを一時テクスチャにコピー
         // flipYパラメータで画像の上下反転を制御（Videoはtrue、TextFieldはfalse）
@@ -2383,13 +2411,13 @@ export class Context
 
         const pipeline = this.pipelineManager.getPipeline("bitmap_render");
         if (!pipeline) {
-            tempTexture.destroy();
+            $releaseRenderTexture(tempTexture);
             return;
         }
 
         const bindGroupLayout = this.pipelineManager.getBindGroupLayout("positioned_texture");
         if (!bindGroupLayout) {
-            tempTexture.destroy();
+            $releaseRenderTexture(tempTexture);
             return;
         }
 
@@ -2443,7 +2471,8 @@ export class Context
         renderPass.draw(6);
         renderPass.end();
 
-        this.frameTextures.push(tempTexture);
+        // endFrame()でプールに返却
+        this.pooledRenderTextures.push(tempTexture);
     }
 
     /**
@@ -2470,11 +2499,12 @@ export class Context
             this.beginFrame();
         }
 
-        // 既存のレンダーパスを終了
+        // 既存のレンダーパスを終了（アトラスパス統合をリセット）
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
+        this.nodeRenderPassAtlasIndex = -1;
 
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
@@ -2486,7 +2516,8 @@ export class Context
             "frameBufferManager": this.frameBufferManager,
             "pipelineManager": this.pipelineManager,
             "textureManager": this.textureManager,
-            "mainAttachment": this.$mainAttachmentObject as IAttachmentObject
+            "mainAttachment": this.$mainAttachmentObject as IAttachmentObject,
+            "computePipelineManager": this.computePipelineManager
         };
 
         contextApplyFilterUseCase(
@@ -2590,7 +2621,8 @@ export class Context
             "bufferManager": this.bufferManager,
             "frameBufferManager": this.frameBufferManager,
             "pipelineManager": this.pipelineManager,
-            "textureManager": this.textureManager
+            "textureManager": this.textureManager,
+            "computePipelineManager": this.computePipelineManager
         };
 
         contextContainerEndLayerUseCase(
@@ -2900,13 +2932,23 @@ export class Context
         }
         this.pooledTextures.length = 0;
 
+        // レンダーテクスチャをプールに返却
+        for (const texture of this.pooledRenderTextures) {
+            $releaseRenderTexture(texture);
+        }
+        this.pooledRenderTextures.length = 0;
+
         // Gradient LUTキャッシュのTTL超過エントリを解放
         $cleanupLUTCache();
+
+        // Dynamic Uniform BindGroupをリセット（バッファオフセットがリセットされるため）
+        this.fillDynamicBindGroup = null;
 
         // 次のフレーム用にクリア
         this.commandEncoder = null;
         this.renderPassEncoder = null;
         this.currentRenderTarget = null;
+        this.nodeRenderPassAtlasIndex = -1;
 
         // テクスチャ参照をクリア（次フレームで新しく取得）
         this.mainTexture = null;

@@ -32,7 +32,11 @@ describe("MaskUnionMaskService", () =>
         return {
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
-            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
+            "dynamicUniform": {
+                "allocate": vi.fn(() => 0),
+                "getBuffer": vi.fn(() => ({ "label": "mockDynamicBuffer" }))
+            }
         } as unknown as BufferManager;
     };
 
@@ -53,7 +57,8 @@ describe("MaskUnionMaskService", () =>
                     };
                 }
                 return null;
-            })
+            }),
+            "getBindGroupLayout": vi.fn(() => ({ "label": "mockDynamicLayout" }))
         } as unknown as PipelineManager;
     };
 
@@ -103,7 +108,7 @@ describe("MaskUnionMaskService", () =>
 
     describe("uniform buffer creation", () =>
     {
-        it("should create uniform buffer with FillUniforms data", () =>
+        it("should allocate uniform data via dynamic uniform allocator", () =>
         {
             const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
@@ -113,8 +118,7 @@ describe("MaskUnionMaskService", () =>
 
             execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
-            expect(bufferManager.acquireUniformBuffer).toHaveBeenCalled();
-            expect(device.queue.writeBuffer).toHaveBeenCalled();
+            expect(bufferManager.dynamicUniform.allocate).toHaveBeenCalled();
         });
     });
 
@@ -180,7 +184,8 @@ describe("MaskUnionMaskService", () =>
             execute(device, renderPassEncoder, bufferManager, pipelineManager, attachment);
 
             expect(renderPassEncoder.setBindGroup).toHaveBeenCalledTimes(2);
-            expect(device.createBindGroup).toHaveBeenCalledTimes(2);
+            // 1 createBindGroup for dynamic bind group (shared by both passes)
+            expect(device.createBindGroup).toHaveBeenCalledTimes(1);
         });
     });
 

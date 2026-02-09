@@ -12,16 +12,6 @@ import { $isMaskDrawing, $getMaskStencilReference } from "../../Mask";
 
 describe("ContextFillSimpleService", () =>
 {
-    const createMockDevice = () =>
-    {
-        return {
-            "queue": {
-                "writeBuffer": vi.fn()
-            },
-            "createBindGroup": vi.fn(() => ({ "label": "mockBindGroup" }))
-        } as unknown as GPUDevice;
-    };
-
     const createMockRenderPassEncoder = () =>
     {
         return {
@@ -33,11 +23,11 @@ describe("ContextFillSimpleService", () =>
         } as unknown as GPURenderPassEncoder;
     };
 
-    const createMockPipelineManager = (hasPipeline: boolean = true, hasBindGroupLayout: boolean = true) =>
+    const createMockPipelineManager = (hasPipeline: boolean = true) =>
     {
         return {
             "getPipeline": vi.fn(() => hasPipeline ? { "label": "mockPipeline" } : null),
-            "getBindGroupLayout": vi.fn(() => hasBindGroupLayout ? { "label": "mockLayout" } : null)
+            "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
         } as unknown as PipelineManager;
     };
 
@@ -46,9 +36,9 @@ describe("ContextFillSimpleService", () =>
         return { "label": "mockVertexBuffer" } as unknown as GPUBuffer;
     };
 
-    const createMockUniformBuffer = () =>
+    const createMockBindGroup = () =>
     {
-        return { "label": "mockUniformBuffer" } as unknown as GPUBuffer;
+        return { "label": "mockBindGroup" } as unknown as GPUBindGroup;
     };
 
     beforeEach(() =>
@@ -58,120 +48,66 @@ describe("ContextFillSimpleService", () =>
         (($isMaskDrawing as unknown) as ReturnType<typeof vi.fn>).mockReturnValue(false);
     });
 
-    describe("bind group", () =>
-    {
-        it("should request fill bind group layout", () =>
-        {
-            const device = createMockDevice();
-            const renderPassEncoder = createMockRenderPassEncoder();
-            const pipelineManager = createMockPipelineManager();
-            const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
-
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
-
-            expect(pipelineManager.getBindGroupLayout).toHaveBeenCalledWith("fill");
-        });
-
-        it("should return early when bind group layout not found", () =>
-        {
-            const device = createMockDevice();
-            const renderPassEncoder = createMockRenderPassEncoder();
-            const pipelineManager = createMockPipelineManager(true, false);
-            const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
-
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
-
-            expect(console.error).toHaveBeenCalledWith("[WebGPU] Fill bind group layout not found");
-            expect(device.createBindGroup).not.toHaveBeenCalled();
-        });
-
-        it("should create bind group with uniform buffer", () =>
-        {
-            const device = createMockDevice();
-            const renderPassEncoder = createMockRenderPassEncoder();
-            const pipelineManager = createMockPipelineManager();
-            const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
-
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
-
-            expect(device.createBindGroup).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    "entries": expect.arrayContaining([
-                        expect.objectContaining({ "binding": 0 })
-                    ])
-                })
-            );
-        });
-    });
-
     describe("pipeline selection", () =>
     {
         it("should use fill pipeline for atlas target", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, true);
 
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("fill");
         });
 
         it("should use fill_bgra pipeline for canvas target", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, false);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, false);
 
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("fill_bgra");
         });
 
         it("should use fill_bgra_stencil pipeline when useStencilPipeline and not mask drawing", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
             (($isMaskDrawing as unknown) as ReturnType<typeof vi.fn>).mockReturnValue(false);
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, false, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, false, true);
 
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("fill_bgra_stencil");
         });
 
         it("should return early when mask drawing mode and useStencilPipeline", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
             (($isMaskDrawing as unknown) as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, false, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, false, true);
 
             expect(renderPassEncoder.draw).not.toHaveBeenCalled();
         });
 
         it("should return early when pipeline not found", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
-            const pipelineManager = createMockPipelineManager(false, true);
+            const pipelineManager = createMockPipelineManager(false);
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, true);
 
             expect(console.error).toHaveBeenCalled();
             expect(renderPassEncoder.draw).not.toHaveBeenCalled();
@@ -182,52 +118,48 @@ describe("ContextFillSimpleService", () =>
     {
         it("should set pipeline", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, true);
 
             expect(renderPassEncoder.setPipeline).toHaveBeenCalled();
         });
 
         it("should set vertex buffer", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, true);
 
             expect(renderPassEncoder.setVertexBuffer).toHaveBeenCalledWith(0, vertexBuffer);
         });
 
-        it("should set bind group", () =>
+        it("should set bind group with dynamic offset", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 256, true);
 
-            expect(renderPassEncoder.setBindGroup).toHaveBeenCalledWith(0, expect.anything());
+            expect(renderPassEncoder.setBindGroup).toHaveBeenCalledWith(0, bindGroup, [256]);
         });
 
         it("should draw with correct vertex count", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 24, uniformBuffer, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 24, bindGroup, 0, true);
 
             expect(renderPassEncoder.draw).toHaveBeenCalledWith(24, 1, 0, 0);
         });
@@ -237,28 +169,26 @@ describe("ContextFillSimpleService", () =>
     {
         it("should set stencil reference for stencil pipeline mode", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
             (($isMaskDrawing as unknown) as ReturnType<typeof vi.fn>).mockReturnValue(false);
             (($getMaskStencilReference as unknown) as ReturnType<typeof vi.fn>).mockReturnValue(7);
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, false, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, false, true);
 
             expect(renderPassEncoder.setStencilReference).toHaveBeenCalledWith(7);
         });
 
         it("should not set stencil reference for atlas target", () =>
         {
-            const device = createMockDevice();
             const renderPassEncoder = createMockRenderPassEncoder();
             const pipelineManager = createMockPipelineManager();
             const vertexBuffer = createMockVertexBuffer();
-            const uniformBuffer = createMockUniformBuffer();
+            const bindGroup = createMockBindGroup();
 
-            execute(device, renderPassEncoder, pipelineManager, vertexBuffer, 12, uniformBuffer, true, true);
+            execute(renderPassEncoder, pipelineManager, vertexBuffer, 12, bindGroup, 0, true, true);
 
             expect(renderPassEncoder.setStencilReference).not.toHaveBeenCalled();
         });

@@ -2,6 +2,8 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
 import { calculateBlurParams, calculateDirectionalBlurParams } from "../BlurFilterUseCase";
+import { shouldUseComputeShader } from "./service/BlurFilterComputeShaderService";
+import { execute as executeBlurCompute } from "../../Compute/service/ComputeExecuteBlurService";
 
 /**
  * @description プリアロケートされたFloat32Array (サイズ4)
@@ -76,6 +78,10 @@ export const execute = (
     const bufferBlurX = baseBlurX * bufferScaleX;
     const bufferBlurY = baseBlurY * bufferScaleY;
 
+    // Compute Shaderを使用すべきか判定
+    const useCompute = config.computePipelineManager
+        && shouldUseComputeShader(baseBlurX, baseBlurY, bufferWidth, bufferHeight);
+
     // ブラーパスを実行
     const attachments = [attachment0, attachment1];
     let attachmentIndex = 0;
@@ -86,11 +92,19 @@ export const execute = (
             const srcIndex = attachmentIndex;
             attachmentIndex = (attachmentIndex + 1) % 2;
 
-            applyDirectionalBlur(
-                device, commandEncoder, frameBufferManager, pipelineManager,
-                attachments[srcIndex], attachments[attachmentIndex], sampler,
-                true, bufferBlurX, config.bufferManager
-            );
+            if (useCompute) {
+                executeBlurCompute(
+                    device, commandEncoder, config.computePipelineManager!,
+                    attachments[srcIndex], attachments[attachmentIndex],
+                    true, bufferBlurX
+                );
+            } else {
+                applyDirectionalBlur(
+                    device, commandEncoder, frameBufferManager, pipelineManager,
+                    attachments[srcIndex], attachments[attachmentIndex], sampler,
+                    true, bufferBlurX, config.bufferManager
+                );
+            }
         }
 
         // 垂直ブラー
@@ -98,11 +112,19 @@ export const execute = (
             const srcIndex = attachmentIndex;
             attachmentIndex = (attachmentIndex + 1) % 2;
 
-            applyDirectionalBlur(
-                device, commandEncoder, frameBufferManager, pipelineManager,
-                attachments[srcIndex], attachments[attachmentIndex], sampler,
-                false, bufferBlurY, config.bufferManager
-            );
+            if (useCompute) {
+                executeBlurCompute(
+                    device, commandEncoder, config.computePipelineManager!,
+                    attachments[srcIndex], attachments[attachmentIndex],
+                    false, bufferBlurY
+                );
+            } else {
+                applyDirectionalBlur(
+                    device, commandEncoder, frameBufferManager, pipelineManager,
+                    attachments[srcIndex], attachments[attachmentIndex], sampler,
+                    false, bufferBlurY, config.bufferManager
+                );
+            }
         }
     }
 

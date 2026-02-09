@@ -52,47 +52,42 @@ export const execute = (
 
     const vertexBuffer = bufferManager.acquireVertexBuffer($rectVertices.byteLength, $rectVertices);
 
-    // uniform bufferを作成（FillUniforms: color + matrix）
-    const uniformBuffer = bufferManager.acquireUniformBuffer($uniformData16.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniformData16.buffer, $uniformData16.byteOffset, $uniformData16.byteLength);
+    // Dynamic Uniform Bufferにデータを書き込み
+    const uniformOffset = bufferManager.dynamicUniform.allocate($uniformData16);
+
+    // Dynamic BindGroupを取得
+    const layout = pipelineManager.getBindGroupLayout("fill_dynamic");
+    if (!layout) {
+        return;
+    }
+    const bindGroup = device.createBindGroup({
+        "layout": layout,
+        "entries": [{
+            "binding": 0,
+            "resource": {
+                "buffer": bufferManager.dynamicUniform.getBuffer(),
+                "size": 256
+            }
+        }]
+    });
 
     // === Pass 1: ステンシルビットのマージ ===
     const mergePipeline = pipelineManager.getPipeline(`mask_union_merge_${clipLevel}`);
     if (mergePipeline) {
-        const mergeLayout = mergePipeline.getBindGroupLayout(0);
-        if (mergeLayout) {
-            const mergeBindGroup = device.createBindGroup({
-                "layout": mergeLayout,
-                "entries": [{
-                    "binding": 0,
-                    "resource": { "buffer": uniformBuffer }
-                }]
-            });
-            renderPassEncoder.setPipeline(mergePipeline);
-            renderPassEncoder.setStencilReference(mask);
-            renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            renderPassEncoder.setBindGroup(0, mergeBindGroup);
-            renderPassEncoder.draw(6, 1, 0, 0);
-        }
+        renderPassEncoder.setPipeline(mergePipeline);
+        renderPassEncoder.setStencilReference(mask);
+        renderPassEncoder.setVertexBuffer(0, vertexBuffer);
+        renderPassEncoder.setBindGroup(0, bindGroup, [uniformOffset]);
+        renderPassEncoder.draw(6, 1, 0, 0);
     }
 
     // === Pass 2: 上位ビットのクリア ===
     const clearPipeline = pipelineManager.getPipeline(`mask_union_clear_${clipLevel}`);
     if (clearPipeline) {
-        const clearLayout = clearPipeline.getBindGroupLayout(0);
-        if (clearLayout) {
-            const clearBindGroup = device.createBindGroup({
-                "layout": clearLayout,
-                "entries": [{
-                    "binding": 0,
-                    "resource": { "buffer": uniformBuffer }
-                }]
-            });
-            renderPassEncoder.setPipeline(clearPipeline);
-            renderPassEncoder.setStencilReference(0);
-            renderPassEncoder.setVertexBuffer(0, vertexBuffer);
-            renderPassEncoder.setBindGroup(0, clearBindGroup);
-            renderPassEncoder.draw(6, 1, 0, 0);
-        }
+        renderPassEncoder.setPipeline(clearPipeline);
+        renderPassEncoder.setStencilReference(0);
+        renderPassEncoder.setVertexBuffer(0, vertexBuffer);
+        renderPassEncoder.setBindGroup(0, bindGroup, [uniformOffset]);
+        renderPassEncoder.draw(6, 1, 0, 0);
     }
 };

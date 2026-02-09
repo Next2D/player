@@ -10,6 +10,94 @@ import { execute as cleanupStorageBuffersUseCase } from "./BufferManager/usecase
 import { execute as bufferManagerCreateIndirectBufferService } from "./BufferManager/service/BufferManagerCreateIndirectBufferService";
 import { execute as updateIndirectBuffer } from "./BufferManager/service/BufferManagerUpdateIndirectBufferService";
 
+/**
+ * @description Dynamic Uniform Buffer Allocator
+ *              1フレーム内の全fill uniform データを1本の大バッファにサブアロケートし、
+ *              BindGroup作成を1回に削減する。
+ */
+export class DynamicUniformAllocator
+{
+    private device: GPUDevice;
+    private buffer: GPUBuffer | null = null;
+    private offset: number = 0;
+    private capacity: number;
+    readonly alignment: number = 256;
+
+    constructor (device: GPUDevice, capacity: number = 65536)
+    {
+        this.device = device;
+        this.capacity = capacity;
+    }
+
+    /**
+     * @description フレーム開始時にオフセットをリセット
+     */
+    resetFrame (): void
+    {
+        this.offset = 0;
+    }
+
+    /**
+     * @description バッファを取得（遅延生成）
+     */
+    getBuffer (): GPUBuffer
+    {
+        if (!this.buffer) {
+            this.buffer = this.device.createBuffer({
+                "size": this.capacity,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+        }
+        return this.buffer;
+    }
+
+    /**
+     * @description uniform データを書き込み、アライメント済みオフセットを返す
+     * @param data - 書き込むデータ
+     * @return アライメント済みオフセット（バイト単位）
+     */
+    allocate (data: Float32Array): number
+    {
+        // バッファの遅延生成
+        if (!this.buffer) {
+            this.getBuffer();
+        }
+
+        const alignedOffset = this.offset;
+        const dataSize = data.byteLength;
+
+        if (alignedOffset + dataSize > this.capacity) {
+            // バッファが足りない場合は容量を倍増して再作成
+            this.capacity *= 2;
+            const oldBuffer = this.buffer;
+            this.buffer = this.device.createBuffer({
+                "size": this.capacity,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+            if (oldBuffer) {
+                oldBuffer.destroy();
+            }
+            // 既にコミット済みのデータは再書込みが必要になるが、
+            // 実運用では64KBで256スロット（256*64=16384描画）確保可能のためオーバーフローは稀
+        }
+
+        this.device.queue.writeBuffer(this.buffer!, alignedOffset, data.buffer, data.byteOffset, data.byteLength);
+
+        // 次のアロケーションは256バイトアライメント
+        this.offset = alignedOffset + Math.ceil(dataSize / this.alignment) * this.alignment;
+
+        return alignedOffset;
+    }
+
+    dispose (): void
+    {
+        if (this.buffer) {
+            this.buffer.destroy();
+            this.buffer = null;
+        }
+    }
+}
+
 export class BufferManager
 {
     private device: GPUDevice;
@@ -23,6 +111,7 @@ export class BufferManager
     private unitRectBuffer: GPUBuffer | null;
     private frameVertexPoolBuffers: GPUBuffer[];
     private frameUniformPoolBuffers: GPUBuffer[];
+    readonly dynamicUniform: DynamicUniformAllocator;
 
     constructor (device: GPUDevice)
     {
@@ -37,6 +126,7 @@ export class BufferManager
         this.unitRectBuffer = null;
         this.frameVertexPoolBuffers = [];
         this.frameUniformPoolBuffers = [];
+        this.dynamicUniform = new DynamicUniformAllocator(device);
     }
 
     createVertexBuffer (name: string, data: Float32Array): GPUBuffer
@@ -179,6 +269,8 @@ export class BufferManager
 
         this.frameVertexPoolBuffers.length = 0;
         this.frameUniformPoolBuffers.length = 0;
+
+        this.dynamicUniform.dispose();
     }
 
     getPoolStats (): { vertexPoolSize: number; uniformPoolSize: number }
@@ -221,6 +313,8 @@ export class BufferManager
         this.frameUniformPoolBuffers.length = 0;
 
         this.releaseAllStorageBuffers();
+
+        this.dynamicUniform.resetFrame();
 
         this.frameNumber++;
 

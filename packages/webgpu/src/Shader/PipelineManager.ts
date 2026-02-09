@@ -135,20 +135,21 @@ export class PipelineManager
 
     private createFillPipeline(): void
     {
-        const bindGroupLayout = this.device.createBindGroupLayout({
+        // Dynamic Offset対応のBindGroupLayout（fill + stencil共有）
+        const dynamicBindGroupLayout = this.device.createBindGroupLayout({
             "entries": [
                 {
                     "binding": 0,
-                    "visibility": GPUShaderStage.VERTEX,
-                    "buffer": { "type": "uniform" }
+                    "visibility": GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                    "buffer": { "type": "uniform", "hasDynamicOffset": true }
                 }
             ]
         });
 
-        this.bindGroupLayouts.set("fill", bindGroupLayout);
+        this.bindGroupLayouts.set("fill_dynamic", dynamicBindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({
-            "bindGroupLayouts": [bindGroupLayout]
+            "bindGroupLayouts": [dynamicBindGroupLayout]
         });
 
         const vertexShaderModule = this.getOrCreateShaderModule("fillVertex", ShaderSource.getFillVertexShader());
@@ -274,8 +275,15 @@ export class PipelineManager
     private createStencilFillPipelines(): void
     {
         const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
+
+        // fill_dynamicレイアウトを共有（hasDynamicOffset: true）
+        const dynamicLayout = this.bindGroupLayouts.get("fill_dynamic")!;
+        const stencilPipelineLayout = this.device.createPipelineLayout({
+            "bindGroupLayouts": [dynamicLayout]
+        });
+
         const stencilWritePipeline = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": stencilPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader()),
                 "entryPoint": "main",
@@ -318,7 +326,7 @@ export class PipelineManager
         });
         this.pipelines.set("stencil_write", stencilWritePipeline);
         const stencilFillPipeline = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": stencilPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilFillVertex", ShaderSource.getStencilFillVertexShader()),
                 "entryPoint": "main",
@@ -370,7 +378,7 @@ export class PipelineManager
         });
         this.pipelines.set("stencil_fill", stencilFillPipeline);
         const stencilWritePipelineAtlas = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": stencilPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader()),
                 "entryPoint": "main",
@@ -413,7 +421,7 @@ export class PipelineManager
         });
         this.pipelines.set("stencil_write_atlas", stencilWritePipelineAtlas);
         const stencilWritePipelineMain = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": stencilPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader()),
                 "entryPoint": "main",
@@ -458,7 +466,7 @@ export class PipelineManager
         this.pipelines.set("stencil_write_main", stencilWritePipelineMain);
 
         const stencilFillPipelineAtlas = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": stencilPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilFillVertex", ShaderSource.getStencilFillVertexShader()),
                 "entryPoint": "main",
@@ -510,7 +518,7 @@ export class PipelineManager
         });
         this.pipelines.set("stencil_fill_atlas", stencilFillPipelineAtlas);
         const stencilFillPipelineMain = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": stencilPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilFillVertex", ShaderSource.getStencilFillVertexShader()),
                 "entryPoint": "main",
@@ -563,7 +571,7 @@ export class PipelineManager
         });
         this.pipelines.set("stencil_fill_main", stencilFillPipelineMain);
         const stencilFillMaskedPipeline = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": stencilPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilFillVertex", ShaderSource.getStencilFillVertexShader()),
                 "entryPoint": "main",
@@ -619,8 +627,12 @@ export class PipelineManager
     private createClipPipeline(): void
     {
         const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
+        const dynamicLayout = this.bindGroupLayouts.get("fill_dynamic")!;
+        const clipPipelineLayout = this.device.createPipelineLayout({
+            "bindGroupLayouts": [dynamicLayout]
+        });
         const clipWritePipeline = this.device.createRenderPipeline({
-            "layout": "auto",
+            "layout": clipPipelineLayout,
             "vertex": {
                 "module": this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader()),
                 "entryPoint": "main",
@@ -666,7 +678,7 @@ export class PipelineManager
         for (let level = 1; level <= 8; level++) {
             const stencilWriteMask = 1 << level - 1;
             const clipWriteMainPipeline = this.device.createRenderPipeline({
-                "layout": "auto",
+                "layout": clipPipelineLayout,
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",
@@ -713,7 +725,7 @@ export class PipelineManager
         for (let level = 1; level <= 8; level++) {
             const stencilWriteMask = 1 << level - 1;
             const clipClearMainPipeline = this.device.createRenderPipeline({
-                "layout": "auto",
+                "layout": clipPipelineLayout,
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",
@@ -760,6 +772,10 @@ export class PipelineManager
     private createMaskUnionPipelines(): void
     {
         const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
+        const dynamicLayout = this.bindGroupLayouts.get("fill_dynamic")!;
+        const maskUnionPipelineLayout = this.device.createPipelineLayout({
+            "bindGroupLayouts": [dynamicLayout]
+        });
 
         const vertexShaderModule = this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader());
         const fragmentShaderModule = this.getOrCreateShaderModule("stencilWriteFragment", ShaderSource.getStencilWriteFragmentShader());
@@ -767,7 +783,7 @@ export class PipelineManager
             const mask = 1 << level - 1;
             const upperBitsMask = ~mask & 0xFF;
             const mergePipeline = this.device.createRenderPipeline({
-                "layout": "auto",
+                "layout": maskUnionPipelineLayout,
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",
@@ -806,7 +822,7 @@ export class PipelineManager
             });
             this.pipelines.set(`mask_union_merge_${level}`, mergePipeline);
             const clearPipeline = this.device.createRenderPipeline({
-                "layout": "auto",
+                "layout": maskUnionPipelineLayout,
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",

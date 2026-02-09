@@ -103,96 +103,64 @@ export class ComputePipelineManager
 
     /**
      * @description ブラーCompute Shaderコードを生成
+     *              ボックスブラー（均一加重平均）を使用。Fragment Shaderと同一出力。
      * @return {string} WGSLシェーダーコード
      * @private
      */
     private getBlurComputeShaderCode (): string
     {
-        // Compute Shaderでの並列ブラー処理
-        // 共有メモリを使用してメモリアクセスを最適化
         return `
 struct BlurParams {
     direction: vec2<f32>,  // (1,0) or (0,1)
     radius: f32,           // ブラー半径
-    sigma: f32,            // ガウシアンブラーのσ
+    fraction: f32,         // 端ピクセルのブレンド割合
     texSize: vec2<f32>,    // テクスチャサイズ
-    padding: vec2<f32>,    // パディング（16バイトアライメント）
+    samples: f32,          // サンプル数
+    padding: f32,          // パディング（16バイトアライメント）
 }
 
 @group(0) @binding(0) var inputTexture: texture_2d<f32>;
 @group(0) @binding(1) var outputTexture: texture_storage_2d<rgba8unorm, write>;
 @group(0) @binding(2) var<uniform> params: BlurParams;
 
-// ワークグループサイズ: 16x16 = 256スレッド
 const WORKGROUP_SIZE: u32 = 16u;
 
-// 共有メモリでローカルキャッシュ（タイル + ブラー半径の境界）
-// 最大32ピクセルの半径をサポート
-const MAX_RADIUS: u32 = 32u;
-const TILE_SIZE: u32 = WORKGROUP_SIZE;
-const SHARED_SIZE: u32 = TILE_SIZE + MAX_RADIUS * 2u;
-
-// 共有メモリ（タイル + 境界）
-var<workgroup> sharedData: array<vec4<f32>, 80>;  // (16 + 32*2) = 80
-
-// ガウシアン重みを計算
-fn gaussianWeight(offset: f32, sigma: f32) -> f32 {
-    let sigma2 = sigma * sigma;
-    return exp(-(offset * offset) / (2.0 * sigma2)) / (sqrt(2.0 * 3.14159265) * sigma);
-}
-
-@compute @workgroup_size(${WORKGROUP_SIZE}, ${WORKGROUP_SIZE}, 1)
+@compute @workgroup_size(16, 16, 1)
 fn main(
-    @builtin(global_invocation_id) globalId: vec3<u32>,
-    @builtin(local_invocation_id) localId: vec3<u32>,
-    @builtin(workgroup_id) workgroupId: vec3<u32>
+    @builtin(global_invocation_id) globalId: vec3<u32>
 ) {
     let texSize = vec2<u32>(u32(params.texSize.x), u32(params.texSize.y));
-    let radius = u32(params.radius);
+    let radius = i32(params.radius);
 
-    // 出力座標
     let outCoord = globalId.xy;
 
-    // 境界チェック
     if (outCoord.x >= texSize.x || outCoord.y >= texSize.y) {
         return;
     }
 
-    // ブラーを適用
+    let direction = vec2<i32>(i32(params.direction.x), i32(params.direction.y));
+    let samples = params.samples;
+    let fraction = params.fraction;
+
     var color = vec4<f32>(0.0);
-    var totalWeight = 0.0;
 
-    let direction = params.direction;
-    let sigma = params.sigma;
+    for (var i = -radius; i <= radius; i = i + 1) {
+        var sampleCoord = vec2<i32>(outCoord) + direction * i;
 
-    for (var i = 0u; i <= radius * 2u; i = i + 1u) {
-        let offset = i32(i) - i32(radius);
-        let offsetF = f32(offset);
-
-        // サンプル座標を計算
-        var sampleCoord = vec2<i32>(outCoord) + vec2<i32>(
-            i32(direction.x * offsetF),
-            i32(direction.y * offsetF)
-        );
-
-        // クランプ
         sampleCoord.x = clamp(sampleCoord.x, 0, i32(texSize.x) - 1);
         sampleCoord.y = clamp(sampleCoord.y, 0, i32(texSize.y) - 1);
 
-        // サンプル
         let sample = textureLoad(inputTexture, vec2<u32>(sampleCoord), 0);
 
-        // ガウシアン重み
-        let weight = gaussianWeight(offsetF, sigma);
-
-        color = color + sample * weight;
-        totalWeight = totalWeight + weight;
+        // 端ピクセルにfraction重みを適用（Fragment Shaderと同じロジック）
+        if (i == -radius || i == radius) {
+            color = color + sample * fraction;
+        } else {
+            color = color + sample;
+        }
     }
 
-    // 正規化して出力
-    if (totalWeight > 0.0) {
-        color = color / totalWeight;
-    }
+    color = color / samples;
 
     textureStore(outputTexture, outCoord, color);
 }

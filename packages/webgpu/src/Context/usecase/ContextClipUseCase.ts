@@ -70,8 +70,8 @@ export const execute = (
     $clipUniform16[14] = 1;
     $clipUniform16[15] = 0;
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer($clipUniform16.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, $clipUniform16.buffer, $clipUniform16.byteOffset, $clipUniform16.byteLength);
+    // Dynamic Uniform Bufferにデータを書き込み
+    const uniformOffset = buffer_manager.dynamicUniform.allocate($clipUniform16);
 
     // 現在のマスクレベルを取得（WebGL版: $clipLevels.get(clipLevel)）
     // レベルは1から始まり、各パスごとにインクリメントされる
@@ -95,14 +95,19 @@ export const execute = (
         return;
     }
 
-    // バインドグループを作成
-    const bindGroupLayout = pipeline.getBindGroupLayout(0);
-
+    // Dynamic BindGroupを取得
+    const layout = pipeline_manager.getBindGroupLayout("fill_dynamic");
+    if (!layout) {
+        return;
+    }
     const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
+        "layout": layout,
         "entries": [{
             "binding": 0,
-            "resource": { "buffer": uniformBuffer }
+            "resource": {
+                "buffer": buffer_manager.dynamicUniform.getBuffer(),
+                "size": 256
+            }
         }]
     });
 
@@ -112,7 +117,7 @@ export const execute = (
     render_pass_encoder.setPipeline(pipeline);
     render_pass_encoder.setStencilReference(0); // INVERT操作では参照値は使用されないが、設定は必要
     render_pass_encoder.setVertexBuffer(0, vertexBuffer);
-    render_pass_encoder.setBindGroup(0, bindGroup);
+    render_pass_encoder.setBindGroup(0, bindGroup, [uniformOffset]);
     render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
 
     // レベルをインクリメント（WebGL版: ++level）

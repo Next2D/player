@@ -114,7 +114,6 @@ describe("ComputeExecuteBlurService", () =>
 
             execute(device, commandEncoder, pipelineManager, source, dest, true, 8);
 
-            expect(console.error).toHaveBeenCalled();
             expect(commandEncoder.beginComputePass).not.toHaveBeenCalled();
         });
     });

@@ -177,14 +177,13 @@ export const execute = (
         "entries": $entries3
     });
 
-    // ステンシル書き込みパス用のFillUniforms bindGroupを作成
+    // ステンシル書き込みパス用のDynamic BindGroup + offsetを作成
     // stencil_write_atlas / stencil_write_main はFillUniforms（color+matrix）を期待する
-    const createStencilBindGroup = (pipelineName: string): GPUBindGroup | null => {
-        const pipeline = pipeline_manager.getPipeline(pipelineName);
-        if (!pipeline) {
+    const createStencilDynamic = (): { bindGroup: GPUBindGroup; offset: number } | null => {
+        const dynamicLayout = pipeline_manager.getBindGroupLayout("fill_dynamic");
+        if (!dynamicLayout) {
             return null;
         }
-        const stencilLayout = pipeline.getBindGroupLayout(0);
         // FillUniformsと同じレイアウト: color(16) + matrix0(16) + matrix1(16) + matrix2(16) = 64 bytes
         const stencilUniformData = new Float32Array(16);
         stencilUniformData[0] = 1; // red
@@ -204,15 +203,18 @@ export const execute = (
         stencilUniformData[14] = 1;
         stencilUniformData[15] = 0;
 
-        const stencilUniformBuffer = buffer_manager.acquireUniformBuffer(stencilUniformData.byteLength);
-        device.queue.writeBuffer(stencilUniformBuffer, 0, stencilUniformData.buffer, stencilUniformData.byteOffset, stencilUniformData.byteLength);
-        return device.createBindGroup({
-            "layout": stencilLayout,
+        const offset = buffer_manager.dynamicUniform.allocate(stencilUniformData);
+        const stencilBindGroup = device.createBindGroup({
+            "layout": dynamicLayout,
             "entries": [{
                 "binding": 0,
-                "resource": { "buffer": stencilUniformBuffer }
+                "resource": {
+                    "buffer": buffer_manager.dynamicUniform.getBuffer(),
+                    "size": 256
+                }
             }]
         });
+        return { "bindGroup": stencilBindGroup, "offset": offset };
     };
 
     // アトラス描画時：2パスステンシルフィル（WebGL版と同じアルゴリズム）
@@ -221,12 +223,12 @@ export const execute = (
         // === Pass 1: ステンシル書き込み ===
         const stencilWritePipeline = pipeline_manager.getPipeline("stencil_write_atlas");
         if (stencilWritePipeline) {
-            const stencilBindGroup = createStencilBindGroup("stencil_write_atlas");
+            const stencilDynamic = createStencilDynamic();
             render_pass_encoder.setPipeline(stencilWritePipeline);
             render_pass_encoder.setStencilReference(0);
             render_pass_encoder.setVertexBuffer(0, vertexBuffer);
-            if (stencilBindGroup) {
-                render_pass_encoder.setBindGroup(0, stencilBindGroup);
+            if (stencilDynamic) {
+                render_pass_encoder.setBindGroup(0, stencilDynamic.bindGroup, [stencilDynamic.offset]);
             }
             render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
         }
@@ -252,12 +254,12 @@ export const execute = (
     // === Pass 1: ステンシル書き込み ===
     const stencilWritePipeline = pipeline_manager.getPipeline("stencil_write_main");
     if (stencilWritePipeline) {
-        const stencilBindGroup = createStencilBindGroup("stencil_write_main");
+        const stencilDynamic = createStencilDynamic();
         render_pass_encoder.setPipeline(stencilWritePipeline);
         render_pass_encoder.setStencilReference(0);
         render_pass_encoder.setVertexBuffer(0, vertexBuffer);
-        if (stencilBindGroup) {
-            render_pass_encoder.setBindGroup(0, stencilBindGroup);
+        if (stencilDynamic) {
+            render_pass_encoder.setBindGroup(0, stencilDynamic.bindGroup, [stencilDynamic.offset]);
         }
         render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
     }

@@ -121,7 +121,8 @@ export class FrameBufferManager
         const usage = GPUTextureUsage.RENDER_ATTACHMENT |
                       GPUTextureUsage.TEXTURE_BINDING |
                       GPUTextureUsage.COPY_SRC |
-                      GPUTextureUsage.COPY_DST;
+                      GPUTextureUsage.COPY_DST |
+                      GPUTextureUsage.STORAGE_BINDING;
 
         const gpuTexture = this.texturePool.acquire(width, height, "rgba8unorm", usage);
         const textureView = gpuTexture.createView();

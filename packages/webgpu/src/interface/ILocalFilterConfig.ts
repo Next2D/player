@@ -3,6 +3,7 @@ import type { BufferManager } from "../BufferManager";
 import type { FrameBufferManager } from "../FrameBufferManager";
 import type { PipelineManager } from "../Shader/PipelineManager";
 import type { TextureManager } from "../TextureManager";
+import type { ComputePipelineManager } from "../Compute/ComputePipelineManager";
 
 /**
  * @description フィルター適用時のローカル設定（ContextApplyFilterUseCase用）
@@ -16,4 +17,5 @@ export interface ILocalFilterConfig {
     pipelineManager: PipelineManager;
     textureManager: TextureManager;
     mainAttachment?: IAttachmentObject;
+    computePipelineManager?: ComputePipelineManager;
 }
