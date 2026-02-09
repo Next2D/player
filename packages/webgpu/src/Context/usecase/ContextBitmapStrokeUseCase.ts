@@ -6,6 +6,12 @@ import { execute as contextComputeBitmapMatrixService } from "../service/Context
 
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,
@@ -124,13 +130,12 @@ export const execute = (
         return null;
     }
 
+    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = bitmapTexture.createView();
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            { "binding": 0, "resource": { "buffer": uniformBuffer } },
-            { "binding": 1, "resource": sampler },
-            { "binding": 2, "resource": bitmapTexture.createView() }
-        ]
+        "entries": $entries3
     });
 
     // パイプラインを取得

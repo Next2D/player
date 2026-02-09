@@ -106,6 +106,18 @@ const $QUAD_VERTICES = new Float32Array([
  */
 const $ctUniform8 = new Float32Array(8);
 
+// present() 用 Static BindGroup キャッシュ
+let $presentBindGroup: GPUBindGroup | null = null;
+let $presentBindGroupView: GPUTextureView | null = null;
+let $presentUniformBuffer: GPUBuffer | null = null;
+
+// BindGroup entries 事前割り当て
+const $entries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
+    { "binding": 1, "resource": null as unknown as GPUSampler },
+    { "binding": 2, "resource": null as unknown as GPUTextureView }
+];
+
 /**
  * @description WebGPU版、Next2Dのコンテキスト
  *              WebGPU version, Next2D context
@@ -2437,7 +2449,6 @@ export class Context
             }
         );
 
-        // bitmap_render_msaaパイプラインを取得
         const pipeline = this.pipelineManager.getPipeline("bitmap_render_msaa");
         if (!pipeline) {
             tempTexture.destroy();
@@ -2450,7 +2461,6 @@ export class Context
             return;
         }
 
-        // PositionUniforms: offset, size, viewport, padding
         const uniformData = this.$uniformData8;
         uniformData[0] = node.x;
         uniformData[1] = node.y;
@@ -2464,20 +2474,18 @@ export class Context
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
-
         const tempTextureView = tempTexture.createView();
 
+        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+        $entries3[1].resource = sampler;
+        $entries3[2].resource = tempTextureView;
         const bindGroup = this.device.createBindGroup({
             "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": tempTextureView }
-            ]
+            "entries": $entries3
         });
 
-        // MSAAテクスチャに直接描画
-        const commandEncoder = this.device.createCommandEncoder();
+        // フレームエンコーダーを使用してMSAAテクスチャに描画
+        this.ensureCommandEncoder();
         const renderPassDescriptor: GPURenderPassDescriptor = {
             "colorAttachments": [{
                 "view": attachment.msaaTexture!.view,
@@ -2496,7 +2504,7 @@ export class Context
             };
         }
 
-        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+        const renderPass = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
@@ -2504,91 +2512,8 @@ export class Context
         renderPass.draw(6);
         renderPass.end();
 
-        this.device.queue.submit([commandEncoder.finish()]);
-
-        // 一時テクスチャを解放（uniformBufferはプールで管理）
-        tempTexture.destroy();
-    }
-
-    /**
-     * @description resolve target（シングルサンプル）の内容をMSAAテクスチャに同期する
-     *              writeTextureで書き込んだbitmap領域をMSAAテクスチャに反映
-     */
-    private syncBitmapToMsaaTexture (
-        attachment: IAttachmentObject,
-        x: number,
-        y: number,
-        width: number,
-        height: number
-    ): void
-    {
-        if (!attachment.texture || !attachment.msaaTexture) { return }
-
-        // bitmap_syncパイプラインを使用
-        const pipeline = this.pipelineManager.getPipeline("bitmap_sync");
-        if (!pipeline) { return }
-
-        // bitmap_sync専用のbind group layoutを使用
-        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("bitmap_sync");
-        if (!bindGroupLayout) { return }
-
-        // uniform buffer: nodeRect (x, y, width, height), textureSize (w, h), padding
-        const uniformData = this.$uniformData8;
-        uniformData[0] = x;
-        uniformData[1] = y;
-        uniformData[2] = width;
-        uniformData[3] = height;
-        uniformData[4] = attachment.width;
-        uniformData[5] = attachment.height;
-        uniformData[6] = 0.0;
-        uniformData[7] = 0.0;
-        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
-
-        const sampler = this.textureManager.createSampler("linear_sampler", true);
-
-        const bindGroup = this.device.createBindGroup({
-            "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": attachment.texture.view }
-            ]
-        });
-
-        // コマンドエンコーダーを作成
-        const commandEncoder = this.device.createCommandEncoder();
-
-        // MSAAステンシルを使用（MSAAテクスチャに描画するため）
-        const stencilView = attachment.msaaStencil?.view;
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            "colorAttachments": [{
-                "view": attachment.msaaTexture.view,
-                "loadOp": "load" as GPULoadOp,
-                "storeOp": "store" as GPUStoreOp
-                // resolveTargetを設定しないことで、この時点でのMSAA resolveを防ぐ
-            }]
-        };
-
-        if (stencilView) {
-            renderPassDescriptor.depthStencilAttachment = {
-                "view": stencilView,
-                "stencilLoadOp": "load" as GPULoadOp,
-                "stencilStoreOp": "store" as GPUStoreOp
-            };
-        }
-
-        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
-
-        renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
-
-        renderPass.setPipeline(pipeline);
-        renderPass.setBindGroup(0, bindGroup);
-        renderPass.draw(6); // node領域のみを描画（シェーダーで座標計算）
-
-        renderPass.end();
-        this.device.queue.submit([commandEncoder.finish()]);
-
+        // submit前にdestroyできないため、endFrame()で解放
+        this.frameTextures.push(tempTexture);
     }
 
     /**
@@ -2646,8 +2571,6 @@ export class Context
             "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
         });
 
-        // ImageBitmapを一時テクスチャにコピー
-        // flipYパラメータで画像の上下反転を制御（Videoはtrue、TextFieldはfalse）
         this.device.queue.copyExternalImageToTexture(
             {
                 "source": element as ImageBitmap,
@@ -2663,7 +2586,6 @@ export class Context
             }
         );
 
-        // bitmap_render_msaaパイプラインを取得
         const pipeline = this.pipelineManager.getPipeline("bitmap_render_msaa");
         if (!pipeline) {
             tempTexture.destroy();
@@ -2676,7 +2598,6 @@ export class Context
             return;
         }
 
-        // PositionUniforms: offset, size, viewport, padding
         const uniformData = this.$uniformData8;
         uniformData[0] = node.x;
         uniformData[1] = node.y;
@@ -2690,20 +2611,18 @@ export class Context
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
-
         const tempTextureView = tempTexture.createView();
 
+        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+        $entries3[1].resource = sampler;
+        $entries3[2].resource = tempTextureView;
         const bindGroup = this.device.createBindGroup({
             "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": tempTextureView }
-            ]
+            "entries": $entries3
         });
 
-        // MSAAテクスチャに直接描画（resolveTargetも設定してresolve targetも更新）
-        const commandEncoder = this.device.createCommandEncoder();
+        // フレームエンコーダーを使用してMSAAテクスチャに描画
+        this.ensureCommandEncoder();
         const renderPassDescriptor: GPURenderPassDescriptor = {
             "colorAttachments": [{
                 "view": attachment.msaaTexture!.view,
@@ -2722,7 +2641,7 @@ export class Context
             };
         }
 
-        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+        const renderPass = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
@@ -2730,10 +2649,7 @@ export class Context
         renderPass.draw(6);
         renderPass.end();
 
-        this.device.queue.submit([commandEncoder.finish()]);
-
-        // 一時テクスチャを解放（uniformBufferはプールで管理）
-        tempTexture.destroy();
+        this.frameTextures.push(tempTexture);
     }
 
     /**
@@ -2772,7 +2688,6 @@ export class Context
             }
         );
 
-        // bitmap_renderパイプラインを取得（非MSAA版）
         const pipeline = this.pipelineManager.getPipeline("bitmap_render");
         if (!pipeline) {
             tempTexture.destroy();
@@ -2785,7 +2700,6 @@ export class Context
             return;
         }
 
-        // PositionUniforms: offset, size, viewport, padding
         const uniformData = this.$uniformData8;
         uniformData[0] = node.x;
         uniformData[1] = node.y;
@@ -2799,20 +2713,18 @@ export class Context
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
-
         const tempTextureView = tempTexture.createView();
 
+        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+        $entries3[1].resource = sampler;
+        $entries3[2].resource = tempTextureView;
         const bindGroup = this.device.createBindGroup({
             "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": tempTextureView }
-            ]
+            "entries": $entries3
         });
 
-        // 通常テクスチャに描画
-        const commandEncoder = this.device.createCommandEncoder();
+        // フレームエンコーダーを使用して通常テクスチャに描画
+        this.ensureCommandEncoder();
         const renderPassDescriptor: GPURenderPassDescriptor = {
             "colorAttachments": [{
                 "view": attachment.texture!.view,
@@ -2830,7 +2742,7 @@ export class Context
             };
         }
 
-        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+        const renderPass = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
@@ -2838,10 +2750,7 @@ export class Context
         renderPass.draw(6);
         renderPass.end();
 
-        this.device.queue.submit([commandEncoder.finish()]);
-
-        // 一時テクスチャを解放（uniformBufferはプールで管理）
-        tempTexture.destroy();
+        this.frameTextures.push(tempTexture);
     }
 
     /**
@@ -3086,13 +2995,12 @@ export class Context
                 const ctUniformBuffer = this.bufferManager.acquireUniformBuffer(32);
                 this.device.queue.writeBuffer(ctUniformBuffer, 0, ctUniformData);
                 const ctSampler = this.textureManager.createSampler("cached_ct_sampler", false);
+                ($entries3[0].resource as GPUBufferBinding).buffer = ctUniformBuffer;
+                $entries3[1].resource = ctSampler;
+                $entries3[2].resource = cachedAttachment.texture.view;
                 const ctBindGroup = this.device.createBindGroup({
                     "layout": ctBindGroupLayout,
-                    "entries": [
-                        { "binding": 0, "resource": { "buffer": ctUniformBuffer } },
-                        { "binding": 1, "resource": ctSampler },
-                        { "binding": 2, "resource": cachedAttachment.texture.view }
-                    ]
+                    "entries": $entries3
                 });
                 const ctRenderPass = this.frameBufferManager.createRenderPassDescriptor(
                     ctAttachment.texture.view, 0, 0, 0, 0, "clear"
@@ -3144,17 +3052,15 @@ export class Context
         }
 
         const sampler = this.textureManager.createSampler("cached_filter_sampler", true);
-        const uniformData = new Float32Array([1, 1, 0, 0]);
         const uniformBuffer = this.bufferManager.acquireUniformBuffer(16);
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+        this.device.queue.writeBuffer(uniformBuffer, 0, $IDENTITY_UV.buffer, $IDENTITY_UV.byteOffset, $IDENTITY_UV.byteLength);
 
+        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+        $entries3[1].resource = sampler;
+        $entries3[2].resource = drawAttachment.texture!.view;
         const bindGroup = this.device.createBindGroup({
             "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": drawAttachment.texture!.view }
-            ]
+            "entries": $entries3
         });
 
         const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
@@ -3388,23 +3294,27 @@ export class Context
             return;
         }
 
-        // Uniform: scale = (1, 1), offset = (0, 0) で 1:1 コピー
-        const uniformData = $IDENTITY_UV;
-        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData.buffer, uniformData.byteOffset, uniformData.byteLength);
-
-        // サンプラーを作成
-        const sampler = this.textureManager.createSampler("transfer_sampler", false);
-
-        // バインドグループを作成
-        const bindGroup = this.device.createBindGroup({
-            "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": this.$mainAttachmentObject.texture.view }
-            ]
-        });
+        // Static BindGroup キャッシュ: mainAttachment.texture.viewが同じ間は再利用
+        const currentView = this.$mainAttachmentObject.texture.view;
+        if (!$presentBindGroup || $presentBindGroupView !== currentView) {
+            if (!$presentUniformBuffer) {
+                $presentUniformBuffer = this.device.createBuffer({
+                    "size": $IDENTITY_UV.byteLength,
+                    "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+                });
+                this.device.queue.writeBuffer($presentUniformBuffer, 0, $IDENTITY_UV.buffer, $IDENTITY_UV.byteOffset, $IDENTITY_UV.byteLength);
+            }
+            const sampler = this.textureManager.createSampler("transfer_sampler", false);
+            $entries3[0].resource = { "buffer": $presentUniformBuffer };
+            $entries3[1].resource = sampler;
+            $entries3[2].resource = currentView;
+            $presentBindGroup = this.device.createBindGroup({
+                "layout": bindGroupLayout,
+                "entries": $entries3
+            });
+            $presentBindGroupView = currentView;
+        }
+        const bindGroup = $presentBindGroup;
 
         // スワップチェーンへのレンダーパスを作成
         const renderPassDescriptor: GPURenderPassDescriptor = {
