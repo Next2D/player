@@ -2,7 +2,8 @@ import { $clipBounds } from "../../Mask";
 import {
     $gl,
     $context,
-    $getFloat32Array4
+    $getFloat32Array4,
+    $enableScissorTest
 } from "../../WebGLUtil";
 
 /**
@@ -37,7 +38,7 @@ export const execute = (
 
     const width  = Math.ceil(Math.abs(x_max - x_min));
     const height = Math.ceil(Math.abs(y_max - y_min));
-    $gl.enable($gl.SCISSOR_TEST);
+    $enableScissorTest();
     $gl.scissor(
         x_min,
         currentAttachmentObject.height - y_min - height,

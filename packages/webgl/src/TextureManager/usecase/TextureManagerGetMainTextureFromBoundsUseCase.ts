@@ -4,7 +4,9 @@ import { execute as textureManagerGetTextureUseCase } from "./TextureManagerGetT
 import { execute as textureManagerBind0UseCase } from "./TextureManagerBind0UseCase";
 import {
     $context,
-    $gl
+    $gl,
+    $enableScissorTest,
+    $disableScissorTest
 } from "../../WebGLUtil";
 import {
     $drawBitmapFramebuffer,
@@ -64,7 +66,7 @@ export const execute = (
     $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, $readFrameBuffer);
     $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, $drawBitmapFramebuffer);
 
-    $gl.enable($gl.SCISSOR_TEST);
+    $enableScissorTest();
     $gl.scissor(
         x,
         mainAttachmentObject.height - y - height,
@@ -79,7 +81,7 @@ export const execute = (
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
     );
-    $gl.disable($gl.SCISSOR_TEST);
+    $disableScissorTest();
 
     $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
 

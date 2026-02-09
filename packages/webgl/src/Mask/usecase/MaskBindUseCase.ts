@@ -1,6 +1,9 @@
 
 import { execute as maskEndMaskService } from "../service/MaskEndMaskService";
-import { $gl } from "../../WebGLUtil";
+import {
+    $gl,
+    $disableScissorTest
+} from "../../WebGLUtil";
 import {
     $isMaskDrawing,
     $setMaskDrawing
@@ -21,7 +24,7 @@ export const execute = (mask: boolean): void =>
         $setMaskDrawing(false);
 
         $gl.disable($gl.STENCIL_TEST);
-        $gl.disable($gl.SCISSOR_TEST);
+        $disableScissorTest();
     } else if (mask && !$isMaskDrawing()) {
         $setMaskDrawing(true);
 

@@ -28,9 +28,8 @@ export const execute = (): void =>
 {
     const fillVertexArrayObject = vertexArrayObjectBindFillMeshUseCase();
 
-    // mask on
+    // mask on（frontFaceはContext初期化時にCCW固定）
     $gl.enable($gl.STENCIL_TEST);
-    $gl.frontFace($gl.CCW);
     $gl.stencilMask(0xff);
 
     // Reset stencil cache at the start of fill processing

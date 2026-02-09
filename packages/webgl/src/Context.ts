@@ -147,6 +147,10 @@ export class Context
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
+        // 初期化時に1回だけ設定するステート
+        gl.clearColor(0, 0, 0, 0);
+        gl.frontFace(gl.CCW);
+
         // FrameBufferManagerの初期起動
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);

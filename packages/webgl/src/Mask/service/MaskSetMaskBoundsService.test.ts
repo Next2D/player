@@ -37,6 +37,7 @@ describe("MaskSetMaskBoundsService.js method test", () =>
                     }),
                     "SCISSOR_TEST": "SCISSOR_TEST",
                 },
+                $enableScissorTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;

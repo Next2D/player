@@ -102,6 +102,8 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                     "SCISSOR_TEST": "SCISSOR_TEST",
                     "STENCIL_BUFFER_BIT": "STENCIL_BUFFER_BIT",
                 },
+                $enableScissorTest: vi.fn(),
+                $disableScissorTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;
@@ -266,6 +268,8 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                     "SCISSOR_TEST": "SCISSOR_TEST",
                     "STENCIL_BUFFER_BIT": "STENCIL_BUFFER_BIT",
                 },
+                $enableScissorTest: vi.fn(),
+                $disableScissorTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;

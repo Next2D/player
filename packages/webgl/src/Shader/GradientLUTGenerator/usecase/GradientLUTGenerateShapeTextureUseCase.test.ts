@@ -48,6 +48,16 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) =>
                 scissorCalls.push([x, y, w, h]);
             })
         },
+        $enableScissorTest: vi.fn((cap?: any) =>
+        {
+            enableCalls.push("SCISSOR_TEST");
+            scissorTestEnabled = true;
+        }),
+        $disableScissorTest: vi.fn((cap?: any) =>
+        {
+            disableCalls.push("SCISSOR_TEST");
+            scissorTestEnabled = false;
+        }),
         $context: {
             get currentAttachmentObject() {
                 return currentAttachment;

@@ -47,19 +47,10 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
         : attachment_object.stencil as IStencilBufferObject;
 
     // 再利用のオブジェクトの場合は、描画情報をクリアする
+    // clearColorは初期化時に(0,0,0,0)で固定済みのためそのまま使用
     if (object.dirty) {
-
         object.dirty = false;
-
-        // 無色透明で初期化
-        const red   = context.$clearColorR;
-        const green = context.$clearColorG;
-        const blue  = context.$clearColorB;
-        const alpha = context.$clearColorA;
-
-        $gl.clearColor(0, 0, 0, 0);
         context.clearRect(0, 0, attachment_object.width, attachment_object.height);
-        $gl.clearColor(red, green, blue, alpha);
     }
 
     // mask bind

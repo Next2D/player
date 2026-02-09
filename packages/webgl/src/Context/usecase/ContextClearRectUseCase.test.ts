@@ -19,9 +19,11 @@ describe("ContextClearRectUseCase.js method test", () =>
                         expect(x).toBe(1);
                         expect(y).toBe(2);
                         expect(w).toBe(3);
-                        expect(h).toBe(4); 
+                        expect(h).toBe(4);
                     }),
-                }
+                },
+                $enableScissorTest: vi.fn(),
+                $disableScissorTest: vi.fn(),
             }
         });
 

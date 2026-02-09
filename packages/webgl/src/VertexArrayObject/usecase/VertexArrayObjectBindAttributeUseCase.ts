@@ -41,6 +41,6 @@ export const execute = (): void =>
 
     $gl.bufferSubData(
         $gl.ARRAY_BUFFER, 0,
-        renderQueue.buffer.subarray(0, renderQueue.offset)
+        renderQueue.buffer, 0, renderQueue.offset
     );
 };

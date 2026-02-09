@@ -17,6 +17,8 @@ describe("ContextUpdateBackgroundColorService.js method test", () =>
             "createFramebuffer": vi.fn(() => "createFramebuffer"),
             "bindFramebuffer": vi.fn(() => "bindFramebuffer"),
             "clearColor": vi.fn(() => "clearColor"),
+            "frontFace": vi.fn(() => "frontFace"),
+            "CCW": 1,
             "createRenderbuffer": vi.fn(() => "createRenderbuffer"),
             "bindRenderbuffer": vi.fn(() => "bindRenderbuffer"),
             "renderbufferStorageMultisample": vi.fn(() => "renderbufferStorageMultisample"),

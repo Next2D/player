@@ -28,6 +28,29 @@ export const $setContext = (context: Context): void =>
     $context = context;
 };
 
+let $scissorEnabled: boolean = false;
+
+export const $enableScissorTest = (): void =>
+{
+    if (!$scissorEnabled) {
+        $scissorEnabled = true;
+        $gl.enable($gl.SCISSOR_TEST);
+    }
+};
+
+export const $disableScissorTest = (): void =>
+{
+    if ($scissorEnabled) {
+        $scissorEnabled = false;
+        $gl.disable($gl.SCISSOR_TEST);
+    }
+};
+
+export const $resetScissorState = (): void =>
+{
+    $scissorEnabled = false;
+};
+
 export const $clamp = (
     value: number,
     min: number, max: number,

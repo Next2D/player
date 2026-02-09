@@ -2,20 +2,18 @@ import { execute } from "./ContextBeginNodeRenderingService";
 import { describe, expect, it, vi } from "vitest";
 
 let scissorCallCount = 0;
-let clearColorCallCount = 0;
 
-vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
 {
     const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
     return {
         ...mod,
+        $enableScissorTest: vi.fn(),
         $gl: {
             "SCISSOR_TEST": "SCISSOR_TEST",
             "COLOR_BUFFER_BIT": 1,
             "STENCIL_BUFFER_BIT": 2,
-            "enable": vi.fn((v) => {
-                expect(v).toBe("SCISSOR_TEST");
-            }),
+            "enable": vi.fn(),
             "scissor": vi.fn((x, y, w, h) => {
                 expect(x).toBe(1);
                 expect(y).toBe(2);
@@ -27,15 +25,6 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
                     expect(h).toBe(4);
                 }
                 scissorCallCount++;
-            }),
-            "clearColor": vi.fn((r, g, b, a) => {
-                if (clearColorCallCount === 0) {
-                    expect(r).toBe(0);
-                    expect(g).toBe(0);
-                    expect(b).toBe(0);
-                    expect(a).toBe(0);
-                }
-                clearColorCallCount++;
             }),
             "clear": vi.fn((v) => {
                 expect(v).toBe(3);

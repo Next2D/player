@@ -1,6 +1,7 @@
 import {
     $gl,
-    $context
+    $context,
+    $disableScissorTest
 } from "../../WebGLUtil";
 
 /**
@@ -31,5 +32,5 @@ export const execute = (): void =>
     $gl.colorMask(true, true, true, true);
 
     $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
-    $gl.disable($gl.SCISSOR_TEST);
+    $disableScissorTest();
 };

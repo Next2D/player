@@ -10,7 +10,9 @@ import {
 import {
     $gl,
     $context,
-    $poolFloat32Array4
+    $poolFloat32Array4,
+    $enableScissorTest,
+    $disableScissorTest
 } from "../../WebGLUtil";
 
 /**
@@ -42,7 +44,7 @@ export const execute = (): void =>
 
     const width  = Math.ceil(Math.abs(xMax - xMin));
     const height = Math.ceil(Math.abs(yMax - yMin));
-    $gl.enable($gl.SCISSOR_TEST);
+    $enableScissorTest();
     $gl.scissor(
         xMin,
         currentAttachmentObject.height - yMin - height,
@@ -58,7 +60,7 @@ export const execute = (): void =>
 
         $gl.clear($gl.STENCIL_BUFFER_BIT);
         $gl.disable($gl.STENCIL_TEST);
-        $gl.disable($gl.SCISSOR_TEST);
+        $disableScissorTest();
 
         $clipLevels.clear();
         $clipBounds.clear();

@@ -52,7 +52,6 @@ export const execute = (
     textureManagerBind0UseCase(textureObject);
 
     $gl.enable($gl.STENCIL_TEST);
-    $gl.frontFace($gl.CCW);
     $gl.stencilMask(0xff);
 
     // mask setting (cached)

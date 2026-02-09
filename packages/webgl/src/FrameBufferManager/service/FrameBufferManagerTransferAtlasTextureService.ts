@@ -4,7 +4,9 @@ import {
 } from "../../AtlasManager";
 import {
     $gl,
-    $context
+    $context,
+    $enableScissorTest,
+    $disableScissorTest
 } from "../../WebGLUtil";
 import {
     $atlasFrameBuffer,
@@ -39,7 +41,7 @@ export const execute = (): void =>
     const atlasIdx = $activeAtlasIndex;
     const bounds = $getActiveTransferBounds(atlasIdx);
 
-    $gl.enable($gl.SCISSOR_TEST);
+    $enableScissorTest();
     $gl.scissor(
         bounds[0], bounds[1],
         bounds[2] - bounds[0], bounds[3] - bounds[1]
@@ -51,7 +53,7 @@ export const execute = (): void =>
         $gl.COLOR_BUFFER_BIT,
         $gl.NEAREST
     );
-    $gl.disable($gl.SCISSOR_TEST);
+    $disableScissorTest();
 
     if (currentAttachmentObject) {
         $context.bind(currentAttachmentObject);

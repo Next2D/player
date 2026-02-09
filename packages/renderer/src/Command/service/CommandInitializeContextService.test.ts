@@ -16,6 +16,8 @@ describe("CommandInitializeContextService.js test", () =>
 
                 return {
                     "clearColor": vi.fn(),
+                    "frontFace": vi.fn(),
+                    "CCW": 1,
                     "getParameter": vi.fn(),
                     "createFramebuffer": vi.fn(),
                     "bindFramebuffer": vi.fn(),

@@ -10,7 +10,9 @@ import {
 } from "../../Mask";
 import {
     $gl,
-    $context
+    $context,
+    $enableScissorTest,
+    $disableScissorTest
 } from "../../WebGLUtil";
 import {
     $fillBufferIndexes,
@@ -45,7 +47,7 @@ export const execute = (): void =>
 
     const width  = Math.ceil(Math.abs(xMax - xMin));
     const height = Math.ceil(Math.abs(yMax - yMin));
-    $gl.enable($gl.SCISSOR_TEST);
+    $enableScissorTest();
     $gl.scissor(
         xMin,
         currentAttachmentObject.height - yMin - height,
@@ -98,5 +100,5 @@ export const execute = (): void =>
     $clearFillBufferSetting();
     $terminateGrid();
 
-    $gl.disable($gl.SCISSOR_TEST);
+    $disableScissorTest();
 };

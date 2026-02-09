@@ -6,7 +6,9 @@ import { execute as gradientLUTSetUniformService } from "../service/GradientLUTS
 import { execute as gradientLUTGeneratorFillTextureUseCase } from "./GradientLUTGeneratorFillTextureUseCase";
 import {
     $gl,
-    $context
+    $context,
+    $enableScissorTest,
+    $disableScissorTest
 } from "../../../WebGLUtil";
 import {
     $getGradientAttachmentObjectWithResolution,
@@ -34,7 +36,7 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
 {
     const currentAttachment = $context.currentAttachmentObject;
     const scissorBox = $gl.getParameter($gl.SCISSOR_BOX);
-    $gl.disable($gl.SCISSOR_TEST);
+    $disableScissorTest();
 
     const isLinearSpace = interpolation === 0;
     const stopsLength = stops.length / 5;
@@ -76,7 +78,7 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     }
 
     // bugfix: @see https://github.com/Next2D/player/issues/234
-    $gl.enable($gl.SCISSOR_TEST);
+    $enableScissorTest();
     $gl.scissor(scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]);
 
     return gradientAttachmentObject.texture as NonNullable<ITextureObject>;
