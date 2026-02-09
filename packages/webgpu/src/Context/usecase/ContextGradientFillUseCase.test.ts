@@ -383,7 +383,8 @@ describe("ContextGradientFillUseCase", () =>
             );
 
             expect(result).toBe(null);
-            expect(device._mockTexture.destroy).toHaveBeenCalled();
+            // プール対応: テクスチャはdestroyされずプールに返却される
+            expect(device._mockTexture.destroy).not.toHaveBeenCalled();
         });
     });
 

@@ -3,6 +3,7 @@ import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshBitmapStrokeGenerateUseCase } from "../../Mesh/usecase/MeshBitmapStrokeGenerateUseCase";
 import { execute as contextComputeBitmapMatrixService } from "../service/ContextComputeBitmapMatrixService";
+import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool";
 
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
@@ -64,12 +65,8 @@ export const execute = (
     // 頂点バッファを取得（プールから再利用）
     const vertexBuffer = buffer_manager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
-    // ビットマップテクスチャを作成
-    const bitmapTexture = device.createTexture({
-        "size": { width, height },
-        "format": "rgba8unorm",
-        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-    });
+    // ビットマップテクスチャをプールから取得
+    const bitmapTexture = $acquireFillTexture(device, width, height);
 
     // ピクセルデータをテクスチャに転送
     device.queue.writeTexture(
@@ -126,7 +123,7 @@ export const execute = (
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("bitmap_fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] bitmap_fill bind group layout not found");
-        bitmapTexture.destroy();
+        $releaseFillTexture(bitmapTexture);
         return null;
     }
 
@@ -148,7 +145,7 @@ export const execute = (
     const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-        bitmapTexture.destroy();
+        $releaseFillTexture(bitmapTexture);
         return null;
     }
 

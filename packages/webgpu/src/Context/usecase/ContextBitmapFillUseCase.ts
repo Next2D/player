@@ -3,6 +3,7 @@ import type { BufferManager } from "../../BufferManager";
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
 import { execute as contextComputeBitmapMatrixService } from "../service/ContextComputeBitmapMatrixService";
+import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool";
 import {
     $isMaskDrawing,
     $getMaskStencilReference
@@ -65,12 +66,8 @@ export const execute = (
     // 頂点バッファを取得（プールから再利用）
     const vertexBuffer = buffer_manager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
-    // ビットマップテクスチャを作成
-    const bitmapTexture = device.createTexture({
-        "size": { width, height },
-        "format": "rgba8unorm",
-        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-    });
+    // ビットマップテクスチャをプールから取得
+    const bitmapTexture = $acquireFillTexture(device, width, height);
 
     // ピクセルデータをテクスチャに転送
     device.queue.writeTexture(
@@ -134,7 +131,7 @@ export const execute = (
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("bitmap_fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] bitmap_fill bind group layout not found");
-        bitmapTexture.destroy();
+        $releaseFillTexture(bitmapTexture);
         return null;
     }
 
@@ -185,7 +182,7 @@ export const execute = (
                 // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
                 // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
                 // ビットマップテクスチャは解放してnullを返す
-                bitmapTexture.destroy();
+                $releaseFillTexture(bitmapTexture);
                 return null;
             }
             // マスクテストモード: ステンシル値をテストしてビットマップを描画
@@ -197,7 +194,7 @@ export const execute = (
         const pipeline = pipeline_manager.getPipeline(pipelineName);
         if (!pipeline) {
             console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-            bitmapTexture.destroy();
+            $releaseFillTexture(bitmapTexture);
             return null;
         }
 

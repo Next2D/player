@@ -276,7 +276,7 @@ describe("ContextBitmapFillUseCase", () =>
             );
 
             expect(result).toBe(null);
-            expect(device._mockTexture.destroy).toHaveBeenCalled();
+            expect(device._mockTexture.destroy).not.toHaveBeenCalled();
         });
     });
 

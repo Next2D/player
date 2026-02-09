@@ -373,7 +373,7 @@ describe("ContextBitmapStrokeUseCase", () =>
             );
 
             expect(result).toBe(null);
-            expect(device._mockTexture.destroy).toHaveBeenCalled();
+            expect(device._mockTexture.destroy).not.toHaveBeenCalled();
         });
 
         it("should return null when pipeline not found", () =>
@@ -403,7 +403,7 @@ describe("ContextBitmapStrokeUseCase", () =>
             );
 
             expect(result).toBe(null);
-            expect(device._mockTexture.destroy).toHaveBeenCalled();
+            expect(device._mockTexture.destroy).not.toHaveBeenCalled();
         });
     });
 

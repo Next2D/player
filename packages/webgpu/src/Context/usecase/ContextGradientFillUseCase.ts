@@ -4,6 +4,7 @@ import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
 import { generateGradientLUT, getAdaptiveResolution } from "../../Gradient/GradientLUTGenerator";
 import { execute as contextComputeGradientMatrixService } from "../service/ContextComputeGradientMatrixService";
+import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool";
 import {
     $isMaskDrawing,
     $getMaskStencilReference
@@ -73,12 +74,8 @@ export const execute = (
     const stopsLength = stops.length / 5;
     const lutResolution = getAdaptiveResolution(stopsLength);
 
-    // LUTテクスチャを作成
-    const lutTexture = device.createTexture({
-        "size": { "width": lutResolution, "height": 1 },
-        "format": "rgba8unorm",
-        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-    });
+    // LUTテクスチャをプールから取得
+    const lutTexture = $acquireFillTexture(device, lutResolution, 1);
 
     // LUTデータをテクスチャに転送
     // Note: Use lutData directly instead of lutData.buffer to avoid potential issues
@@ -158,7 +155,7 @@ export const execute = (
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("gradient_fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] gradient_fill bind group layout not found");
-        lutTexture.destroy();
+        $releaseFillTexture(lutTexture);
         return null;
     }
 
@@ -202,8 +199,8 @@ export const execute = (
     if (use_stencil_pipeline && $isMaskDrawing()) {
         // マスク描画モード: ステンシルへの書き込みはclip()で行うため、ここでは何もしない
         // clip()がINVERTでステンシルを書き込み、重複書き込みによるINVERT打ち消しを防止
-        // LUTテクスチャは解放してnullを返す
-        lutTexture.destroy();
+        // LUTテクスチャはプールに返却してnullを返す
+        $releaseFillTexture(lutTexture);
         return null;
     }
 

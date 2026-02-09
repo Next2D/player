@@ -4,6 +4,7 @@ import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshGradientStrokeGenerateUseCase } from "../../Mesh/usecase/MeshGradientStrokeGenerateUseCase";
 import { generateGradientLUT, getAdaptiveResolution } from "../../Gradient/GradientLUTGenerator";
 import { execute as contextComputeGradientMatrixService } from "../service/ContextComputeGradientMatrixService";
+import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool";
 
 let $gradientSampler: GPUSampler | null = null;
 
@@ -70,12 +71,8 @@ export const execute = (
     const stopsLength = stops.length / 5;
     const lutResolution = getAdaptiveResolution(stopsLength);
 
-    // LUTテクスチャを作成
-    const lutTexture = device.createTexture({
-        "size": { "width": lutResolution, "height": 1 },
-        "format": "rgba8unorm",
-        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-    });
+    // LUTテクスチャをプールから取得
+    const lutTexture = $acquireFillTexture(device, lutResolution, 1);
 
     // LUTデータをテクスチャに転送
     // Note: Use lutData directly instead of lutData.buffer to avoid potential issues
@@ -155,7 +152,7 @@ export const execute = (
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("gradient_fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] gradient_fill bind group layout not found");
-        lutTexture.destroy();
+        $releaseFillTexture(lutTexture);
         return null;
     }
 
@@ -176,7 +173,7 @@ export const execute = (
     const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-        lutTexture.destroy();
+        $releaseFillTexture(lutTexture);
         return null;
     }
 

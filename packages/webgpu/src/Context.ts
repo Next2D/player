@@ -44,6 +44,10 @@ import {
     $clearGradientAttachmentObjects
 } from "./Gradient/GradientLUTCache";
 import {
+    $releaseFillTexture,
+    $clearFillTexturePool
+} from "./FillTexturePool";
+import {
     $setFilterGradientLUTDevice,
     $clearFilterGradientAttachment
 } from "./Filter/FilterGradientLUTCache";
@@ -156,8 +160,11 @@ export class Context
     private mainTextureView: GPUTextureView | null = null;
     private frameStarted: boolean = false;
 
-    // フレームごとの一時テクスチャ（endFrame()で解放）
+    // フレームごとの一時テクスチャ（endFrame()でdestroy）
     private frameTextures: GPUTexture[] = [];
+
+    // フレームごとのプール管理テクスチャ（endFrame()でプールに返却）
+    private pooledTextures: GPUTexture[] = [];
 
     // Current rendering target (could be main or atlas)
     private currentRenderTarget: GPUTextureView | null = null;
@@ -384,6 +391,13 @@ export class Context
             texture.destroy();
         }
         this.frameTextures.length = 0;
+
+        // プール管理テクスチャをプールに返却し、プール自体もクリア
+        for (const texture of this.pooledTextures) {
+            $releaseFillTexture(texture);
+        }
+        this.pooledTextures.length = 0;
+        $clearFillTexturePool();
 
         // フレーム状態をリセット（リサイズ中は新しいフレームを開始できるようにする）
         this.frameStarted = false;
@@ -3157,11 +3171,11 @@ export class Context
     }
 
     /**
-     * @description フレームごとの一時テクスチャを追加（endFrame()で解放）
+     * @description フレームごとのプール管理テクスチャを追加（endFrame()でプールに返却）
      */
     addFrameTexture (texture: GPUTexture): void
     {
-        this.frameTextures.push(texture);
+        this.pooledTextures.push(texture);
     }
 
     /**
@@ -3200,6 +3214,12 @@ export class Context
             texture.destroy();
         }
         this.frameTextures.length = 0;
+
+        // プール管理テクスチャをプールに返却
+        for (const texture of this.pooledTextures) {
+            $releaseFillTexture(texture);
+        }
+        this.pooledTextures.length = 0;
 
         // 次のフレーム用にクリア
         this.commandEncoder = null;
