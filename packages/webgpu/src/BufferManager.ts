@@ -21,6 +21,8 @@ export class BufferManager
     private indirectBuffer: GPUBuffer | null;
     private frameNumber: number;
     private unitRectBuffer: GPUBuffer | null;
+    private frameVertexPoolBuffers: GPUBuffer[];
+    private frameUniformPoolBuffers: GPUBuffer[];
 
     constructor (device: GPUDevice)
     {
@@ -33,6 +35,8 @@ export class BufferManager
         this.indirectBuffer = null;
         this.frameNumber = 0;
         this.unitRectBuffer = null;
+        this.frameVertexPoolBuffers = [];
+        this.frameUniformPoolBuffers = [];
     }
 
     createVertexBuffer (name: string, data: Float32Array): GPUBuffer
@@ -86,12 +90,14 @@ export class BufferManager
 
     acquireVertexBuffer (requiredSize: number, data?: Float32Array): GPUBuffer
     {
-        return bufferManagerAcquireVertexBufferUseCase(
+        const buffer = bufferManagerAcquireVertexBufferUseCase(
             this.device,
             this.vertexBufferBuckets,
             requiredSize,
             data
         );
+        this.frameVertexPoolBuffers.push(buffer);
+        return buffer;
     }
 
     releaseVertexBuffer (buffer: GPUBuffer): void
@@ -101,11 +107,13 @@ export class BufferManager
 
     acquireUniformBuffer (requiredSize: number): GPUBuffer
     {
-        return bufferManagerAcquireUniformBufferUseCase(
+        const buffer = bufferManagerAcquireUniformBufferUseCase(
             this.device,
             this.uniformBufferBuckets,
             requiredSize
         );
+        this.frameUniformPoolBuffers.push(buffer);
+        return buffer;
     }
 
     releaseUniformBuffer (buffer: GPUBuffer): void
@@ -168,6 +176,9 @@ export class BufferManager
             this.unitRectBuffer.destroy();
             this.unitRectBuffer = null;
         }
+
+        this.frameVertexPoolBuffers.length = 0;
+        this.frameUniformPoolBuffers.length = 0;
     }
 
     getPoolStats (): { vertexPoolSize: number; uniformPoolSize: number }
@@ -197,6 +208,17 @@ export class BufferManager
             buffer.destroy();
         }
         this.uniformBuffers.clear();
+
+        // フレーム内で取得したプールバッファをプールに返却
+        for (const buffer of this.frameVertexPoolBuffers) {
+            bufferManagerReleaseVertexBufferService(this.vertexBufferBuckets, buffer);
+        }
+        this.frameVertexPoolBuffers.length = 0;
+
+        for (const buffer of this.frameUniformPoolBuffers) {
+            bufferManagerReleaseUniformBufferService(this.uniformBufferBuckets, buffer);
+        }
+        this.frameUniformPoolBuffers.length = 0;
 
         this.releaseAllStorageBuffers();
 

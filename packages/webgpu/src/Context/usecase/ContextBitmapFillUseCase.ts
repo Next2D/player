@@ -11,7 +11,7 @@ import {
 
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
-const $uniformData16 = new Float32Array(16);
+const $uniformData32 = new Float32Array(32);
 
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
@@ -39,27 +39,8 @@ export const execute = (
     use_stencil_pipeline: boolean = false,
     _clip_level: number = 1
 ): GPUTexture | null => {
-    // 色（ビットマップ描画ではアルファ乗算用に使用）
-    const red = fill_style[0];
-    const green = fill_style[1];
-    const blue = fill_style[2];
-    const alpha = fill_style[3];
-
-    // 行列を取得
-    const a  = context_matrix[0];
-    const b  = context_matrix[1];
-    const c  = context_matrix[3];
-    const d  = context_matrix[4];
-    const tx = context_matrix[6];
-    const ty = context_matrix[7];
-
-    // MeshFillGenerateUseCaseで頂点データを生成
-    const mesh = meshFillGenerateUseCase(
-        path_vertices,
-        a, b, c, d, tx, ty,
-        red, green, blue, alpha,
-        viewport_width, viewport_height
-    );
+    // MeshFillGenerateUseCaseで頂点データを生成（4 floats/vertex: position + bezier）
+    const mesh = meshFillGenerateUseCase(path_vertices);
 
     if (mesh.indexCount === 0) {
         return null;
@@ -82,34 +63,59 @@ export const execute = (
     // ビットマップ変換行列を計算（コンテキスト行列と合成して逆行列）
     const computedBitmapMatrix = contextComputeBitmapMatrixService(bitmap_matrix, context_matrix);
 
-    // Uniformバッファを作成
-    // BitmapUniforms構造体:
-    // - bitmapMatrix: mat3x3<f32> (各列がvec4にパディング = 48 bytes)
-    // - textureWidth: f32 (4 bytes)
-    // - textureHeight: f32 (4 bytes)
-    // - repeat: f32 (4 bytes)
-    // - _pad: f32 (4 bytes)
-    // 合計: 64 bytes
-    $uniformData16[0] = computedBitmapMatrix[0];  // col0.x = a
-    $uniformData16[1] = computedBitmapMatrix[1];  // col0.y = c
-    $uniformData16[2] = computedBitmapMatrix[2];  // col0.z = 0
-    $uniformData16[3] = 0; // padding
-    $uniformData16[4] = computedBitmapMatrix[3];  // col1.x = b
-    $uniformData16[5] = computedBitmapMatrix[4];  // col1.y = d
-    $uniformData16[6] = computedBitmapMatrix[5];  // col1.z = 0
-    $uniformData16[7] = 0; // padding
-    $uniformData16[8] = computedBitmapMatrix[6];  // col2.x = tx
-    $uniformData16[9] = computedBitmapMatrix[7];  // col2.y = ty
-    $uniformData16[10] = computedBitmapMatrix[8]; // col2.z = 1
-    $uniformData16[11] = 0; // padding
-    // ビットマップパラメータ
-    $uniformData16[12] = width;
-    $uniformData16[13] = height;
-    $uniformData16[14] = repeat ? 1.0 : 0.0;
-    $uniformData16[15] = 0; // padding
+    // 色とmatrix
+    const red = fill_style[0];
+    const green = fill_style[1];
+    const blue = fill_style[2];
+    const alpha = fill_style[3];
+    const a  = context_matrix[0];
+    const b  = context_matrix[1];
+    const c  = context_matrix[3];
+    const d  = context_matrix[4];
+    const tx = context_matrix[6];
+    const ty = context_matrix[7];
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData16.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniformData16.buffer, $uniformData16.byteOffset, $uniformData16.byteLength);
+    // Uniformバッファを作成（BitmapUniforms: 28 floats = 112 bytes）
+    // bitmapMatrix: mat3x3<f32> (48 bytes)
+    $uniformData32[0] = computedBitmapMatrix[0];  // col0.x = a
+    $uniformData32[1] = computedBitmapMatrix[1];  // col0.y = c
+    $uniformData32[2] = computedBitmapMatrix[2];  // col0.z = 0
+    $uniformData32[3] = 0; // padding
+    $uniformData32[4] = computedBitmapMatrix[3];  // col1.x = b
+    $uniformData32[5] = computedBitmapMatrix[4];  // col1.y = d
+    $uniformData32[6] = computedBitmapMatrix[5];  // col1.z = 0
+    $uniformData32[7] = 0; // padding
+    $uniformData32[8] = computedBitmapMatrix[6];  // col2.x = tx
+    $uniformData32[9] = computedBitmapMatrix[7];  // col2.y = ty
+    $uniformData32[10] = computedBitmapMatrix[8]; // col2.z = 1
+    $uniformData32[11] = 0; // padding
+    // ビットマップパラメータ
+    $uniformData32[12] = width;
+    $uniformData32[13] = height;
+    $uniformData32[14] = repeat ? 1.0 : 0.0;
+    $uniformData32[15] = 0; // padding
+    // color
+    $uniformData32[16] = red;
+    $uniformData32[17] = green;
+    $uniformData32[18] = blue;
+    $uniformData32[19] = alpha;
+    // contextMatrix（viewport正規化済み）
+    $uniformData32[20] = a / viewport_width;
+    $uniformData32[21] = b / viewport_height;
+    $uniformData32[22] = 0;
+    $uniformData32[23] = 0;
+    $uniformData32[24] = c / viewport_width;
+    $uniformData32[25] = d / viewport_height;
+    $uniformData32[26] = 0;
+    $uniformData32[27] = 0;
+    // contextMatrix2
+    $uniformData32[28] = tx / viewport_width;
+    $uniformData32[29] = ty / viewport_height;
+    $uniformData32[30] = 1;
+    $uniformData32[31] = 0;
+
+    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData32.byteLength);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniformData32.buffer, $uniformData32.byteOffset, $uniformData32.byteLength);
 
     // サンプラーを取得（キャッシュ済み）
     const samplerKey = `bitmap_${smooth ? "s" : "n"}_${repeat ? "r" : "c"}`;
@@ -140,23 +146,58 @@ export const execute = (
         "entries": $entries3
     });
 
+    // ステンシル書き込みパス用のFillUniforms作成ヘルパー
+    const createStencilBindGroup = (pipelineName: string): GPUBindGroup | null => {
+        const pipeline = pipeline_manager.getPipeline(pipelineName);
+        if (!pipeline) {
+            return null;
+        }
+        const stencilLayout = pipeline.getBindGroupLayout(0);
+        // FillUniforms: color(16) + matrix0(16) + matrix1(16) + matrix2(16) = 64 bytes
+        const stencilData = new Float32Array(16);
+        stencilData[0] = red;
+        stencilData[1] = green;
+        stencilData[2] = blue;
+        stencilData[3] = alpha;
+        stencilData[4] = a / viewport_width;
+        stencilData[5] = b / viewport_height;
+        stencilData[6] = 0;
+        stencilData[7] = 0;
+        stencilData[8] = c / viewport_width;
+        stencilData[9] = d / viewport_height;
+        stencilData[10] = 0;
+        stencilData[11] = 0;
+        stencilData[12] = tx / viewport_width;
+        stencilData[13] = ty / viewport_height;
+        stencilData[14] = 1;
+        stencilData[15] = 0;
+        const stencilUniformBuffer = buffer_manager.acquireUniformBuffer(stencilData.byteLength);
+        device.queue.writeBuffer(stencilUniformBuffer, 0, stencilData.buffer, stencilData.byteOffset, stencilData.byteLength);
+        return device.createBindGroup({
+            "layout": stencilLayout,
+            "entries": [{
+                "binding": 0,
+                "resource": { "buffer": stencilUniformBuffer }
+            }]
+        });
+    };
+
     // アトラス描画時は2パスステンシル処理を使用（WebGL版と同じ）
-    // Pass 1: ステンシルに書き込み
-    // Pass 2: ビットマップを描画（NOT_EQUAL 0）
-    // 注意: アトラスのステンシルはメインキャンバスのマスク処理とは独立
     if (use_atlas_target && use_stencil_pipeline) {
         // === Pass 1: ステンシル書き込み（カラー書き込みなし） ===
-        // Front面: INCR_WRAP, Back面: DECR_WRAP
         const stencilWritePipeline = pipeline_manager.getPipeline("stencil_write");
         if (stencilWritePipeline) {
-            render_pass_encoder.setPipeline(stencilWritePipeline);
-            render_pass_encoder.setStencilReference(0);
-            render_pass_encoder.setVertexBuffer(0, vertexBuffer);
-            render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
+            const stencilBindGroup = createStencilBindGroup("stencil_write");
+            if (stencilBindGroup) {
+                render_pass_encoder.setPipeline(stencilWritePipeline);
+                render_pass_encoder.setStencilReference(0);
+                render_pass_encoder.setVertexBuffer(0, vertexBuffer);
+                render_pass_encoder.setBindGroup(0, stencilBindGroup);
+                render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
+            }
         }
 
         // === Pass 2: ビットマップ描画（NOT_EQUAL 0） ===
-        // アトラス描画時は常に通常モード（メインキャンバスのマスク状態を参照しない）
         const bitmapPipeline = pipeline_manager.getPipeline("bitmap_fill_stencil");
         if (bitmapPipeline) {
             render_pass_encoder.setPipeline(bitmapPipeline);

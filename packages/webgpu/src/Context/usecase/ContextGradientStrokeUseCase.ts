@@ -4,11 +4,11 @@ import type { PipelineManager } from "../../Shader/PipelineManager";
 import { execute as meshGradientStrokeGenerateUseCase } from "../../Mesh/usecase/MeshGradientStrokeGenerateUseCase";
 import { generateGradientLUT, getAdaptiveResolution } from "../../Gradient/GradientLUTGenerator";
 import { execute as contextComputeGradientMatrixService } from "../service/ContextComputeGradientMatrixService";
-import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool";
+import { $getLUTFromCache, $putLUTToCache } from "../../Gradient/GradientLUTCache";
 
 let $gradientSampler: GPUSampler | null = null;
 
-const $uniformData20 = new Float32Array(20);
+const $uniformData36 = new Float32Array(36);
 
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
@@ -36,30 +36,8 @@ export const execute = (
     use_atlas_target: boolean,
     use_stencil_pipeline: boolean
 ): GPUTexture | null => {
-    // グラデーション描画では色は白（1, 1, 1, alpha）を使用
-    // グラデーションの色はLUTテクスチャから取得され、頂点色で乗算される
-    // そのため頂点色は白にして、アルファのみstroke_styleから使用
-    const red = 1;
-    const green = 1;
-    const blue = 1;
-    const alpha = stroke_style[3] > 0 ? stroke_style[3] : 1;
-
-    // 行列を取得
-    const a  = context_matrix[0];
-    const b  = context_matrix[1];
-    const c  = context_matrix[3];
-    const d  = context_matrix[4];
-    const tx = context_matrix[6];
-    const ty = context_matrix[7];
-
-    // グラデーションストローク用メッシュを生成
-    const mesh = meshGradientStrokeGenerateUseCase(
-        vertices,
-        thickness,
-        a, b, c, d, tx, ty,
-        red, green, blue, alpha,
-        viewport_width, viewport_height
-    );
+    // グラデーションストローク用メッシュを生成（4 floats/vertex: position + bezier）
+    const mesh = meshGradientStrokeGenerateUseCase(vertices, thickness);
 
     if (mesh.indexCount === 0) {
         return null;
@@ -68,68 +46,99 @@ export const execute = (
     // 頂点バッファを取得（プールから再利用）
     const vertexBuffer = buffer_manager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
-    // グラデーションLUTテクスチャを生成
-    const lutData = generateGradientLUT(stops, spread, interpolation);
-    const stopsLength = stops.length / 5;
-    const lutResolution = getAdaptiveResolution(stopsLength);
+    // グラデーションLUTテクスチャを取得（キャッシュ優先）
+    let lutTexture: GPUTexture;
+    let lutView: GPUTextureView;
 
-    // LUTテクスチャをプールから取得
-    const lutTexture = $acquireFillTexture(device, lutResolution, 1);
+    const cachedLUT = $getLUTFromCache(stops, spread, interpolation);
+    if (cachedLUT) {
+        lutTexture = cachedLUT.texture;
+        lutView = cachedLUT.view;
+    } else {
+        const lutData = generateGradientLUT(stops, spread, interpolation);
+        const stopsLength = stops.length / 5;
+        const lutResolution = getAdaptiveResolution(stopsLength);
 
-    // LUTデータをテクスチャに転送
-    // Note: Use lutData directly instead of lutData.buffer to avoid potential issues
-    device.queue.writeTexture(
-        { "texture": lutTexture },
-        lutData,
-        { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1 },
-        { "width": lutResolution, "height": 1 }
-    );
+        lutTexture = device.createTexture({
+            "size": { "width": lutResolution, "height": 1 },
+            "format": "rgba8unorm",
+            "usage": 0x06  // TEXTURE_BINDING | COPY_DST
+        });
+
+        device.queue.writeTexture(
+            { "texture": lutTexture },
+            lutData,
+            { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1 },
+            { "width": lutResolution, "height": 1 }
+        );
+
+        lutView = lutTexture.createView();
+        $putLUTToCache(stops, spread, interpolation, lutTexture, lutView);
+    }
 
     // WebGL版と同じ計算でグラデーション変換データを取得
     const gradientData = contextComputeGradientMatrixService(gradient_matrix, context_matrix, type);
 
-    // Uniformバッファを作成
-    // GradientUniforms構造体:
-    // - inverseMatrix: mat3x3<f32> (各列がvec4にパディング = 48 bytes)
-    // - gradientType: f32 (4 bytes)
-    // - focal: f32 (4 bytes)
-    // - spread: f32 (4 bytes)
-    // - radius: f32 (4 bytes)
-    // - linearPoints: vec4<f32> (16 bytes) - a.x, a.y, b.x, b.y
-    // 合計: 80 bytes
-    $uniformData20[0] = gradientData.inverseMatrix[0];  // column 0, row 0 (a)
-    $uniformData20[1] = gradientData.inverseMatrix[3];  // column 0, row 1 (c)
-    $uniformData20[2] = 0;                              // column 0, row 2 (0)
-    $uniformData20[3] = 0; // padding
-    $uniformData20[4] = gradientData.inverseMatrix[1];  // column 1, row 0 (b)
-    $uniformData20[5] = gradientData.inverseMatrix[4];  // column 1, row 1 (d)
-    $uniformData20[6] = 0;                              // column 1, row 2 (0)
-    $uniformData20[7] = 0; // padding
-    $uniformData20[8] = gradientData.inverseMatrix[6];  // column 2, row 0 (tx)
-    $uniformData20[9] = gradientData.inverseMatrix[7];  // column 2, row 1 (ty)
-    $uniformData20[10] = 1;                             // column 2, row 2 (1)
-    $uniformData20[11] = 0; // padding
+    // 色とmatrix
+    const alpha = stroke_style[3] > 0 ? stroke_style[3] : 1;
+    const a  = context_matrix[0];
+    const b  = context_matrix[1];
+    const c  = context_matrix[3];
+    const d  = context_matrix[4];
+    const tx = context_matrix[6];
+    const ty = context_matrix[7];
+
+    // Uniformバッファを作成（GradientUniforms: 36 floats = 144 bytes）
+    $uniformData36[0] = gradientData.inverseMatrix[0];  // column 0, row 0 (a)
+    $uniformData36[1] = gradientData.inverseMatrix[3];  // column 0, row 1 (c)
+    $uniformData36[2] = 0;                              // column 0, row 2 (0)
+    $uniformData36[3] = 0; // padding
+    $uniformData36[4] = gradientData.inverseMatrix[1];  // column 1, row 0 (b)
+    $uniformData36[5] = gradientData.inverseMatrix[4];  // column 1, row 1 (d)
+    $uniformData36[6] = 0;                              // column 1, row 2 (0)
+    $uniformData36[7] = 0; // padding
+    $uniformData36[8] = gradientData.inverseMatrix[6];  // column 2, row 0 (tx)
+    $uniformData36[9] = gradientData.inverseMatrix[7];  // column 2, row 1 (ty)
+    $uniformData36[10] = 1;                             // column 2, row 2 (1)
+    $uniformData36[11] = 0; // padding
     // グラデーションパラメータ
-    $uniformData20[12] = type; // gradientType
-    // focal point ratio を -0.975 ~ 0.975 にclamp（WebGL版と同じ）
-    $uniformData20[13] = Math.max(-0.975, Math.min(0.975, focal)); // focal
-    $uniformData20[14] = spread; // spread (0: reflect, 1: repeat, 2: pad)
-    $uniformData20[15] = 819.2; // radius（Radial用、WebGL版と同じ定数）
+    $uniformData36[12] = type; // gradientType
+    $uniformData36[13] = Math.max(-0.975, Math.min(0.975, focal)); // focal
+    $uniformData36[14] = spread; // spread (0: reflect, 1: repeat, 2: pad)
+    $uniformData36[15] = 819.2; // radius
     // Linear用の点a, b
     if (gradientData.linearPoints) {
-        $uniformData20[16] = gradientData.linearPoints[0]; // a.x
-        $uniformData20[17] = gradientData.linearPoints[1]; // a.y
-        $uniformData20[18] = gradientData.linearPoints[2]; // b.x
-        $uniformData20[19] = gradientData.linearPoints[3]; // b.y
+        $uniformData36[16] = gradientData.linearPoints[0]; // a.x
+        $uniformData36[17] = gradientData.linearPoints[1]; // a.y
+        $uniformData36[18] = gradientData.linearPoints[2]; // b.x
+        $uniformData36[19] = gradientData.linearPoints[3]; // b.y
     } else {
-        $uniformData20[16] = 0;
-        $uniformData20[17] = 0;
-        $uniformData20[18] = 0;
-        $uniformData20[19] = 0;
+        $uniformData36[16] = 0;
+        $uniformData36[17] = 0;
+        $uniformData36[18] = 0;
+        $uniformData36[19] = 0;
     }
+    // color (白 + alpha)
+    $uniformData36[20] = 1;
+    $uniformData36[21] = 1;
+    $uniformData36[22] = 1;
+    $uniformData36[23] = alpha;
+    // contextMatrix（viewport正規化済み）
+    $uniformData36[24] = a / viewport_width;
+    $uniformData36[25] = b / viewport_height;
+    $uniformData36[26] = 0;
+    $uniformData36[27] = 0;
+    $uniformData36[28] = c / viewport_width;
+    $uniformData36[29] = d / viewport_height;
+    $uniformData36[30] = 0;
+    $uniformData36[31] = 0;
+    $uniformData36[32] = tx / viewport_width;
+    $uniformData36[33] = ty / viewport_height;
+    $uniformData36[34] = 1;
+    $uniformData36[35] = 0;
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData20.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniformData20.buffer, $uniformData20.byteOffset, $uniformData20.byteLength);
+    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData36.byteLength);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniformData36.buffer, $uniformData36.byteOffset, $uniformData36.byteLength);
 
     // サンプラーを取得（キャッシュ済み）
     if (!$gradientSampler) {
@@ -146,13 +155,12 @@ export const execute = (
     const bindGroupLayout = pipeline_manager.getBindGroupLayout("gradient_fill");
     if (!bindGroupLayout) {
         console.error("[WebGPU] gradient_fill bind group layout not found");
-        $releaseFillTexture(lutTexture);
         return null;
     }
 
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;
-    $entries3[2].resource = lutTexture.createView();
+    $entries3[2].resource = lutView;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries3
@@ -167,7 +175,6 @@ export const execute = (
     const pipeline = pipeline_manager.getPipeline(pipelineName);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
-        $releaseFillTexture(lutTexture);
         return null;
     }
 
@@ -176,6 +183,6 @@ export const execute = (
     render_pass_encoder.setBindGroup(0, bindGroup);
     render_pass_encoder.draw(mesh.indexCount, 1, 0, 0);
 
-    // LUTテクスチャを返す（Context.tsでフレーム終了時に解放）
-    return lutTexture;
+    // LUTテクスチャはキャッシュ管理
+    return null;
 };

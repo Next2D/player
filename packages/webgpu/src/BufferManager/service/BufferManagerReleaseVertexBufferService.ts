@@ -4,7 +4,7 @@
  * @type {number}
  * @const
  */
-const MAX_BUCKET_SIZE: number = 8;
+const MAX_BUCKET_SIZE: number = 32;
 
 /**
  * @description 頂点バッファをプールに返却

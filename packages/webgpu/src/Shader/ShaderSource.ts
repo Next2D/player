@@ -19,6 +19,7 @@ import {
     BlurTextureCopyFragment,
     FilterOutputFragment,
     ColorTransformFragment,
+    YFlipColorTransformFragment,
     ColorMatrixFilterFragment,
     NodeClearFragment,
     PositionedTextureFragment,
@@ -235,6 +236,11 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     static getColorTransformFragmentShader (): string
     {
         return ColorTransformFragment;
+    }
+
+    static getYFlipColorTransformFragmentShader (): string
+    {
+        return YFlipColorTransformFragment;
     }
 
     static getColorMatrixFilterFragmentShader (): string

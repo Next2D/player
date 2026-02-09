@@ -4,62 +4,38 @@ import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
 import { execute as meshStrokeFillGenerateService } from "../service/MeshStrokeFillGenerateService";
 
 /**
- * @description ビットマップストローク用のメッシュを生成する（WebGL版と同じ仕様）
- *              Generate a mesh for bitmap stroke (same specification as WebGL)
+ * @description メッシュ生成用の再利用可能な一時バッファ（GC回避）
+ */
+let $meshTempBuffer: Float32Array = new Float32Array(32);
+
+const $upperPowerOfTwo = (v: number): number =>
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v++;
+    return v;
+};
+
+/**
+ * @description ビットマップストローク用のメッシュを生成する
+ *              Generate a mesh for bitmap stroke
  *
- * 頂点フォーマット（17 floats per vertex）:
- * - position: x, y (2 floats)
- * - bezier: u, v (2 floats) - Loop-Blinn用の暗黙的関数座標
- * - color: r, g, b, a (4 floats)
- * - matrix row 0: a, b, 0 (3 floats)
- * - matrix row 1: c, d, 0 (3 floats)
- * - matrix row 2: tx, ty, 1 (3 floats)
- *
- * @param  {IPath[]} vertices - パス頂点配列 [x, y, isCurve, ...]
- * @param  {number} thickness - 線の太さ（フル値、内部で/2される）
- * @param  {number} a - 行列要素
- * @param  {number} b - 行列要素
- * @param  {number} c - 行列要素
- * @param  {number} d - 行列要素
- * @param  {number} tx - 行列要素
- * @param  {number} ty - 行列要素
- * @param  {number} red
- * @param  {number} green
- * @param  {number} blue
- * @param  {number} alpha
- * @param  {number} viewportWidth - ビューポート幅
- * @param  {number} viewportHeight - ビューポート高さ
+ * @param  {IPath[]} vertices
+ * @param  {number} thickness
  * @return {IMeshResult}
  * @method
  * @protected
  */
 export const execute = (
     vertices: IPath[],
-    thickness: number,
-    a: number,
-    b: number,
-    c: number,
-    d: number,
-    tx: number,
-    ty: number,
-    red: number,
-    green: number,
-    blue: number,
-    alpha: number,
-    viewport_width: number,
-    viewport_height: number
+    thickness: number
 ): IMeshResult => {
 
-    // WebGL版と同じ: 内部で半分にする
     const halfThickness = thickness / 2;
-
-    // WebGL版と同じ: 行列をビューポートサイズで正規化
-    const normalizedA  = a / viewport_width;
-    const normalizedC  = c / viewport_width;
-    const normalizedTx = tx / viewport_width;
-    const normalizedB  = b / viewport_height;
-    const normalizedD  = d / viewport_height;
-    const normalizedTy = ty / viewport_height;
 
     // 各パスのアウトラインを生成
     const fillVertices: IPath[] = [];
@@ -86,22 +62,24 @@ export const execute = (
         };
     }
 
-    // バッファを確保（17 floats per vertex）
-    const buffer = new Float32Array(totalVertices * 17);
+    // バッファを確保（4 floats per vertex、再利用可能バッファ）
+    const requiredSize = totalVertices * 4;
+    if ($meshTempBuffer.length < requiredSize) {
+        $meshTempBuffer = new Float32Array($upperPowerOfTwo(requiredSize));
+    }
+    const buffer = $meshTempBuffer;
 
     let index = 0;
     for (const vertex of fillVertices) {
         index = meshStrokeFillGenerateService(
             vertex,
             buffer,
-            index,
-            normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy,
-            red, green, blue, alpha
+            index
         );
     }
 
     return {
-        buffer,
+        "buffer": buffer.subarray(0, index * 4),
         "indexCount": index
     };
 };

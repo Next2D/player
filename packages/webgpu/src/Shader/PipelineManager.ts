@@ -1,15 +1,11 @@
 import { ShaderSource } from "./ShaderSource";
 import { $samples } from "../WebGPUUtil";
 
-const VERTEX_BUFFER_LAYOUT_17F: GPUVertexBufferLayout = {
-    "arrayStride": 17 * 4,
+const VERTEX_BUFFER_LAYOUT_4F: GPUVertexBufferLayout = {
+    "arrayStride": 4 * 4,
     "attributes": [
         { "shaderLocation": 0, "offset": 0, "format": "float32x2" },
-        { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" },
-        { "shaderLocation": 2, "offset": 4 * 4, "format": "float32x4" },
-        { "shaderLocation": 3, "offset": 8 * 4, "format": "float32x3" },
-        { "shaderLocation": 4, "offset": 11 * 4, "format": "float32x3" },
-        { "shaderLocation": 5, "offset": 14 * 4, "format": "float32x3" }
+        { "shaderLocation": 1, "offset": 2 * 4, "format": "float32x2" }
     ]
 };
 
@@ -77,7 +73,7 @@ export class PipelineManager
     private readonly lazyGroupMap: ReadonlyMap<string, string> = new Map([
         ...Array.from({ "length": 16 }, (_, i): [string, string] => [`blur_filter_${i + 1}`, "blur_filter"]),
         ["blur_filter", "blur_filter"],
-        ["texture_copy", "texture_copy"], ["texture_copy_rgba8", "texture_copy"], ["color_transform", "texture_copy"],
+        ["texture_copy", "texture_copy"], ["texture_copy_rgba8", "texture_copy"], ["color_transform", "texture_copy"], ["y_flip_color_transform", "texture_copy"],
         ["texture_erase", "texture_copy"], ["blur_texture_copy", "texture_copy"],
         ["filter_blend", "texture_copy"], ["texture_copy_bgra", "texture_copy"],
         ["filter_output", "texture_copy"], ["filter_output_add", "texture_copy"],
@@ -159,7 +155,7 @@ export class PipelineManager
 
         const fragmentShaderModule = this.getOrCreateShaderModule("fillFragment", ShaderSource.getFillFragmentShader());
 
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
         const blendState = BLEND_PREMULTIPLIED_ALPHA;
         const pipelineRGBA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
@@ -277,7 +273,7 @@ export class PipelineManager
 
     private createStencilFillPipelines(): void
     {
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
         const stencilWritePipeline = this.device.createRenderPipeline({
             "layout": "auto",
             "vertex": {
@@ -620,7 +616,7 @@ export class PipelineManager
 
     private createClipPipeline(): void
     {
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
         const clipWritePipeline = this.device.createRenderPipeline({
             "layout": "auto",
             "vertex": {
@@ -759,7 +755,7 @@ export class PipelineManager
 
     private createMaskUnionPipelines(): void
     {
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
 
         const vertexShaderModule = this.getOrCreateShaderModule("stencilWriteMainVertex", ShaderSource.getStencilWriteMainVertexShader());
         const fragmentShaderModule = this.getOrCreateShaderModule("stencilWriteFragment", ShaderSource.getStencilWriteFragmentShader());
@@ -1336,7 +1332,7 @@ export class PipelineManager
         const fragmentShaderModule = this.getOrCreateShaderModule("gradientFillFragment", ShaderSource.getGradientFillFragmentShader());
         const stencilFragmentShaderModule = this.getOrCreateShaderModule("gradientFillStencilFragment", ShaderSource.getGradientFillStencilFragmentShader());
 
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
         const blendState = BLEND_PREMULTIPLIED_ALPHA;
         const pipelineRGBA = this.device.createRenderPipeline({
             "label": "gradient_fill_no_stencil_pipeline",
@@ -1682,7 +1678,7 @@ export class PipelineManager
 
         const fragmentShaderModule = this.getOrCreateShaderModule("bitmapFillFragment", ShaderSource.getBitmapFillFragmentShader());
 
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_17F;
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
         const blendState = BLEND_PREMULTIPLIED_ALPHA;
         const pipelineRGBA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
@@ -2099,6 +2095,10 @@ export class PipelineManager
         const colorTransformFragmentModule = this.getOrCreateShaderModule("colorTransformFragment", ShaderSource.getColorTransformFragmentShader());
         this.pipelines.set("color_transform", this.createFullscreenQuadPipeline(
             pipelineLayout, vertexShaderModule, colorTransformFragmentModule, "rgba8unorm", BLEND_REPLACE
+        ));
+        const yFlipCTFragmentModule = this.getOrCreateShaderModule("yFlipColorTransformFragment", ShaderSource.getYFlipColorTransformFragmentShader());
+        this.pipelines.set("y_flip_color_transform", this.createFullscreenQuadPipeline(
+            pipelineLayout, vertexShaderModule, yFlipCTFragmentModule, "rgba8unorm", BLEND_REPLACE
         ));
         const blurCopyFragmentModule = this.getOrCreateShaderModule("blurTextureCopyFragment", ShaderSource.getBlurTextureCopyFragmentShader());
         this.pipelines.set("texture_erase", this.createFullscreenQuadPipeline(

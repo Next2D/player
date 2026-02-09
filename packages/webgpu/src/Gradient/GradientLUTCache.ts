@@ -110,3 +110,90 @@ export const $clearGradientAttachmentObjects = (): void =>
     }
     $gradientAttachmentObjects.clear();
 };
+
+// === Gradient LUT テクスチャキャッシュ ===
+
+interface IGradientLUTEntry {
+    texture: GPUTexture;
+    view: GPUTextureView;
+    lastUsedFrame: number;
+}
+
+const $lutCache: Map<string, IGradientLUTEntry> = new Map();
+let $currentFrame: number = 0;
+const $LUT_TTL: number = 60;
+
+/**
+ * @description グラデーションLUTのキャッシュキーを生成
+ */
+const $buildLUTKey = (
+    stops: number[],
+    spread: number,
+    interpolation: number
+): string =>
+{
+    return `${spread}_${interpolation}_${stops.join(",")}`;
+};
+
+/**
+ * @description キャッシュからLUTテクスチャを取得。ヒットしなければnullを返す。
+ */
+export const $getLUTFromCache = (
+    stops: number[],
+    spread: number,
+    interpolation: number
+): IGradientLUTEntry | null =>
+{
+    const key = $buildLUTKey(stops, spread, interpolation);
+    const entry = $lutCache.get(key);
+    if (entry) {
+        entry.lastUsedFrame = $currentFrame;
+        return entry;
+    }
+    return null;
+};
+
+/**
+ * @description LUTテクスチャをキャッシュに格納
+ */
+export const $putLUTToCache = (
+    stops: number[],
+    spread: number,
+    interpolation: number,
+    texture: GPUTexture,
+    view: GPUTextureView
+): void =>
+{
+    const key = $buildLUTKey(stops, spread, interpolation);
+    $lutCache.set(key, {
+        texture,
+        view,
+        "lastUsedFrame": $currentFrame
+    });
+};
+
+/**
+ * @description フレーム終了時にTTL超過エントリを解放
+ */
+export const $cleanupLUTCache = (): void =>
+{
+    $currentFrame++;
+    for (const [key, entry] of $lutCache) {
+        if ($currentFrame - entry.lastUsedFrame > $LUT_TTL) {
+            entry.texture.destroy();
+            $lutCache.delete(key);
+        }
+    }
+};
+
+/**
+ * @description 全LUTキャッシュを破棄
+ */
+export const $clearLUTCache = (): void =>
+{
+    for (const entry of $lutCache.values()) {
+        entry.texture.destroy();
+    }
+    $lutCache.clear();
+    $currentFrame = 0;
+};

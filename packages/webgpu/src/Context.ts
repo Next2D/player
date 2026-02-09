@@ -41,7 +41,9 @@ import {
 } from "./Grid";
 import {
     $setGradientLUTDevice,
-    $clearGradientAttachmentObjects
+    $clearGradientAttachmentObjects,
+    $cleanupLUTCache,
+    $clearLUTCache
 } from "./Gradient/GradientLUTCache";
 import {
     $releaseFillTexture,
@@ -110,10 +112,27 @@ const $QUAD_VERTICES = new Float32Array([
  */
 const $ctUniform8 = new Float32Array(8);
 
+/**
+ * @description fill() 用 uniform プリアロケート (color + matrix = 16 floats = 64 bytes)
+ */
+const $fillUniform16 = new Float32Array(16);
+
 // present() 用 Static BindGroup キャッシュ
 let $presentBindGroup: GPUBindGroup | null = null;
 let $presentBindGroupView: GPUTextureView | null = null;
 let $presentUniformBuffer: GPUBuffer | null = null;
+
+// present() 用 RenderPassDescriptor プリアロケート
+const $presentClearValue: GPUColorDict = { "r": 0, "g": 0, "b": 0, "a": 0 };
+const $presentColorAttachment: GPURenderPassColorAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "clearValue": $presentClearValue,
+    "loadOp": "clear" as GPULoadOp,
+    "storeOp": "store" as GPUStoreOp
+};
+const $presentDescriptor: GPURenderPassDescriptor = {
+    "colorAttachments": [$presentColorAttachment]
+};
 
 // BindGroup entries 事前割り当て
 const $entries3: GPUBindGroupEntry[] = [
@@ -451,6 +470,7 @@ export class Context
         // 共有アタッチメントをクリア
         if (cache_clear) {
             $clearGradientAttachmentObjects();
+            $clearLUTCache();
             $clearFilterGradientAttachment();
             // アトラスのパッキングデータをリセット（WebGL版と同じ）
             $resetAtlas();
@@ -772,92 +792,110 @@ export class Context
         const viewportWidth = this.viewportWidth;
         const viewportHeight = this.viewportHeight;
 
-        // WebGL版と同じ: 色はストレート形式（プリマルチプライドはシェーダーで行う）
-        // globalAlphaはアトラス描画時ではなく、インスタンス描画時に適用される
-        const red = this.$fillStyle[0];
-        const green = this.$fillStyle[1];
-        const blue = this.$fillStyle[2];
-        const alpha = this.$fillStyle[3];
-
-        // WebGL版と同じ: 行列はそのまま渡す（MeshFillGenerateUseCaseで正規化）
-        const a  = this.$matrix[0];
-        const b  = this.$matrix[1];
-        const c  = this.$matrix[3];
-        const d  = this.$matrix[4];
-        const tx = this.$matrix[6];
-        const ty = this.$matrix[7];
-
-        // MeshFillGenerateUseCaseで頂点データを生成
-        // WebGL版と同じ: ビューポートサイズを渡して行列を正規化
-        const mesh = meshFillGenerateUseCase(
-            pathVertices,
-            a, b, c, d, tx, ty,
-            red, green, blue, alpha,
-            viewportWidth, viewportHeight
-        );
+        // MeshFillGenerateUseCaseで頂点データを生成（4 floats/vertex: position + bezier）
+        const mesh = meshFillGenerateUseCase(pathVertices);
 
         if (mesh.indexCount === 0) {
-            // メッシュがない場合は何もしない（レンダーパスは終了しない）
             return;
         }
 
         // 頂点バッファを取得（プールから再利用）
         const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
+        // color/matrixをuniformに書き込み
+        const uniformBuffer = this.writeFillUniform(
+            this.$fillStyle[0], this.$fillStyle[1], this.$fillStyle[2], this.$fillStyle[3],
+            this.$matrix[0], this.$matrix[1], this.$matrix[3], this.$matrix[4],
+            this.$matrix[6], this.$matrix[7],
+            viewportWidth, viewportHeight
+        );
+
         // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
         const attachment = $getAtlasAttachmentObject();
         if (this.currentRenderTarget && attachment?.stencil?.view) {
-            // 2パスステンシルフィル（WebGL版と同じアルゴリズム、アトラス用）
-            this.fillWithStencil(vertexBuffer, mesh.indexCount);
+            this.fillWithStencil(vertexBuffer, mesh.indexCount, uniformBuffer);
         } else if (!this.currentRenderTarget && !this.inMaskMode && !$isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
-            // メインキャンバスへの描画（マスクなし）で2パスステンシルフィル
-            // WebGL版と同じアルゴリズム: MSAA + alphaToCoverageでアンチエイリアスを実現
-            this.fillWithStencilMain(vertexBuffer, mesh.indexCount);
+            this.fillWithStencilMain(vertexBuffer, mesh.indexCount, uniformBuffer);
         } else {
-            // マスクモード時またはマスクテスト有効時は1パスフィル
-            // （ステンシルがマスク用に使用されているため2パスは使用不可）
             const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
-            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
+            this.fillSimple(vertexBuffer, mesh.indexCount, useStencilPipeline, uniformBuffer);
         }
 
         // レンダーパスは終了しない（drawFill()またはendNodeRendering()で終了する）
     }
 
     /**
-     * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム、アトラス用）
-     *              Pass 1: Front面でインクリメント、Back面でデクリメント（1回の描画で両面処理）
-     *              Pass 2: ステンシル値 != 0 の部分に色を描画
-     *
+     * @description fill/stroke用のcolor/matrix uniformを書き込む
+     * FillUniforms構造体: color(vec4) + matrix0(vec4) + matrix1(vec4) + matrix2(vec4) = 64 bytes
+     */
+    private writeFillUniform(
+        red: number, green: number, blue: number, alpha: number,
+        a: number, b: number, c: number, d: number,
+        tx: number, ty: number,
+        viewportWidth: number, viewportHeight: number
+    ): GPUBuffer
+    {
+        // color
+        $fillUniform16[0] = red;
+        $fillUniform16[1] = green;
+        $fillUniform16[2] = blue;
+        $fillUniform16[3] = alpha;
+        // matrix0 (a, b, 0, pad) — ビューポート正規化
+        $fillUniform16[4] = a / viewportWidth;
+        $fillUniform16[5] = b / viewportHeight;
+        $fillUniform16[6] = 0;
+        $fillUniform16[7] = 0;
+        // matrix1 (c, d, 0, pad)
+        $fillUniform16[8] = c / viewportWidth;
+        $fillUniform16[9] = d / viewportHeight;
+        $fillUniform16[10] = 0;
+        $fillUniform16[11] = 0;
+        // matrix2 (tx, ty, 1, pad)
+        $fillUniform16[12] = tx / viewportWidth;
+        $fillUniform16[13] = ty / viewportHeight;
+        $fillUniform16[14] = 1;
+        $fillUniform16[15] = 0;
+
+        const uniformBuffer = this.bufferManager.acquireUniformBuffer($fillUniform16.byteLength);
+        this.device.queue.writeBuffer(uniformBuffer, 0, $fillUniform16.buffer, $fillUniform16.byteOffset, $fillUniform16.byteLength);
+        return uniformBuffer;
+    }
+
+    /**
+     * @description 2パスステンシルフィル（アトラス用）
      */
     private fillWithStencil(
         vertexBuffer: GPUBuffer,
-        vertexCount: number
+        vertexCount: number,
+        uniformBuffer: GPUBuffer
     ): void
     {
         contextFillWithStencilService(
+            this.device,
             this.renderPassEncoder!,
             this.pipelineManager,
             vertexBuffer,
-            vertexCount
+            vertexCount,
+            uniformBuffer
         );
     }
 
     /**
-     * @description 2パスステンシルフィル（WebGL版と同じアルゴリズム、メインキャンバス用）
-     *              Pass 1: Front面でインクリメント、Back面でデクリメント（alphaToCoverageでAA）
-     *              Pass 2: ステンシル値 != 0 の部分に色を描画
-     *
+     * @description 2パスステンシルフィル（メインキャンバス用）
      */
     private fillWithStencilMain(
         vertexBuffer: GPUBuffer,
-        vertexCount: number
+        vertexCount: number,
+        uniformBuffer: GPUBuffer
     ): void
     {
         contextFillWithStencilMainService(
+            this.device,
             this.renderPassEncoder!,
             this.pipelineManager,
             vertexBuffer,
-            vertexCount
+            vertexCount,
+            uniformBuffer
         );
     }
 
@@ -867,23 +905,19 @@ export class Context
     private fillSimple(
         vertexBuffer: GPUBuffer,
         vertexCount: number,
-        viewportWidth: number,
-        viewportHeight: number,
-        useStencilPipeline: boolean = false
+        useStencilPipeline: boolean,
+        uniformBuffer: GPUBuffer
     ): void
     {
-        // マスク描画時のクリップレベルを取得
         const clipLevel = this.$mainAttachmentObject?.clipLevel ?? 1;
 
         contextFillSimpleService(
             this.device,
             this.renderPassEncoder!,
-            this.bufferManager,
             this.pipelineManager,
             vertexBuffer,
             vertexCount,
-            viewportWidth,
-            viewportHeight,
+            uniformBuffer,
             !!this.currentRenderTarget,
             useStencilPipeline,
             clipLevel
@@ -946,59 +980,37 @@ export class Context
 
         this.ensureFillRenderPass();
 
-        // WebGL版と同じ: 現在のビューポートサイズを使用（アトラス描画時はアトラスサイズ）
         const viewportWidth = this.viewportWidth;
         const viewportHeight = this.viewportHeight;
 
-        // WebGL版と同じ: ストロークスタイルの色を使用
-        const red = this.$strokeStyle[0];
-        const green = this.$strokeStyle[1];
-        const blue = this.$strokeStyle[2];
-        const alpha = this.$strokeStyle[3];
-
-        // WebGL版と同じ: 行列はそのまま渡す（MeshFillGenerateUseCaseで正規化）
-        const a  = this.$matrix[0];
-        const b  = this.$matrix[1];
-        const c  = this.$matrix[3];
-        const d  = this.$matrix[4];
-        const tx = this.$matrix[6];
-        const ty = this.$matrix[7];
-
-        // WebGL版と同じ: MeshStrokeGenerateUseCaseを使用してストロークの輪郭を生成
-        // generateStrokeMeshはthickness（フル値）を受け取り、内部で/2する
         const strokeOutlines = generateStrokeMesh(vertices, this.thickness);
         if (strokeOutlines.length === 0) { return }
 
-        // WebGL版と同じ: ストロークもmeshFillGenerateUseCaseを使用
-        // 曲線セグメントにはLoop-Blinn用のbezier座標が設定され、滑らかな曲線が描画される
-        const mesh = meshFillGenerateUseCase(
-            strokeOutlines,
-            a, b, c, d, tx, ty,
-            red, green, blue, alpha,
-            viewportWidth, viewportHeight
-        );
+        // ストロークもmeshFillGenerateUseCaseを使用（4 floats/vertex）
+        const mesh = meshFillGenerateUseCase(strokeOutlines);
 
         if (mesh.indexCount === 0) {
             return;
         }
 
-        // 頂点バッファを取得（プールから再利用）
         const vertexBuffer = this.bufferManager.acquireVertexBuffer(mesh.buffer.byteLength, mesh.buffer);
 
-        // WebGL版と同じ: ストロークも2パスステンシルフィルで描画（非凸多角形対応）
-        // アトラスへの描画（ステンシルあり）の場合は2パスステンシルフィル
+        // color/matrixをuniformに書き込み
+        const uniformBuffer = this.writeFillUniform(
+            this.$strokeStyle[0], this.$strokeStyle[1], this.$strokeStyle[2], this.$strokeStyle[3],
+            this.$matrix[0], this.$matrix[1], this.$matrix[3], this.$matrix[4],
+            this.$matrix[6], this.$matrix[7],
+            viewportWidth, viewportHeight
+        );
+
         const attachment = $getAtlasAttachmentObject();
         if (this.currentRenderTarget && attachment?.stencil?.view) {
-            // 2パスステンシルフィル（WebGL版と同じアルゴリズム、アトラス用）
-            this.fillWithStencil(vertexBuffer, mesh.indexCount);
+            this.fillWithStencil(vertexBuffer, mesh.indexCount, uniformBuffer);
         } else if (!this.currentRenderTarget && !this.inMaskMode && !$isMaskTestEnabled() && this.$mainAttachmentObject?.stencil?.view) {
-            // メインキャンバスへの描画（マスクなし）で2パスステンシルフィル
-            // WebGL版と同じアルゴリズム: MSAA + alphaToCoverageでアンチエイリアスを実現
-            this.fillWithStencilMain(vertexBuffer, mesh.indexCount);
+            this.fillWithStencilMain(vertexBuffer, mesh.indexCount, uniformBuffer);
         } else {
-            // マスクモード時またはマスクテスト有効時は1パスフィル
             const useStencilPipeline = (this.inMaskMode || $isMaskTestEnabled()) && !!this.$mainAttachmentObject?.stencil?.view && !this.currentRenderTarget;
-            this.fillSimple(vertexBuffer, mesh.indexCount, viewportWidth, viewportHeight, useStencilPipeline);
+            this.fillSimple(vertexBuffer, mesh.indexCount, useStencilPipeline, uniformBuffer);
         }
 
         // ストローク描画後はpathCommandをクリアする
@@ -1664,6 +1676,7 @@ export class Context
         }
 
         contextClipUseCase(
+            this.device,
             this.renderPassEncoder,
             this.bufferManager,
             this.pipelineManager,
@@ -2887,6 +2900,9 @@ export class Context
         }
         this.pooledTextures.length = 0;
 
+        // Gradient LUTキャッシュのTTL超過エントリを解放
+        $cleanupLUTCache();
+
         // 次のフレーム用にクリア
         this.commandEncoder = null;
         this.renderPassEncoder = null;
@@ -3002,17 +3018,10 @@ export class Context
         }
         const bindGroup = $presentBindGroup;
 
-        // スワップチェーンへのレンダーパスを作成
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            "colorAttachments": [{
-                "view": this.mainTextureView!,
-                "clearValue": { "r": 0, "g": 0, "b": 0, "a": 0 },
-                "loadOp": "clear",
-                "storeOp": "store"
-            }]
-        };
+        // スワップチェーンへのレンダーパスを作成（プリアロケート版）
+        $presentColorAttachment.view = this.mainTextureView!;
 
-        const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        const passEncoder = this.commandEncoder!.beginRenderPass($presentDescriptor);
         passEncoder.setPipeline(pipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.draw(6, 1, 0, 0); // フルスクリーンクワッド（6頂点）

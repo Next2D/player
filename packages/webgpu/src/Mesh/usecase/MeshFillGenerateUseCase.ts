@@ -3,49 +3,34 @@ import type { IMeshResult } from "../../interface/IMeshResult";
 import { execute as meshFillGenerateService } from "../service/MeshFillGenerateService";
 
 /**
- * @description 塗りのメッシュを生成する（WebGL版と同じ行列正規化を行う）
- *              Generate a fill mesh (with viewport matrix normalization like WebGL)
+ * @description メッシュ生成用の再利用可能な一時バッファ（GC回避）
+ */
+let $meshTempBuffer: Float32Array = new Float32Array(32);
+
+const $upperPowerOfTwo = (v: number): number =>
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v++;
+    return v;
+};
+
+/**
+ * @description 塗りのメッシュを生成する
+ *              Generate a fill mesh
  *
  * @param  {IPath[]} vertices
- * @param  {number} a - 行列要素
- * @param  {number} b - 行列要素
- * @param  {number} c - 行列要素
- * @param  {number} d - 行列要素
- * @param  {number} tx - 行列要素
- * @param  {number} ty - 行列要素
- * @param  {number} red
- * @param  {number} green
- * @param  {number} blue
- * @param  {number} alpha
- * @param  {number} viewportWidth - ビューポート幅
- * @param  {number} viewportHeight - ビューポート高さ
  * @return {IMeshResult}
  * @method
  * @protected
  */
 export const execute = (
-    vertices: IPath[],
-    a: number,
-    b: number,
-    c: number,
-    d: number,
-    tx: number,
-    ty: number,
-    red: number,
-    green: number,
-    blue: number,
-    alpha: number,
-    viewport_width: number,
-    viewport_height: number
+    vertices: IPath[]
 ): IMeshResult => {
-
-    // WebGL版と同じ: 行列をビューポートサイズで正規化
-    const normalizedA  = a / viewport_width;
-    const normalizedC  = c / viewport_width;
-    const normalizedTx = tx / viewport_width;
-    const normalizedB  = b / viewport_height;
-    const normalizedD  = d / viewport_height;
-    const normalizedTy = ty / viewport_height;
 
     // 頂点数を計算（各パスの三角形数 × 3）
     let totalVertices = 0;
@@ -56,22 +41,24 @@ export const execute = (
         }
     }
 
-    // バッファを確保（17 floats per vertex）
-    const buffer = new Float32Array(totalVertices * 17);
+    // バッファを確保（4 floats per vertex、再利用可能バッファ）
+    const requiredSize = totalVertices * 4;
+    if ($meshTempBuffer.length < requiredSize) {
+        $meshTempBuffer = new Float32Array($upperPowerOfTwo(requiredSize));
+    }
+    const buffer = $meshTempBuffer;
 
     let index = 0;
     for (const vertex of vertices) {
         index = meshFillGenerateService(
             vertex,
             buffer,
-            index,
-            normalizedA, normalizedB, normalizedC, normalizedD, normalizedTx, normalizedTy,
-            red, green, blue, alpha
+            index
         );
     }
 
     return {
-        buffer,
+        "buffer": buffer.subarray(0, index * 4),
         "indexCount": index
     };
 };

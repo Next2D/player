@@ -87,6 +87,33 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+export const YFlipColorTransformFragment = /* wgsl */`
+${WgslVertexOutput}
+
+struct YFlipCTUniforms {
+    scale: vec2<f32>,
+    offset: vec2<f32>,
+    mul: vec4<f32>,
+    add: vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> uniforms: YFlipCTUniforms;
+@group(0) @binding(1) var textureSampler: sampler;
+@group(0) @binding(2) var inputTexture: texture_2d<f32>;
+
+@fragment
+fn main(input: VertexOutput) -> @location(0) vec4<f32> {
+    let uv = input.texCoord * uniforms.scale + uniforms.offset;
+    var color = textureSample(inputTexture, textureSampler, uv);
+
+    color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
+    color = clamp(color * uniforms.mul + uniforms.add, vec4<f32>(0.0), vec4<f32>(1.0));
+    color = vec4<f32>(color.rgb * color.a, color.a);
+
+    return color;
+}
+`;
+
 export const ColorMatrixFilterFragment = /* wgsl */`
 ${WgslVertexOutput}
 

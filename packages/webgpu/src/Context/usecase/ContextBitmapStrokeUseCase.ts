@@ -7,7 +7,7 @@ import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool"
 
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
-const $uniformData16 = new Float32Array(16);
+const $uniformData32 = new Float32Array(32);
 
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
@@ -35,30 +35,8 @@ export const execute = (
     use_atlas_target: boolean,
     use_stencil_pipeline: boolean
 ): GPUTexture | null => {
-    // ビットマップ描画では色は白（1, 1, 1, alpha）を使用
-    // ビットマップの色はテクスチャから取得され、頂点色で乗算される
-    // そのため頂点色は白にして、アルファのみstroke_styleから使用
-    const red = 1;
-    const green = 1;
-    const blue = 1;
-    const alpha = stroke_style[3] > 0 ? stroke_style[3] : 1;
-
-    // 行列を取得
-    const a  = context_matrix[0];
-    const b  = context_matrix[1];
-    const c  = context_matrix[3];
-    const d  = context_matrix[4];
-    const tx = context_matrix[6];
-    const ty = context_matrix[7];
-
-    // ビットマップストローク用メッシュを生成
-    const mesh = meshBitmapStrokeGenerateUseCase(
-        vertices,
-        thickness,
-        a, b, c, d, tx, ty,
-        red, green, blue, alpha,
-        viewport_width, viewport_height
-    );
+    // ビットマップストローク用メッシュを生成（4 floats/vertex: position + bezier）
+    const mesh = meshBitmapStrokeGenerateUseCase(vertices, thickness);
 
     if (mesh.indexCount === 0) {
         return null;
@@ -81,27 +59,57 @@ export const execute = (
     // ビットマップ変換行列を計算（コンテキスト行列と合成して逆行列）
     const computedBitmapMatrix = contextComputeBitmapMatrixService(bitmap_matrix, context_matrix);
 
-    // Uniformバッファを作成
-    $uniformData16[0] = computedBitmapMatrix[0];  // col0.x = a
-    $uniformData16[1] = computedBitmapMatrix[1];  // col0.y = c
-    $uniformData16[2] = computedBitmapMatrix[2];  // col0.z = 0
-    $uniformData16[3] = 0; // padding
-    $uniformData16[4] = computedBitmapMatrix[3];  // col1.x = b
-    $uniformData16[5] = computedBitmapMatrix[4];  // col1.y = d
-    $uniformData16[6] = computedBitmapMatrix[5];  // col1.z = 0
-    $uniformData16[7] = 0; // padding
-    $uniformData16[8] = computedBitmapMatrix[6];  // col2.x = tx
-    $uniformData16[9] = computedBitmapMatrix[7];  // col2.y = ty
-    $uniformData16[10] = computedBitmapMatrix[8]; // col2.z = 1
-    $uniformData16[11] = 0; // padding
-    // ビットマップパラメータ
-    $uniformData16[12] = width;
-    $uniformData16[13] = height;
-    $uniformData16[14] = repeat ? 1.0 : 0.0;
-    $uniformData16[15] = 0; // padding
+    // 色とmatrix
+    const red = 1;
+    const green = 1;
+    const blue = 1;
+    const alpha = stroke_style[3] > 0 ? stroke_style[3] : 1;
+    const a  = context_matrix[0];
+    const b  = context_matrix[1];
+    const c  = context_matrix[3];
+    const d  = context_matrix[4];
+    const tx = context_matrix[6];
+    const ty = context_matrix[7];
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData16.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniformData16.buffer, $uniformData16.byteOffset, $uniformData16.byteLength);
+    // Uniformバッファを作成（BitmapUniforms: 32 floats = 128 bytes）
+    $uniformData32[0] = computedBitmapMatrix[0];  // col0.x = a
+    $uniformData32[1] = computedBitmapMatrix[1];  // col0.y = c
+    $uniformData32[2] = computedBitmapMatrix[2];  // col0.z = 0
+    $uniformData32[3] = 0; // padding
+    $uniformData32[4] = computedBitmapMatrix[3];  // col1.x = b
+    $uniformData32[5] = computedBitmapMatrix[4];  // col1.y = d
+    $uniformData32[6] = computedBitmapMatrix[5];  // col1.z = 0
+    $uniformData32[7] = 0; // padding
+    $uniformData32[8] = computedBitmapMatrix[6];  // col2.x = tx
+    $uniformData32[9] = computedBitmapMatrix[7];  // col2.y = ty
+    $uniformData32[10] = computedBitmapMatrix[8]; // col2.z = 1
+    $uniformData32[11] = 0; // padding
+    // ビットマップパラメータ
+    $uniformData32[12] = width;
+    $uniformData32[13] = height;
+    $uniformData32[14] = repeat ? 1.0 : 0.0;
+    $uniformData32[15] = 0; // padding
+    // color
+    $uniformData32[16] = red;
+    $uniformData32[17] = green;
+    $uniformData32[18] = blue;
+    $uniformData32[19] = alpha;
+    // contextMatrix（viewport正規化済み）
+    $uniformData32[20] = a / viewport_width;
+    $uniformData32[21] = b / viewport_height;
+    $uniformData32[22] = 0;
+    $uniformData32[23] = 0;
+    $uniformData32[24] = c / viewport_width;
+    $uniformData32[25] = d / viewport_height;
+    $uniformData32[26] = 0;
+    $uniformData32[27] = 0;
+    $uniformData32[28] = tx / viewport_width;
+    $uniformData32[29] = ty / viewport_height;
+    $uniformData32[30] = 1;
+    $uniformData32[31] = 0;
+
+    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData32.byteLength);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniformData32.buffer, $uniformData32.byteOffset, $uniformData32.byteLength);
 
     // サンプラーを取得（キャッシュ済み）
     const samplerKey = `bitmap_${smooth ? "s" : "n"}_${repeat ? "r" : "c"}`;
