@@ -99,8 +99,8 @@ export const execute = (
                 const shaderInstancedManager = variantsBlendInstanceShaderService();
 
                 renderQueue.pushDisplayObjectBuffer(
-                    node.x / $RENDER_MAX_SIZE, node.y / $RENDER_MAX_SIZE,
-                    node.w / $RENDER_MAX_SIZE, node.h / $RENDER_MAX_SIZE,
+                    (node.x + 0.5) / $RENDER_MAX_SIZE, (node.y + 0.5) / $RENDER_MAX_SIZE,
+                    (node.w - 1.0) / $RENDER_MAX_SIZE, (node.h - 1.0) / $RENDER_MAX_SIZE,
                     node.w, node.h, $viewportWidth, $viewportHeight,
                     matrix[6], matrix[7],
                     matrix[0], matrix[1], matrix[3], matrix[4],

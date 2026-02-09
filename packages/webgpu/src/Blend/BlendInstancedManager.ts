@@ -131,9 +131,9 @@ export const addDisplayObjectToInstanceArray = (
         const shaderManager = getInstancedShaderManager();
 
         renderQueue.pushInstanceBuffer(
-            // texture rectangle (vec4) - normalized coordinates
-            node.x / render_max_size, node.y / render_max_size,
-            node.w / render_max_size, node.h / render_max_size,
+            // texture rectangle (vec4) - normalized coordinates (half-pixel inset)
+            (node.x + 0.5) / render_max_size, (node.y + 0.5) / render_max_size,
+            (node.w - 1.0) / render_max_size, (node.h - 1.0) / render_max_size,
             // texture width, height and viewport width, height (vec4)
             node.w, node.h, viewport_width, viewport_height,
             // matrix tx, ty (vec2) + padding (vec2)
