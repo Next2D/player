@@ -64,6 +64,7 @@ describe("MaskBeginMaskService.js method test", () =>
                     "ZERO": "ZERO",
                     "INVERT": "INVERT",
                 },
+                $enableStencilTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;

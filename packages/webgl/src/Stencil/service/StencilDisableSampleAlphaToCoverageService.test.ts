@@ -15,12 +15,12 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
 });
 
 vi.mock("../../Stencil.ts", () => ({
-    $getSampleAlphaToCoverageEnabled: vi.fn(() => mockEnabled),
+    get $sampleAlphaToCoverageEnabled() { return mockEnabled; },
     $setSampleAlphaToCoverageEnabled: vi.fn((value: boolean) => { mockEnabled = value; })
 }));
 
 import { $gl } from "../../WebGLUtil";
-import { $getSampleAlphaToCoverageEnabled, $setSampleAlphaToCoverageEnabled } from "../../Stencil";
+import { $setSampleAlphaToCoverageEnabled } from "../../Stencil";
 
 describe("StencilDisableSampleAlphaToCoverageService.ts method test", () =>
 {

@@ -5,7 +5,11 @@ import { execute as contextLinearGradientFillUseCase } from "./ContextLinearGrad
 import { execute as contextRadialGradientFillUseCase } from "./ContextRadialGradientFillUseCase";
 import { execute as contextPatternBitmapFillUseCase } from "./ContextPatternBitmapFillUseCase";
 import { execute as stencilResetService } from "../../Stencil/service/StencilResetService";
-import { $gl } from "../../WebGLUtil";
+import {
+    $gl,
+    $enableStencilTest,
+    $disableStencilTest
+} from "../../WebGLUtil";
 import {
     $terminateGrid,
     $gridDataMap
@@ -29,7 +33,7 @@ export const execute = (): void =>
     const fillVertexArrayObject = vertexArrayObjectBindFillMeshUseCase();
 
     // mask on（frontFaceはContext初期化時にCCW固定）
-    $gl.enable($gl.STENCIL_TEST);
+    $enableStencilTest();
     $gl.stencilMask(0xff);
 
     // Reset stencil cache at the start of fill processing
@@ -90,7 +94,7 @@ export const execute = (): void =>
     }
 
     // mask off
-    $gl.disable($gl.STENCIL_TEST);
+    $disableStencilTest();
 
     // Reset stencil cache after disabling stencil test
     stencilResetService();

@@ -72,7 +72,9 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
             transform: vi.fn()
         },
         $inverseMatrix: vi.fn(() => new Float32Array([1, 0, 0, 1, 0, 0])),
-        $poolFloat32Array6: vi.fn()
+        $poolFloat32Array6: vi.fn(),
+        $enableStencilTest: vi.fn(),
+        $disableStencilTest: vi.fn()
     };
 });
 

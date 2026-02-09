@@ -51,6 +51,29 @@ export const $resetScissorState = (): void =>
     $scissorEnabled = false;
 };
 
+let $stencilTestEnabled: boolean = false;
+
+export const $enableStencilTest = (): void =>
+{
+    if (!$stencilTestEnabled) {
+        $stencilTestEnabled = true;
+        $gl.enable($gl.STENCIL_TEST);
+    }
+};
+
+export const $disableStencilTest = (): void =>
+{
+    if ($stencilTestEnabled) {
+        $stencilTestEnabled = false;
+        $gl.disable($gl.STENCIL_TEST);
+    }
+};
+
+export const $resetStencilTestState = (): void =>
+{
+    $stencilTestEnabled = false;
+};
+
 export const $clamp = (
     value: number,
     min: number, max: number,

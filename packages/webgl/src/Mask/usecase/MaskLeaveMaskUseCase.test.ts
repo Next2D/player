@@ -104,6 +104,7 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                 },
                 $enableScissorTest: vi.fn(),
                 $disableScissorTest: vi.fn(),
+                $disableStencilTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;
@@ -270,6 +271,7 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                 },
                 $enableScissorTest: vi.fn(),
                 $disableScissorTest: vi.fn(),
+                $disableStencilTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;

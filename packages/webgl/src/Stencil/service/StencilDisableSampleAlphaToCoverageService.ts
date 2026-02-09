@@ -1,20 +1,12 @@
 import { $gl } from "../../WebGLUtil";
 import {
-    $getSampleAlphaToCoverageEnabled,
+    $sampleAlphaToCoverageEnabled,
     $setSampleAlphaToCoverageEnabled
 } from "../../Stencil";
 
-/**
- * @description SAMPLE_ALPHA_TO_COVERAGEを無効化
- *              Disable SAMPLE_ALPHA_TO_COVERAGE
- *
- * @return {void}
- * @method
- * @protected
- */
 export const execute = (): void =>
 {
-    if ($getSampleAlphaToCoverageEnabled()) {
+    if ($sampleAlphaToCoverageEnabled) {
         $setSampleAlphaToCoverageEnabled(false);
         $gl.disable($gl.SAMPLE_ALPHA_TO_COVERAGE);
     }

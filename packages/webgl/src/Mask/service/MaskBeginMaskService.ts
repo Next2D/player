@@ -4,8 +4,9 @@ import {
     $clipLevels
 } from "../../Mask";
 import {
+    $gl,
     $context,
-    $gl
+    $enableStencilTest
 } from "../../WebGLUtil";
 
 /**
@@ -33,7 +34,7 @@ export const execute = (): void =>
     if (!$isMaskDrawing()) {
         $setMaskDrawing(true);
 
-        $gl.enable($gl.STENCIL_TEST);
+        $enableStencilTest();
         $gl.enable($gl.SAMPLE_ALPHA_TO_COVERAGE);
 
         $gl.stencilFunc($gl.ALWAYS, 0, 0xff);

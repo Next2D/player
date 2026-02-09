@@ -36,7 +36,9 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
             stencilMask: vi.fn(),
             STENCIL_TEST: 0,
             CCW: 1
-        }
+        },
+        $enableStencilTest: vi.fn(),
+        $disableStencilTest: vi.fn()
     };
 });
 

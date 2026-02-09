@@ -12,7 +12,8 @@ import {
     $context,
     $poolFloat32Array4,
     $enableScissorTest,
-    $disableScissorTest
+    $disableScissorTest,
+    $disableStencilTest
 } from "../../WebGLUtil";
 
 /**
@@ -59,7 +60,7 @@ export const execute = (): void =>
         $setMaskDrawing(false);
 
         $gl.clear($gl.STENCIL_BUFFER_BIT);
-        $gl.disable($gl.STENCIL_TEST);
+        $disableStencilTest();
         $disableScissorTest();
 
         $clipLevels.clear();

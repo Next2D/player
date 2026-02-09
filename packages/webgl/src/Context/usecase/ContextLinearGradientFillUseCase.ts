@@ -18,7 +18,9 @@ import {
     $inverseMatrix,
     $context,
     $poolFloat32Array6,
-    $poolFloat32Array4
+    $poolFloat32Array4,
+    $enableStencilTest,
+    $disableStencilTest
 } from "../../WebGLUtil";
 
 /**
@@ -48,11 +50,11 @@ export const execute = (
     // Reset stencil cache before disabling stencil test
     stencilResetService();
 
-    $gl.disable($gl.STENCIL_TEST);
+    $disableStencilTest();
     const textureObject = gradientLUTGenerateShapeTextureUseCase(stops, interpolation);
     textureManagerBind0UseCase(textureObject);
 
-    $gl.enable($gl.STENCIL_TEST);
+    $enableStencilTest();
     $gl.stencilMask(0xff);
 
     // mask setting (cached)

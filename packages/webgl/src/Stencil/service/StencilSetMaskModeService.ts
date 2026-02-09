@@ -1,23 +1,15 @@
 import { $gl } from "../../WebGLUtil";
 import {
-    $getStencilMode,
+    $currentStencilMode,
     $setStencilMode,
-    $getColorMaskEnabled,
+    $colorMaskEnabled,
     $setColorMaskEnabled,
     STENCIL_MODE_MASK
 } from "../../Stencil";
 
-/**
- * @description ステンシルをマスク描画モードに設定
- *              Set stencil to mask drawing mode
- *
- * @return {void}
- * @method
- * @protected
- */
 export const execute = (): void =>
 {
-    if ($getStencilMode() !== STENCIL_MODE_MASK) {
+    if ($currentStencilMode !== STENCIL_MODE_MASK) {
         $setStencilMode(STENCIL_MODE_MASK);
 
         $gl.stencilFunc($gl.ALWAYS, 0, 0xff);
@@ -25,7 +17,7 @@ export const execute = (): void =>
         $gl.stencilOpSeparate($gl.BACK, $gl.KEEP, $gl.KEEP, $gl.DECR_WRAP);
     }
 
-    if ($getColorMaskEnabled()) {
+    if ($colorMaskEnabled) {
         $setColorMaskEnabled(false);
         $gl.colorMask(false, false, false, false);
     }

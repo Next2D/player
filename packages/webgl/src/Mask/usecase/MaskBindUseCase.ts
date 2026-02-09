@@ -1,7 +1,8 @@
 
 import { execute as maskEndMaskService } from "../service/MaskEndMaskService";
 import {
-    $gl,
+    $enableStencilTest,
+    $disableStencilTest,
     $disableScissorTest
 } from "../../WebGLUtil";
 import {
@@ -23,13 +24,13 @@ export const execute = (mask: boolean): void =>
     if (!mask && $isMaskDrawing()) {
         $setMaskDrawing(false);
 
-        $gl.disable($gl.STENCIL_TEST);
+        $disableStencilTest();
         $disableScissorTest();
     } else if (mask && !$isMaskDrawing()) {
         $setMaskDrawing(true);
 
         // キャッシュ作成後は、マスクの状態を復元する
-        $gl.enable($gl.STENCIL_TEST);
+        $enableStencilTest();
         maskEndMaskService();
     }
 };

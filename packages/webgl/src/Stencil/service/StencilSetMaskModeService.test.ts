@@ -34,8 +34,8 @@ describe("StencilSetMaskModeService.ts method test", () =>
             execute();
         }).not.toThrow();
 
-        expect(StencilModule.$getStencilMode()).toBe(StencilModule.STENCIL_MODE_MASK);
-        expect(StencilModule.$getColorMaskEnabled()).toBe(false);
+        expect(StencilModule.$currentStencilMode).toBe(StencilModule.STENCIL_MODE_MASK);
+        expect(StencilModule.$colorMaskEnabled).toBe(false);
     });
 
     it("test case - should not change state on subsequent calls", () =>
@@ -43,6 +43,6 @@ describe("StencilSetMaskModeService.ts method test", () =>
         execute();
         execute();
 
-        expect(StencilModule.$getStencilMode()).toBe(StencilModule.STENCIL_MODE_MASK);
+        expect(StencilModule.$currentStencilMode).toBe(StencilModule.STENCIL_MODE_MASK);
     });
 });
