@@ -15,7 +15,7 @@ fn main(input: FragmentInput) -> @location(0) vec4<f32> {
         return vec4<f32>(input.color.rgb * input.color.a, input.color.a);
     }
 
-    let dist = f_val / length(vec2<f32>(dx, dy));
+    let dist = f_val * inverseSqrt(dx * dx + dy * dy);
     let coverage = smoothstep(0.5, -0.5, dist);
 
     if (coverage <= 0.001) {

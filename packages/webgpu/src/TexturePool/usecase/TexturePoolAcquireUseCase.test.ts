@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { IPooledTexture } from "../../interface/IPooledTexture";
+import type { ITexturePoolBuckets } from "../../interface/IPooledTexture";
 import { execute } from "./TexturePoolAcquireUseCase";
 
 describe("TexturePoolAcquireUseCase", () =>
 {
-    let pool: IPooledTexture[];
+    let buckets: ITexturePoolBuckets;
+    let totalCount: number[];
 
     const createMockDevice = () =>
     {
@@ -20,111 +21,136 @@ describe("TexturePoolAcquireUseCase", () =>
         } as unknown as GPUDevice;
     };
 
-    const createPoolEntry = (
-        width: number,
-        height: number,
-        format: GPUTextureFormat = "rgba8unorm",
-        inUse: boolean = false,
-        lastUsedFrame: number = 0
-    ): IPooledTexture => ({
-        "texture": { "id": Math.random(), "destroy": vi.fn() } as unknown as GPUTexture,
-        width,
-        height,
-        format,
-        inUse,
-        lastUsedFrame
-    });
-
     beforeEach(() =>
     {
-        pool = [];
+        buckets = new Map();
+        totalCount = [0];
     });
 
     describe("pool matching", () =>
     {
-        it("should return exact match from pool", () =>
+        it("should return exact match from bucket", () =>
         {
-            const entry = createPoolEntry(256, 256, "rgba8unorm", false, 0);
-            pool.push(entry);
+            const mockTexture = { "id": 1, "destroy": vi.fn() } as unknown as GPUTexture;
+            buckets.set("256_256_rgba8unorm", [{
+                "texture": mockTexture,
+                "width": 256,
+                "height": 256,
+                "format": "rgba8unorm" as GPUTextureFormat,
+                "inUse": false,
+                "lastUsedFrame": 0
+            }]);
+            totalCount[0] = 1;
             const device = createMockDevice();
 
-            const result = execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            const result = execute(device, buckets, 256, 256, "rgba8unorm", 0, 100, 32, totalCount);
 
-            expect(result).toBe(entry.texture);
-            expect(entry.inUse).toBe(true);
-            expect(entry.lastUsedFrame).toBe(100);
+            expect(result).toBe(mockTexture);
             expect(device.createTexture).not.toHaveBeenCalled();
         });
 
         it("should skip entries that are in use", () =>
         {
-            const inUseEntry = createPoolEntry(256, 256, "rgba8unorm", true);
-            const availableEntry = createPoolEntry(256, 256, "rgba8unorm", false);
-            pool.push(inUseEntry, availableEntry);
+            const inUseTexture = { "id": 1, "destroy": vi.fn() } as unknown as GPUTexture;
+            const availableTexture = { "id": 2, "destroy": vi.fn() } as unknown as GPUTexture;
+            buckets.set("256_256_rgba8unorm", [
+                {
+                    "texture": inUseTexture,
+                    "width": 256,
+                    "height": 256,
+                    "format": "rgba8unorm" as GPUTextureFormat,
+                    "inUse": true,
+                    "lastUsedFrame": 0
+                },
+                {
+                    "texture": availableTexture,
+                    "width": 256,
+                    "height": 256,
+                    "format": "rgba8unorm" as GPUTextureFormat,
+                    "inUse": false,
+                    "lastUsedFrame": 0
+                }
+            ]);
+            totalCount[0] = 2;
             const device = createMockDevice();
 
-            const result = execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            const result = execute(device, buckets, 256, 256, "rgba8unorm", 0, 100, 32, totalCount);
 
-            expect(result).toBe(availableEntry.texture);
-            expect(inUseEntry.inUse).toBe(true); // Still in use
+            expect(result).toBe(availableTexture);
         });
 
-        it("should skip entries with different format", () =>
+        it("should skip entries with different format (different bucket)", () =>
         {
-            const wrongFormat = createPoolEntry(256, 256, "bgra8unorm", false);
-            pool.push(wrongFormat);
+            const wrongFormatTexture = { "id": 1, "destroy": vi.fn() } as unknown as GPUTexture;
+            buckets.set("256_256_bgra8unorm", [{
+                "texture": wrongFormatTexture,
+                "width": 256,
+                "height": 256,
+                "format": "bgra8unorm" as GPUTextureFormat,
+                "inUse": false,
+                "lastUsedFrame": 0
+            }]);
+            totalCount[0] = 1;
             const device = createMockDevice();
 
-            execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            execute(device, buckets, 256, 256, "rgba8unorm", 0, 100, 32, totalCount);
 
             expect(device.createTexture).toHaveBeenCalled();
         });
 
-        it("should accept larger texture within 2x bounds", () =>
+        it("should not match different sizes (different bucket)", () =>
         {
-            const largerEntry = createPoolEntry(400, 400, "rgba8unorm", false);
-            pool.push(largerEntry);
             const device = createMockDevice();
+            const mockTexture = { "id": 1, "destroy": vi.fn() } as unknown as GPUTexture;
+            buckets.set("256_256_rgba8unorm", [{
+                "texture": mockTexture,
+                "width": 256,
+                "height": 256,
+                "format": "rgba8unorm" as GPUTextureFormat,
+                "inUse": false,
+                "lastUsedFrame": 0
+            }]);
+            totalCount[0] = 1;
 
-            const result = execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
-
-            expect(result).toBe(largerEntry.texture);
-            expect(device.createTexture).not.toHaveBeenCalled();
-        });
-
-        it("should reject texture larger than 2x", () =>
-        {
-            const tooLarge = createPoolEntry(600, 600, "rgba8unorm", false);
-            pool.push(tooLarge);
-            const device = createMockDevice();
-
-            execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            // 200x200 は 256_256 バケットに入らない → 新規作成
+            execute(device, buckets, 200, 200, "rgba8unorm", 0, 100, 32, totalCount);
 
             expect(device.createTexture).toHaveBeenCalled();
+            expect(totalCount[0]).toBe(2);
         });
+    });
 
-        it("should prefer exact match over larger", () =>
+    describe("bucket map structure", () =>
+    {
+        it("should use exact size as bucket key", () =>
         {
-            const larger = createPoolEntry(300, 300, "rgba8unorm", false);
-            const exact = createPoolEntry(256, 256, "rgba8unorm", false);
-            pool.push(larger, exact);
             const device = createMockDevice();
 
-            const result = execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            execute(device, buckets, 200, 150, "rgba8unorm", 0x10, 100, 32, totalCount);
 
-            expect(result).toBe(exact.texture);
+            expect(device.createTexture).toHaveBeenCalledWith({
+                "size": { "width": 200, "height": 150 },
+                "format": "rgba8unorm",
+                "usage": 0x10
+            });
+            expect(buckets.has("200_150_rgba8unorm")).toBe(true);
         });
 
-        it("should pick smallest fitting texture when no exact match", () =>
+        it("should reuse same-size texture from bucket", () =>
         {
-            const large = createPoolEntry(400, 400, "rgba8unorm", false);
-            const medium = createPoolEntry(300, 300, "rgba8unorm", false);
-            pool.push(large, medium);
             const device = createMockDevice();
 
-            const result = execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            const tex1 = execute(device, buckets, 200, 150, "rgba8unorm", 0x10, 100, 32, totalCount);
+            expect(device.createTexture).toHaveBeenCalledTimes(1);
 
-            expect(result).toBe(medium.texture);
+            // テクスチャを返却
+            const bucket = buckets.get("200_150_rgba8unorm")!;
+            bucket[0].inUse = false;
+
+            // 同じサイズを要求 → キャッシュヒット
+            const tex2 = execute(device, buckets, 200, 150, "rgba8unorm", 0x10, 200, 32, totalCount);
+            expect(device.createTexture).toHaveBeenCalledTimes(1);
+            expect(tex2).toBe(tex1);
         });
     });
 
@@ -134,7 +160,7 @@ describe("TexturePoolAcquireUseCase", () =>
         {
             const device = createMockDevice();
 
-            execute(device, pool, 256, 256, "rgba8unorm", 0x10, 100, 32);
+            execute(device, buckets, 256, 256, "rgba8unorm", 0x10, 100, 32, totalCount);
 
             expect(device.createTexture).toHaveBeenCalledWith({
                 "size": { "width": 256, "height": 256 },
@@ -143,32 +169,45 @@ describe("TexturePoolAcquireUseCase", () =>
             });
         });
 
-        it("should add new texture to pool", () =>
+        it("should add new texture to bucket", () =>
         {
             const device = createMockDevice();
 
-            execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            execute(device, buckets, 256, 256, "rgba8unorm", 0, 100, 32, totalCount);
 
-            expect(pool.length).toBe(1);
-            expect(pool[0].width).toBe(256);
-            expect(pool[0].height).toBe(256);
-            expect(pool[0].inUse).toBe(true);
-            expect(pool[0].lastUsedFrame).toBe(100);
+            const bucket = buckets.get("256_256_rgba8unorm");
+            expect(bucket).toBeDefined();
+            expect(bucket!.length).toBe(1);
+            expect(bucket![0].width).toBe(256);
+            expect(bucket![0].height).toBe(256);
+            expect(bucket![0].inUse).toBe(true);
+            expect(bucket![0].lastUsedFrame).toBe(100);
+            expect(totalCount[0]).toBe(1);
         });
 
-        it("should evict oldest when pool is full", () =>
+        it("should evict oldest (LRU) when pool is full", () =>
         {
             const device = createMockDevice();
 
-            // Fill pool with maxPoolSize entries
+            // Fill pool with maxPoolSize entries (各異なるバケット)
             for (let i = 0; i < 4; i++) {
-                pool.push(createPoolEntry(128, 128, "rgba8unorm", false, i));
+                const size = 100 + i * 50; // 100, 150, 200, 250
+                execute(device, buckets, size, size, "rgba8unorm", 0, i, 4, totalCount);
+                // 返却してavailableにする
+                for (const bucket of buckets.values()) {
+                    for (const entry of bucket) {
+                        entry.inUse = false;
+                    }
+                }
             }
+            expect(totalCount[0]).toBe(4);
 
-            execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 4);
+            // 新しいサイズを要求 → 最も古いもの（frame=0）が削除される
+            execute(device, buckets, 300, 300, "rgba8unorm", 0, 100, 4, totalCount);
 
-            // Pool should still be at max size
-            expect(pool.length).toBe(4);
+            expect(totalCount[0]).toBe(4); // 1個削除 + 1個追加
+            // frame=0のエントリ（100x100）が削除されたはず
+            expect(buckets.has("100_100_rgba8unorm")).toBe(false);
         });
     });
 
@@ -176,22 +215,40 @@ describe("TexturePoolAcquireUseCase", () =>
     {
         it("should update lastUsedFrame when acquiring from pool", () =>
         {
-            const entry = createPoolEntry(256, 256, "rgba8unorm", false, 50);
-            pool.push(entry);
+            const mockTexture = { "id": 1, "destroy": vi.fn() } as unknown as GPUTexture;
+            const entry = {
+                "texture": mockTexture,
+                "width": 256,
+                "height": 256,
+                "format": "rgba8unorm" as GPUTextureFormat,
+                "inUse": false,
+                "lastUsedFrame": 50
+            };
+            buckets.set("256_256_rgba8unorm", [entry]);
+            totalCount[0] = 1;
             const device = createMockDevice();
 
-            execute(device, pool, 256, 256, "rgba8unorm", 0, 200, 32);
+            execute(device, buckets, 256, 256, "rgba8unorm", 0, 200, 32, totalCount);
 
             expect(entry.lastUsedFrame).toBe(200);
         });
 
         it("should mark texture as in use", () =>
         {
-            const entry = createPoolEntry(256, 256, "rgba8unorm", false);
-            pool.push(entry);
+            const mockTexture = { "id": 1, "destroy": vi.fn() } as unknown as GPUTexture;
+            const entry = {
+                "texture": mockTexture,
+                "width": 256,
+                "height": 256,
+                "format": "rgba8unorm" as GPUTextureFormat,
+                "inUse": false,
+                "lastUsedFrame": 0
+            };
+            buckets.set("256_256_rgba8unorm", [entry]);
+            totalCount[0] = 1;
             const device = createMockDevice();
 
-            execute(device, pool, 256, 256, "rgba8unorm", 0, 100, 32);
+            execute(device, buckets, 256, 256, "rgba8unorm", 0, 100, 32, totalCount);
 
             expect(entry.inUse).toBe(true);
         });

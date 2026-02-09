@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { IPooledTexture } from "../../interface/IPooledTexture";
+import type { IPooledTexture, ITexturePoolBuckets } from "../../interface/IPooledTexture";
 import { execute } from "./TexturePoolCleanupService";
 
 describe("TexturePoolCleanupService", () =>
 {
-    let pool: IPooledTexture[];
+    let buckets: ITexturePoolBuckets;
+    let totalCount: number[];
 
     const createMockEntry = (
         lastUsedFrame: number,
@@ -22,92 +23,109 @@ describe("TexturePoolCleanupService", () =>
 
     beforeEach(() =>
     {
-        pool = [];
+        buckets = new Map();
+        totalCount = [0];
     });
 
     it("should remove old unused entries", () =>
     {
         const old = createMockEntry(10, false);
         const recent = createMockEntry(90, false);
-        pool.push(old, recent);
+        buckets.set("256_256_rgba8unorm", [old, recent]);
+        totalCount[0] = 2;
 
-        execute(pool, 100, 50);
+        execute(buckets, 100, 50, totalCount);
 
-        expect(pool.length).toBe(1);
-        expect(pool[0]).toBe(recent);
+        const bucket = buckets.get("256_256_rgba8unorm")!;
+        expect(bucket.length).toBe(1);
+        expect(bucket[0]).toBe(recent);
         expect(old.texture.destroy).toHaveBeenCalled();
+        expect(totalCount[0]).toBe(1);
     });
 
     it("should keep entries that are in use even if old", () =>
     {
         const oldInUse = createMockEntry(10, true);
         const oldNotInUse = createMockEntry(10, false);
-        pool.push(oldInUse, oldNotInUse);
+        buckets.set("256_256_rgba8unorm", [oldInUse, oldNotInUse]);
+        totalCount[0] = 2;
 
-        execute(pool, 100, 50);
+        execute(buckets, 100, 50, totalCount);
 
-        expect(pool.length).toBe(1);
-        expect(pool[0]).toBe(oldInUse);
+        const bucket = buckets.get("256_256_rgba8unorm")!;
+        expect(bucket.length).toBe(1);
+        expect(bucket[0]).toBe(oldInUse);
         expect(oldInUse.texture.destroy).not.toHaveBeenCalled();
         expect(oldNotInUse.texture.destroy).toHaveBeenCalled();
+        expect(totalCount[0]).toBe(1);
     });
 
     it("should handle empty pool", () =>
     {
-        expect(() => execute(pool, 100, 50)).not.toThrow();
-        expect(pool.length).toBe(0);
+        expect(() => execute(buckets, 100, 50, totalCount)).not.toThrow();
+        expect(buckets.size).toBe(0);
     });
 
-    it("should remove all old unused entries", () =>
+    it("should remove all old unused entries and delete empty bucket", () =>
     {
-        pool.push(
+        buckets.set("256_256_rgba8unorm", [
             createMockEntry(0, false),
             createMockEntry(10, false),
             createMockEntry(20, false)
-        );
+        ]);
+        totalCount[0] = 3;
 
-        execute(pool, 100, 30);
+        execute(buckets, 100, 30, totalCount);
 
-        expect(pool.length).toBe(0);
+        expect(buckets.has("256_256_rgba8unorm")).toBe(false);
+        expect(totalCount[0]).toBe(0);
     });
 
     it("should keep recent unused entries", () =>
     {
         const recent1 = createMockEntry(80, false);
         const recent2 = createMockEntry(90, false);
-        pool.push(recent1, recent2);
+        buckets.set("256_256_rgba8unorm", [recent1, recent2]);
+        totalCount[0] = 2;
 
-        execute(pool, 100, 50);
+        execute(buckets, 100, 50, totalCount);
 
-        expect(pool.length).toBe(2);
+        const bucket = buckets.get("256_256_rgba8unorm")!;
+        expect(bucket.length).toBe(2);
         expect(recent1.texture.destroy).not.toHaveBeenCalled();
         expect(recent2.texture.destroy).not.toHaveBeenCalled();
+        expect(totalCount[0]).toBe(2);
     });
 
     it("should call destroy on removed textures", () =>
     {
         const entry = createMockEntry(10, false);
-        pool.push(entry);
+        buckets.set("256_256_rgba8unorm", [entry]);
+        totalCount[0] = 1;
 
-        execute(pool, 100, 50);
+        execute(buckets, 100, 50, totalCount);
 
         expect(entry.texture.destroy).toHaveBeenCalledTimes(1);
     });
 
-    it("should handle mixed pool correctly", () =>
+    it("should handle mixed pool across buckets correctly", () =>
     {
         const oldUnused = createMockEntry(10, false);
         const oldInUse = createMockEntry(10, true);
         const recentUnused = createMockEntry(90, false);
         const recentInUse = createMockEntry(90, true);
-        pool.push(oldUnused, oldInUse, recentUnused, recentInUse);
 
-        execute(pool, 100, 50);
+        buckets.set("256_256_rgba8unorm", [oldUnused, oldInUse]);
+        buckets.set("512_512_rgba8unorm", [recentUnused, recentInUse]);
+        totalCount[0] = 4;
 
-        expect(pool.length).toBe(3);
-        expect(pool).not.toContain(oldUnused);
-        expect(pool).toContain(oldInUse);
-        expect(pool).toContain(recentUnused);
-        expect(pool).toContain(recentInUse);
+        execute(buckets, 100, 50, totalCount);
+
+        const bucket256 = buckets.get("256_256_rgba8unorm")!;
+        const bucket512 = buckets.get("512_512_rgba8unorm")!;
+        expect(bucket256.length).toBe(1);
+        expect(bucket256[0]).toBe(oldInUse);
+        expect(bucket512.length).toBe(2);
+        expect(totalCount[0]).toBe(3);
     });
 });

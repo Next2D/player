@@ -1,4 +1,4 @@
-import type { IPooledTexture } from "./interface/IPooledTexture";
+import type { ITexturePoolBuckets } from "./interface/IPooledTexture";
 import { execute as texturePoolAcquireUseCase } from "./TexturePool/usecase/TexturePoolAcquireUseCase";
 import { execute as texturePoolReleaseService } from "./TexturePool/service/TexturePoolReleaseService";
 import { execute as texturePoolCleanupService } from "./TexturePool/service/TexturePoolCleanupService";
@@ -14,17 +14,19 @@ const MAX_POOL_SIZE = 32;
 const CACHE_CLEANUP_THRESHOLD = 180; // 3秒（60FPS想定）
 
 /**
- * @description テクスチャプールマネージャー
+ * @description テクスチャプールマネージャー（Power-of-2バケット版）
  *              Texture pool manager for WebGPU optimization
  *
- *              WebGPUではテクスチャの作成コストが高いため、
- *              同じサイズ・フォーマットのテクスチャをプールして再利用する
+ *              リクエストサイズをPower-of-2に切り上げてバケット化。
+ *              同一バケット内で高いキャッシュヒット率を実現。
+ *              LRUベースで未使用テクスチャを回収。
  */
 export class TexturePool
 {
     private device: GPUDevice;
-    private pool: IPooledTexture[];
+    private buckets: ITexturePoolBuckets;
     private currentFrame: number;
+    private totalCount: number[];
 
     /**
      * @param {GPUDevice} device
@@ -33,8 +35,9 @@ export class TexturePool
     constructor(device: GPUDevice)
     {
         this.device = device;
-        this.pool = [];
+        this.buckets = new Map();
         this.currentFrame = 0;
+        this.totalCount = [0];
     }
 
     /**
@@ -45,9 +48,9 @@ export class TexturePool
     {
         this.currentFrame++;
 
-        // 定期的にプールをクリーンアップ
+        // 定期的にプールをクリーンアップ（LRU回収）
         if (this.currentFrame % 60 === 0) {
-            texturePoolCleanupService(this.pool, this.currentFrame, CACHE_CLEANUP_THRESHOLD);
+            texturePoolCleanupService(this.buckets, this.currentFrame, CACHE_CLEANUP_THRESHOLD, this.totalCount);
         }
     }
 
@@ -69,13 +72,14 @@ export class TexturePool
     ): GPUTexture {
         return texturePoolAcquireUseCase(
             this.device,
-            this.pool,
+            this.buckets,
             width,
             height,
             format,
             usage,
             this.currentFrame,
-            MAX_POOL_SIZE
+            MAX_POOL_SIZE,
+            this.totalCount
         );
     }
 
@@ -86,7 +90,7 @@ export class TexturePool
      */
     release(texture: GPUTexture): void
     {
-        texturePoolReleaseService(this.pool, texture, this.currentFrame);
+        texturePoolReleaseService(this.buckets, texture, this.currentFrame);
     }
 
     /**
@@ -98,16 +102,18 @@ export class TexturePool
         let inUse = 0;
         let available = 0;
 
-        for (const entry of this.pool) {
-            if (entry.inUse) {
-                inUse++;
-            } else {
-                available++;
+        for (const bucket of this.buckets.values()) {
+            for (const entry of bucket) {
+                if (entry.inUse) {
+                    inUse++;
+                } else {
+                    available++;
+                }
             }
         }
 
         return {
-            "total": this.pool.length,
+            "total": this.totalCount[0],
             inUse,
             available
         };
@@ -119,10 +125,13 @@ export class TexturePool
      */
     dispose(): void
     {
-        for (const entry of this.pool) {
-            entry.texture.destroy();
+        for (const bucket of this.buckets.values()) {
+            for (const entry of bucket) {
+                entry.texture.destroy();
+            }
         }
-        this.pool = [];
+        this.buckets.clear();
+        this.totalCount[0] = 0;
     }
 }
 

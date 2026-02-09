@@ -1,89 +1,111 @@
-import type { IPooledTexture } from "../../interface/IPooledTexture";
-import { execute as texturePoolEvictOldestService } from "../service/TexturePoolEvictOldestService";
+import type { IPooledTexture, ITexturePoolBuckets } from "../../interface/IPooledTexture";
 
 /**
- * @description テクスチャを取得または作成
- *              Acquire texture from pool or create new one
+ * @description バケットキーを生成（exactサイズ + フォーマット）
+ *
+ * @param  {number} width
+ * @param  {number} height
+ * @param  {GPUTextureFormat} format
+ * @return {string}
+ */
+const buildKey = (width: number, height: number, format: GPUTextureFormat): string =>
+{
+    return `${width}_${height}_${format}`;
+};
+
+/**
+ * @description テクスチャを取得または作成（バケットMap検索）
+ *              Acquire texture from pool or create new one (bucket Map lookup)
  *
  * @param  {GPUDevice} device
- * @param  {IPooledTexture[]} pool
+ * @param  {ITexturePoolBuckets} buckets
  * @param  {number} width
  * @param  {number} height
  * @param  {GPUTextureFormat} format
  * @param  {GPUTextureUsageFlags} usage
  * @param  {number} currentFrame
  * @param  {number} maxPoolSize
+ * @param  {number[]} totalCount - [0]に現在の合計数を格納
  * @return {GPUTexture}
  * @method
  * @protected
  */
 export const execute = (
     device: GPUDevice,
-    pool: IPooledTexture[],
+    buckets: ITexturePoolBuckets,
     width: number,
     height: number,
     format: GPUTextureFormat,
     usage: GPUTextureUsageFlags,
     currentFrame: number,
-    maxPoolSize: number
+    maxPoolSize: number,
+    totalCount: number[]
 ): GPUTexture => {
-    // プールから適切なテクスチャを検索
-    // サイズ完全一致を優先、なければ大きいサイズを許容（2倍以内）
-    let bestIndex = -1;
-    let bestSizeMatch = Infinity;
+    const key = buildKey(width, height, format);
 
-    for (let i = 0; i < pool.length; i++) {
-        const entry = pool[i];
-        if (entry.inUse || entry.format !== format) {
-            continue;
-        }
-
-        // サイズの一致度を計算
-        if (entry.width === width && entry.height === height) {
-            // 完全一致
-            bestIndex = i;
-            break;
-        } else if (
-            entry.width >= width && entry.width <= width * 2 &&
-            entry.height >= height && entry.height <= height * 2
-        ) {
-            // サイズが大きいが許容範囲内
-            const sizeMatch = entry.width - width + (entry.height - height);
-            if (sizeMatch < bestSizeMatch) {
-                bestSizeMatch = sizeMatch;
-                bestIndex = i;
+    // バケットから未使用テクスチャを検索（O(1)バケット + O(n)バケット内走査）
+    const bucket = buckets.get(key);
+    if (bucket) {
+        for (let i = 0; i < bucket.length; i++) {
+            const entry = bucket[i];
+            if (!entry.inUse) {
+                entry.inUse = true;
+                entry.lastUsedFrame = currentFrame;
+                return entry.texture;
             }
         }
     }
 
-    if (bestIndex >= 0) {
-        // プールから取得
-        const entry = pool[bestIndex];
-        entry.inUse = true;
-        entry.lastUsedFrame = currentFrame;
-        return entry.texture;
+    // プールが満杯なら最も古い未使用エントリを削除（LRU回収）
+    if (totalCount[0] >= maxPoolSize) {
+        let oldestFrame = Infinity;
+        let oldestKey = "";
+        let oldestIdx = -1;
+
+        for (const [bKey, bEntries] of buckets) {
+            for (let i = 0; i < bEntries.length; i++) {
+                const e = bEntries[i];
+                if (!e.inUse && e.lastUsedFrame < oldestFrame) {
+                    oldestFrame = e.lastUsedFrame;
+                    oldestKey = bKey;
+                    oldestIdx = i;
+                }
+            }
+        }
+
+        if (oldestIdx >= 0) {
+            const bEntries = buckets.get(oldestKey)!;
+            bEntries[oldestIdx].texture.destroy();
+            bEntries.splice(oldestIdx, 1);
+            if (bEntries.length === 0) {
+                buckets.delete(oldestKey);
+            }
+            totalCount[0]--;
+        }
     }
 
-    // 新規作成
+    // exactサイズで新規作成
     const texture = device.createTexture({
         "size": { width, height },
         format,
         usage
     });
 
-    // プールに追加（満杯なら最も古いものを削除）
-    if (pool.length >= maxPoolSize) {
-        texturePoolEvictOldestService(pool);
-    }
-
-    pool.push({
+    const entry: IPooledTexture = {
         texture,
         width,
         height,
         format,
         "lastUsedFrame": currentFrame,
         "inUse": true
-    });
+    };
+
+    if (bucket) {
+        bucket.push(entry);
+    } else {
+        buckets.set(key, [entry]);
+    }
+    totalCount[0]++;
 
     return texture;
 };

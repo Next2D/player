@@ -13,12 +13,16 @@ struct GradientUniforms {
 @group(0) @binding(2) var gradientTexture: texture_2d<f32>;
 
 fn applySpread(t: f32, spread: f32) -> f32 {
-    if (spread < 0.5) {
-        return 1.0 - abs(fract(t * 0.5) * 2.0 - 1.0);
-    } else if (spread < 1.5) {
-        return fract(t);
-    } else {
-        return clamp(t, 0.0, 1.0);
+    switch(i32(spread)) {
+        case 0: {
+            return 1.0 - abs(fract(t * 0.5) * 2.0 - 1.0);
+        }
+        case 1: {
+            return fract(t);
+        }
+        default: {
+            return clamp(t, 0.0, 1.0);
+        }
     }
 }
 `;

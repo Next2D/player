@@ -1,10 +1,10 @@
-import type { IPooledTexture } from "../../interface/IPooledTexture";
+import type { ITexturePoolBuckets } from "../../interface/IPooledTexture";
 
 /**
- * @description テクスチャをプールに返却
- *              Release texture back to pool
+ * @description テクスチャをプールに返却（バケットMap版）
+ *              Release texture back to pool (bucket Map version)
  *
- * @param  {IPooledTexture[]} pool
+ * @param  {ITexturePoolBuckets} buckets
  * @param  {GPUTexture} texture
  * @param  {number} currentFrame
  * @return {void}
@@ -12,15 +12,17 @@ import type { IPooledTexture } from "../../interface/IPooledTexture";
  * @protected
  */
 export const execute = (
-    pool: IPooledTexture[],
+    buckets: ITexturePoolBuckets,
     texture: GPUTexture,
     currentFrame: number
 ): void => {
-    for (const entry of pool) {
-        if (entry.texture === texture) {
-            entry.inUse = false;
-            entry.lastUsedFrame = currentFrame;
-            return;
+    for (const bucket of buckets.values()) {
+        for (let i = 0; i < bucket.length; i++) {
+            if (bucket[i].texture === texture) {
+                bucket[i].inUse = false;
+                bucket[i].lastUsedFrame = currentFrame;
+                return;
+            }
         }
     }
 };

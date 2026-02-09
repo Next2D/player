@@ -5,7 +5,7 @@ fn isInside(uv: vec2<f32>) -> f32 {
 }`;
 
 export const WgslFullscreenPositions = `
-    var positions = array<vec2<f32>, 6>(
+    const positions = array<vec2<f32>, 6>(
         vec2<f32>(-1.0, -1.0),
         vec2<f32>( 1.0, -1.0),
         vec2<f32>(-1.0,  1.0),
@@ -15,7 +15,7 @@ export const WgslFullscreenPositions = `
     );`;
 
 export const WgslUnitQuadVertices = `
-    var vertices = array<vec2<f32>, 6>(
+    const vertices = array<vec2<f32>, 6>(
         vec2<f32>(0.0, 0.0),
         vec2<f32>(1.0, 0.0),
         vec2<f32>(0.0, 1.0),
@@ -31,7 +31,7 @@ struct VertexOutput {
 }`;
 
 export const WgslFullscreenTexCoords = `
-    var texCoords = array<vec2<f32>, 6>(
+    const texCoords = array<vec2<f32>, 6>(
         vec2<f32>(0.0, 1.0),
         vec2<f32>(1.0, 1.0),
         vec2<f32>(0.0, 0.0),

@@ -1,4 +1,6 @@
-const createGradientFillVertex = (yFlip: boolean): string => /* wgsl */`
+export const GradientFillVertex = /* wgsl */`
+override yFlipSign: f32 = 1.0;
+
 struct VertexInput {
     @location(0) position: vec2<f32>,
     @location(1) bezier: vec2<f32>,
@@ -32,7 +34,7 @@ fn main(input: VertexInput) -> VertexOutput {
     let contextMatrix = mat3x3<f32>(gradient.contextMatrix0.xyz, gradient.contextMatrix1.xyz, gradient.contextMatrix2.xyz);
     let pos = contextMatrix * vec3<f32>(input.position, 1.0);
     let ndc = vec2<f32>(pos.x * 2.0 - 1.0, pos.y * 2.0 - 1.0);
-    output.position = vec4<f32>(ndc.x, ${yFlip ? "-ndc.y" : "ndc.y"}, 0.0, 1.0);
+    output.position = vec4<f32>(ndc.x, ndc.y * yFlipSign, 0.0, 1.0);
     let uvPos = gradient.inverseMatrix * vec3<f32>(input.position, 1.0);
     output.v_uv = uvPos.xy;
     output.bezier = input.bezier;
@@ -40,6 +42,3 @@ fn main(input: VertexInput) -> VertexOutput {
     return output;
 }
 `;
-
-export const GradientFillVertex = createGradientFillVertex(false);
-export const GradientFillMainVertex = createGradientFillVertex(true);

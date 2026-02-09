@@ -1,4 +1,6 @@
-const createBitmapFillVertex = (yFlip: boolean): string => /* wgsl */`
+export const BitmapFillVertex = /* wgsl */`
+override yFlipSign: f32 = 1.0;
+
 struct VertexInput {
     @location(0) position: vec2<f32>,
     @location(1) bezier: vec2<f32>,
@@ -31,7 +33,7 @@ fn main(input: VertexInput) -> VertexOutput {
     let matrix = mat3x3<f32>(bitmap.contextMatrix0.xyz, bitmap.contextMatrix1.xyz, bitmap.contextMatrix2.xyz);
     let transformedPos = matrix * vec3<f32>(input.position, 1.0);
     let clipX = transformedPos.x * 2.0 - 1.0;
-    let clipY = ${yFlip ? "-(transformedPos.y * 2.0 - 1.0)" : "transformedPos.y * 2.0 - 1.0"};
+    let clipY = (transformedPos.y * 2.0 - 1.0) * yFlipSign;
     output.position = vec4<f32>(clipX, clipY, 0.0, 1.0);
     output.bezier = input.bezier;
     output.color = bitmap.color;
@@ -39,6 +41,3 @@ fn main(input: VertexInput) -> VertexOutput {
     return output;
 }
 `;
-
-export const BitmapFillVertex = createBitmapFillVertex(false);
-export const BitmapFillMainVertex = createBitmapFillVertex(true);

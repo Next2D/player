@@ -1,10 +1,10 @@
-import { FillVertex, FillMainVertex } from "./wgsl/vertex/FillVertex";
-import { StencilWriteVertex, StencilWriteMainVertex, StencilFillVertex, StencilFillMainVertex } from "./wgsl/vertex/StencilVertex";
+import { FillVertex } from "./wgsl/vertex/FillVertex";
+import { StencilWriteVertex, StencilFillVertex } from "./wgsl/vertex/StencilVertex";
 import { MaskVertex } from "./wgsl/vertex/MaskVertex";
-import { BasicVertex, BasicMainVertex } from "./wgsl/vertex/BasicVertex";
+import { BasicVertex } from "./wgsl/vertex/BasicVertex";
 import { InstancedVertex } from "./wgsl/vertex/InstancedVertex";
-import { GradientFillVertex, GradientFillMainVertex } from "./wgsl/vertex/GradientVertex";
-import { BitmapFillVertex, BitmapFillMainVertex } from "./wgsl/vertex/BitmapVertex";
+import { GradientFillVertex } from "./wgsl/vertex/GradientVertex";
+import { BitmapFillVertex } from "./wgsl/vertex/BitmapVertex";
 import { BlurFilterVertex, NodeClearVertex, PositionedTextureVertex, BitmapSyncVertex, TextureScaleVertex, TextureScaleBlendVertex, ComplexBlendScaleVertex, ComplexBlendVertex, ComplexBlendCopyVertex, ComplexBlendOutputVertex, FilterComplexBlendOutputVertex } from "./wgsl/vertex/FilterVertex";
 
 import { FillFragment } from "./wgsl/fragment/FillFragment";
@@ -45,7 +45,7 @@ export class ShaderSource
 
     static getFillMainVertexShader (): string
     {
-        return FillMainVertex;
+        return FillVertex;
     }
 
     static getFillFragmentShader (): string
@@ -60,7 +60,7 @@ export class ShaderSource
 
     static getStencilWriteMainVertexShader (): string
     {
-        return StencilWriteMainVertex;
+        return StencilWriteVertex;
     }
 
     static getStencilWriteFragmentShader (): string
@@ -75,7 +75,7 @@ export class ShaderSource
 
     static getStencilFillMainVertexShader (): string
     {
-        return StencilFillMainVertex;
+        return StencilFillVertex;
     }
 
     static getStencilFillFragmentShader (): string
@@ -100,7 +100,7 @@ export class ShaderSource
 
     static getBasicMainVertexShader (): string
     {
-        return BasicMainVertex;
+        return BasicVertex;
     }
 
     static getBasicFragmentShader (): string
@@ -130,7 +130,7 @@ export class ShaderSource
 
     static getGradientFillMainVertexShader (): string
     {
-        return GradientFillMainVertex;
+        return GradientFillVertex;
     }
 
     static getGradientFillFragmentShader (): string
@@ -155,7 +155,7 @@ export class ShaderSource
 
     static getBitmapFillMainVertexShader (): string
     {
-        return BitmapFillMainVertex;
+        return BitmapFillVertex;
     }
 
     static getBitmapFillFragmentShader (): string

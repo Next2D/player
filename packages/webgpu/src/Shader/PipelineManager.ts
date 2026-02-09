@@ -198,14 +198,13 @@ export class PipelineManager
                 "alphaToCoverageEnabled": true
             }
         });
-        const vertexShaderModuleMain = this.getOrCreateShaderModule("fillMainVertex", ShaderSource.getFillMainVertexShader());
-
         const pipelineBGRA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -230,9 +229,10 @@ export class PipelineManager
         const pipelineBGRAStencil = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -415,9 +415,10 @@ export class PipelineManager
         const stencilWritePipelineMain = this.device.createRenderPipeline({
             "layout": "auto",
             "vertex": {
-                "module": this.getOrCreateShaderModule("stencilWriteMainVertex", ShaderSource.getStencilWriteMainVertexShader()),
+                "module": this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader()),
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": this.getOrCreateShaderModule("stencilWriteFragment", ShaderSource.getStencilWriteFragmentShader()),
@@ -511,9 +512,10 @@ export class PipelineManager
         const stencilFillPipelineMain = this.device.createRenderPipeline({
             "layout": "auto",
             "vertex": {
-                "module": this.getOrCreateShaderModule("stencilFillMainVertex", ShaderSource.getStencilFillMainVertexShader()),
+                "module": this.getOrCreateShaderModule("stencilFillVertex", ShaderSource.getStencilFillVertexShader()),
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": this.getOrCreateShaderModule("stencilFillFragment", ShaderSource.getStencilFillFragmentShader()),
@@ -658,7 +660,7 @@ export class PipelineManager
             }
         });
         this.pipelines.set("clip_write", clipWritePipeline);
-        const vertexShaderModule = this.getOrCreateShaderModule("stencilWriteMainVertex", ShaderSource.getStencilWriteMainVertexShader());
+        const vertexShaderModule = this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader());
         const fragmentShaderModule = this.getOrCreateShaderModule("stencilWriteFragment", ShaderSource.getStencilWriteFragmentShader());
 
         for (let level = 1; level <= 8; level++) {
@@ -668,7 +670,8 @@ export class PipelineManager
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",
-                    "buffers": [vertexBufferLayout]
+                    "buffers": [vertexBufferLayout],
+                    "constants": { "yFlipSign": -1.0 }
                 },
                 "fragment": {
                     "module": fragmentShaderModule,
@@ -714,7 +717,8 @@ export class PipelineManager
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",
-                    "buffers": [vertexBufferLayout]
+                    "buffers": [vertexBufferLayout],
+                    "constants": { "yFlipSign": -1.0 }
                 },
                 "fragment": {
                     "module": fragmentShaderModule,
@@ -757,7 +761,7 @@ export class PipelineManager
     {
         const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
 
-        const vertexShaderModule = this.getOrCreateShaderModule("stencilWriteMainVertex", ShaderSource.getStencilWriteMainVertexShader());
+        const vertexShaderModule = this.getOrCreateShaderModule("stencilWriteVertex", ShaderSource.getStencilWriteVertexShader());
         const fragmentShaderModule = this.getOrCreateShaderModule("stencilWriteFragment", ShaderSource.getStencilWriteFragmentShader());
         for (let level = 1; level <= 8; level++) {
             const mask = 1 << level - 1;
@@ -767,7 +771,8 @@ export class PipelineManager
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",
-                    "buffers": [vertexBufferLayout]
+                    "buffers": [vertexBufferLayout],
+                    "constants": { "yFlipSign": -1.0 }
                 },
                 "fragment": {
                     "module": fragmentShaderModule,
@@ -805,7 +810,8 @@ export class PipelineManager
                 "vertex": {
                     "module": vertexShaderModule,
                     "entryPoint": "main",
-                    "buffers": [vertexBufferLayout]
+                    "buffers": [vertexBufferLayout],
+                    "constants": { "yFlipSign": -1.0 }
                 },
                 "fragment": {
                     "module": fragmentShaderModule,
@@ -972,14 +978,13 @@ export class PipelineManager
                 "count": this.sampleCount
             }
         });
-        const vertexShaderModuleBGRA = this.getOrCreateShaderModule("basicMainVertex", ShaderSource.getBasicMainVertexShader());
-
         const pipelineBGRA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleBGRA,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -1358,14 +1363,13 @@ export class PipelineManager
                 "count": this.sampleCount
             }
         });
-        const vertexShaderModuleMain = this.getOrCreateShaderModule("gradientFillMainVertex", ShaderSource.getGradientFillMainVertexShader());
-
         const pipelineBGRA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -1434,9 +1438,10 @@ export class PipelineManager
             "label": "gradient_stroke_bgra_pipeline",
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -1459,9 +1464,10 @@ export class PipelineManager
         const pipelineBGRA_noMSAA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -1565,9 +1571,10 @@ export class PipelineManager
         const pipelineStencilMain = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": stencilFragmentShaderModule,
@@ -1606,9 +1613,10 @@ export class PipelineManager
         const pipelineBGRAStencil = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -1703,14 +1711,13 @@ export class PipelineManager
                 "count": this.sampleCount
             }
         });
-        const vertexShaderModuleMain = this.getOrCreateShaderModule("bitmapFillMainVertex", ShaderSource.getBitmapFillMainVertexShader());
-
         const pipelineBGRA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -1775,9 +1782,10 @@ export class PipelineManager
             "label": "bitmap_stroke_bgra_pipeline",
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,
@@ -1841,9 +1849,10 @@ export class PipelineManager
         const pipelineBGRAStencil = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
-                "module": vertexShaderModuleMain,
+                "module": vertexShaderModule,
                 "entryPoint": "main",
-                "buffers": [vertexBufferLayout]
+                "buffers": [vertexBufferLayout],
+                "constants": { "yFlipSign": -1.0 }
             },
             "fragment": {
                 "module": fragmentShaderModule,

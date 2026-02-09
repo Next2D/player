@@ -1,36 +1,30 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { IPooledTexture } from "../../interface/IPooledTexture";
+import { describe, it, expect, beforeEach } from "vitest";
+import type { ITexturePoolBuckets } from "../../interface/IPooledTexture";
 import { execute } from "./TexturePoolReleaseService";
 
 describe("TexturePoolReleaseService", () =>
 {
-    let pool: IPooledTexture[];
-
-    const createMockEntry = (
-        texture: GPUTexture,
-        inUse: boolean = true,
-        lastUsedFrame: number = 0
-    ): IPooledTexture => ({
-        texture,
-        "width": 256,
-        "height": 256,
-        "format": "rgba8unorm" as GPUTextureFormat,
-        inUse,
-        lastUsedFrame
-    });
+    let buckets: ITexturePoolBuckets;
 
     beforeEach(() =>
     {
-        pool = [];
+        buckets = new Map();
     });
 
     it("should release texture back to pool", () =>
     {
         const mockTexture = { "id": 1 } as unknown as GPUTexture;
-        const entry = createMockEntry(mockTexture, true, 0);
-        pool.push(entry);
+        const entry = {
+            "texture": mockTexture,
+            "width": 256,
+            "height": 256,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 0
+        };
+        buckets.set("256_256_rgba8unorm", [entry]);
 
-        execute(pool, mockTexture, 100);
+        execute(buckets, mockTexture, 100);
 
         expect(entry.inUse).toBe(false);
         expect(entry.lastUsedFrame).toBe(100);
@@ -39,10 +33,17 @@ describe("TexturePoolReleaseService", () =>
     it("should update lastUsedFrame on release", () =>
     {
         const mockTexture = { "id": 1 } as unknown as GPUTexture;
-        const entry = createMockEntry(mockTexture, true, 50);
-        pool.push(entry);
+        const entry = {
+            "texture": mockTexture,
+            "width": 256,
+            "height": 256,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 50
+        };
+        buckets.set("256_256_rgba8unorm", [entry]);
 
-        execute(pool, mockTexture, 200);
+        execute(buckets, mockTexture, 200);
 
         expect(entry.lastUsedFrame).toBe(200);
     });
@@ -51,11 +52,25 @@ describe("TexturePoolReleaseService", () =>
     {
         const texture1 = { "id": 1 } as unknown as GPUTexture;
         const texture2 = { "id": 2 } as unknown as GPUTexture;
-        const entry1 = createMockEntry(texture1, true, 0);
-        const entry2 = createMockEntry(texture2, true, 0);
-        pool.push(entry1, entry2);
+        const entry1 = {
+            "texture": texture1,
+            "width": 256,
+            "height": 256,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 0
+        };
+        const entry2 = {
+            "texture": texture2,
+            "width": 256,
+            "height": 256,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 0
+        };
+        buckets.set("256_256_rgba8unorm", [entry1, entry2]);
 
-        execute(pool, texture1, 100);
+        execute(buckets, texture1, 100);
 
         expect(entry1.inUse).toBe(false);
         expect(entry2.inUse).toBe(true);
@@ -65,42 +80,65 @@ describe("TexturePoolReleaseService", () =>
     {
         const unknownTexture = { "id": 999 } as unknown as GPUTexture;
 
-        expect(() => execute(pool, unknownTexture, 100)).not.toThrow();
+        expect(() => execute(buckets, unknownTexture, 100)).not.toThrow();
     });
 
     it("should handle empty pool", () =>
     {
         const mockTexture = { "id": 1 } as unknown as GPUTexture;
 
-        expect(() => execute(pool, mockTexture, 100)).not.toThrow();
+        expect(() => execute(buckets, mockTexture, 100)).not.toThrow();
     });
 
-    it("should find texture in middle of pool", () =>
+    it("should find texture across different buckets", () =>
     {
         const texture1 = { "id": 1 } as unknown as GPUTexture;
         const texture2 = { "id": 2 } as unknown as GPUTexture;
-        const texture3 = { "id": 3 } as unknown as GPUTexture;
+        buckets.set("256_256_rgba8unorm", [{
+            "texture": texture1,
+            "width": 256,
+            "height": 256,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 0
+        }]);
+        buckets.set("512_512_rgba8unorm", [{
+            "texture": texture2,
+            "width": 512,
+            "height": 512,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 0
+        }]);
 
-        const entry1 = createMockEntry(texture1, true, 0);
-        const entry2 = createMockEntry(texture2, true, 0);
-        const entry3 = createMockEntry(texture3, true, 0);
-        pool.push(entry1, entry2, entry3);
+        execute(buckets, texture2, 100);
 
-        execute(pool, texture2, 100);
-
-        expect(entry1.inUse).toBe(true);
-        expect(entry2.inUse).toBe(false);
-        expect(entry3.inUse).toBe(true);
+        expect(buckets.get("256_256_rgba8unorm")![0].inUse).toBe(true);
+        expect(buckets.get("512_512_rgba8unorm")![0].inUse).toBe(false);
     });
 
     it("should stop after finding first match", () =>
     {
         const mockTexture = { "id": 1 } as unknown as GPUTexture;
-        const entry1 = createMockEntry(mockTexture, true, 0);
-        const entry2 = createMockEntry(mockTexture, true, 0); // Same texture reference
-        pool.push(entry1, entry2);
+        const entry1 = {
+            "texture": mockTexture,
+            "width": 256,
+            "height": 256,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 0
+        };
+        const entry2 = {
+            "texture": mockTexture,
+            "width": 256,
+            "height": 256,
+            "format": "rgba8unorm" as GPUTextureFormat,
+            "inUse": true,
+            "lastUsedFrame": 0
+        };
+        buckets.set("256_256_rgba8unorm", [entry1, entry2]);
 
-        execute(pool, mockTexture, 100);
+        execute(buckets, mockTexture, 100);
 
         // Only first matching entry should be released
         expect(entry1.inUse).toBe(false);

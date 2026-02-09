@@ -5,6 +5,7 @@ import { execute as meshGradientStrokeGenerateUseCase } from "../../Mesh/usecase
 import { generateGradientLUT, getAdaptiveResolution } from "../../Gradient/GradientLUTGenerator";
 import { execute as contextComputeGradientMatrixService } from "../service/ContextComputeGradientMatrixService";
 import { $getLUTFromCache, $putLUTToCache } from "../../Gradient/GradientLUTCache";
+import { $acquireFillTexture } from "../../FillTexturePool";
 
 let $gradientSampler: GPUSampler | null = null;
 
@@ -59,11 +60,7 @@ export const execute = (
         const stopsLength = stops.length / 5;
         const lutResolution = getAdaptiveResolution(stopsLength);
 
-        lutTexture = device.createTexture({
-            "size": { "width": lutResolution, "height": 1 },
-            "format": "rgba8unorm",
-            "usage": 0x06  // TEXTURE_BINDING | COPY_DST
-        });
+        lutTexture = $acquireFillTexture(device, lutResolution, 1);
 
         device.queue.writeTexture(
             { "texture": lutTexture },

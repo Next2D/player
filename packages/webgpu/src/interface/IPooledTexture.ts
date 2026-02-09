@@ -10,3 +10,9 @@ export interface IPooledTexture {
     lastUsedFrame: number;
     inUse: boolean;
 }
+
+/**
+ * @description バケットキーからテクスチャ配列へのマップ
+ *              キーは "${po2Width}_${po2Height}_${format}" 形式
+ */
+export type ITexturePoolBuckets = Map<string, IPooledTexture[]>;

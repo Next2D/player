@@ -1,4 +1,6 @@
-const createBasicVertex = (yFlip: boolean): string => /* wgsl */`
+export const BasicVertex = /* wgsl */`
+override yFlipSign: f32 = 1.0;
+
 struct VertexInput {
     @location(0) position: vec2<f32>,
     @location(1) texCoord: vec2<f32>,
@@ -23,7 +25,7 @@ fn main(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
     let pos = uniforms.matrix * vec3<f32>(input.position, 1.0);
     let ndc = pos.xy * 2.0 - 1.0;
-    output.position = vec4<f32>(ndc.x, ${yFlip ? "-ndc.y" : "ndc.y"}, 0.0, 1.0);
+    output.position = vec4<f32>(ndc.x, ndc.y * yFlipSign, 0.0, 1.0);
     output.texCoord = input.texCoord;
     let premultipliedColor = vec4<f32>(
         uniforms.color.rgb * uniforms.color.a * uniforms.alpha,
@@ -33,6 +35,3 @@ fn main(input: VertexInput) -> VertexOutput {
     return output;
 }
 `;
-
-export const BasicVertex = createBasicVertex(false);
-export const BasicMainVertex = createBasicVertex(true);

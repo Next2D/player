@@ -1,4 +1,6 @@
-const createFillVertex = (yFlip: boolean): string => /* wgsl */`
+export const FillVertex = /* wgsl */`
+override yFlipSign: f32 = 1.0;
+
 struct VertexInput {
     @location(0) position: vec2<f32>,
     @location(1) bezier: vec2<f32>,
@@ -25,12 +27,9 @@ fn main(input: VertexInput) -> VertexOutput {
     let matrix = mat3x3<f32>(uniforms.matrix0.xyz, uniforms.matrix1.xyz, uniforms.matrix2.xyz);
     let transformed = matrix * vec3<f32>(input.position, 1.0);
     let ndc = transformed.xy * 2.0 - 1.0;
-    output.position = vec4<f32>(ndc.x, ${yFlip ? "-ndc.y" : "ndc.y"}, 0.0, 1.0);
+    output.position = vec4<f32>(ndc.x, ndc.y * yFlipSign, 0.0, 1.0);
     output.bezier = input.bezier;
     output.color = uniforms.color;
     return output;
 }
 `;
-
-export const FillVertex = createFillVertex(false);
-export const FillMainVertex = createFillVertex(true);

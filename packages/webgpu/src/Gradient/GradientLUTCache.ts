@@ -1,4 +1,5 @@
 import type { IAttachmentObject } from "../interface/IAttachmentObject";
+import { $releaseFillTexture } from "../FillTexturePool";
 
 /**
  * @description 解像度別のAttachmentObjectキャッシュ
@@ -180,7 +181,7 @@ export const $cleanupLUTCache = (): void =>
     $currentFrame++;
     for (const [key, entry] of $lutCache) {
         if ($currentFrame - entry.lastUsedFrame > $LUT_TTL) {
-            entry.texture.destroy();
+            $releaseFillTexture(entry.texture);
             $lutCache.delete(key);
         }
     }
@@ -192,7 +193,7 @@ export const $cleanupLUTCache = (): void =>
 export const $clearLUTCache = (): void =>
 {
     for (const entry of $lutCache.values()) {
-        entry.texture.destroy();
+        $releaseFillTexture(entry.texture);
     }
     $lutCache.clear();
     $currentFrame = 0;
