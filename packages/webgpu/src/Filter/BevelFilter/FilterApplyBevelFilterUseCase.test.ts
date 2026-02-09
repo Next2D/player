@@ -408,8 +408,8 @@ describe("FilterApplyBevelFilterUseCase", () =>
                 config
             );
 
-            // Should release bevelBase, blur, baseTextureForComposite, and blurTextureForComposite
-            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(4);
+            // Should release erase and blur attachments (UV変換方式により一時テクスチャ不要)
+            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(2);
         });
     });
 

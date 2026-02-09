@@ -205,6 +205,7 @@ export const execute = (
     passEncoder.end();
 
     // クリーンアップ
+    lutTexture.destroy();
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
 
     // WebGL版と同じオフセット更新

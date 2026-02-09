@@ -26,7 +26,7 @@ export const execute = (
     device: GPUDevice,
     commandEncoder: GPUCommandEncoder,
     computePipelineManager: ComputePipelineManager,
-    config: IFilterConfig,
+    _config: IFilterConfig,
     source: IAttachmentObject,
     dest: IAttachmentObject,
     isHorizontal: boolean,
@@ -72,10 +72,10 @@ export const shouldUseComputeShader = (
 ): boolean => {
 
     // ブラー半径のしきい値
-    const BLUR_THRESHOLD = 8;
+    const BLUR_THRESHOLD = 4;
 
     // テクスチャサイズのしきい値
-    const SIZE_THRESHOLD = 256;
+    const SIZE_THRESHOLD = 128;
 
     const maxBlur = Math.max(blurX, blurY);
     const minSize = Math.min(width, height);

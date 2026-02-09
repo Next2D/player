@@ -267,7 +267,8 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ（LUTは共有テクスチャなので破棄しない）
+    // クリーンアップ
+    lutTexture.destroy();
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
 
     // WebGL版と同じオフセット更新

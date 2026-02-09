@@ -7,6 +7,21 @@ import type { ComputePipelineManager } from "../ComputePipelineManager";
 const $params8 = new Float32Array(8);
 
 /**
+ * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
+ */
+const $computeEntries3: GPUBindGroupEntry[] = [
+    { "binding": 0, "resource": null as unknown as GPUTextureView },
+    { "binding": 1, "resource": null as unknown as GPUTextureView },
+    { "binding": 2, "resource": { "buffer": null as unknown as GPUBuffer } }
+];
+
+/**
+ * @description プリアロケートされたComputePassDescriptor
+ */
+const $labelH: GPUComputePassDescriptor = { "label": "blur_compute_pass_h" };
+const $labelV: GPUComputePassDescriptor = { "label": "blur_compute_pass_v" };
+
+/**
  * @description Compute Shaderでブラーを実行（ボックスブラー）
  *              Execute box blur using Compute Shader
  *
@@ -19,6 +34,7 @@ const $params8 = new Float32Array(8);
  * @param {IAttachmentObject} dest - 出力アタッチメント
  * @param {boolean} isHorizontal - 水平ブラーかどうか
  * @param {number} blur - ブラー量（bufferBlurX/Y相当）
+ * @param {object} [bufferManager] - バッファマネージャー（プール化用）
  * @return {void}
  */
 export const execute = (
@@ -28,7 +44,8 @@ export const execute = (
     source: IAttachmentObject,
     dest: IAttachmentObject,
     isHorizontal: boolean,
-    blur: number
+    blur: number,
+    bufferManager?: { acquireUniformBuffer(requiredSize: number): GPUBuffer }
 ): void => {
 
     const pipelineName = isHorizontal ? "blur_compute_horizontal" : "blur_compute_vertical";
@@ -53,33 +70,23 @@ export const execute = (
     $params8[6] = samples;                    // samples
     $params8[7] = 0.0;                        // padding
 
-    const paramsBuffer = device.createBuffer({
-        "size": $params8.byteLength,
-        "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-    });
+    const paramsBuffer = bufferManager
+        ? bufferManager.acquireUniformBuffer($params8.byteLength)
+        : device.createBuffer({
+            "size": $params8.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
     device.queue.writeBuffer(paramsBuffer, 0, $params8);
 
+    $computeEntries3[0].resource = source.texture!.view;
+    $computeEntries3[1].resource = dest.texture!.view;
+    ($computeEntries3[2].resource as GPUBufferBinding).buffer = paramsBuffer;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
-        "entries": [
-            {
-                "binding": 0,
-                "resource": source.texture!.view
-            },
-            {
-                "binding": 1,
-                "resource": dest.texture!.view
-            },
-            {
-                "binding": 2,
-                "resource": { "buffer": paramsBuffer }
-            }
-        ]
+        "entries": $computeEntries3
     });
 
-    const computePass = commandEncoder.beginComputePass({
-        "label": `blur_compute_pass_${isHorizontal ? "h" : "v"}`
-    });
+    const computePass = commandEncoder.beginComputePass(isHorizontal ? $labelH : $labelV);
 
     computePass.setPipeline(pipeline);
     computePass.setBindGroup(0, bindGroup);

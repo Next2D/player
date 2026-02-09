@@ -4,9 +4,9 @@ import { $offset } from "../FilterOffset";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 
 /**
- * @description プリアロケートされたFloat32Array (サイズ8)
+ * @description プリアロケートされたFloat32Array (サイズ16)
  */
-const $uniform8 = new Float32Array(8);
+const $uniform16 = new Float32Array(16);
 
 /**
  * @description プリアロケートされたBindGroupEntry配列 (バインディング4つ)
@@ -32,6 +32,9 @@ const intToRGBA = (color: number, alpha: number): [number, number, number, numbe
  * @description グローフィルターを適用
  *              Apply glow filter
  *
+ * UV変換方式で元テクスチャとブラーテクスチャを直接サンプリング。
+ * copyTextureToTextureと一時テクスチャを使用しない最適化版。
+ *
  * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
  * @param  {Float32Array} matrix - 変換行列
  * @param  {number} color - グロー色 (32bit整数)
@@ -43,7 +46,7 @@ const intToRGBA = (color: number, alpha: number): [number, number, number, numbe
  * @param  {boolean} inner - インナーグロー
  * @param  {boolean} knockout - ノックアウトモード
  * @param  {number} devicePixelRatio - デバイスピクセル比
- * @param  {IGlowConfig} config - WebGPUリソース設定
+ * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
@@ -89,6 +92,22 @@ export const execute = (
     const offsetDiffX = blurOffsetX - baseOffsetX;
     const offsetDiffY = blurOffsetY - baseOffsetY;
 
+    // UV変換パラメータ計算（GradientGlowFilterと同じパターン）
+    const baseTextureX = inner ? 0 : offsetDiffX;
+    const baseTextureY = inner ? 0 : offsetDiffY;
+    const blurTextureX = inner ? -offsetDiffX : 0;
+    const blurTextureY = inner ? -offsetDiffY : 0;
+
+    const baseScaleX = width / baseWidth;
+    const baseScaleY = height / baseHeight;
+    const baseOffsetUVX = baseTextureX / baseWidth;
+    const baseOffsetUVY = baseTextureY / baseHeight;
+
+    const blurScaleX = width / blurWidth;
+    const blurScaleY = height / blurHeight;
+    const blurOffsetUVX = blurTextureX / blurWidth;
+    const blurOffsetUVY = blurTextureY / blurHeight;
+
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
@@ -106,90 +125,41 @@ export const execute = (
 
     // ユニフォームバッファを作成
     // color: vec4<f32> (16 bytes)
-    // strength: f32 (4 bytes)
-    // inner: f32 (4 bytes)
-    // knockout: f32 (4 bytes)
-    // _padding: f32 (4 bytes)
-    // Total: 32 bytes
+    // baseScale: vec2<f32>, baseOffset: vec2<f32> (16 bytes)
+    // blurScale: vec2<f32>, blurOffset: vec2<f32> (16 bytes)
+    // strength: f32, inner: f32, knockout: f32, _padding: f32 (16 bytes)
+    // Total: 64 bytes
     const [r, g, b, a] = intToRGBA(color, alpha);
-    $uniform8[0] = r;
-    $uniform8[1] = g;
-    $uniform8[2] = b;
-    $uniform8[3] = a;
-    $uniform8[4] = strength;
-    $uniform8[5] = inner ? 1.0 : 0.0;
-    $uniform8[6] = knockout ? 1.0 : 0.0;
-    $uniform8[7] = 0.0;
+    $uniform16[0] = r;
+    $uniform16[1] = g;
+    $uniform16[2] = b;
+    $uniform16[3] = a;
+    $uniform16[4] = baseScaleX;
+    $uniform16[5] = baseScaleY;
+    $uniform16[6] = baseOffsetUVX;
+    $uniform16[7] = baseOffsetUVY;
+    $uniform16[8] = blurScaleX;
+    $uniform16[9] = blurScaleY;
+    $uniform16[10] = blurOffsetUVX;
+    $uniform16[11] = blurOffsetUVY;
+    $uniform16[12] = strength;
+    $uniform16[13] = inner ? 1.0 : 0.0;
+    $uniform16[14] = knockout ? 1.0 : 0.0;
+    $uniform16[15] = 0.0;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer($uniform8.byteLength)
+        ? config.bufferManager.acquireUniformBuffer($uniform16.byteLength)
         : device.createBuffer({
-            "size": $uniform8.byteLength,
+            "size": $uniform16.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform16);
 
-    // 元テクスチャを適切な位置にコピーした一時テクスチャを作成
-    const baseTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    // 元テクスチャをコピー（オフセット付き）
-    const baseTextureX = inner ? 0 : offsetDiffX;
-    const baseTextureY = inner ? 0 : offsetDiffY;
-
-    if (baseTextureX >= 0 && baseTextureY >= 0 &&
-        baseTextureX + baseWidth <= width && baseTextureY + baseHeight <= height) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": sourceAttachment.texture!.resource,
-                "origin": { "x": 0, "y": 0, "z": 0 }
-            },
-            {
-                "texture": baseTextureForComposite.texture!.resource,
-                "origin": { "x": baseTextureX, "y": baseTextureY, "z": 0 }
-            },
-            {
-                "width": baseWidth,
-                "height": baseHeight
-            }
-        );
-    }
-
-    // ブラーテクスチャを適切な位置にコピーした一時テクスチャを作成
-    const blurTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    const blurTextureX = inner ? -offsetDiffX : 0;
-    const blurTextureY = inner ? -offsetDiffY : 0;
-
-    // ブラーテクスチャをコピー
-    const srcX = Math.max(0, -blurTextureX);
-    const srcY = Math.max(0, -blurTextureY);
-    const dstX = Math.max(0, blurTextureX);
-    const dstY = Math.max(0, blurTextureY);
-    const copyWidth = Math.min(blurWidth - srcX, width - dstX);
-    const copyHeight = Math.min(blurHeight - srcY, height - dstY);
-
-    if (copyWidth > 0 && copyHeight > 0) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": blurAttachment.texture!.resource,
-                "origin": { "x": srcX, "y": srcY, "z": 0 }
-            },
-            {
-                "texture": blurTextureForComposite.texture!.resource,
-                "origin": { "x": dstX, "y": dstY, "z": 0 }
-            },
-            {
-                "width": copyWidth,
-                "height": copyHeight
-            }
-        );
-    }
-
-    // バインドグループを作成
+    // バインドグループを作成（元テクスチャとブラーテクスチャを直接バインド）
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries4[1].resource = sampler;
-    $entries4[2].resource = blurTextureForComposite.texture!.view;
-    $entries4[3].resource = baseTextureForComposite.texture!.view;
+    $entries4[2].resource = blurAttachment.texture!.view;
+    $entries4[3].resource = sourceAttachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries4
@@ -207,10 +177,7 @@ export const execute = (
     passEncoder.end();
 
     // クリーンアップ
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-    frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
-    frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);
 
     return destAttachment;
 };

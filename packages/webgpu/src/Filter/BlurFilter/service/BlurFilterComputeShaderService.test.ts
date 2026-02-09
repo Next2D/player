@@ -158,37 +158,37 @@ describe("BlurFilterComputeShaderService", () =>
     {
         describe("blur threshold", () =>
         {
-            it("should return true when blur >= 8 and size >= 256", () =>
+            it("should return true when blur >= 4 and size >= 128", () =>
             {
-                const result = shouldUseComputeShader(8, 8, 256, 256);
+                const result = shouldUseComputeShader(4, 4, 128, 128);
 
                 expect(result).toBe(true);
             });
 
-            it("should return true when blurX >= 8 (using max)", () =>
+            it("should return true when blurX >= 4 (using max)", () =>
             {
-                const result = shouldUseComputeShader(10, 4, 256, 256);
+                const result = shouldUseComputeShader(5, 2, 128, 128);
 
                 expect(result).toBe(true);
             });
 
-            it("should return true when blurY >= 8 (using max)", () =>
+            it("should return true when blurY >= 4 (using max)", () =>
             {
-                const result = shouldUseComputeShader(4, 10, 256, 256);
+                const result = shouldUseComputeShader(2, 5, 128, 128);
 
                 expect(result).toBe(true);
             });
 
-            it("should return false when both blurs < 8", () =>
+            it("should return false when both blurs < 4", () =>
             {
-                const result = shouldUseComputeShader(7, 7, 256, 256);
+                const result = shouldUseComputeShader(3, 3, 128, 128);
 
                 expect(result).toBe(false);
             });
 
-            it("should return false when max blur < 8", () =>
+            it("should return false when max blur < 4", () =>
             {
-                const result = shouldUseComputeShader(5, 6, 512, 512);
+                const result = shouldUseComputeShader(2, 3, 512, 512);
 
                 expect(result).toBe(false);
             });
@@ -196,42 +196,42 @@ describe("BlurFilterComputeShaderService", () =>
 
         describe("size threshold", () =>
         {
-            it("should return true when min size >= 256", () =>
+            it("should return true when min size >= 128", () =>
             {
-                const result = shouldUseComputeShader(10, 10, 256, 256);
+                const result = shouldUseComputeShader(10, 10, 128, 128);
 
                 expect(result).toBe(true);
             });
 
-            it("should return true when width >= 256 and height > 256", () =>
+            it("should return true when width >= 128 and height > 128", () =>
             {
-                const result = shouldUseComputeShader(10, 10, 256, 512);
+                const result = shouldUseComputeShader(10, 10, 128, 512);
 
                 expect(result).toBe(true);
             });
 
-            it("should return true when height >= 256 and width > 256", () =>
+            it("should return true when height >= 128 and width > 128", () =>
             {
-                const result = shouldUseComputeShader(10, 10, 512, 256);
+                const result = shouldUseComputeShader(10, 10, 512, 128);
 
                 expect(result).toBe(true);
             });
 
-            it("should return false when width < 256", () =>
+            it("should return false when width < 128", () =>
             {
                 const result = shouldUseComputeShader(10, 10, 100, 512);
 
                 expect(result).toBe(false);
             });
 
-            it("should return false when height < 256", () =>
+            it("should return false when height < 128", () =>
             {
                 const result = shouldUseComputeShader(10, 10, 512, 100);
 
                 expect(result).toBe(false);
             });
 
-            it("should return false when both dimensions < 256", () =>
+            it("should return false when both dimensions < 128", () =>
             {
                 const result = shouldUseComputeShader(20, 20, 100, 100);
 
@@ -243,21 +243,21 @@ describe("BlurFilterComputeShaderService", () =>
         {
             it("should return true at exact thresholds", () =>
             {
-                const result = shouldUseComputeShader(8, 0, 256, 256);
+                const result = shouldUseComputeShader(4, 0, 128, 128);
 
                 expect(result).toBe(true);
             });
 
             it("should return false just below blur threshold", () =>
             {
-                const result = shouldUseComputeShader(7.9, 7.9, 256, 256);
+                const result = shouldUseComputeShader(3.9, 3.9, 128, 128);
 
                 expect(result).toBe(false);
             });
 
             it("should return false just below size threshold", () =>
             {
-                const result = shouldUseComputeShader(10, 10, 255, 255);
+                const result = shouldUseComputeShader(10, 10, 127, 127);
 
                 expect(result).toBe(false);
             });
@@ -268,7 +268,7 @@ describe("BlurFilterComputeShaderService", () =>
                 expect(shouldUseComputeShader(20, 20, 100, 100)).toBe(false);
 
                 // Large size but small blur
-                expect(shouldUseComputeShader(5, 5, 1024, 1024)).toBe(false);
+                expect(shouldUseComputeShader(3, 3, 1024, 1024)).toBe(false);
             });
 
             it("should handle zero blur values", () =>

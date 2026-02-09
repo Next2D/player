@@ -12,7 +12,7 @@ const DEG_TO_RAD: number = Math.PI / 180;
  * @description プリアロケートされたFloat32Array
  */
 const $uniform8 = new Float32Array(8);
-const $uniform12 = new Float32Array(12);
+const $uniform20 = new Float32Array(20);
 
 /**
  * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
@@ -46,6 +46,9 @@ const intToRGBA = (color: number, alpha: number): [number, number, number, numbe
 /**
  * @description ベベルフィルターを適用
  *              WebGL版と同様に、erase前処理で差分テクスチャを作成してからブラーを適用
+ *
+ *              UV変換方式で元テクスチャとブラーテクスチャを直接サンプリング。
+ *              合成時のcopyTextureToTextureと一時テクスチャを使用しない最適化版。
  */
 export const execute = (
     sourceAttachment: IAttachmentObject,
@@ -84,17 +87,9 @@ export const execute = (
     const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);
 
     // === Erase前処理：差分テクスチャを作成 ===
-    // WebGL版の動作：
-    // 1. 空のフレームバッファに元の位置でテクスチャを描画
-    // 2. オフセット位置「に」同じテクスチャをerase描画
-    //
-    // WebGPU版での実装：
-    // 1. ソーステクスチャを元の位置にコピー
-    // 2. オフセット位置「から」サンプルしてerase描画
-    //    (画面座標に対してオフセットしたUV座標でサンプル = オフセット位置に描画と同等)
     const eraseAttachment = frameBufferManager.createTemporaryAttachment(baseWidth, baseHeight);
 
-    // Step 1: ソーステクスチャを元の位置にコピー
+    // Step 1: ソーステクスチャを元の位置にコピー（erase前処理のcopyTextureToTextureは残す）
     commandEncoder.copyTextureToTexture(
         {
             "texture": sourceAttachment.texture!.resource,
@@ -111,19 +106,12 @@ export const execute = (
     );
 
     // Step 2: オフセット位置からサンプルしてerase描画
-    // UV = texCoord - offset により、画面の(0,0)でUV(-offset,-offset)をサンプル
-    // これはWebGLの「オフセット位置に描画」と等価
     const erasePipeline = pipelineManager.getPipeline("texture_erase");
     const eraseBindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
 
     if (erasePipeline && eraseBindGroupLayout) {
         const eraseSampler = textureManager.createSampler("erase_sampler", true);
 
-        // オフセット用のユニフォーム
-        // BlurTextureCopyFragment: uv = (texCoord - offset) * scale
-        // 「オフセット位置に描画」= 画面の(offset,offset)にソースの(0,0)を描画
-        // = 画面位置Pに対して、ソース位置(P - offset)をサンプル
-        // = uv = texCoord - offset（正のoffset）
         const offsetX = x * 2 / baseWidth;
         const offsetY = y * 2 / baseHeight;
 
@@ -163,9 +151,6 @@ export const execute = (
         erasePassEncoder.end();
     }
 
-    // DEBUG: erase処理の結果を直接確認
-    // return eraseAttachment;
-
     // === 差分テクスチャにブラーを適用 ===
     const blurAttachment = filterApplyBlurFilterUseCase(
         eraseAttachment, matrix,
@@ -192,6 +177,22 @@ export const execute = (
     const blurOffsetFromBase = (blurWidth - baseWidth) / 2;
     const blurOffsetFromBaseY = (blurHeight - baseHeight) / 2;
 
+    // UV変換パラメータ計算（GradientBevelFilterと同じパターン）
+    const baseTextureX = isInner ? 0 : Math.floor(absX + blurOffsetFromBase);
+    const baseTextureY = isInner ? 0 : Math.floor(absY + blurOffsetFromBaseY);
+    const blurTextureX = isInner ? Math.floor(-blurOffsetFromBase - x) : Math.floor(absX - x);
+    const blurTextureY = isInner ? Math.floor(-blurOffsetFromBaseY - y) : Math.floor(absY - y);
+
+    const baseScaleX = width / baseWidth;
+    const baseScaleY = height / baseHeight;
+    const baseOffsetUVX = baseTextureX / baseWidth;
+    const baseOffsetUVY = baseTextureY / baseHeight;
+
+    const blurScaleX = width / blurWidth;
+    const blurScaleY = height / blurHeight;
+    const blurOffsetUVX = blurTextureX / blurWidth;
+    const blurOffsetUVY = blurTextureY / blurHeight;
+
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
@@ -208,89 +209,49 @@ export const execute = (
     const sampler = textureManager.createSampler("bevel_sampler", true);
 
     // ユニフォームバッファを作成
+    // highlightColor: vec4<f32> (16 bytes)
+    // shadowColor: vec4<f32> (16 bytes)
+    // strength, inner, knockout, bevelType (16 bytes)
+    // baseScale, baseOffset (16 bytes)
+    // blurScale, blurOffset (16 bytes)
+    // Total: 80 bytes → 16 floats + 4 floats = 20 floats (80 bytes)
     const [hr, hg, hb, ha] = intToRGBA(highlightColor, highlightAlpha);
     const [sr, sg, sb, sa] = intToRGBA(shadowColor, shadowAlpha);
 
-    $uniform12[0] = hr;
-    $uniform12[1] = hg;
-    $uniform12[2] = hb;
-    $uniform12[3] = ha;
-    $uniform12[4] = sr;
-    $uniform12[5] = sg;
-    $uniform12[6] = sb;
-    $uniform12[7] = sa;
-    $uniform12[8] = strength;
-    $uniform12[9] = isInner ? 1.0 : 0.0;
-    $uniform12[10] = knockout ? 1.0 : 0.0;
-    $uniform12[11] = type;
+    $uniform20[0] = hr;
+    $uniform20[1] = hg;
+    $uniform20[2] = hb;
+    $uniform20[3] = ha;
+    $uniform20[4] = sr;
+    $uniform20[5] = sg;
+    $uniform20[6] = sb;
+    $uniform20[7] = sa;
+    $uniform20[8] = strength;
+    $uniform20[9] = isInner ? 1.0 : 0.0;
+    $uniform20[10] = knockout ? 1.0 : 0.0;
+    $uniform20[11] = type;
+    $uniform20[12] = baseScaleX;
+    $uniform20[13] = baseScaleY;
+    $uniform20[14] = baseOffsetUVX;
+    $uniform20[15] = baseOffsetUVY;
+    $uniform20[16] = blurScaleX;
+    $uniform20[17] = blurScaleY;
+    $uniform20[18] = blurOffsetUVX;
+    $uniform20[19] = blurOffsetUVY;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer($uniform12.byteLength)
+        ? config.bufferManager.acquireUniformBuffer($uniform20.byteLength)
         : device.createBuffer({
-            "size": $uniform12.byteLength,
+            "size": $uniform20.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
+    device.queue.writeBuffer(uniformBuffer, 0, $uniform20);
 
-    // 元テクスチャを適切な位置にコピーした一時テクスチャを作成
-    const baseTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    const baseTextureX = isInner ? 0 : Math.floor(absX + blurOffsetFromBase);
-    const baseTextureY = isInner ? 0 : Math.floor(absY + blurOffsetFromBaseY);
-
-    if (baseTextureX >= 0 && baseTextureY >= 0 &&
-        baseTextureX + baseWidth <= width && baseTextureY + baseHeight <= height) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": sourceAttachment.texture!.resource,
-                "origin": { "x": 0, "y": 0, "z": 0 }
-            },
-            {
-                "texture": baseTextureForComposite.texture!.resource,
-                "origin": { "x": baseTextureX, "y": baseTextureY, "z": 0 }
-            },
-            {
-                "width": baseWidth,
-                "height": baseHeight
-            }
-        );
-    }
-
-    // ブラーテクスチャを適切な位置にコピーした一時テクスチャを作成
-    const blurTextureForComposite = frameBufferManager.createTemporaryAttachment(width, height);
-
-    const blurTextureX = isInner ? Math.floor(-blurOffsetFromBase - x) : Math.floor(absX - x);
-    const blurTextureY = isInner ? Math.floor(-blurOffsetFromBaseY - y) : Math.floor(absY - y);
-
-    const srcX = Math.max(0, -blurTextureX);
-    const srcY = Math.max(0, -blurTextureY);
-    const dstX = Math.max(0, blurTextureX);
-    const dstY = Math.max(0, blurTextureY);
-    const copyWidth = Math.min(blurWidth - srcX, width - dstX);
-    const copyHeight = Math.min(blurHeight - srcY, height - dstY);
-
-    if (copyWidth > 0 && copyHeight > 0) {
-        commandEncoder.copyTextureToTexture(
-            {
-                "texture": blurAttachment.texture!.resource,
-                "origin": { "x": srcX, "y": srcY, "z": 0 }
-            },
-            {
-                "texture": blurTextureForComposite.texture!.resource,
-                "origin": { "x": dstX, "y": dstY, "z": 0 }
-            },
-            {
-                "width": copyWidth,
-                "height": copyHeight
-            }
-        );
-    }
-
-    // バインドグループを作成（4バインディング: uniform, sampler, blur, base）
+    // バインドグループを作成（元テクスチャとブラーテクスチャを直接バインド）
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries4[1].resource = sampler;
-    $entries4[2].resource = blurTextureForComposite.texture!.view;
-    $entries4[3].resource = baseTextureForComposite.texture!.view;
+    $entries4[2].resource = blurAttachment.texture!.view;
+    $entries4[3].resource = sourceAttachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries4
@@ -309,8 +270,6 @@ export const execute = (
 
     // クリーンアップ
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-    frameBufferManager.releaseTemporaryAttachment(baseTextureForComposite);
-    frameBufferManager.releaseTemporaryAttachment(blurTextureForComposite);
 
     // オフセットを更新（WebGL版と同じ: 常にbaseOffset+baseTextureXYに設定）
     $offset.x = baseOffsetX + baseTextureX;

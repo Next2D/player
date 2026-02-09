@@ -70,7 +70,8 @@ describe("FilterApplyGradientGlowFilterUseCase", () =>
                 "createBuffer": vi.fn(() => ({ "label": "mockBuffer" })),
                 "createTexture": vi.fn(() => ({
                     "label": "mockLUTTexture",
-                    "createView": vi.fn(() => ({ "label": "mockLUTTextureView" }))
+                    "createView": vi.fn(() => ({ "label": "mockLUTTextureView" })),
+                    "destroy": vi.fn()
                 })),
                 "queue": {
                     "writeBuffer": vi.fn(),

@@ -528,7 +528,7 @@ describe("Context", () =>
 
             // Verify render pass was ended after clearing
             expect(mockRenderPassEncoder.end).toHaveBeenCalled();
-            expect(mockQueue.submit).toHaveBeenCalled();
+            // submit is no longer called here — commandEncoder is reused by drawPixelsToMsaa
             expect(mockQueue.writeTexture).toHaveBeenCalled();
 
             // Verify render pass is now null
@@ -587,7 +587,7 @@ describe("Context", () =>
 
             // Verify render pass was ended after clearing
             expect(mockRenderPassEncoder.end).toHaveBeenCalled();
-            expect(mockQueue.submit).toHaveBeenCalled();
+            // submit is no longer called here — commandEncoder is reused by drawElementToMsaa/drawElementToTexture
             expect(mockQueue.copyExternalImageToTexture).toHaveBeenCalled();
 
             // Verify render pass is now null

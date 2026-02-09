@@ -40,7 +40,7 @@ const $pipelineCache = new Map<string, {
  */
 export const execute = (
     sourceAttachment: IAttachmentObject,
-    matrix: Float32Array,
+    _matrix: Float32Array,
     bitmapBuffer: Uint8Array,
     bitmapWidth: number,
     bitmapHeight: number,
@@ -53,7 +53,7 @@ export const execute = (
     mode: number,
     color: number,
     alpha: number,
-    devicePixelRatio: number,
+    _devicePixelRatio: number,
     config: IFilterConfig
 ): IAttachmentObject => {
 
@@ -223,6 +223,9 @@ export const execute = (
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
+
+    // クリーンアップ
+    mapTexture.destroy();
 
     return destAttachment;
 };

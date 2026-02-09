@@ -576,7 +576,7 @@ const applyFilterChain = (
 export const execute = (
     tempAttachment: IAttachmentObject,
     mainAttachment: IAttachmentObject,
-    tempName: string,
+    _tempName: string,
     blendMode: IBlendMode,
     matrix: Float32Array,
     colorTransform: Float32Array | null,
@@ -585,8 +585,8 @@ export const execute = (
     params: Float32Array | null,
     uniqueKey: string,
     filterKey: string,
-    contentWidth: number,
-    contentHeight: number,
+    _contentWidth: number,
+    _contentHeight: number,
     config: ILocalFilterConfig,
     bufferManager: BufferManager
 ): void => {

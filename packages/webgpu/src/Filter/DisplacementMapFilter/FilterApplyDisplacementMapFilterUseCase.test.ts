@@ -58,7 +58,8 @@ describe("FilterApplyDisplacementMapFilterUseCase", () =>
         };
 
         const mockTexture = {
-            "createView": vi.fn(() => ({ "label": "mockMapTextureView" }))
+            "createView": vi.fn(() => ({ "label": "mockMapTextureView" })),
+            "destroy": vi.fn()
         };
 
         return {

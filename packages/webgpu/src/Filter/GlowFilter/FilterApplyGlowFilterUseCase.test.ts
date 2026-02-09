@@ -301,8 +301,8 @@ describe("FilterApplyGlowFilterUseCase", () =>
                 config
             );
 
-            // Should release blur, baseTextureForComposite, and blurTextureForComposite
-            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(3);
+            // Should release blur attachment (UV変換方式により一時テクスチャ不要)
+            expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledTimes(1);
         });
     });
 });

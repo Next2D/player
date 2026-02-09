@@ -12,6 +12,7 @@ import {
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
 const $uniformData32 = new Float32Array(32);
+const $stencilData16 = new Float32Array(16);
 
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
@@ -153,24 +154,23 @@ export const execute = (
             return null;
         }
         // FillUniforms: color(16) + matrix0(16) + matrix1(16) + matrix2(16) = 64 bytes
-        const stencilData = new Float32Array(16);
-        stencilData[0] = red;
-        stencilData[1] = green;
-        stencilData[2] = blue;
-        stencilData[3] = alpha;
-        stencilData[4] = a / viewport_width;
-        stencilData[5] = b / viewport_height;
-        stencilData[6] = 0;
-        stencilData[7] = 0;
-        stencilData[8] = c / viewport_width;
-        stencilData[9] = d / viewport_height;
-        stencilData[10] = 0;
-        stencilData[11] = 0;
-        stencilData[12] = tx / viewport_width;
-        stencilData[13] = ty / viewport_height;
-        stencilData[14] = 1;
-        stencilData[15] = 0;
-        const offset = buffer_manager.dynamicUniform.allocate(stencilData);
+        $stencilData16[0] = red;
+        $stencilData16[1] = green;
+        $stencilData16[2] = blue;
+        $stencilData16[3] = alpha;
+        $stencilData16[4] = a / viewport_width;
+        $stencilData16[5] = b / viewport_height;
+        $stencilData16[6] = 0;
+        $stencilData16[7] = 0;
+        $stencilData16[8] = c / viewport_width;
+        $stencilData16[9] = d / viewport_height;
+        $stencilData16[10] = 0;
+        $stencilData16[11] = 0;
+        $stencilData16[12] = tx / viewport_width;
+        $stencilData16[13] = ty / viewport_height;
+        $stencilData16[14] = 1;
+        $stencilData16[15] = 0;
+        const offset = buffer_manager.dynamicUniform.allocate($stencilData16);
         const stencilBindGroup = device.createBindGroup({
             "layout": dynamicLayout,
             "entries": [{

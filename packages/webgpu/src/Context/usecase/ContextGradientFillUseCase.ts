@@ -14,6 +14,7 @@ import {
 let $gradientSampler: GPUSampler | null = null;
 
 const $uniformData36 = new Float32Array(36);
+const $stencilData16 = new Float32Array(16);
 
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
@@ -68,7 +69,7 @@ export const execute = (
 
         device.queue.writeTexture(
             { "texture": lutTexture },
-            lutData,
+            lutData as unknown as ArrayBufferView<ArrayBuffer>,
             { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1 },
             { "width": lutResolution, "height": 1 }
         );
@@ -185,25 +186,24 @@ export const execute = (
             return null;
         }
         // FillUniformsと同じレイアウト: color(16) + matrix0(16) + matrix1(16) + matrix2(16) = 64 bytes
-        const stencilUniformData = new Float32Array(16);
-        stencilUniformData[0] = 1; // red
-        stencilUniformData[1] = 1; // green
-        stencilUniformData[2] = 1; // blue
-        stencilUniformData[3] = alpha;
-        stencilUniformData[4] = a / viewport_width;
-        stencilUniformData[5] = b / viewport_height;
-        stencilUniformData[6] = 0;
-        stencilUniformData[7] = 0;
-        stencilUniformData[8] = c / viewport_width;
-        stencilUniformData[9] = d / viewport_height;
-        stencilUniformData[10] = 0;
-        stencilUniformData[11] = 0;
-        stencilUniformData[12] = tx / viewport_width;
-        stencilUniformData[13] = ty / viewport_height;
-        stencilUniformData[14] = 1;
-        stencilUniformData[15] = 0;
+        $stencilData16[0] = 1; // red
+        $stencilData16[1] = 1; // green
+        $stencilData16[2] = 1; // blue
+        $stencilData16[3] = alpha;
+        $stencilData16[4] = a / viewport_width;
+        $stencilData16[5] = b / viewport_height;
+        $stencilData16[6] = 0;
+        $stencilData16[7] = 0;
+        $stencilData16[8] = c / viewport_width;
+        $stencilData16[9] = d / viewport_height;
+        $stencilData16[10] = 0;
+        $stencilData16[11] = 0;
+        $stencilData16[12] = tx / viewport_width;
+        $stencilData16[13] = ty / viewport_height;
+        $stencilData16[14] = 1;
+        $stencilData16[15] = 0;
 
-        const offset = buffer_manager.dynamicUniform.allocate(stencilUniformData);
+        const offset = buffer_manager.dynamicUniform.allocate($stencilData16);
         const stencilBindGroup = device.createBindGroup({
             "layout": dynamicLayout,
             "entries": [{

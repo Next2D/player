@@ -246,7 +246,7 @@ export const execute = (
     // コンテナのフィルター/ブレンド結果をメインに合成
     if (useLayer) {
         $context.containerEndLayer(
-            blendMode, matrix, colorTransform,
+            blendMode, matrix!, colorTransform,
             useFilter, filterBounds, filterParams,
             uniqueKey, filterKey
         );

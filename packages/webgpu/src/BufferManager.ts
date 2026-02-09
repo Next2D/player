@@ -22,6 +22,7 @@ export class DynamicUniformAllocator
     private offset: number = 0;
     private capacity: number;
     readonly alignment: number = 256;
+    private pendingDestroyBuffers: GPUBuffer[] = [];
 
     constructor (device: GPUDevice, capacity: number = 65536)
     {
@@ -31,10 +32,16 @@ export class DynamicUniformAllocator
 
     /**
      * @description フレーム開始時にオフセットをリセット
+     *              前フレームの旧バッファを安全に破棄（submit済みのため）
      */
     resetFrame (): void
     {
         this.offset = 0;
+
+        for (const buf of this.pendingDestroyBuffers) {
+            buf.destroy();
+        }
+        this.pendingDestroyBuffers.length = 0;
     }
 
     /**
@@ -75,10 +82,11 @@ export class DynamicUniformAllocator
                 "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
             });
             if (oldBuffer) {
-                oldBuffer.destroy();
+                // 旧バッファは即座に破棄しない — コマンドエンコーダーに記録済みの
+                // コマンドが旧バッファを参照している可能性があるため、
+                // フレーム終了後のresetFrame()で安全に破棄する
+                this.pendingDestroyBuffers.push(oldBuffer);
             }
-            // 既にコミット済みのデータは再書込みが必要になるが、
-            // 実運用では64KBで256スロット（256*64=16384描画）確保可能のためオーバーフローは稀
         }
 
         this.device.queue.writeBuffer(this.buffer!, alignedOffset, data.buffer, data.byteOffset, data.byteLength);
@@ -95,6 +103,11 @@ export class DynamicUniformAllocator
             this.buffer.destroy();
             this.buffer = null;
         }
+
+        for (const buf of this.pendingDestroyBuffers) {
+            buf.destroy();
+        }
+        this.pendingDestroyBuffers.length = 0;
     }
 }
 

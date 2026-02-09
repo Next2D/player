@@ -64,7 +64,7 @@ export const execute = (
 
         device.queue.writeTexture(
             { "texture": lutTexture },
-            lutData,
+            lutData as unknown as ArrayBufferView<ArrayBuffer>,
             { "bytesPerRow": lutResolution * 4, "rowsPerImage": 1 },
             { "width": lutResolution, "height": 1 }
         );

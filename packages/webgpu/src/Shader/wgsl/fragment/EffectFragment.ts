@@ -5,6 +5,10 @@ ${WgslVertexOutput}
 
 struct GlowUniforms {
     color: vec4<f32>,
+    baseScale: vec2<f32>,
+    baseOffset: vec2<f32>,
+    blurScale: vec2<f32>,
+    blurOffset: vec2<f32>,
     strength: f32,
     inner: f32,
     knockout: f32,
@@ -15,11 +19,16 @@ struct GlowUniforms {
 @group(0) @binding(1) var textureSampler: sampler;
 @group(0) @binding(2) var blurTexture: texture_2d<f32>;
 @group(0) @binding(3) var baseTexture: texture_2d<f32>;
+${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let blurColor = textureSample(blurTexture, textureSampler, input.texCoord);
-    let baseColor = textureSample(baseTexture, textureSampler, input.texCoord);
+    let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
+    let baseColor = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+
+    let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
+    let blurColor = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+
     var rawAlpha = blurColor.a;
     if (uniforms.inner > 0.5) {
         rawAlpha = 1.0 - rawAlpha;
@@ -233,18 +242,28 @@ struct BevelUniforms {
     inner: f32,
     knockout: f32,
     bevelType: f32,
+    baseScale: vec2<f32>,
+    baseOffset: vec2<f32>,
+    blurScale: vec2<f32>,
+    blurOffset: vec2<f32>,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: BevelUniforms;
 @group(0) @binding(1) var textureSampler: sampler;
 @group(0) @binding(2) var blurTexture: texture_2d<f32>;
 @group(0) @binding(3) var baseTexture: texture_2d<f32>;
+${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let base = textureSample(baseTexture, textureSampler, input.texCoord);
-    let blur1 = textureSample(blurTexture, textureSampler, input.texCoord);
-    let blur2 = textureSample(blurTexture, textureSampler, 1.0 - input.texCoord);
+    let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
+    let base = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+
+    let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
+    let blur1 = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+
+    let mirrorUV = (1.0 - input.texCoord) * uniforms.blurScale - uniforms.blurOffset;
+    let blur2 = textureSample(blurTexture, textureSampler, mirrorUV) * isInside(mirrorUV);
 
     var highlightAlpha = blur1.a - blur2.a;
     var shadowAlpha = blur2.a - blur1.a;

@@ -1,3 +1,15 @@
+// GPUTexture → GPUTextureView キャッシュ（createView()呼び出し削減）
+const $viewCache = new WeakMap<GPUTexture, GPUTextureView>();
+
+export const $getOrCreateView = (texture: GPUTexture): GPUTextureView => {
+    let view = $viewCache.get(texture);
+    if (!view) {
+        view = texture.createView();
+        $viewCache.set(texture, view);
+    }
+    return view;
+};
+
 // GPUTextureUsage.TEXTURE_BINDING(0x04) | GPUTextureUsage.COPY_DST(0x02) = 0x06
 const FILL_TEXTURE_USAGE = 0x06;
 

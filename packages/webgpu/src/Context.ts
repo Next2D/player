@@ -1,7 +1,6 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
-import type { IPath } from "./interface/IPath";
 import type { Node } from "@next2d/texture-packer";
 import { TexturePacker } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
@@ -50,7 +49,8 @@ import {
     $releaseFillTexture,
     $acquireRenderTexture,
     $releaseRenderTexture,
-    $clearFillTexturePool
+    $clearFillTexturePool,
+    $getOrCreateView
 } from "./FillTexturePool";
 import {
     $setFilterGradientLUTDevice,
@@ -144,6 +144,41 @@ const $entries3: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
+// fillBackgroundColor() 用 RenderPassDescriptor プリアロケート
+const $bgClearValue: GPUColorDict = { "r": 0, "g": 0, "b": 0, "a": 0 };
+const $bgColorAttachment: GPURenderPassColorAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "clearValue": $bgClearValue,
+    "loadOp": "clear" as GPULoadOp,
+    "storeOp": "store" as GPUStoreOp,
+    "resolveTarget": undefined
+};
+const $bgStencilAttachment: GPURenderPassDepthStencilAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "stencilClearValue": 0,
+    "stencilLoadOp": "clear" as GPULoadOp,
+    "stencilStoreOp": "store" as GPUStoreOp
+};
+const $bgDescriptor: GPURenderPassDescriptor = {
+    "colorAttachments": [$bgColorAttachment]
+};
+
+// MSAA描画用 RenderPassDescriptor プリアロケート
+const $msaaColorAttachment: GPURenderPassColorAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "resolveTarget": undefined,
+    "loadOp": "load" as GPULoadOp,
+    "storeOp": "store" as GPUStoreOp
+};
+const $msaaStencilAttachment: GPURenderPassDepthStencilAttachment = {
+    "view": null as unknown as GPUTextureView,
+    "stencilLoadOp": "load" as GPULoadOp,
+    "stencilStoreOp": "store" as GPUStoreOp
+};
+const $msaaDescriptor: GPURenderPassDescriptor = {
+    "colorAttachments": [$msaaColorAttachment]
+};
+
 /**
  * @description WebGPU版、Next2Dのコンテキスト
  *              WebGPU version, Next2D context
@@ -226,6 +261,10 @@ export class Context
 
     // Dynamic Uniform BindGroup（fill/stencilパイプライン共有、フレームごとに1回作成）
     private fillDynamicBindGroup: GPUBindGroup | null = null;
+    private fillDynamicBindGroupBuffer: GPUBuffer | null = null;
+
+    // clearNodeArea() 用頂点バッファキャッシュ
+    private nodeClearQuadBuffer: GPUBuffer | null = null;
 
     // Storage Buffer + Indirect Drawing を使用するかどうか
     private useOptimizedInstancing: boolean = true;
@@ -233,6 +272,18 @@ export class Context
     // Hot Path 用の事前割り当てバッファ
     private readonly $uniformData8 = new Float32Array(8);
     private readonly $scissorRect: { "x": number; "y": number; "w": number; "h": number } = { "x": 0, "y": 0, "w": 0, "h": 0 };
+
+    // フィルター/コンテナレイヤー用のプリアロケートされた設定オブジェクト
+    private readonly $filterConfig: {
+        device: GPUDevice;
+        commandEncoder: GPUCommandEncoder;
+        bufferManager: BufferManager;
+        frameBufferManager: FrameBufferManager;
+        pipelineManager: PipelineManager;
+        textureManager: TextureManager;
+        mainAttachment?: IAttachmentObject;
+        computePipelineManager: ComputePipelineManager;
+    };
 
     constructor (
         device: GPUDevice,
@@ -319,6 +370,17 @@ export class Context
             );
         });
 
+        // フィルター/コンテナレイヤー用の設定オブジェクトを事前割り当て
+        this.$filterConfig = {
+            "device": this.device,
+            "commandEncoder": null as unknown as GPUCommandEncoder,
+            "bufferManager": this.bufferManager,
+            "frameBufferManager": this.frameBufferManager,
+            "pipelineManager": this.pipelineManager,
+            "textureManager": this.textureManager,
+            "computePipelineManager": this.computePipelineManager
+        };
+
         // コンテキストをグローバル変数にセット
         $setContext(this);
     }
@@ -371,42 +433,30 @@ export class Context
         // メインアタッチメントにステンシルがある場合はステンシル付きレンダーパスを使用
         // MSAA有効時はmsaaTextureをクリアしresolveTargetで非MSAAテクスチャにも反映
         const clearUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
-        const clearColorView = clearUseMsaa
+
+        $bgColorAttachment.view = clearUseMsaa
             ? this.$mainAttachmentObject.msaaTexture!.view
             : this.$mainAttachmentObject.texture.view;
-        const clearResolveTarget = clearUseMsaa
+        $bgColorAttachment.resolveTarget = clearUseMsaa
             ? this.$mainAttachmentObject.texture.view : undefined;
-
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            "colorAttachments": [{
-                "view": clearColorView,
-                "clearValue": {
-                    "r": this.$clearColorR,
-                    "g": this.$clearColorG,
-                    "b": this.$clearColorB,
-                    "a": this.$clearColorA
-                },
-                "loadOp": "clear",
-                "storeOp": "store",
-                "resolveTarget": clearResolveTarget
-            }]
-        };
+        $bgClearValue.r = this.$clearColorR;
+        $bgClearValue.g = this.$clearColorG;
+        $bgClearValue.b = this.$clearColorB;
+        $bgClearValue.a = this.$clearColorA;
 
         // ステンシルバッファもクリア
         const clearStencilView = clearUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
             ? this.$mainAttachmentObject.msaaStencil.view
             : this.$mainAttachmentObject.stencil?.view;
         if (clearStencilView) {
-            renderPassDescriptor.depthStencilAttachment = {
-                "view": clearStencilView,
-                "stencilClearValue": 0,
-                "stencilLoadOp": "clear",
-                "stencilStoreOp": "store"
-            };
+            $bgStencilAttachment.view = clearStencilView;
+            $bgDescriptor.depthStencilAttachment = $bgStencilAttachment;
+        } else {
+            $bgDescriptor.depthStencilAttachment = undefined;
         }
 
         // 背景クリア用のレンダーパスを開始して即座に終了
-        this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        this.renderPassEncoder = this.commandEncoder!.beginRenderPass($bgDescriptor);
         this.renderPassEncoder.end();
         this.renderPassEncoder = null;
     }
@@ -696,8 +746,16 @@ export class Context
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
-        // 既存のレンダーパスがない場合のみ新規作成
-        if (!this.renderPassEncoder) {
+        // 既存のレンダーパスがある場合はearlyリターン（ノード領域クリアのみ確認）
+        if (this.renderPassEncoder) {
+            if (this.currentRenderTarget) {
+                this.ensureNodeAreaCleared();
+            }
+            return;
+        }
+
+        // レンダーパスがない場合のみ新規作成
+        {
             // 現在のレンダーターゲットを取得（メインまたはオフスクリーン）
             const textureView = this.getCurrentTextureView();
             const attachment = $getAtlasAttachmentObject();
@@ -848,7 +906,8 @@ export class Context
      */
     private getOrCreateFillDynamicBindGroup(): GPUBindGroup
     {
-        if (!this.fillDynamicBindGroup) {
+        const currentBuffer = this.bufferManager.dynamicUniform.getBuffer();
+        if (!this.fillDynamicBindGroup || this.fillDynamicBindGroupBuffer !== currentBuffer) {
             const layout = this.pipelineManager.getBindGroupLayout("fill_dynamic");
             if (!layout) {
                 throw new Error("[WebGPU] fill_dynamic bind group layout not found");
@@ -858,11 +917,12 @@ export class Context
                 "entries": [{
                     "binding": 0,
                     "resource": {
-                        "buffer": this.bufferManager.dynamicUniform.getBuffer(),
+                        "buffer": currentBuffer,
                         "size": 256
                     }
                 }]
             });
+            this.fillDynamicBindGroupBuffer = currentBuffer;
         }
         return this.fillDynamicBindGroup;
     }
@@ -1062,376 +1122,6 @@ export class Context
         // ストローク描画後はpathCommandをクリアする
         // 理由: drawFill()がfill()を呼び出すため、クリアしないと同じパスが白で塗りつぶされる
         this.pathCommand.reset();
-    }
-
-    /**
-     * @description ストロークの輪郭を生成（WebGL版のMeshGenerateStrokeOutlineUseCaseと同等）
-     */
-    private generateStrokeOutlines(vertices: IPath[], thickness: number): IPath[]
-    {
-        const outlines: IPath[] = [];
-
-        for (const path of vertices) {
-            if (path.length < 6) { continue }
-
-            const pathOutlines = this.generateStrokeOutlineForPath(path, thickness);
-            for (const outline of pathOutlines) {
-                outlines.push(outline);
-            }
-        }
-
-        return outlines;
-    }
-
-    /**
-     * @description 単一パスのストローク輪郭を生成
-     */
-    private generateStrokeOutlineForPath(path: IPath, thickness: number): IPath[]
-    {
-        const rectangles: IPath[] = [];
-
-        let startX = path[0] as number;
-        let startY = path[1] as number;
-        let controlX = 0;
-        let controlY = 0;
-        let prevEndUp: { x: number, y: number } | null = null;
-        let prevEndDown: { x: number, y: number } | null = null;
-
-        for (let idx = 3; idx < path.length; idx += 3) {
-            const x = path[idx] as number;
-            const y = path[idx + 1] as number;
-            const isCurve = path[idx + 2] as boolean;
-
-            // 現在のポイントが制御点（曲線の中間点）の場合は保存してスキップ
-            if (isCurve) {
-                controlX = x;
-                controlY = y;
-                continue;
-            }
-
-            const endX = x;
-            const endY = y;
-
-            // 前のポイントが制御点だったかチェック（WebGL版と同じロジック）
-            const prevWasCurve = path[idx - 1] as boolean;
-
-            if (prevWasCurve) {
-                // 曲線セグメント：ベジェ曲線をオフセットして描画
-                const curveOutline = this.generateCurveOutline(
-                    startX, startY,
-                    controlX, controlY,
-                    endX, endY,
-                    thickness
-                );
-                rectangles.push(curveOutline);
-
-                // 結合処理
-                if (prevEndUp && prevEndDown && curveOutline.length >= 6) {
-                    const curveStartUpX = curveOutline[0] as number;
-                    const curveStartUpY = curveOutline[1] as number;
-                    // 曲線の始点の下側を推定（曲線輪郭の最後の方から取得）
-                    const joinPath = this.generateJoin(
-                        prevEndUp.x, prevEndUp.y,
-                        prevEndDown.x, prevEndDown.y,
-                        curveStartUpX, curveStartUpY,
-                        curveStartUpX, curveStartUpY, // 簡易的に同じ点を使用
-                        startX, startY,
-                        thickness
-                    );
-                    if (joinPath) {
-                        rectangles.push(joinPath);
-                    }
-                }
-
-                // 曲線の終点情報を更新
-                // 曲線輪郭の構造から終点の上下を取得
-                const curveLen = curveOutline.length;
-                if (curveLen >= 12) {
-                    // 左側の最後の点が終点上側に近い
-                    prevEndUp = { "x": curveOutline[curveLen - 9] as number, "y": curveOutline[curveLen - 8] as number };
-                    prevEndDown = { "x": curveOutline[curveLen - 6] as number, "y": curveOutline[curveLen - 5] as number };
-                }
-            } else {
-                // 直線セグメント
-                // 方向ベクトル
-                const dx = endX - startX;
-                const dy = endY - startY;
-                const magnitude = Math.sqrt(dx * dx + dy * dy);
-
-                if (magnitude < 0.0001) {
-                    startX = endX;
-                    startY = endY;
-                    continue;
-                }
-
-                // 法線ベクトル
-                const nx = -(dy / magnitude) * thickness;
-                const ny = dx / magnitude * thickness;
-
-                // 矩形の4頂点
-                const startUpX = startX + nx;
-                const startUpY = startY + ny;
-                const startDownX = startX - nx;
-                const startDownY = startY - ny;
-                const endUpX = endX + nx;
-                const endUpY = endY + ny;
-                const endDownX = endX - nx;
-                const endDownY = endY - ny;
-
-                // IPath形式で矩形を追加（WebGL版と同じフォーマット）
-                const rectPath: IPath = [
-                    startUpX, startUpY, false,
-                    endUpX, endUpY, false,
-                    endDownX, endDownY, false,
-                    startDownX, startDownY, false,
-                    startUpX, startUpY, false  // 閉じる
-                ];
-                rectangles.push(rectPath);
-
-                // 結合処理（前の線分がある場合）
-                if (prevEndUp && prevEndDown) {
-                    const joinPath = this.generateJoin(
-                        prevEndUp.x, prevEndUp.y,
-                        prevEndDown.x, prevEndDown.y,
-                        startUpX, startUpY,
-                        startDownX, startDownY,
-                        startX, startY,
-                        thickness
-                    );
-                    if (joinPath) {
-                        rectangles.push(joinPath);
-                    }
-                }
-
-                prevEndUp = { "x": endUpX, "y": endUpY };
-                prevEndDown = { "x": endDownX, "y": endDownY };
-            }
-
-            startX = endX;
-            startY = endY;
-        }
-
-        // パスが閉じている場合は最後と最初も結合
-        if (path[0] === path[path.length - 3] &&
-            path[1] === path[path.length - 2] &&
-            rectangles.length > 1 && prevEndUp && prevEndDown) {
-
-            // 最初の矩形の情報を取得
-            const firstRect = rectangles[0];
-            const firstStartUpX = firstRect[0] as number;
-            const firstStartUpY = firstRect[1] as number;
-            const firstStartDownX = firstRect[9] as number;
-            const firstStartDownY = firstRect[10] as number;
-            const centerX = path[0] as number;
-            const centerY = path[1] as number;
-
-            const joinPath = this.generateJoin(
-                prevEndUp.x, prevEndUp.y,
-                prevEndDown.x, prevEndDown.y,
-                firstStartUpX, firstStartUpY,
-                firstStartDownX, firstStartDownY,
-                centerX, centerY,
-                thickness
-            );
-            if (joinPath) {
-                rectangles.push(joinPath);
-            }
-        }
-
-        return rectangles;
-    }
-
-    /**
-     * @description 結合部分のパスを生成
-     */
-    private generateJoin(
-        prevEndUpX: number, prevEndUpY: number,
-        prevEndDownX: number, prevEndDownY: number,
-        currStartUpX: number, currStartUpY: number,
-        currStartDownX: number, currStartDownY: number,
-        centerX: number, centerY: number,
-        thickness: number
-    ): IPath | null
-    {
-        switch (this.joints) {
-            case 0: // bevel
-                return this.generateBevelJoin(
-                    prevEndUpX, prevEndUpY,
-                    prevEndDownX, prevEndDownY,
-                    currStartUpX, currStartUpY,
-                    currStartDownX, currStartDownY,
-                    centerX, centerY
-                );
-
-            case 2: // round
-                return this.generateRoundJoin(
-                    prevEndUpX, prevEndUpY,
-                    prevEndDownX, prevEndDownY,
-                    currStartUpX, currStartUpY,
-                    currStartDownX, currStartDownY,
-                    centerX, centerY,
-                    thickness
-                );
-
-            case 1: // miter
-            default:
-                return this.generateBevelJoin(
-                    prevEndUpX, prevEndUpY,
-                    prevEndDownX, prevEndDownY,
-                    currStartUpX, currStartUpY,
-                    currStartDownX, currStartDownY,
-                    centerX, centerY
-                );
-        }
-    }
-
-    /**
-     * @description ベベル結合のパスを生成
-     */
-    private generateBevelJoin(
-        prevEndUpX: number, prevEndUpY: number,
-        prevEndDownX: number, prevEndDownY: number,
-        currStartUpX: number, currStartUpY: number,
-        currStartDownX: number, currStartDownY: number,
-        centerX: number, centerY: number
-    ): IPath
-    {
-        // 上側と下側の三角形を1つのパスとして結合
-        return [
-            centerX, centerY, false,
-            prevEndUpX, prevEndUpY, false,
-            currStartUpX, currStartUpY, false,
-            centerX, centerY, false,  // 閉じて次の三角形
-            currStartDownX, currStartDownY, false,
-            prevEndDownX, prevEndDownY, false,
-            centerX, centerY, false   // 閉じる
-        ];
-    }
-
-    /**
-     * @description ラウンド結合のパスを生成
-     */
-    private generateRoundJoin(
-        prevEndUpX: number, prevEndUpY: number,
-        prevEndDownX: number, prevEndDownY: number,
-        currStartUpX: number, currStartUpY: number,
-        currStartDownX: number, currStartDownY: number,
-        centerX: number, centerY: number,
-        thickness: number
-    ): IPath
-    {
-        const path: IPath = [];
-        const segments = 8;
-
-        // 上側の扇形
-        const angleA = Math.atan2(prevEndUpY - centerY, prevEndUpX - centerX);
-        const angleB = Math.atan2(currStartUpY - centerY, currStartUpX - centerX);
-        let angleDiff = angleB - angleA;
-        if (angleDiff > Math.PI) { angleDiff -= 2 * Math.PI }
-        else if (angleDiff < -Math.PI) { angleDiff += 2 * Math.PI }
-        const step = angleDiff / segments;
-
-        for (let i = 0; i < segments; i++) {
-            const a1 = angleA + i * step;
-            const a2 = angleA + (i + 1) * step;
-            const x1 = centerX + thickness * Math.cos(a1);
-            const y1 = centerY + thickness * Math.sin(a1);
-            const x2 = centerX + thickness * Math.cos(a2);
-            const y2 = centerY + thickness * Math.sin(a2);
-
-            path.push(centerX, centerY, false);
-            path.push(x1, y1, false);
-            path.push(x2, y2, false);
-        }
-
-        // 下側の扇形
-        const angleC = Math.atan2(prevEndDownY - centerY, prevEndDownX - centerX);
-        const angleD = Math.atan2(currStartDownY - centerY, currStartDownX - centerX);
-        let angleDiff2 = angleD - angleC;
-        if (angleDiff2 > Math.PI) { angleDiff2 -= 2 * Math.PI }
-        else if (angleDiff2 < -Math.PI) { angleDiff2 += 2 * Math.PI }
-        const step2 = angleDiff2 / segments;
-
-        for (let i = 0; i < segments; i++) {
-            const a1 = angleC + i * step2;
-            const a2 = angleC + (i + 1) * step2;
-            const x1 = centerX + thickness * Math.cos(a1);
-            const y1 = centerY + thickness * Math.sin(a1);
-            const x2 = centerX + thickness * Math.cos(a2);
-            const y2 = centerY + thickness * Math.sin(a2);
-
-            path.push(centerX, centerY, false);
-            path.push(x1, y1, false);
-            path.push(x2, y2, false);
-        }
-
-        // パスを閉じる
-        if (path.length > 0) {
-            path.push(path[0] as number, path[1] as number, false);
-        }
-
-        return path;
-    }
-
-    /**
-     * @description 曲線セグメントの輪郭を生成（WebGL版のMeshCalculateCurveRectangleUseCaseと同等）
-     */
-    private generateCurveOutline(
-        startX: number, startY: number,
-        controlX: number, controlY: number,
-        endX: number, endY: number,
-        thickness: number
-    ): IPath
-    {
-        // ベジェ曲線を複数の直線セグメントに分割
-        const segments = 8;
-        const leftPoints: Array<{ x: number, y: number }> = [];
-        const rightPoints: Array<{ x: number, y: number }> = [];
-
-        for (let i = 0; i <= segments; i++) {
-            const t = i / segments;
-            const mt = 1 - t;
-
-            // ベジェ曲線上の点
-            const px = mt * mt * startX + 2 * mt * t * controlX + t * t * endX;
-            const py = mt * mt * startY + 2 * mt * t * controlY + t * t * endY;
-
-            // 接線ベクトル（ベジェ曲線の微分）
-            const tx = 2 * (mt * (controlX - startX) + t * (endX - controlX));
-            const ty = 2 * (mt * (controlY - startY) + t * (endY - controlY));
-
-            // 接線の長さ
-            const tLen = Math.sqrt(tx * tx + ty * ty);
-            if (tLen < 0.0001) { continue }
-
-            // 法線ベクトル（接線に垂直）
-            const nx = -ty / tLen * thickness;
-            const ny = tx / tLen * thickness;
-
-            // 左右のオフセット点
-            leftPoints.push({ "x": px + nx, "y": py + ny });
-            rightPoints.push({ "x": px - nx, "y": py - ny });
-        }
-
-        // 左側 → 右側（逆順）でパスを構成
-        const path: IPath = [];
-
-        // 左側の点を追加
-        for (let i = 0; i < leftPoints.length; i++) {
-            path.push(leftPoints[i].x, leftPoints[i].y, false);
-        }
-
-        // 右側の点を逆順で追加
-        for (let i = rightPoints.length - 1; i >= 0; i--) {
-            path.push(rightPoints[i].x, rightPoints[i].y, false);
-        }
-
-        // パスを閉じる
-        if (path.length > 0) {
-            path.push(path[0] as number, path[1] as number, false);
-        }
-
-        return path;
     }
 
     /**
@@ -1895,11 +1585,19 @@ export class Context
             return;
         }
 
-        // 頂点バッファを作成（定数化済みクワッド頂点）
-        const vertexBuffer = this.bufferManager.createVertexBuffer(
-            "node_clear_quad",
-            $QUAD_VERTICES
-        );
+        // 初回のみ頂点バッファを作成、以降はキャッシュを再利用
+        // clearFrameBuffers()で破棄されないよう、BufferManagerのMapに登録せず直接作成
+        if (!this.nodeClearQuadBuffer) {
+            const buf = this.device.createBuffer({
+                "size": $QUAD_VERTICES.byteLength,
+                "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+                "mappedAtCreation": true
+            });
+            new Float32Array(buf.getMappedRange()).set($QUAD_VERTICES);
+            buf.unmap();
+            this.nodeClearQuadBuffer = buf;
+        }
+        const vertexBuffer = this.nodeClearQuadBuffer;
 
         // クリア描画を実行（シザーは+1pxで設定済み）
         this.renderPassEncoder.setPipeline(clearPipeline);
@@ -2117,10 +1815,9 @@ export class Context
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
-        if (this.commandEncoder) {
-            this.device.queue.submit([this.commandEncoder.finish()]);
-            this.commandEncoder = null;
-        }
+        // commandEncoderはsubmitしない — drawPixelsToMsaa()内で同じエンコーダを再利用
+        // writeTexture()はキュー操作でありエンコーダ不要
+        this.nodeRenderPassAtlasIndex = -1;
 
         // MSAAが有効な場合は一時テクスチャ経由でMSAAテクスチャに直接描画
         // MSAAが無効な場合は従来通りresolve targetに直接書き込み
@@ -2133,7 +1830,7 @@ export class Context
                     "texture": attachment.texture.resource,
                     "origin": { "x": node.x, "y": node.y, "z": 0 }
                 },
-                pixels,
+                pixels as unknown as ArrayBufferView<ArrayBuffer>,
                 {
                     "bytesPerRow": rowBytes,
                     "rowsPerImage": height,
@@ -2166,7 +1863,7 @@ export class Context
         const rowBytes = width * 4;
         this.device.queue.writeTexture(
             { "texture": tempTexture },
-            pixels,
+            pixels as unknown as ArrayBufferView<ArrayBuffer>,
             {
                 "bytesPerRow": rowBytes,
                 "rowsPerImage": height
@@ -2202,7 +1899,7 @@ export class Context
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
-        const tempTextureView = tempTexture.createView();
+        const tempTextureView = $getOrCreateView(tempTexture);
 
         ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
         $entries3[1].resource = sampler;
@@ -2214,25 +1911,18 @@ export class Context
 
         // フレームエンコーダーを使用してMSAAテクスチャに描画
         this.ensureCommandEncoder();
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            "colorAttachments": [{
-                "view": attachment.msaaTexture!.view,
-                "resolveTarget": attachment.texture!.view,
-                "loadOp": "load" as GPULoadOp,
-                "storeOp": "store" as GPUStoreOp
-            }]
-        };
+        $msaaColorAttachment.view = attachment.msaaTexture!.view;
+        $msaaColorAttachment.resolveTarget = attachment.texture!.view;
 
         const stencilView = attachment.msaaStencil?.view;
         if (stencilView) {
-            renderPassDescriptor.depthStencilAttachment = {
-                "view": stencilView,
-                "stencilLoadOp": "load" as GPULoadOp,
-                "stencilStoreOp": "store" as GPUStoreOp
-            };
+            $msaaStencilAttachment.view = stencilView;
+            $msaaDescriptor.depthStencilAttachment = $msaaStencilAttachment;
+        } else {
+            $msaaDescriptor.depthStencilAttachment = undefined;
         }
 
-        const renderPass = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        const renderPass = this.commandEncoder!.beginRenderPass($msaaDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
@@ -2266,10 +1956,9 @@ export class Context
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
-        if (this.commandEncoder) {
-            this.device.queue.submit([this.commandEncoder.finish()]);
-            this.commandEncoder = null;
-        }
+        // commandEncoderはsubmitしない — drawElementToMsaa()/drawElementToTexture()内で同じエンコーダを再利用
+        // copyExternalImageToTexture()はキュー操作でありエンコーダ不要
+        this.nodeRenderPassAtlasIndex = -1;
 
         // MSAAが有効な場合は一時テクスチャ経由でMSAAテクスチャに直接描画
         // MSAAが無効な場合もシェーダー経由で描画（WebGLと同じ処理フロー）
@@ -2335,7 +2024,7 @@ export class Context
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
-        const tempTextureView = tempTexture.createView();
+        const tempTextureView = $getOrCreateView(tempTexture);
 
         ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
         $entries3[1].resource = sampler;
@@ -2347,25 +2036,18 @@ export class Context
 
         // フレームエンコーダーを使用してMSAAテクスチャに描画
         this.ensureCommandEncoder();
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            "colorAttachments": [{
-                "view": attachment.msaaTexture!.view,
-                "resolveTarget": attachment.texture!.view,
-                "loadOp": "load" as GPULoadOp,
-                "storeOp": "store" as GPUStoreOp
-            }]
-        };
+        $msaaColorAttachment.view = attachment.msaaTexture!.view;
+        $msaaColorAttachment.resolveTarget = attachment.texture!.view;
 
         const stencilView = attachment.msaaStencil?.view;
         if (stencilView) {
-            renderPassDescriptor.depthStencilAttachment = {
-                "view": stencilView,
-                "stencilLoadOp": "load" as GPULoadOp,
-                "stencilStoreOp": "store" as GPUStoreOp
-            };
+            $msaaStencilAttachment.view = stencilView;
+            $msaaDescriptor.depthStencilAttachment = $msaaStencilAttachment;
+        } else {
+            $msaaDescriptor.depthStencilAttachment = undefined;
         }
 
-        const renderPass = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        const renderPass = this.commandEncoder!.beginRenderPass($msaaDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
@@ -2434,7 +2116,7 @@ export class Context
         this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
-        const tempTextureView = tempTexture.createView();
+        const tempTextureView = $getOrCreateView(tempTexture);
 
         ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
         $entries3[1].resource = sampler;
@@ -2446,24 +2128,18 @@ export class Context
 
         // フレームエンコーダーを使用して通常テクスチャに描画
         this.ensureCommandEncoder();
-        const renderPassDescriptor: GPURenderPassDescriptor = {
-            "colorAttachments": [{
-                "view": attachment.texture!.view,
-                "loadOp": "load" as GPULoadOp,
-                "storeOp": "store" as GPUStoreOp
-            }]
-        };
+        $msaaColorAttachment.view = attachment.texture!.view;
+        $msaaColorAttachment.resolveTarget = undefined;
 
         const stencilView = attachment.stencil?.view;
         if (stencilView) {
-            renderPassDescriptor.depthStencilAttachment = {
-                "view": stencilView,
-                "stencilLoadOp": "load" as GPULoadOp,
-                "stencilStoreOp": "store" as GPUStoreOp
-            };
+            $msaaStencilAttachment.view = stencilView;
+            $msaaDescriptor.depthStencilAttachment = $msaaStencilAttachment;
+        } else {
+            $msaaDescriptor.depthStencilAttachment = undefined;
         }
 
-        const renderPass = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        const renderPass = this.commandEncoder!.beginRenderPass($msaaDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
@@ -2509,16 +2185,8 @@ export class Context
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
-        const config = {
-            "device": this.device,
-            "commandEncoder": this.commandEncoder!,
-            "bufferManager": this.bufferManager,
-            "frameBufferManager": this.frameBufferManager,
-            "pipelineManager": this.pipelineManager,
-            "textureManager": this.textureManager,
-            "mainAttachment": this.$mainAttachmentObject as IAttachmentObject,
-            "computePipelineManager": this.computePipelineManager
-        };
+        this.$filterConfig.commandEncoder = this.commandEncoder!;
+        this.$filterConfig.mainAttachment = this.$mainAttachmentObject as IAttachmentObject;
 
         contextApplyFilterUseCase(
             node,
@@ -2530,7 +2198,7 @@ export class Context
             blend_mode,
             bounds,
             params,
-            config,
+            this.$filterConfig,
             this.mainTextureView!,
             this.bufferManager
         );
@@ -2615,15 +2283,8 @@ export class Context
         // mainを復元
         this.$mainAttachmentObject = this.$containerLayerStack.pop() as IAttachmentObject;
 
-        const config = {
-            "device": this.device,
-            "commandEncoder": this.commandEncoder!,
-            "bufferManager": this.bufferManager,
-            "frameBufferManager": this.frameBufferManager,
-            "pipelineManager": this.pipelineManager,
-            "textureManager": this.textureManager,
-            "computePipelineManager": this.computePipelineManager
-        };
+        this.$filterConfig.commandEncoder = this.commandEncoder!;
+        this.$filterConfig.mainAttachment = undefined;
 
         contextContainerEndLayerUseCase(
             tempAttachment,
@@ -2639,7 +2300,7 @@ export class Context
             filter_key,
             contentSize.width,
             contentSize.height,
-            config,
+            this.$filterConfig,
             this.bufferManager
         );
 
@@ -2943,6 +2604,7 @@ export class Context
 
         // Dynamic Uniform BindGroupをリセット（バッファオフセットがリセットされるため）
         this.fillDynamicBindGroup = null;
+        this.fillDynamicBindGroupBuffer = null;
 
         // 次のフレーム用にクリア
         this.commandEncoder = null;

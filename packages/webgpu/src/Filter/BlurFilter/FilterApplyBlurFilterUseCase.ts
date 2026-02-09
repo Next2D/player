@@ -96,7 +96,7 @@ export const execute = (
                 executeBlurCompute(
                     device, commandEncoder, config.computePipelineManager!,
                     attachments[srcIndex], attachments[attachmentIndex],
-                    true, bufferBlurX
+                    true, bufferBlurX, config.bufferManager
                 );
             } else {
                 applyDirectionalBlur(
@@ -116,7 +116,7 @@ export const execute = (
                 executeBlurCompute(
                     device, commandEncoder, config.computePipelineManager!,
                     attachments[srcIndex], attachments[attachmentIndex],
-                    false, bufferBlurY
+                    false, bufferBlurY, config.bufferManager
                 );
             } else {
                 applyDirectionalBlur(

@@ -1,6 +1,6 @@
 export const execute = (
     gradientMatrix: Float32Array,
-    contextMatrix: Float32Array,
+    _contextMatrix: Float32Array,
     type: number
 ): { inverseMatrix: Float32Array; linearPoints: Float32Array | null } => {
     // グラデーション行列
