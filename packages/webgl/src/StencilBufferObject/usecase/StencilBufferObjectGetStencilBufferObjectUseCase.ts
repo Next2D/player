@@ -14,6 +14,7 @@ import { $gl } from "../../WebGLUtil";
  */
 export const execute = (width: number, height: number): IStencilBufferObject =>
 {
+
     const stencilBufferObject = stencilBufferObjectAcquireObjectUseCase(width, height);
 
     if (stencilBufferObject.width !== width

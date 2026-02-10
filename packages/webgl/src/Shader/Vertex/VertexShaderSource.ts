@@ -1,8 +1,3 @@
-/**
- * @return {string}
- * @method
- * @static
- */
 export const TEXTURE_TEMPLATE = (): string =>
 {
     return `#version 300 es
@@ -19,11 +14,6 @@ void main() {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 export const VECTOR_TEMPLATE = (): string =>
 {
     return `#version 300 es
@@ -40,11 +30,6 @@ void main() {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 export const BLEND_MATRIX_TEMPLATE = (): string =>
 {
     return `#version 300 es
@@ -76,11 +61,6 @@ void main() {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 export const BLEND_TEMPLATE = (): string =>
 {
     return `#version 300 es
@@ -106,11 +86,6 @@ void main() {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 export const INSTANCE_TEMPLATE = (): string =>
 {
     return `#version 300 es

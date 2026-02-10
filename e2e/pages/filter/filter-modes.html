@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Filter Modes</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 700, 60);
+        const { Shape } = next2d.display;
+        const { DropShadowFilter, GlowFilter, BevelFilter, GradientGlowFilter, GradientBevelFilter } = next2d.filters;
+
+        const createTestShape = (color = 0xFF0000) => {
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(color, 1.0)
+                .drawRoundRect(0, 0, 70, 45, 6)
+                .endFill();
+            return shape;
+        };
+
+        // ===== 1行目（y=20）: DropShadowFilter モード =====
+
+        // 通常
+        const ds1 = createTestShape();
+        ds1.x = 20; ds1.y = 20;
+        ds1.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1)];
+        root.addChild(ds1);
+
+        // inner=true
+        const ds2 = createTestShape();
+        ds2.x = 120; ds2.y = 20;
+        ds2.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1, true)];
+        root.addChild(ds2);
+
+        // knockout=true
+        const ds3 = createTestShape();
+        ds3.x = 220; ds3.y = 20;
+        ds3.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1, false, true)];
+        root.addChild(ds3);
+
+        // hideObject=true
+        const ds4 = createTestShape();
+        ds4.x = 320; ds4.y = 20;
+        ds4.filters = [new DropShadowFilter(6, 45, 0x000000, 1, 4, 4, 1, 1, false, false, true)];
+        root.addChild(ds4);
+
+        // inner+knockout
+        const ds5 = createTestShape();
+        ds5.x = 420; ds5.y = 20;
+        ds5.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1, true, true)];
+        root.addChild(ds5);
+
+        // ===== 2行目（y=100）: GlowFilter モード =====
+
+        // 通常
+        const gf1 = createTestShape();
+        gf1.x = 20; gf1.y = 100;
+        gf1.filters = [new GlowFilter(0xFFFF00, 1, 8, 8, 2, 1)];
+        root.addChild(gf1);
+
+        // inner=true on cyan shape
+        const gf2 = createTestShape(0x00FFFF);
+        gf2.x = 120; gf2.y = 100;
+        gf2.filters = [new GlowFilter(0x000000, 1, 8, 8, 2, 1, true)];
+        root.addChild(gf2);
+
+        // knockout=true
+        const gf3 = createTestShape();
+        gf3.x = 220; gf3.y = 100;
+        gf3.filters = [new GlowFilter(0xFFFF00, 1, 8, 8, 2, 1, false, true)];
+        root.addChild(gf3);
+
+        // inner+knockout on cyan shape
+        const gf4 = createTestShape(0x00FFFF);
+        gf4.x = 320; gf4.y = 100;
+        gf4.filters = [new GlowFilter(0xFF0000, 1, 8, 8, 2, 1, true, true)];
+        root.addChild(gf4);
+
+        // ===== 3行目（y=180）: BevelFilter type バリエーション =====
+
+        // type="inner" on gray shape
+        const bf1 = createTestShape(0x888888);
+        bf1.x = 20; bf1.y = 180;
+        bf1.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner")];
+        root.addChild(bf1);
+
+        // type="outer" on gray shape
+        const bf2 = createTestShape(0x888888);
+        bf2.x = 120; bf2.y = 180;
+        bf2.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "outer")];
+        root.addChild(bf2);
+
+        // type="full" on gray shape
+        const bf3 = createTestShape(0x888888);
+        bf3.x = 220; bf3.y = 180;
+        bf3.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "full")];
+        root.addChild(bf3);
+
+        // knockout=true on gray shape
+        const bf4 = createTestShape(0x888888);
+        bf4.x = 320; bf4.y = 180;
+        bf4.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1, "inner", true)];
+        root.addChild(bf4);
+
+        // ===== 4行目（y=270）: GradientGlowFilter type バリエーション =====
+
+        // type="outer"
+        const gg1 = createTestShape();
+        gg1.x = 20; gg1.y = 270;
+        gg1.filters = [new GradientGlowFilter(4, 45, [0xFF0000, 0xFFFF00], [1, 1], [0, 255], 8, 8, 2, 1, "outer")];
+        root.addChild(gg1);
+
+        // type="inner"
+        const gg2 = createTestShape();
+        gg2.x = 140; gg2.y = 270;
+        gg2.filters = [new GradientGlowFilter(4, 45, [0xFF0000, 0xFFFF00], [1, 1], [0, 255], 8, 8, 2, 1, "inner")];
+        root.addChild(gg2);
+
+        // type="full"
+        const gg3 = createTestShape();
+        gg3.x = 260; gg3.y = 270;
+        gg3.filters = [new GradientGlowFilter(4, 45, [0xFF0000, 0xFFFF00], [1, 1], [0, 255], 8, 8, 2, 1, "full")];
+        root.addChild(gg3);
+
+        // ===== 5行目（y=360）: GradientBevelFilter type バリエーション =====
+
+        // type="inner" on gray shape
+        const gb1 = createTestShape(0x888888);
+        gb1.x = 20; gb1.y = 360;
+        gb1.filters = [new GradientBevelFilter(4, 45, [0xFFFFFF, 0x888888, 0x000000], [1, 1, 1], [0, 128, 255], 4, 4, 1, 1, "inner")];
+        root.addChild(gb1);
+
+        // type="outer" on gray shape
+        const gb2 = createTestShape(0x888888);
+        gb2.x = 140; gb2.y = 360;
+        gb2.filters = [new GradientBevelFilter(4, 45, [0xFFFFFF, 0x888888, 0x000000], [1, 1, 1], [0, 128, 255], 4, 4, 1, 1, "outer")];
+        root.addChild(gb2);
+
+        // type="full" on gray shape
+        const gb3 = createTestShape(0x888888);
+        gb3.x = 260; gb3.y = 360;
+        gb3.filters = [new GradientBevelFilter(4, 45, [0xFFFFFF, 0x888888, 0x000000], [1, 1, 1], [0, 128, 255], 4, 4, 1, 1, "full")];
+        root.addChild(gb3);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

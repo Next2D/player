@@ -23,9 +23,9 @@ export const execute = (
     multisample: boolean = false
 ): IAttachmentObject => {
 
-    // キャッシュがあれば再利用する
+    // キャッシュがあれば再利用する（pop()はO(1)、shift()はO(n)）
     const attachmentObject = $objectPool.length
-        ? $objectPool.shift() as IAttachmentObject
+        ? $objectPool.pop() as IAttachmentObject
         : frameBufferManagerCreateAttachmentObjectService();
 
     // テクスチャを取得

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Basic Shapes</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape } = next2d.display;
+
+        // ===== drawRect =====
+
+        // 基本矩形
+        const rect1 = new Shape();
+        rect1.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(20, 20, 100, 60)
+            .endFill();
+        root.addChild(rect1);
+
+        // 枠線付き矩形
+        const rect2 = new Shape();
+        rect2.graphics
+            .lineStyle(3, 0xFFFFFF, 1.0)
+            .beginFill(0x0000FF, 0.8)
+            .drawRect(140, 20, 100, 60)
+            .endFill();
+        root.addChild(rect2);
+
+        // 正方形
+        const rect3 = new Shape();
+        rect3.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawRect(260, 20, 60, 60)
+            .endFill();
+        root.addChild(rect3);
+
+        // 細長い矩形
+        const rect4 = new Shape();
+        rect4.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawRect(340, 20, 200, 30)
+            .endFill();
+        root.addChild(rect4);
+
+        // ===== drawRoundRect =====
+
+        // 基本角丸矩形
+        const roundRect1 = new Shape();
+        roundRect1.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawRoundRect(20, 100, 120, 70, 15)
+            .endFill();
+        root.addChild(roundRect1);
+
+        // 大きな角丸
+        const roundRect2 = new Shape();
+        roundRect2.graphics
+            .beginFill(0x00FFFF, 1.0)
+            .drawRoundRect(160, 100, 120, 70, 35)
+            .endFill();
+        root.addChild(roundRect2);
+
+        // 非対称角丸（楕円角）
+        const roundRect3 = new Shape();
+        roundRect3.graphics
+            .lineStyle(2, 0xFFFFFF, 1.0)
+            .beginFill(0xFF8800, 0.9)
+            .drawRoundRect(300, 100, 120, 70, 20)
+            .endFill();
+        root.addChild(roundRect3);
+
+        // 小さな角丸
+        const roundRect4 = new Shape();
+        roundRect4.graphics
+            .beginFill(0x8800FF, 1.0)
+            .drawRoundRect(440, 100, 120, 70, 5)
+            .endFill();
+        root.addChild(roundRect4);
+
+        // ===== drawCircle =====
+
+        // 基本円
+        const circle1 = new Shape();
+        circle1.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawCircle(70, 230, 40)
+            .endFill();
+        root.addChild(circle1);
+
+        // 枠線付き円
+        const circle2 = new Shape();
+        circle2.graphics
+            .lineStyle(4, 0xFFFF00, 1.0)
+            .beginFill(0x0000FF, 0.7)
+            .drawCircle(170, 230, 40)
+            .endFill();
+        root.addChild(circle2);
+
+        // 小さな円
+        const circle3 = new Shape();
+        circle3.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(250, 230, 20)
+            .endFill();
+        root.addChild(circle3);
+
+        // 大きな円
+        const circle4 = new Shape();
+        circle4.graphics
+            .lineStyle(2, 0xFFFFFF, 1.0)
+            .beginFill(0xFF00FF, 0.8)
+            .drawCircle(360, 230, 60)
+            .endFill();
+        root.addChild(circle4);
+
+        // 枠線のみ円
+        const circle5 = new Shape();
+        circle5.graphics
+            .lineStyle(5, 0x00FFFF, 1.0)
+            .drawCircle(480, 230, 45);
+        root.addChild(circle5);
+
+        // ===== drawEllipse =====
+
+        // 水平楕円
+        const ellipse1 = new Shape();
+        ellipse1.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawEllipse(20, 310, 100, 50)
+            .endFill();
+        root.addChild(ellipse1);
+
+        // 垂直楕円
+        const ellipse2 = new Shape();
+        ellipse2.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawEllipse(140, 300, 50, 80)
+            .endFill();
+        root.addChild(ellipse2);
+
+        // 枠線付き楕円
+        const ellipse3 = new Shape();
+        ellipse3.graphics
+            .lineStyle(3, 0xFFFFFF, 1.0)
+            .beginFill(0x0000FF, 0.8)
+            .drawEllipse(220, 310, 120, 60)
+            .endFill();
+        root.addChild(ellipse3);
+
+        // 扁平な楕円
+        const ellipse4 = new Shape();
+        ellipse4.graphics
+            .beginFill(0xFF8800, 1.0)
+            .drawEllipse(360, 325, 150, 30)
+            .endFill();
+        root.addChild(ellipse4);
+
+        // 枠線のみ楕円
+        const ellipse5 = new Shape();
+        ellipse5.graphics
+            .lineStyle(4, 0xFF00FF, 1.0)
+            .drawEllipse(380, 290, 80, 40);
+        root.addChild(ellipse5);
+
+        // ===== 複合図形 =====
+
+        // 同心円
+        const concentricCircles = new Shape();
+        concentricCircles.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawCircle(100, 430, 50)
+            .endFill()
+            .beginFill(0xFFFF00, 1.0)
+            .drawCircle(100, 430, 35)
+            .endFill()
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(100, 430, 20)
+            .endFill();
+        root.addChild(concentricCircles);
+
+        // 複数図形の組み合わせ
+        const combo = new Shape();
+        combo.graphics
+            .beginFill(0x0000FF, 0.8)
+            .drawRect(200, 400, 100, 70)
+            .endFill()
+            .beginFill(0xFF0000, 0.8)
+            .drawCircle(250, 435, 25)
+            .endFill();
+        root.addChild(combo);
+
+        // 入れ子矩形
+        const nestedRects = new Shape();
+        nestedRects.graphics
+            .lineStyle(2, 0xFFFFFF, 1.0)
+            .drawRect(350, 400, 80, 60)
+            .drawRect(360, 410, 60, 40)
+            .drawRect(370, 420, 40, 20);
+        root.addChild(nestedRects);
+
+        // グリッドパターン
+        const grid = new Shape();
+        grid.graphics.lineStyle(1, 0xFFFFFF, 0.5);
+        for (let i = 0; i <= 4; i++) {
+            grid.graphics
+                .moveTo(460 + i * 20, 400)
+                .lineTo(460 + i * 20, 480);
+        }
+        for (let i = 0; i <= 4; i++) {
+            grid.graphics
+                .moveTo(460, 400 + i * 20)
+                .lineTo(540, 400 + i * 20);
+        }
+        root.addChild(grid);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

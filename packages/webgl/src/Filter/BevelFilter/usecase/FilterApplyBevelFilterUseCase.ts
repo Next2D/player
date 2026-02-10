@@ -17,7 +17,7 @@ import {
     $intToB
 } from "../../../Filter";
 import {
-    $getDevicePixelRatio,
+    $devicePixelRatio,
     $context
 } from "../../../WebGLUtil";
 
@@ -73,7 +73,7 @@ export const execute = (
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
     // pointer
-    const devicePixelRatio = $getDevicePixelRatio();
+    const devicePixelRatio = $devicePixelRatio;
     const radian = angle * $Deg2Rad;
     const x = Math.cos(radian) * distance * (xScale / devicePixelRatio);
     const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);

@@ -1,11 +1,5 @@
 import { STATEMENT_COLOR_TRANSFORM_ON } from "./FragmentShaderLibrary";
 
-/**
- * @param  {boolean} with_color_transform
- * @return {string}
- * @method
- * @static
- */
 export const TEXTURE = (with_color_transform: boolean): string =>
 {
     const colorTransformUniform = with_color_transform
@@ -32,11 +26,6 @@ void main() {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 export const INSTANCE_TEXTURE = (): string =>
 {
     return `#version 300 es

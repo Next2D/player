@@ -10,7 +10,7 @@ describe("CanvasInitializeService.js test", () =>
         expect(canvas.width).toBe(1);
         expect(canvas.height).toBe(1);
         expect(canvas.getAttribute("style")).toBe(
-            "-webkit-tap-highlight-color: rgba(0,0,0,0);backface-visibility: hidden;touch-action: none;"
+            "-webkit-tap-highlight-color: rgba(0,0,0,0);backface-visibility: hidden;touch-action: none;user-select: none;-webkit-user-select: none;-webkit-touch-callout: none;"
         );
     });
 
@@ -21,7 +21,7 @@ describe("CanvasInitializeService.js test", () =>
         expect(canvas.width).toBe(1);
         expect(canvas.height).toBe(1);
         expect(canvas.getAttribute("style")).toBe(
-            "-webkit-tap-highlight-color: rgba(0,0,0,0);backface-visibility: hidden;touch-action: none;transform: scale(0.5);"
+            "-webkit-tap-highlight-color: rgba(0,0,0,0);backface-visibility: hidden;touch-action: none;user-select: none;-webkit-user-select: none;-webkit-touch-callout: none;transform: scale(0.5);"
         );
     });
 });

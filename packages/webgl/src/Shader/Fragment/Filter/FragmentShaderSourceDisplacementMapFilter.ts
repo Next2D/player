@@ -1,14 +1,5 @@
 import { FUNCTION_IS_INSIDE } from "../FragmentShaderLibrary";
 
-/**
- * @param  {number} mediump_length
- * @param  {number} component_x
- * @param  {number} component_y
- * @param  {number} mode
- * @return {string}
- * @method
- * @static
- */
 export const DISPLACEMENT_MAP_FILTER_TEMPLATE = (
     mediump_length: number,
     component_x: number,
@@ -22,19 +13,19 @@ export const DISPLACEMENT_MAP_FILTER_TEMPLATE = (
 
     switch (component_x) {
 
-        case 1: // BitmapDataChannel.RED
+        case 1:
             cx = "map_color.r";
             break;
 
-        case 2: // BitmapDataChannel.GREEN
+        case 2:
             cx = "map_color.g";
             break;
 
-        case 4: // BitmapDataChannel.BLUE
+        case 4:
             cx = "map_color.b";
             break;
 
-        case 8: // BitmapDataChannel.ALPHA
+        case 8:
             cx = "map_color.a";
             break;
 
@@ -46,19 +37,19 @@ export const DISPLACEMENT_MAP_FILTER_TEMPLATE = (
 
     switch (component_y) {
 
-        case 1: // BitmapDataChannel.RED
+        case 1:
             cy = "map_color.r";
             break;
 
-        case 2: // BitmapDataChannel.GREEN
+        case 2:
             cy = "map_color.g";
             break;
 
-        case 4: // BitmapDataChannel.BLUE
+        case 4:
             cy = "map_color.b";
             break;
 
-        case 8: // BitmapDataChannel.ALPHA
+        case 8:
             cy = "map_color.a";
             break;
 
@@ -77,7 +68,6 @@ export const DISPLACEMENT_MAP_FILTER_TEMPLATE = (
             break;
 
         case 3:
-            // 置き換え後の座標が範囲外なら、置き換え前の座標をとる（x軸とy軸を別々に判定する）
             modeStatement = `
     vec4 source_color =texture(u_textures[0], mix(v_coord, uv, step(abs(uv - vec2(0.5)), vec2(0.5))));
 `;

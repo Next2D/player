@@ -1,10 +1,5 @@
 import { STATEMENT_COLOR_TRANSFORM_ON } from "./FragmentShaderLibrary";
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_NORMAL = (): string =>
 {
     return `
@@ -13,27 +8,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-// 各ブレンド式は、前景と背景の両方のアルファを考慮する必要がある
-// https://odashi.hatenablog.com/entry/20110921/1316610121
-// https://hakuhin.jp/as3/blend.html
-//
-// [基本計算式]
-// ・色(rgb)はストレートアルファ
-// ・アルファ(a)が0の場合は例外処理をする
-// 前景色 a: src.rgb * (src.a * (1.0 - dst.a))
-// 背景色 b: dst.rgb * (dst.a * (1.0 - src.a))
-// 合成色 c: mix.rgb * (src.a * dst.a)
-// 最終結果: a + b + c
-
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_SUBTRACT = (): string =>
 {
-    // [合成色計算式]
-    // dst - src
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
@@ -52,15 +28,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_MULTIPLY = (): string =>
 {
-    // [合成色計算式]
-    // src * dst
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     vec4 a = src - src * dst.a;
@@ -71,15 +40,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_LIGHTEN = (): string =>
 {
-    // [合成色計算式]
-    // (src > dst) ? src : dst
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
@@ -98,15 +60,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_DARKEN = (): string =>
 {
-    // [合成色計算式]
-    // (src < dst) ? src : dst
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
@@ -125,19 +80,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_OVERLAY = (): string =>
 {
-    // [合成色計算式]
-    // if (dst < 0.5) {
-    //     return 2.0 * src * dst
-    // } else {
-    //     return 1.0 - 2.0 * (1.0 - src) * (1.0 - dst)
-    // }
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
@@ -159,19 +103,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_HARDLIGHT = (): string =>
 {
-    // [合成色計算式]
-    // if (src < 0.5) {
-    //     return 2.0 * src * dst
-    // } else {
-    //     return 1.0 - 2.0 * (1.0 - src) * (1.0 - dst)
-    // }
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
@@ -193,15 +126,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_DIFFERENCE = (): string =>
 {
-    // [合成色計算式]
-    // abs(src - dst)
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
@@ -220,15 +146,8 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @return {string}
- * @method
- * @static
- */
 const FUNCTION_INVERT = (): string =>
 {
-    // [基本計算式]
-    // ((1.0 - dst) * src.a) + (dst * (1.0 - src.a))
     return `
 vec4 blend (in vec4 src, in vec4 dst) {
     if (src.a == 0.0) { return dst; }
@@ -241,13 +160,6 @@ vec4 blend (in vec4 src, in vec4 dst) {
 }`;
 };
 
-/**
- * @param  {string}  operation
- * @param  {boolean} with_color_transform
- * @return {string}
- * @method
- * @static
- */
 export const BLEND_TEMPLATE = (operation: string, with_color_transform: boolean): string =>
 {
     let blendFunction: string;

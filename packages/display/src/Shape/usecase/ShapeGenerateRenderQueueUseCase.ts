@@ -61,6 +61,10 @@ export const execute = (
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(shape);
     const tColorTransform = rawColor
+        && (rawColor[0] !== 1 || rawColor[1] !== 1
+        || rawColor[2] !== 1 || rawColor[3] !== 1
+        || rawColor[4] !== 0 || rawColor[5] !== 0
+        || rawColor[6] !== 0 || rawColor[7] !== 0)
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
 
@@ -76,6 +80,9 @@ export const execute = (
     // transformed matrix(tMatrix)
     const rawMatrix = displayObjectGetRawMatrixUseCase(shape);
     const tMatrix = rawMatrix
+        && (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+        || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+        || rawMatrix[4] !== 0 || rawMatrix[5] !== 0)
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
@@ -107,7 +114,6 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-            $poolBoundsArray(bounds);
             renderQueue.push(0);
             return;
 
@@ -127,7 +133,6 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        $poolBoundsArray(bounds);
         renderQueue.push(0);
         return;
     }
@@ -138,43 +143,41 @@ export const execute = (
 
     if (!shape.uniqueKey) {
         if (shape.characterId && shape.loaderInfo) {
-
             const values = $getArray(
                 shape.loaderInfo.id,
                 shape.characterId
             );
-
             shape.uniqueKey = `${displayObjectGenerateHashService(new Float32Array(values))}`;
             $poolArray(values);
-
         } else {
-
             shape.uniqueKey = shape.isBitmap
-                ? `${shape.instanceId}`
+                ? `${displayObjectGenerateHashService(new Float32Array((shape.$bitmapBuffer as Uint8Array).buffer))}`
                 : `${displayObjectGenerateHashService(graphics.buffer)}`;
-
         }
     }
 
-    const xScale = Math.round(Math.sqrt(
+    const xScale = Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
-    ) * 100) / 100;
+    );
 
-    const yScale = Math.round(Math.sqrt(
+    const yScale = Math.sqrt(
         tMatrix[2] * tMatrix[2]
         + tMatrix[3] * tMatrix[3]
-    ) * 100) / 100;
+    );
+
+    const xScaleRounded = Math.round(xScale * 100) / 100;
+    const yScaleRounded = Math.round(yScale * 100) / 100;
 
     if (!shape.isBitmap
         && !shape.cacheKey
-        || shape.cacheParams[0] !== xScale
-        || shape.cacheParams[1] !== yScale
+        || shape.cacheParams[0] !== xScaleRounded
+        || shape.cacheParams[1] !== yScaleRounded
         || shape.cacheParams[2] !== tColorTransform[7]
     ) {
-        shape.cacheKey = $cacheStore.generateKeys(xScale, yScale, tColorTransform[7]);
-        shape.cacheParams[0] = xScale;
-        shape.cacheParams[1] = yScale;
+        shape.cacheKey = $cacheStore.generateKeys(xScaleRounded, yScaleRounded, tColorTransform[7]);
+        shape.cacheParams[0] = xScaleRounded;
+        shape.cacheParams[1] = yScaleRounded;
         shape.cacheParams[2] = tColorTransform[7];
     }
 
@@ -183,7 +186,7 @@ export const execute = (
         : shape.cacheKey;
 
     // rennder on
-    renderQueue.push(
+    renderQueue.pushShapeBuffer(
         1, $RENDERER_SHAPE_TYPE,
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
@@ -192,7 +195,9 @@ export const execute = (
         graphics.xMin, graphics.yMin,
         graphics.xMax, graphics.yMax,
         +isGridEnabled, +isDrawable, +shape.isBitmap,
-        +shape.uniqueKey, cacheKey
+        +shape.uniqueKey, cacheKey,
+        xScale, yScale,
+        shape.instanceId // フィルターキャッシュ用のユニークキー
     );
 
     if (shape.$cache && !shape.$cache.has(shape.uniqueKey)) {
@@ -317,14 +322,15 @@ export const execute = (
         displayObjectBlendToNumberService(shape.blendMode)
     );
 
-    if (shape.filters?.length) {
+    const filters = shape.filters;
+    if (filters) {
 
         let updated = false;
         const params = [];
         const bounds = $getBoundsArray(0, 0, 0, 0);
-        for (let idx = 0; idx < shape.filters.length; idx++) {
+        for (let idx = 0; idx < filters.length; idx++) {
 
-            const filter = shape.filters[idx];
+            const filter = filters[idx];
             if (!filter || !filter.canApplyFilter()) {
                 continue;
             }
@@ -352,6 +358,8 @@ export const execute = (
                 params.length
             );
             renderQueue.set(new Float32Array(params));
+        } else {
+            renderQueue.push(0);
         }
 
         $poolBoundsArray(bounds);

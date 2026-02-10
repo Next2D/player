@@ -1,4 +1,8 @@
-import { $gl } from "../../WebGLUtil";
+import {
+    $gl,
+    $enableScissorTest,
+    $disableScissorTest
+} from "../../WebGLUtil";
 
 /**
  * @description 指定範囲をクリアする
@@ -15,8 +19,8 @@ import { $gl } from "../../WebGLUtil";
 export const execute = (x: number, y: number, w: number, h: number): void =>
 {
     // 指定範囲をクリア
-    $gl.enable($gl.SCISSOR_TEST);
+    $enableScissorTest();
     $gl.scissor(x, y, w, h);
     $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
-    $gl.disable($gl.SCISSOR_TEST);
+    $disableScissorTest();
 };

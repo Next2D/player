@@ -24,10 +24,19 @@ import { $offset } from "../../Filter";
 import {
     $context,
     $getFloat32Array6,
-    $getDevicePixelRatio,
+    $devicePixelRatio,
     $multiplyMatrices,
     $poolFloat32Array6
 } from "../../WebGLUtil";
+
+/**
+ * @description ColorMatrixFilter用の再利用可能なバッファ（GC回避）
+ *              Reusable buffer for ColorMatrixFilter (avoid GC)
+ *
+ * @type {Float32Array}
+ * @private
+ */
+const $colorMatrixBuffer: Float32Array = new Float32Array(20);
 
 /**
  * @description フィルターを適用します。
@@ -179,15 +188,13 @@ export const execute = (
                     break;
 
                 case 2: // ColorMatrixFilter
+                    // 再利用可能なバッファを使用（GC回避）
+                    for (let i = 0; i < 20; ++i) {
+                        $colorMatrixBuffer[i] = params[idx++];
+                    }
                     textureObject = filterApplyColorMatrixFilterUseCase(
                         textureObject,
-                        new Float32Array([
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++],
-                            params[idx++], params[idx++], params[idx++], params[idx++]
-                        ])
+                        $colorMatrixBuffer
                     );
                     break;
 
@@ -216,7 +223,7 @@ export const execute = (
                         idx += length;
 
                         textureObject = filterApplyDisplacementMapFilterUseCase(
-                            textureObject, matrix, buffer, params[idx++], params[idx++],
+                            textureObject, buffer, params[idx++], params[idx++],
                             params[idx++], params[idx++], params[idx++], params[idx++], params[idx++], params[idx++],
                             params[idx++], params[idx++], params[idx++]
                         );
@@ -301,7 +308,7 @@ export const execute = (
 
     if (textureObject) {
 
-        const devicePixelRatio = $getDevicePixelRatio();
+        const devicePixelRatio = $devicePixelRatio;
         const xMin = bounds[0] * (scaleX / devicePixelRatio);
         const yMin = bounds[1] * (scaleY / devicePixelRatio);
 

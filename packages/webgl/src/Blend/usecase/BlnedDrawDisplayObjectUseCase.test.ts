@@ -6,6 +6,25 @@ import * as BlendModule from "../../Blend";
 import * as AtlasManagerModule from "../../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
 
+vi.mock("../../Blend", async (importOriginal) => {
+    const mod = await importOriginal<typeof import("../../Blend")>();
+    return {
+        ...mod,
+        $currentBlendMode: "normal",
+        $setCurrentBlendMode: vi.fn(),
+    };
+});
+
+vi.mock("../../AtlasManager", async (importOriginal) => {
+    const mod = await importOriginal<typeof import("../../AtlasManager")>();
+    return {
+        ...mod,
+        $currentAtlasIndex: 0,
+        $setCurrentAtlasIndex: vi.fn(),
+        $setActiveAtlasIndex: vi.fn(),
+    };
+});
+
 vi.mock("../../Shader/Variants/Blend/service/VariantsBlendInstanceShaderService", () => ({
     execute: vi.fn(() => ({ count: 0 }))
 }));
@@ -65,8 +84,8 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
             setTransform: vi.fn(),
             reset: vi.fn()
         },
-        $getViewportWidth: vi.fn(() => 800),
-        $getViewportHeight: vi.fn(() => 600),
+        $viewportWidth: 800,
+        $viewportHeight: 600,
         $getFloat32Array6: vi.fn((...args: number[]) => new Float32Array(args)),
         $RENDER_MAX_SIZE: 4096
     };
@@ -106,14 +125,12 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
         $context.restore = vi.fn();
         $context.setTransform = vi.fn();
 
-        vi.spyOn(BlendModule, "$getCurrentBlendMode").mockReturnValue("normal");
-        vi.spyOn(BlendModule, "$setCurrentBlendMode").mockImplementation(() => {});
-        vi.spyOn(AtlasManagerModule, "$getCurrentAtlasIndex").mockReturnValue(0);
-        vi.spyOn(AtlasManagerModule, "$setCurrentAtlasIndex").mockImplementation(() => {});
-        vi.spyOn(AtlasManagerModule, "$setActiveAtlasIndex").mockImplementation(() => {});
+        // Reset mocked module values
+        (BlendModule as any).$currentBlendMode = "normal";
+        (AtlasManagerModule as any).$currentAtlasIndex = 0;
 
         renderQueue.length = 0;
-        renderQueue.push = vi.fn();
+        renderQueue.pushDisplayObjectBuffer = vi.fn();
     });
 
     it("should handle normal blend mode without switching", () => {
@@ -121,7 +138,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle layer blend mode", () => {
@@ -129,7 +146,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle add blend mode", () => {
@@ -137,7 +154,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle screen blend mode", () => {
@@ -145,7 +162,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle alpha blend mode", () => {
@@ -153,7 +170,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle erase blend mode", () => {
@@ -161,7 +178,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle copy blend mode", () => {
@@ -169,11 +186,11 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should switch blend mode when different from current", () => {
-        vi.spyOn(BlendModule, "$getCurrentBlendMode").mockReturnValue("multiply");
+        (BlendModule as any).$currentBlendMode = "multiply";
         $context.globalCompositeOperation = "normal";
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
@@ -182,7 +199,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
     });
 
     it("should switch atlas index when different from current", () => {
-        vi.spyOn(AtlasManagerModule, "$getCurrentAtlasIndex").mockReturnValue(1);
+        (AtlasManagerModule as any).$currentAtlasIndex = 1;
         mockNode.index = 0;
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
@@ -206,7 +223,7 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, colorTransformWithOffset);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle transformed matrix", () => {
@@ -248,6 +265,6 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 200, 150, mockColorTransform);
 
-        expect(renderQueue.push).toHaveBeenCalled();
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 });

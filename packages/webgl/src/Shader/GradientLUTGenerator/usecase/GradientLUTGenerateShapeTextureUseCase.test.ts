@@ -48,6 +48,16 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) =>
                 scissorCalls.push([x, y, w, h]);
             })
         },
+        $enableScissorTest: vi.fn((cap?: any) =>
+        {
+            enableCalls.push("SCISSOR_TEST");
+            scissorTestEnabled = true;
+        }),
+        $disableScissorTest: vi.fn((cap?: any) =>
+        {
+            disableCalls.push("SCISSOR_TEST");
+            scissorTestEnabled = false;
+        }),
         $context: {
             get currentAttachmentObject() {
                 return currentAttachment;
@@ -60,12 +70,14 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) =>
     };
 });
 
-vi.mock("../../GradientLUTGenerator.ts", async (importOriginal) => 
+vi.mock("../../GradientLUTGenerator.ts", async (importOriginal) =>
 {
     const mod = await importOriginal<typeof import("../../GradientLUTGenerator.ts")>();
     return {
         ...mod,
         $getGradientAttachmentObject: vi.fn(() => mockAttachmentObject),
+        $getGradientAttachmentObjectWithResolution: vi.fn(() => mockAttachmentObject),
+        $getAdaptiveResolution: vi.fn(() => 512),
         $getGradientLUTGeneratorMaxLength: vi.fn(() => 10),
         $rgbToLinearTable: new Float32Array(256),
         $rgbIdentityTable: new Float32Array(256)

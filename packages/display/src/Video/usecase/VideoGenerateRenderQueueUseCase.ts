@@ -54,6 +54,10 @@ export const execute = (
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(video);
     const tColorTransform = rawColor
+        && (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0)
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
 
@@ -69,6 +73,9 @@ export const execute = (
     // transformed matrix(tMatrix)
     const rawMatrix = displayObjectGetRawMatrixUseCase(video);
     const tMatrix = rawMatrix
+        && (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0)
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
@@ -144,14 +151,15 @@ export const execute = (
     }
 
     // rennder on
-    renderQueue.push(
+    renderQueue.pushVideoBuffer(
         1, $RENDERER_VIDEO_TYPE,
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
         xMin, yMin, xMax, yMax,
         0, 0, video.videoWidth, video.videoHeight,
-        +video.uniqueKey, +video.changed
+        +video.uniqueKey, +video.changed,
+        video.instanceId // フィルターキャッシュ用のユニークキー
     );
 
     if (video.$cache && !video.$cache.has(video.uniqueKey)) {
@@ -243,6 +251,8 @@ export const execute = (
                 params.length
             );
             renderQueue.set(new Float32Array(params));
+        } else {
+            renderQueue.push(0);
         }
 
         $poolBoundsArray(bounds);

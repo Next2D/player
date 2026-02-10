@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - ColorTransform</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #333333; }</style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { ColorTransform } = next2d.geom;
+
+        // --- 1行目（y=20）: 色乗算（元は白い四角 0xFFFFFF） ---
+        const mul1 = new Shape();
+        mul1.graphics.beginFill(0xFFFFFF, 1).drawRect(20, 20, 80, 50).endFill();
+        root.addChild(mul1);
+
+        const mul2 = new Shape();
+        mul2.graphics.beginFill(0xFFFFFF, 1).drawRect(120, 20, 80, 50).endFill();
+        mul2.colorTransform = new ColorTransform(1, 0, 0, 1, 0, 0, 0, 0);
+        root.addChild(mul2);
+
+        const mul3 = new Shape();
+        mul3.graphics.beginFill(0xFFFFFF, 1).drawRect(220, 20, 80, 50).endFill();
+        mul3.colorTransform = new ColorTransform(0, 1, 0, 1, 0, 0, 0, 0);
+        root.addChild(mul3);
+
+        const mul4 = new Shape();
+        mul4.graphics.beginFill(0xFFFFFF, 1).drawRect(320, 20, 80, 50).endFill();
+        mul4.colorTransform = new ColorTransform(0, 0, 1, 1, 0, 0, 0, 0);
+        root.addChild(mul4);
+
+        const mul5 = new Shape();
+        mul5.graphics.beginFill(0xFFFFFF, 1).drawRect(420, 20, 80, 50).endFill();
+        mul5.colorTransform = new ColorTransform(0.5, 0.5, 0, 1, 0, 0, 0, 0);
+        root.addChild(mul5);
+
+        // --- 2行目（y=100）: 色オフセット（元は黒い四角 0x000000） ---
+        const off1 = new Shape();
+        off1.graphics.beginFill(0x000000, 1).drawRect(20, 100, 80, 50).endFill();
+        root.addChild(off1);
+
+        const off2 = new Shape();
+        off2.graphics.beginFill(0x000000, 1).drawRect(120, 100, 80, 50).endFill();
+        off2.colorTransform = new ColorTransform(1, 1, 1, 1, 255, 0, 0, 0);
+        root.addChild(off2);
+
+        const off3 = new Shape();
+        off3.graphics.beginFill(0x000000, 1).drawRect(220, 100, 80, 50).endFill();
+        off3.colorTransform = new ColorTransform(1, 1, 1, 1, 0, 255, 0, 0);
+        root.addChild(off3);
+
+        const off4 = new Shape();
+        off4.graphics.beginFill(0x000000, 1).drawRect(320, 100, 80, 50).endFill();
+        off4.colorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 255, 0);
+        root.addChild(off4);
+
+        const off5 = new Shape();
+        off5.graphics.beginFill(0x000000, 1).drawRect(420, 100, 80, 50).endFill();
+        off5.colorTransform = new ColorTransform(1, 1, 1, 1, 128, 128, 0, 0);
+        root.addChild(off5);
+
+        // --- 3行目（y=180）: alphaMultiplier / alphaOffset ---
+        const am1 = new Shape();
+        am1.graphics.beginFill(0xFF0000, 1).drawRect(20, 180, 80, 50).endFill();
+        am1.colorTransform = new ColorTransform(1, 1, 1, 1.0, 0, 0, 0, 0);
+        root.addChild(am1);
+
+        const am2 = new Shape();
+        am2.graphics.beginFill(0xFF0000, 1).drawRect(120, 180, 80, 50).endFill();
+        am2.colorTransform = new ColorTransform(1, 1, 1, 0.5, 0, 0, 0, 0);
+        root.addChild(am2);
+
+        const am3 = new Shape();
+        am3.graphics.beginFill(0xFF0000, 1).drawRect(220, 180, 80, 50).endFill();
+        am3.colorTransform = new ColorTransform(1, 1, 1, 0.0, 0, 0, 0, 0);
+        root.addChild(am3);
+
+        const am4 = new Shape();
+        am4.graphics.beginFill(0xFF0000, 1).drawRect(320, 180, 80, 50).endFill();
+        am4.colorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 0, -128);
+        root.addChild(am4);
+
+        // --- 4行目（y=280）: 親子でのColorTransform累積 ---
+        const parent = new Sprite();
+        parent.x = 20; parent.y = 280;
+        parent.colorTransform = new ColorTransform(0.5, 1, 1, 1, 0, 0, 0, 0);
+
+        const child1 = new Shape();
+        child1.graphics.beginFill(0xFFFFFF, 1).drawRect(0, 0, 80, 50).endFill();
+        parent.addChild(child1);
+
+        const child2 = new Shape();
+        child2.graphics.beginFill(0xFF0000, 1).drawRect(100, 0, 80, 50).endFill();
+        child2.colorTransform = new ColorTransform(1, 1, 0, 1, 0, 0, 255, 0);
+        parent.addChild(child2);
+
+        root.addChild(parent);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

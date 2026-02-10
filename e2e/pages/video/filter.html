@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Video Filters</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #666666; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Video } = next2d.media;
+        const { TextField, TextFormat } = next2d.text;
+        const {
+            BlurFilter,
+            DropShadowFilter,
+            GlowFilter,
+            BevelFilter,
+            ColorMatrixFilter
+        } = next2d.filters;
+
+        const videoPath = "/e2e/fixtures/videos/movie.mp4";
+        const videoScale = 0.2;
+
+        // 全ビデオを追跡
+        const allVideos = [];
+
+        const labelFormat = new TextFormat();
+        labelFormat.size = 10;
+        labelFormat.color = 0xFFFFFF;
+
+        // フィルターの配列
+        const filters = [
+            { filter: [new BlurFilter(4, 4, 1)], name: "Blur" },
+            { filter: [new DropShadowFilter(4, 45, 0x000000, 1, 4, 4, 1, 1)], name: "DropShadow" },
+            { filter: [new GlowFilter(0x00FF00, 1, 8, 8, 2, 1)], name: "Glow" },
+            { filter: [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1)], name: "Bevel" },
+            { filter: [new ColorMatrixFilter([0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0.33, 0.33, 0.33, 0, 0, 0, 0, 0, 1, 0])], name: "Grayscale" },
+            { filter: [new BlurFilter(2, 2, 1), new GlowFilter(0xFF00FF, 1, 6, 6, 2, 1)], name: "Blur+Glow" }
+        ];
+
+        // 各フィルターを配置（3x2グリッド）
+        const cols = 3;
+        const cellWidth = 250;
+        const cellHeight = 150;
+        const startX = 20;
+        const startY = 20;
+
+        filters.forEach((item, index) => {
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            const x = startX + col * cellWidth;
+            const y = startY + row * cellHeight;
+
+            // ビデオ
+            const video = new Video();
+            video.x = x;
+            video.y = y;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = item.filter;
+            video.src = videoPath;
+            root.addChild(video);
+            allVideos.push(video);
+
+            // ラベル
+            const label = new TextField();
+            label.x = x;
+            label.y = y + 100;
+            label.width = 150;
+            label.height = 16;
+            label.defaultTextFormat = labelFormat;
+            label.text = item.name;
+            root.addChild(label);
+        });
+
+        // 各ビデオのCOMPLETEイベントを待機
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (video.loaded && !video.paused) {
+                    resolve();
+                } else {
+                    video.addEventListener("complete", () => resolve());
+                }
+            });
+        }));
+
+        // 固定フレームのためにシークして一時停止
+        const SEEK_TIME = 1.0; // 1秒の位置にシーク
+
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (!video.$videoElement) {
+                    resolve();
+                    return;
+                }
+
+                const onSeeked = () => {
+                    video.$videoElement.removeEventListener("seeked", onSeeked);
+                    video.pause();
+                    resolve();
+                };
+
+                video.$videoElement.addEventListener("seeked", onSeeked);
+                video.seek(SEEK_TIME);
+            });
+        }));
+
+        // 親のchangedフラグも更新する関数
+        const applyChanges = (displayObject) => {
+            displayObject.changed = true;
+            let parent = displayObject.parent;
+            while (parent && !parent.changed) {
+                parent.changed = true;
+                parent = parent.parent;
+            }
+        };
+
+        // ビデオのchangedフラグを更新してレンダリングを強制
+        allVideos.forEach((video) => {
+            if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                applyChanges(video);
+            }
+        });
+
+        // レンダリング安定化のため数フレーム待機
+        await new Promise((resolve) => {
+            let frameCount = 0;
+            const waitFrames = () => {
+                allVideos.forEach((video) => {
+                    if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                        applyChanges(video);
+                    }
+                });
+                frameCount++;
+                if (frameCount >= 10) {
+                    resolve();
+                } else {
+                    requestAnimationFrame(waitFrames);
+                }
+            };
+            requestAnimationFrame(waitFrames);
+        });
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

@@ -767,10 +767,11 @@ export class DisplayObject extends EventDispatcher
     }
     set visible (visible: boolean)
     {
+        visible = !!visible;
         if (this._$visible === visible) {
             return ;
         }
-        this._$visible = !!visible;
+        this._$visible = visible;
         displayObjectApplyChangesService(this);
     }
 

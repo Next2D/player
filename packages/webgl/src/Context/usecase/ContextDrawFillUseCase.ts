@@ -4,7 +4,12 @@ import { execute as contextNormalFillUseCase } from "./ContextNormalFillUseCase"
 import { execute as contextLinearGradientFillUseCase } from "./ContextLinearGradientFillUseCase";
 import { execute as contextRadialGradientFillUseCase } from "./ContextRadialGradientFillUseCase";
 import { execute as contextPatternBitmapFillUseCase } from "./ContextPatternBitmapFillUseCase";
-import { $gl } from "../../WebGLUtil";
+import { execute as stencilResetService } from "../../Stencil/service/StencilResetService";
+import {
+    $gl,
+    $enableStencilTest,
+    $disableStencilTest
+} from "../../WebGLUtil";
 import {
     $terminateGrid,
     $gridDataMap
@@ -27,10 +32,12 @@ export const execute = (): void =>
 {
     const fillVertexArrayObject = vertexArrayObjectBindFillMeshUseCase();
 
-    // mask on
-    $gl.enable($gl.STENCIL_TEST);
-    $gl.frontFace($gl.CCW);
+    // mask on（frontFaceはContext初期化時にCCW固定）
+    $enableStencilTest();
     $gl.stencilMask(0xff);
+
+    // Reset stencil cache at the start of fill processing
+    stencilResetService();
 
     let fillOffset = 0;
     let gridData: Float32Array | null = null;
@@ -87,7 +94,10 @@ export const execute = (): void =>
     }
 
     // mask off
-    $gl.disable($gl.STENCIL_TEST);
+    $disableStencilTest();
+
+    // Reset stencil cache after disabling stencil test
+    stencilResetService();
 
     // release vertex array
     vertexArrayObjectReleaseVertexArrayObjectService(fillVertexArrayObject);

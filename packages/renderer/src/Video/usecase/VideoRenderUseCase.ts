@@ -42,6 +42,9 @@ export const execute = (
     // video state
     const changed = Boolean(render_queue[index++]);
 
+    // フィルターキャッシュ用のユニークキー（instanceId）
+    const filterKey = `${render_queue[index++]}`;
+
     let node: Node;
     const hasCache = render_queue[index++];
     if (!hasCache) {
@@ -63,24 +66,28 @@ export const execute = (
 
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
-            $context.bind($context.atlasAttachmentObject);
+            const atlasAttachment = $context.atlasAttachmentObject;
+            if (atlasAttachment) {
+                $context.bind(atlasAttachment as any);
+            }
 
             $context.reset();
             $context.beginNodeRendering(node);
 
-            const offsetY = $context.atlasAttachmentObject.height - node.y - height;
+            const offsetY = atlasAttachment ? atlasAttachment.height - node.y - height : 0;
             $context.setTransform(1, 0, 0, 1,
                 node.x,
                 offsetY
             );
 
             const imageBitmap = image_bitmaps.shift() as ImageBitmap;
-            $context.drawElement(node, imageBitmap);
+            // Video用にflipY: trueを指定（WebGPUでは画像の座標系変換が必要）
+            $context.drawElement(node, imageBitmap, true);
 
             $context.endNodeRendering();
 
             if (currentAttachment) {
-                $context.bind(currentAttachment);
+                $context.bind(currentAttachment as any);
             }
         }
     } else {
@@ -106,7 +113,7 @@ export const execute = (
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, uniqueKey, Boolean(Math.max(+changed, +updated)),
+            node, filterKey, Boolean(Math.max(+changed, +updated)),
             width, height, true,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params

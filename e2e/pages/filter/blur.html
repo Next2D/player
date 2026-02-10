@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - BlurFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 300, 60);
+        const { Shape } = next2d.display;
+        const { BlurFilter } = next2d.filters;
+
+        // ===== フィルターなし（参照用）=====
+        const noFilter = new Shape();
+        noFilter.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(0, 0, 120, 100)
+            .endFill()
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(60, 50, 35)
+            .endFill();
+        noFilter.x = 50;
+        noFilter.y = 50;
+        root.addChild(noFilter);
+
+        // ===== BlurX + BlurY =====
+        const blur1 = new Shape();
+        blur1.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(0, 0, 120, 100)
+            .endFill()
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(60, 50, 35)
+            .endFill();
+        blur1.x = 230;
+        blur1.y = 50;
+        blur1.filters = [new BlurFilter(10, 10, 1)];
+        root.addChild(blur1);
+
+        // ===== 強いブラー =====
+        const blur2 = new Shape();
+        blur2.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(0, 0, 120, 100)
+            .endFill()
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(60, 50, 35)
+            .endFill();
+        blur2.x = 410;
+        blur2.y = 50;
+        blur2.filters = [new BlurFilter(20, 20, 2)];
+        root.addChild(blur2);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

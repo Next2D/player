@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Shape Load Image</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, Sprite, BlendMode } = next2d.display;
+        const { BlurFilter, GlowFilter, DropShadowFilter } = next2d.filters;
+
+        // 画像パス
+        const images = {
+            checker: "/e2e/fixtures/images/test-checker.png",
+            gradient: "/e2e/fixtures/images/test-gradient.png",
+            circle: "/e2e/fixtures/images/test-circle.png",
+            star: "/e2e/fixtures/images/test-star.png",
+            stripe: "/e2e/fixtures/images/test-stripe.png"
+        };
+
+        // ===== 基本的な画像読み込み =====
+
+        // Shape.load() で画像を読み込み
+        const shape1 = new Shape();
+        await shape1.load(images.checker);
+        shape1.x = 20;
+        shape1.y = 20;
+        root.addChild(shape1);
+
+        // グラデーション画像
+        const shape2 = new Shape();
+        await shape2.load(images.gradient);
+        shape2.x = 100;
+        shape2.y = 20;
+        root.addChild(shape2);
+
+        // 円画像
+        const shape3 = new Shape();
+        await shape3.load(images.circle);
+        shape3.x = 180;
+        shape3.y = 20;
+        root.addChild(shape3);
+
+        // 星画像
+        const shape4 = new Shape();
+        await shape4.load(images.star);
+        shape4.x = 260;
+        shape4.y = 20;
+        root.addChild(shape4);
+
+        // ストライプ画像
+        const shape5 = new Shape();
+        await shape5.load(images.stripe);
+        shape5.x = 340;
+        shape5.y = 20;
+        root.addChild(shape5);
+
+        // ===== srcプロパティでの読み込み =====
+
+        const shapeSrc = new Shape();
+        shapeSrc.src = images.checker;
+        shapeSrc.x = 420;
+        shapeSrc.y = 20;
+        root.addChild(shapeSrc);
+
+        // srcの読み込み完了を待つ
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // ===== スケール変換 =====
+
+        // 拡大
+        const shapeScaleUp = new Shape();
+        await shapeScaleUp.load(images.checker);
+        shapeScaleUp.x = 20;
+        shapeScaleUp.y = 110;
+        shapeScaleUp.scaleX = 1.5;
+        shapeScaleUp.scaleY = 1.5;
+        root.addChild(shapeScaleUp);
+
+        // 縮小
+        const shapeScaleDown = new Shape();
+        await shapeScaleDown.load(images.gradient);
+        shapeScaleDown.x = 150;
+        shapeScaleDown.y = 110;
+        shapeScaleDown.scaleX = 0.5;
+        shapeScaleDown.scaleY = 0.5;
+        root.addChild(shapeScaleDown);
+
+        // 非対称スケール
+        const shapeScaleAsym = new Shape();
+        await shapeScaleAsym.load(images.circle);
+        shapeScaleAsym.x = 220;
+        shapeScaleAsym.y = 110;
+        shapeScaleAsym.scaleX = 2;
+        shapeScaleAsym.scaleY = 1;
+        root.addChild(shapeScaleAsym);
+
+        // ===== 回転 =====
+
+        // 45度回転
+        const shapeRotate45 = new Shape();
+        await shapeRotate45.load(images.star);
+        shapeRotate45.x = 400;
+        shapeRotate45.y = 150;
+        shapeRotate45.rotation = 45;
+        root.addChild(shapeRotate45);
+
+        // 90度回転
+        const shapeRotate90 = new Shape();
+        await shapeRotate90.load(images.stripe);
+        shapeRotate90.x = 500;
+        shapeRotate90.y = 150;
+        shapeRotate90.rotation = 90;
+        root.addChild(shapeRotate90);
+
+        // ===== 透明度 =====
+
+        // alpha 0.5
+        const shapeAlpha = new Shape();
+        await shapeAlpha.load(images.checker);
+        shapeAlpha.x = 20;
+        shapeAlpha.y = 220;
+        shapeAlpha.alpha = 0.5;
+        root.addChild(shapeAlpha);
+
+        // alpha 0.3
+        const shapeAlpha2 = new Shape();
+        await shapeAlpha2.load(images.gradient);
+        shapeAlpha2.x = 100;
+        shapeAlpha2.y = 220;
+        shapeAlpha2.alpha = 0.3;
+        root.addChild(shapeAlpha2);
+
+        // ===== BlendMode =====
+
+        // ADDブレンドモード用コンテナ
+        const addContainer = new Sprite();
+        addContainer.x = 200;
+        addContainer.y = 200;
+        root.addChild(addContainer);
+
+        const addBg = new Shape();
+        addBg.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(0, 0, 80, 80)
+            .endFill();
+        addContainer.addChild(addBg);
+
+        const shapeAdd = new Shape();
+        await shapeAdd.load(images.checker);
+        shapeAdd.x = 8;
+        shapeAdd.y = 8;
+        shapeAdd.blendMode = BlendMode.ADD;
+        addContainer.addChild(shapeAdd);
+
+        // MULTIPLYブレンドモード用コンテナ
+        const multiplyContainer = new Sprite();
+        multiplyContainer.x = 300;
+        multiplyContainer.y = 200;
+        root.addChild(multiplyContainer);
+
+        const multiplyBg = new Shape();
+        multiplyBg.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawRect(0, 0, 80, 80)
+            .endFill();
+        multiplyContainer.addChild(multiplyBg);
+
+        const shapeMultiply = new Shape();
+        await shapeMultiply.load(images.gradient);
+        shapeMultiply.x = 8;
+        shapeMultiply.y = 8;
+        shapeMultiply.blendMode = BlendMode.MULTIPLY;
+        multiplyContainer.addChild(shapeMultiply);
+
+        // SCREENブレンドモード用コンテナ
+        const screenContainer = new Sprite();
+        screenContainer.x = 400;
+        screenContainer.y = 200;
+        root.addChild(screenContainer);
+
+        const screenBg = new Shape();
+        screenBg.graphics
+            .beginFill(0x880088, 1.0)
+            .drawRect(0, 0, 80, 80)
+            .endFill();
+        screenContainer.addChild(screenBg);
+
+        const shapeScreen = new Shape();
+        await shapeScreen.load(images.circle);
+        shapeScreen.x = 8;
+        shapeScreen.y = 8;
+        shapeScreen.blendMode = BlendMode.SCREEN;
+        screenContainer.addChild(shapeScreen);
+
+        // ===== Filter =====
+
+        // BlurFilter
+        const shapeBlur = new Shape();
+        await shapeBlur.load(images.checker);
+        shapeBlur.x = 20;
+        shapeBlur.y = 310;
+        shapeBlur.filters = [new BlurFilter(4, 4, 1)];
+        root.addChild(shapeBlur);
+
+        // GlowFilter
+        const shapeGlow = new Shape();
+        await shapeGlow.load(images.star);
+        shapeGlow.x = 110;
+        shapeGlow.y = 310;
+        shapeGlow.filters = [new GlowFilter(0xFFFF00, 1, 10, 10, 2, 1)];
+        root.addChild(shapeGlow);
+
+        // DropShadowFilter
+        const shapeShadow = new Shape();
+        await shapeShadow.load(images.circle);
+        shapeShadow.x = 210;
+        shapeShadow.y = 310;
+        shapeShadow.filters = [new DropShadowFilter(6, 45, 0x000000, 0.8, 6, 6, 1, 1)];
+        root.addChild(shapeShadow);
+
+        // 複数フィルター
+        const shapeMultiFilter = new Shape();
+        await shapeMultiFilter.load(images.gradient);
+        shapeMultiFilter.x = 310;
+        shapeMultiFilter.y = 310;
+        shapeMultiFilter.filters = [
+            new GlowFilter(0x00FFFF, 1, 8, 8, 2, 1),
+            new BlurFilter(2, 2, 1)
+        ];
+        root.addChild(shapeMultiFilter);
+
+        // ===== 複合変換（スケール + 回転 + フィルター）=====
+
+        const shapeComplex = new Shape();
+        await shapeComplex.load(images.stripe);
+        shapeComplex.x = 450;
+        shapeComplex.y = 350;
+        shapeComplex.scaleX = 1.5;
+        shapeComplex.scaleY = 1.5;
+        shapeComplex.rotation = 30;
+        shapeComplex.alpha = 0.8;
+        shapeComplex.filters = [new GlowFilter(0xFF8800, 1, 6, 6, 1.5, 1)];
+        root.addChild(shapeComplex);
+
+        // ===== 同じ画像を複数表示 =====
+
+        for (let i = 0; i < 5; i++) {
+            const shapeMultiple = new Shape();
+            await shapeMultiple.load(images.checker);
+            shapeMultiple.x = 20 + i * 70;
+            shapeMultiple.y = 420;
+            shapeMultiple.alpha = 0.3 + i * 0.15;
+            root.addChild(shapeMultiple);
+        }
+
+        // ===== bitmapDataプロパティの確認 =====
+        const shapeBitmapData = new Shape();
+        await shapeBitmapData.load(images.gradient);
+        const bitmapData = shapeBitmapData.bitmapData;
+
+        // BitmapDataを使って新しいShapeを作成
+        const shapeFromBitmapData = new Shape();
+        shapeFromBitmapData.graphics
+            .beginBitmapFill(bitmapData, null, false, true)
+            .drawRect(0, 0, 64, 64)
+            .endFill();
+        shapeFromBitmapData.x = 380;
+        shapeFromBitmapData.y = 420;
+        root.addChild(shapeFromBitmapData);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

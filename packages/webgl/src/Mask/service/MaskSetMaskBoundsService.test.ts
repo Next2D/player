@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject.ts";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment
+    $currentAttachment
 } from "../../FrameBufferManager.ts";
 import { $clipBounds } from "../../Mask";
 
@@ -37,9 +37,10 @@ describe("MaskSetMaskBoundsService.js method test", () =>
                     }),
                     "SCISSOR_TEST": "SCISSOR_TEST",
                 },
+                $enableScissorTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
-                        return $getCurrentAttachment();
+                        return $currentAttachment;
                     }
                 }
             }

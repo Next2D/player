@@ -29,6 +29,8 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
             "COLOR_BUFFER_BIT": 16384,
             "NEAREST": 9728,
         },
+        $enableScissorTest: vi.fn(),
+        $disableScissorTest: vi.fn(),
         $context: {
             currentAttachmentObject: mockAttachment,
             $mainAttachmentObject: mockAttachment,
@@ -38,7 +40,7 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
 });
 
 vi.mock("../../FrameBufferManager.ts", () => ({
-    $getDrawBitmapFrameBuffer: vi.fn(() => "drawBitmapFrameBuffer"),
+    $drawBitmapFramebuffer: "drawBitmapFrameBuffer",
     $readFrameBuffer: "readFrameBuffer"
 }));
 

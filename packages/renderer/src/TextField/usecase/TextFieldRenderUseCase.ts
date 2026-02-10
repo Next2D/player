@@ -46,15 +46,11 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     // text state
     const changed = Boolean(render_queue[index++]);
 
-    const xScale = Math.sqrt(
-        matrix[0] * matrix[0]
-        + matrix[1] * matrix[1]
-    );
+    const xScale = render_queue[index++];
+    const yScale = render_queue[index++];
 
-    const yScale = Math.sqrt(
-        matrix[2] * matrix[2]
-        + matrix[3] * matrix[3]
-    );
+    // フィルターキャッシュ用のユニークキー（instanceId）
+    const filterKey = `${render_queue[index++]}`;
 
     let node: Node;
     const hasCache = render_queue[index++];
@@ -131,12 +127,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
         // fixed logic
         const currentAttachment = $context.currentAttachmentObject;
-        $context.bind($context.atlasAttachmentObject);
+        const atlasAttachment = $context.atlasAttachmentObject;
+        if (atlasAttachment) {
+            $context.bind(atlasAttachment as any);
+        }
 
         $context.reset();
         $context.beginNodeRendering(node);
 
-        const offsetY = $context.atlasAttachmentObject.height - node.y - height;
+        const offsetY = atlasAttachment ? atlasAttachment.height - node.y - height : 0;
         $context.setTransform(1, 0, 0, 1,
             node.x,
             offsetY
@@ -147,7 +146,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         $context.endNodeRendering();
 
         if (currentAttachment) {
-            $context.bind(currentAttachment);
+            $context.bind(currentAttachment as any);
         }
 
     } else {
@@ -173,7 +172,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, uniqueKey, Boolean(Math.max(+changed, +updated)),
+            node, filterKey, Boolean(Math.max(+changed, +updated)),
             width, height, false,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params

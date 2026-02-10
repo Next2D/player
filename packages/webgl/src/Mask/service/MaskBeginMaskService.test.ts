@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject.ts";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment
+    $currentAttachment
 } from "../../FrameBufferManager.ts";
 import {
     $isMaskDrawing,
@@ -64,9 +64,10 @@ describe("MaskBeginMaskService.js method test", () =>
                     "ZERO": "ZERO",
                     "INVERT": "INVERT",
                 },
+                $enableStencilTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
-                        return $getCurrentAttachment();
+                        return $currentAttachment;
                     }
                 }
             }

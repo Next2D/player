@@ -2,7 +2,7 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IColorBufferObject } from "../../interface/IColorBufferObject";
 import type { IStencilBufferObject } from "../../interface/IStencilBufferObject";
 import type { Context } from "../../Context";
-import { $getCurrentAttachment } from "../../FrameBufferManager";
+import { $currentAttachment } from "../../FrameBufferManager";
 import { execute as frameBufferManagerBindAttachmentObjectService } from "../../FrameBufferManager/service/FrameBufferManagerBindAttachmentObjectService";
 import { execute as maskBindUseCase } from "../../Mask/usecase/MaskBindUseCase";
 import {
@@ -23,7 +23,7 @@ import {
 export const execute = (context: Context, attachment_object: IAttachmentObject): void =>
 {
     // fixed logic
-    const currentAttachment = $getCurrentAttachment();
+    const currentAttachment = $currentAttachment;
     if (currentAttachment
         && attachment_object.id === currentAttachment.id
     ) {
@@ -47,11 +47,9 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
         : attachment_object.stencil as IStencilBufferObject;
 
     // 再利用のオブジェクトの場合は、描画情報をクリアする
+    // clearColorは初期化時に(0,0,0,0)で固定済みのためそのまま使用
     if (object.dirty) {
-
         object.dirty = false;
-
-        // 無色透明で初期化
         context.clearRect(0, 0, attachment_object.width, attachment_object.height);
     }
 

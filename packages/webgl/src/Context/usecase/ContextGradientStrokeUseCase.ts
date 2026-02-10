@@ -30,9 +30,9 @@ export const execute = (
     focal: number
 ): void => {
 
-    const vertices = $getVertices();
+    const vertices = $getVertices(true);
     if (!vertices.length) {
-        return ;
+        return;
     }
 
     // 塗りの種類を追加

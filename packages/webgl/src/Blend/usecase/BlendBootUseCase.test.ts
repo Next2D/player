@@ -1,8 +1,8 @@
 import { execute } from "./BlendBootUseCase";
 import { describe, expect, it, vi } from "vitest";
 import {
-    $setFuncCode,
-    $getFuncCode
+    $funcCode,
+    $setFuncCode
 } from "../../Blend";
 
 
@@ -34,9 +34,9 @@ describe("BlendBootUseCase.js method test", () =>
         });
 
         $setFuncCode(0);
-        expect($getFuncCode()).toBe(0);
+        expect($funcCode).toBe(0);
         execute();
 
-        expect($getFuncCode()).toBe(613);
+        expect($funcCode).toBe(613);
     });
 });

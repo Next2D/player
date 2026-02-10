@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Line Style</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape } = next2d.display;
+
+        // ===== 線の太さテスト =====
+
+        // 細い線（1px）
+        const line1 = new Shape();
+        line1.graphics
+            .lineStyle(1, 0xFF0000, 1.0)
+            .moveTo(20, 30)
+            .lineTo(180, 30);
+        root.addChild(line1);
+
+        // 中程度の線（3px）
+        const line2 = new Shape();
+        line2.graphics
+            .lineStyle(3, 0x00FF00, 1.0)
+            .moveTo(20, 60)
+            .lineTo(180, 60);
+        root.addChild(line2);
+
+        // 太い線（8px）
+        const line3 = new Shape();
+        line3.graphics
+            .lineStyle(8, 0x0000FF, 1.0)
+            .moveTo(20, 100)
+            .lineTo(180, 100);
+        root.addChild(line3);
+
+        // ===== Caps（線端スタイル）テスト =====
+
+        // caps: none
+        const capsNone = new Shape();
+        capsNone.graphics
+            .lineStyle(12, 0xFF0000, 1.0, false, "normal", "none")
+            .moveTo(220, 30)
+            .lineTo(380, 30);
+        root.addChild(capsNone);
+
+        // caps: round
+        const capsRound = new Shape();
+        capsRound.graphics
+            .lineStyle(12, 0x00FF00, 1.0, false, "normal", "round")
+            .moveTo(220, 70)
+            .lineTo(380, 70);
+        root.addChild(capsRound);
+
+        // caps: square
+        const capsSquare = new Shape();
+        capsSquare.graphics
+            .lineStyle(12, 0x0000FF, 1.0, false, "normal", "square")
+            .moveTo(220, 110)
+            .lineTo(380, 110);
+        root.addChild(capsSquare);
+
+        // ===== Joints（線結合スタイル）テスト =====
+
+        // joints: bevel
+        const jointBevel = new Shape();
+        jointBevel.graphics
+            .lineStyle(12, 0xFF0000, 1.0, false, "normal", "round", "bevel")
+            .moveTo(420, 20)
+            .lineTo(480, 70)
+            .lineTo(540, 20);
+        root.addChild(jointBevel);
+
+        // joints: miter
+        const jointMiter = new Shape();
+        jointMiter.graphics
+            .lineStyle(12, 0x00FF00, 1.0, false, "normal", "round", "miter")
+            .moveTo(560, 20)
+            .lineTo(620, 70)
+            .lineTo(680, 20);
+        root.addChild(jointMiter);
+
+        // joints: round
+        const jointRound = new Shape();
+        jointRound.graphics
+            .lineStyle(12, 0x0000FF, 1.0, false, "normal", "round", "round")
+            .moveTo(700, 20)
+            .lineTo(760, 70)
+            .lineTo(760, 120);
+        root.addChild(jointRound);
+
+        // ===== 二次ベジェ曲線（curveTo）テスト =====
+
+        // 基本的な二次ベジェ曲線
+        const curve1 = new Shape();
+        curve1.graphics
+            .lineStyle(4, 0xFF00FF, 1.0)
+            .moveTo(20, 160)
+            .curveTo(100, 120, 180, 160);
+        root.addChild(curve1);
+
+        // 太い二次ベジェ曲線（round caps）
+        const curve2 = new Shape();
+        curve2.graphics
+            .lineStyle(8, 0x00FFFF, 1.0, false, "normal", "round")
+            .moveTo(20, 220)
+            .curveTo(100, 180, 180, 220);
+        root.addChild(curve2);
+
+        // S字カーブ（二次ベジェ曲線の連続）
+        const sCurve = new Shape();
+        sCurve.graphics
+            .lineStyle(5, 0xFFFF00, 1.0, false, "normal", "round", "round")
+            .moveTo(220, 160)
+            .curveTo(270, 120, 300, 160)
+            .curveTo(330, 200, 380, 160);
+        root.addChild(sCurve);
+
+        // ===== 三次ベジェ曲線（cubicCurveTo）テスト =====
+
+        // 基本的な三次ベジェ曲線
+        const cubic1 = new Shape();
+        cubic1.graphics
+            .lineStyle(4, 0xFF8800, 1.0)
+            .moveTo(420, 160)
+            .cubicCurveTo(450, 100, 530, 220, 580, 160);
+        root.addChild(cubic1);
+
+        // 太い三次ベジェ曲線
+        const cubic2 = new Shape();
+        cubic2.graphics
+            .lineStyle(8, 0x88FF00, 1.0, false, "normal", "round")
+            .moveTo(600, 160)
+            .cubicCurveTo(640, 100, 720, 220, 780, 160);
+        root.addChild(cubic2);
+
+        // ===== 円・楕円テスト =====
+
+        // 円（線のみ）
+        const circle = new Shape();
+        circle.graphics
+            .lineStyle(4, 0xFF0000, 1.0)
+            .drawCircle(80, 300, 40);
+        root.addChild(circle);
+
+        // 太い円
+        const circleThick = new Shape();
+        circleThick.graphics
+            .lineStyle(10, 0x00FF00, 1.0)
+            .drawCircle(200, 300, 40);
+        root.addChild(circleThick);
+
+        // 楕円（横長）
+        const ellipse1 = new Shape();
+        ellipse1.graphics
+            .lineStyle(4, 0x0000FF, 1.0)
+            .drawEllipse(280, 260, 100, 60);
+        root.addChild(ellipse1);
+
+        // 楕円（縦長）
+        const ellipse2 = new Shape();
+        ellipse2.graphics
+            .lineStyle(6, 0xFFFF00, 1.0)
+            .drawEllipse(420, 250, 50, 80);
+        root.addChild(ellipse2);
+
+        // ===== 角丸矩形テスト =====
+
+        // 角丸矩形（小さい半径）
+        const roundRect1 = new Shape();
+        roundRect1.graphics
+            .lineStyle(4, 0xFF00FF, 1.0)
+            .drawRoundRect(520, 260, 100, 60, 10);
+        root.addChild(roundRect1);
+
+        // 角丸矩形（大きい半径）
+        const roundRect2 = new Shape();
+        roundRect2.graphics
+            .lineStyle(6, 0x00FFFF, 1.0)
+            .drawRoundRect(660, 260, 100, 60, 25);
+        root.addChild(roundRect2);
+
+        // ===== Alpha（透明度）テスト =====
+
+        // alpha: 1.0
+        const alpha1 = new Shape();
+        alpha1.graphics
+            .lineStyle(8, 0xFFFFFF, 1.0)
+            .moveTo(20, 380)
+            .curveTo(100, 340, 180, 380);
+        root.addChild(alpha1);
+
+        // alpha: 0.5
+        const alpha2 = new Shape();
+        alpha2.graphics
+            .lineStyle(8, 0xFFFFFF, 0.5)
+            .moveTo(20, 430)
+            .curveTo(100, 390, 180, 430);
+        root.addChild(alpha2);
+
+        // ===== 複合テスト =====
+
+        // 波線（二次ベジェ曲線の連続）
+        const wave = new Shape();
+        wave.graphics
+            .lineStyle(6, 0xFF8800, 1.0, false, "normal", "round", "round")
+            .moveTo(220, 380)
+            .curveTo(260, 340, 300, 380)
+            .curveTo(340, 420, 380, 380)
+            .curveTo(420, 340, 460, 380)
+            .curveTo(500, 420, 540, 380);
+        root.addChild(wave);
+
+        // 直線と曲線の組み合わせ
+        const mixed = new Shape();
+        mixed.graphics
+            .lineStyle(5, 0x00FF88, 1.0, false, "normal", "round", "round")
+            .moveTo(580, 380)
+            .lineTo(620, 340)
+            .curveTo(680, 340, 720, 380)
+            .lineTo(760, 340);
+        root.addChild(mixed);
+
+        // 三角形（closed path）with miter joints
+        const triangle = new Shape();
+        triangle.graphics
+            .lineStyle(6, 0xFF00FF, 1.0, false, "normal", "none", "miter")
+            .moveTo(80, 480)
+            .lineTo(140, 560)
+            .lineTo(20, 560)
+            .lineTo(80, 480);
+        root.addChild(triangle);
+
+        // ジグザグ線（bevel joints）
+        const zigzag = new Shape();
+        zigzag.graphics
+            .lineStyle(8, 0xFFFF00, 1.0, false, "normal", "round", "bevel")
+            .moveTo(180, 480)
+            .lineTo(220, 540)
+            .lineTo(260, 480)
+            .lineTo(300, 540)
+            .lineTo(340, 480);
+        root.addChild(zigzag);
+
+        // 矩形
+        const rect = new Shape();
+        rect.graphics
+            .lineStyle(4, 0x00FFFF, 1.0, false, "normal", "square", "miter")
+            .drawRect(380, 480, 120, 80);
+        root.addChild(rect);
+
+        // 複雑な曲線パス（三次ベジェ曲線の連続）
+        const complexCurve = new Shape();
+        complexCurve.graphics
+            .lineStyle(4, 0xFF8888, 1.0, false, "normal", "round", "round")
+            .moveTo(540, 520)
+            .cubicCurveTo(560, 460, 620, 580, 660, 520)
+            .cubicCurveTo(700, 460, 740, 580, 780, 520);
+        root.addChild(complexCurve);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

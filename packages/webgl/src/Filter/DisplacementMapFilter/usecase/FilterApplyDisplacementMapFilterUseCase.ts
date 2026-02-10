@@ -8,10 +8,7 @@ import { execute as blendResetService } from "../../../Blend/service/BlendResetS
 import { execute as shaderManagerDrawTextureUseCase } from "../../../Shader/ShaderManager/usecase/ShaderManagerDrawTextureUseCase";
 import { execute as shaderManagerSetDisplacementMapFilterUniformService } from "../../../Shader/ShaderManager/service/ShaderManagerSetDisplacementMapFilterUniformService";
 import { execute as textureManagerReleaseTextureObjectUseCase } from "../../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
-import {
-    $context,
-    $getDevicePixelRatio
-} from "../../../WebGLUtil";
+import { $context } from "../../../WebGLUtil";
 import {
     $intToR,
     $intToG,
@@ -23,7 +20,6 @@ import {
  *              Apply displacement map filter
  *
  * @param  {ITextureObject} texture_object
- * @param  {Float32Array} matrix
  * @param  {Uint8Array} bitmap_buffer
  * @param  {number} bitmap_width
  * @param  {number} bitmap_height
@@ -42,7 +38,6 @@ import {
  */
 export const execute = (
     texture_object: ITextureObject,
-    matrix: Float32Array,
     bitmap_buffer: Uint8Array,
     bitmap_width: number = 0,
     bitmap_height: number = 0,
@@ -59,15 +54,8 @@ export const execute = (
 
     const currentAttachmentObject = $context.currentAttachmentObject;
 
-    const devicePixelRatio = $getDevicePixelRatio();
-    const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]) / devicePixelRatio;
-    const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]) / devicePixelRatio;
-
     const width  = texture_object.width;
     const height = texture_object.height;
-
-    const baseWidth  = width  / xScale;
-    const baseHeight = height / yScale;
 
     const attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
         width, height, false
@@ -89,7 +77,7 @@ export const execute = (
 
     shaderManagerSetDisplacementMapFilterUniformService(
         shaderManager,
-        width, height, baseWidth, baseHeight,
+        bitmap_width, bitmap_height, bitmap_width, bitmap_height,
         map_point_x, map_point_y, scale_x, scale_y, mode,
         $intToR(color, alpha, true),
         $intToG(color, alpha, true),

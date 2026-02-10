@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Scale9Grid</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { Rectangle } = next2d.geom;
+
+        // ボタン風のシェイプを作成する関数
+        const createButton = (width, height, cornerRadius, color) => {
+            const sprite = new Sprite();
+            const shape = new Shape();
+
+            // 背景
+            shape.graphics
+                .beginFill(color, 1.0)
+                .drawRoundRect(0, 0, width, height, cornerRadius)
+                .endFill();
+
+            // 内側のハイライト
+            const highlight = new Shape();
+            highlight.graphics
+                .beginFill(0xFFFFFF, 0.3)
+                .drawRoundRect(2, 2, width - 4, height / 2 - 2, cornerRadius - 2)
+                .endFill();
+
+            // 枠線
+            const border = new Shape();
+            border.graphics
+                .lineStyle(2, 0x000000, 0.5)
+                .drawRoundRect(0, 0, width, height, cornerRadius);
+
+            sprite.addChild(shape);
+            sprite.addChild(highlight);
+            sprite.addChild(border);
+
+            return sprite;
+        };
+
+        // ===== scale9Grid なし（通常スケール）=====
+
+        // オリジナルサイズ
+        const btn1 = createButton(100, 40, 10, 0x3366FF);
+        btn1.x = 20;
+        btn1.y = 20;
+        root.addChild(btn1);
+
+        // 横に引き伸ばし（scale9Grid なし）
+        const btn2 = createButton(100, 40, 10, 0x3366FF);
+        btn2.x = 140;
+        btn2.y = 20;
+        btn2.scaleX = 2;
+        root.addChild(btn2);
+
+        // 縦に引き伸ばし（scale9Grid なし）
+        const btn3 = createButton(100, 40, 10, 0x3366FF);
+        btn3.x = 360;
+        btn3.y = 20;
+        btn3.scaleY = 2;
+        root.addChild(btn3);
+
+        // ===== scale9Grid あり =====
+
+        // オリジナルサイズ
+        const btn4 = createButton(100, 40, 10, 0xFF6633);
+        btn4.x = 20;
+        btn4.y = 120;
+        btn4.scale9Grid = new Rectangle(15, 10, 70, 20);
+        root.addChild(btn4);
+
+        // 横に引き伸ばし（scale9Grid あり）
+        const btn5 = createButton(100, 40, 10, 0xFF6633);
+        btn5.x = 140;
+        btn5.y = 120;
+        btn5.scale9Grid = new Rectangle(15, 10, 70, 20);
+        btn5.scaleX = 2;
+        root.addChild(btn5);
+
+        // 縦に引き伸ばし（scale9Grid あり）
+        const btn6 = createButton(100, 40, 10, 0xFF6633);
+        btn6.x = 360;
+        btn6.y = 120;
+        btn6.scale9Grid = new Rectangle(15, 10, 70, 20);
+        btn6.scaleY = 2;
+        root.addChild(btn6);
+
+        // ===== 様々なサイズでの比較 =====
+
+        // 小さいサイズ
+        const btnSmall1 = createButton(100, 40, 10, 0x33CC33);
+        btnSmall1.x = 20;
+        btnSmall1.y = 240;
+        btnSmall1.scaleX = 0.5;
+        btnSmall1.scaleY = 0.5;
+        root.addChild(btnSmall1);
+
+        const btnSmall2 = createButton(100, 40, 10, 0x33CC33);
+        btnSmall2.x = 80;
+        btnSmall2.y = 240;
+        btnSmall2.scale9Grid = new Rectangle(15, 10, 70, 20);
+        btnSmall2.scaleX = 0.5;
+        btnSmall2.scaleY = 0.5;
+        root.addChild(btnSmall2);
+
+        // 大きいサイズ
+        const btnLarge1 = createButton(100, 40, 10, 0xCC33CC);
+        btnLarge1.x = 180;
+        btnLarge1.y = 220;
+        btnLarge1.scaleX = 1.5;
+        btnLarge1.scaleY = 1.5;
+        root.addChild(btnLarge1);
+
+        const btnLarge2 = createButton(100, 40, 10, 0xCC33CC);
+        btnLarge2.x = 360;
+        btnLarge2.y = 220;
+        btnLarge2.scale9Grid = new Rectangle(15, 10, 70, 20);
+        btnLarge2.scaleX = 1.5;
+        btnLarge2.scaleY = 1.5;
+        root.addChild(btnLarge2);
+
+        // ===== パネル風 =====
+
+        const createPanel = (width, height) => {
+            const sprite = new Sprite();
+            const bg = new Shape();
+
+            bg.graphics
+                .beginFill(0x444444, 1.0)
+                .drawRoundRect(0, 0, width, height, 8)
+                .endFill();
+
+            const inner = new Shape();
+            inner.graphics
+                .beginFill(0x666666, 1.0)
+                .drawRoundRect(4, 4, width - 8, height - 8, 4)
+                .endFill();
+
+            const border = new Shape();
+            border.graphics
+                .lineStyle(1, 0x888888, 1.0)
+                .drawRoundRect(0, 0, width, height, 8);
+
+            sprite.addChild(bg);
+            sprite.addChild(inner);
+            sprite.addChild(border);
+
+            return sprite;
+        };
+
+        // パネル（scale9Grid なし）
+        const panel1 = createPanel(80, 60);
+        panel1.x = 20;
+        panel1.y = 320;
+        panel1.scaleX = 2;
+        panel1.scaleY = 1.5;
+        root.addChild(panel1);
+
+        // パネル（scale9Grid あり）
+        const panel2 = createPanel(80, 60);
+        panel2.x = 200;
+        panel2.y = 320;
+        panel2.scale9Grid = new Rectangle(12, 12, 56, 36);
+        panel2.scaleX = 2;
+        panel2.scaleY = 1.5;
+        root.addChild(panel2);
+
+        // ===== 極端なスケール =====
+
+        // 非常に横長
+        const btnWide = createButton(100, 40, 10, 0xFFCC00);
+        btnWide.x = 20;
+        btnWide.y = 430;
+        btnWide.scale9Grid = new Rectangle(15, 10, 70, 20);
+        btnWide.scaleX = 5;
+        root.addChild(btnWide);
+
+        // 非常に縦長
+        const btnTall = createButton(60, 100, 15, 0x00CCFF);
+        btnTall.x = 540;
+        btnTall.y = 300;
+        btnTall.scale9Grid = new Rectangle(20, 25, 20, 50);
+        btnTall.scaleY = 1.8;
+        root.addChild(btnTall);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

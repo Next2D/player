@@ -4,7 +4,7 @@ import { execute } from "./ContextBindUseCase";
 import { describe, expect, it, vi } from "vitest";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment
+    $currentAttachment
 } from "../../FrameBufferManager";
 
 describe("ContextBindUseCase.js method test", () =>
@@ -22,6 +22,8 @@ describe("ContextBindUseCase.js method test", () =>
             "createFramebuffer": vi.fn(() => "createFramebuffer"),
             "bindFramebuffer": vi.fn(() => "bindFramebuffer"),
             "clearColor": vi.fn(() => "clearColor"),
+            "frontFace": vi.fn(() => "frontFace"),
+            "CCW": 1,
             "createRenderbuffer": vi.fn(() => "createRenderbuffer"),
             "bindRenderbuffer": vi.fn(() => "bindRenderbuffer"),
             "renderbufferStorageMultisample": vi.fn(() => "renderbufferStorageMultisample"),
@@ -51,7 +53,7 @@ describe("ContextBindUseCase.js method test", () =>
         } as unknown as WebGL2RenderingContext;
 
         $setCurrentAttachment(null);
-        expect($getCurrentAttachment()).toBe(null);
+        expect($currentAttachment).toBe(null);
 
         const context = new Context(mockGL, 4);
         const attachment_object: IAttachmentObject = {
@@ -78,7 +80,7 @@ describe("ContextBindUseCase.js method test", () =>
 
         execute(context, attachment_object);
 
-        expect($getCurrentAttachment()).toBe(attachment_object);
+        expect($currentAttachment).toBe(attachment_object);
         expect(attachment_object.stencil?.dirty).toBe(false);
     });
 });

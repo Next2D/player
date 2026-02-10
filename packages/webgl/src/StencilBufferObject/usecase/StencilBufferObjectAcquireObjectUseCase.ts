@@ -19,18 +19,25 @@ export const execute = (width: number, height: number): IStencilBufferObject =>
         return stencilBufferObjectCreateService();
     }
 
-    for (let idx: number = 0; idx < $objectPool.length; ++idx) {
-        const stencilBufferObject = $objectPool[idx];
+    let bestIdx = -1;
+    let bestArea = Infinity;
 
-        if (stencilBufferObject.width !== width
-            || stencilBufferObject.height !== height
-        ) {
-            continue;
+    for (let idx = 0; idx < $objectPool.length; ++idx) {
+        const obj = $objectPool[idx];
+        if (obj.width >= width && obj.height >= height) {
+            if (obj.area < bestArea) {
+                bestArea = obj.area;
+                bestIdx = idx;
+            }
         }
-
-        $objectPool.splice(idx, 1);
-        return stencilBufferObject;
     }
 
-    return $objectPool.shift() as NonNullable<IStencilBufferObject>;
+    if (bestIdx !== -1) {
+        const obj = $objectPool[bestIdx];
+        $objectPool[bestIdx] = $objectPool[$objectPool.length - 1];
+        $objectPool.pop();
+        return obj;
+    }
+
+    return $objectPool.pop() as NonNullable<IStencilBufferObject>;
 };

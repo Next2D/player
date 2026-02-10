@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField Scroll</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { TextField } = next2d.text;
+
+        const longText = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8";
+        const longSingleLine = "This is a very long single line text that extends beyond the visible area";
+
+        // ===== scrollY テスト（左側）=====
+
+        // scrollY=0（デフォルト）
+        const tf1 = new TextField();
+        tf1.text = longText;
+        tf1.x = 20; tf1.y = 20;
+        tf1.width = 200; tf1.height = 80;
+        tf1.multiline = true;
+        tf1.border = true;
+        tf1.borderColor = 0xFFFFFF;
+        tf1.textColor = 0xFFFFFF;
+        root.addChild(tf1);
+
+        // scrollY=3
+        const tf2 = new TextField();
+        tf2.text = longText;
+        tf2.x = 20; tf2.y = 120;
+        tf2.width = 200; tf2.height = 80;
+        tf2.multiline = true;
+        tf2.border = true;
+        tf2.borderColor = 0xFFFFFF;
+        tf2.textColor = 0xFFFFFF;
+        tf2.scrollY = 3;
+        root.addChild(tf2);
+
+        // scrollY=5
+        const tf3 = new TextField();
+        tf3.text = longText;
+        tf3.x = 20; tf3.y = 220;
+        tf3.width = 200; tf3.height = 80;
+        tf3.multiline = true;
+        tf3.border = true;
+        tf3.borderColor = 0xFFFFFF;
+        tf3.textColor = 0xFFFFFF;
+        tf3.scrollY = 5;
+        root.addChild(tf3);
+
+        // ===== scrollX テスト（右側 x=300）=====
+
+        // scrollX=0（デフォルト）
+        const tfx1 = new TextField();
+        tfx1.text = longSingleLine;
+        tfx1.x = 300; tfx1.y = 20;
+        tfx1.width = 200; tfx1.height = 30;
+        tfx1.border = true;
+        tfx1.borderColor = 0xFFFFFF;
+        tfx1.textColor = 0xFFFFFF;
+        root.addChild(tfx1);
+
+        // scrollX=50
+        const tfx2 = new TextField();
+        tfx2.text = longSingleLine;
+        tfx2.x = 300; tfx2.y = 70;
+        tfx2.width = 200; tfx2.height = 30;
+        tfx2.border = true;
+        tfx2.borderColor = 0xFFFFFF;
+        tfx2.textColor = 0xFFFFFF;
+        tfx2.scrollX = 50;
+        root.addChild(tfx2);
+
+        // scrollX=100
+        const tfx3 = new TextField();
+        tfx3.text = longSingleLine;
+        tfx3.x = 300; tfx3.y = 120;
+        tfx3.width = 200; tfx3.height = 30;
+        tfx3.border = true;
+        tfx3.borderColor = 0xFFFFFF;
+        tfx3.textColor = 0xFFFFFF;
+        tfx3.scrollX = 100;
+        root.addChild(tfx3);
+
+        // ===== multiline + wordWrap + scroll（下部 y=300）=====
+
+        const wrapText = "This is a long paragraph of text that should wrap to multiple lines when wordWrap is enabled. It contains enough text to require scrolling in a small text field.";
+
+        // wordWrap scrollY=0
+        const tfw1 = new TextField();
+        tfw1.text = wrapText;
+        tfw1.x = 20; tfw1.y = 300;
+        tfw1.width = 200; tfw1.height = 60;
+        tfw1.multiline = true;
+        tfw1.wordWrap = true;
+        tfw1.border = true;
+        tfw1.borderColor = 0xFFFFFF;
+        tfw1.textColor = 0xFFFFFF;
+        root.addChild(tfw1);
+
+        // wordWrap scrollY=2
+        const tfw2 = new TextField();
+        tfw2.text = wrapText;
+        tfw2.x = 300; tfw2.y = 300;
+        tfw2.width = 200; tfw2.height = 60;
+        tfw2.multiline = true;
+        tfw2.wordWrap = true;
+        tfw2.border = true;
+        tfw2.borderColor = 0xFFFFFF;
+        tfw2.textColor = 0xFFFFFF;
+        tfw2.scrollY = 2;
+        root.addChild(tfw2);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

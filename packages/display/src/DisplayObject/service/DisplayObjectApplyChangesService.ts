@@ -13,8 +13,9 @@ export const execute = <D extends DisplayObject>(display_object: D): void =>
 {
     display_object.changed = true;
 
-    const parent = display_object.parent as unknown as D;
-    if (parent && !parent.changed) {
-        execute(parent);
+    let parent = display_object.parent as D | null;
+    while (parent && !parent.changed) {
+        parent.changed = true;
+        parent = parent.parent as D | null;
     }
 };

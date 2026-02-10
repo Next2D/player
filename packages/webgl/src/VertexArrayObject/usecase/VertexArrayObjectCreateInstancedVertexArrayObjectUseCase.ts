@@ -28,7 +28,9 @@ export const execute = (): IVertexArrayObject =>
     $gl.vertexAttribPointer(0, 2, $gl.FLOAT, false, 0, 0);
 
     $gl.bindBuffer($gl.ARRAY_BUFFER, $attributeWebGLBuffer);
-    $gl.bufferData($gl.ARRAY_BUFFER, renderQueue.buffer.length, $gl.DYNAMIC_DRAW);
+    // STREAM_DRAW: 毎フレーム更新されるインスタンスデータに最適
+    // STREAM_DRAW: Optimal for instance data updated every frame
+    $gl.bufferData($gl.ARRAY_BUFFER, renderQueue.buffer.length, $gl.STREAM_DRAW);
 
     // texture rectangle
     $gl.enableVertexAttribArray(1);

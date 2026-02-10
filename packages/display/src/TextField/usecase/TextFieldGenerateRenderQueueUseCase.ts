@@ -54,6 +54,10 @@ export const execute = (
     // transformed ColorTransform(tColorTransform)
     const rawColor = displayObjectGetRawColorTransformUseCase(text_field as any);
     const tColorTransform = rawColor
+        && (rawColor[0] !== 1 || rawColor[1] !== 1
+            || rawColor[2] !== 1 || rawColor[3] !== 1
+            || rawColor[4] !== 0 || rawColor[5] !== 0
+            || rawColor[6] !== 0 || rawColor[7] !== 0)
         ? ColorTransform.multiply(color_transform, rawColor)
         : color_transform;
 
@@ -69,6 +73,9 @@ export const execute = (
     // transformed matrix(tMatrix)
     const rawMatrix = displayObjectGetRawMatrixUseCase(text_field as any);
     const tMatrix = rawMatrix
+        && (rawMatrix[0] !== 1 || rawMatrix[1] !== 0
+            || rawMatrix[2] !== 0 || rawMatrix[3] !== 1
+            || rawMatrix[4] !== 0 || rawMatrix[5] !== 0)
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
 
@@ -100,7 +107,6 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-            $poolBoundsArray(bounds);
             renderQueue.push(0);
             return;
 
@@ -120,7 +126,6 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        $poolBoundsArray(bounds);
         renderQueue.push(0);
         return;
     }
@@ -143,32 +148,35 @@ export const execute = (
         }
     }
 
-    const xScale = Math.round(Math.sqrt(
+    const xScale = Math.sqrt(
         tMatrix[0] * tMatrix[0]
         + tMatrix[1] * tMatrix[1]
-    ) * 100) / 100;
+    );
 
-    const yScale = Math.round(Math.sqrt(
+    const yScale = Math.sqrt(
         tMatrix[2] * tMatrix[2]
         + tMatrix[3] * tMatrix[3]
-    ) * 100) / 100;
+    );
+
+    const xScaleRounded = Math.round(xScale * 100) / 100;
+    const yScaleRounded = Math.round(yScale * 100) / 100;
 
     if (text_field.changed
         && !text_field.cacheKey
-        || text_field.cacheParams[0] !== xScale
-        || text_field.cacheParams[1] !== yScale
+        || text_field.cacheParams[0] !== xScaleRounded
+        || text_field.cacheParams[1] !== yScaleRounded
         || text_field.cacheParams[2] !== tColorTransform[7]
     ) {
-        text_field.cacheKey = $cacheStore.generateKeys(xScale, yScale, tColorTransform[7]);
-        text_field.cacheParams[0] = xScale;
-        text_field.cacheParams[1] = yScale;
+        text_field.cacheKey = $cacheStore.generateKeys(xScaleRounded, yScaleRounded, tColorTransform[7]);
+        text_field.cacheParams[0] = xScaleRounded;
+        text_field.cacheParams[1] = yScaleRounded;
         text_field.cacheParams[2] = tColorTransform[7];
     }
 
     const cacheKey = text_field.cacheKey;
 
     // rennder on
-    renderQueue.push(
+    renderQueue.pushTextFieldBuffer(
         1, $RENDERER_TEXT_TYPE,
         tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
@@ -176,7 +184,9 @@ export const execute = (
         xMin, yMin, xMax, yMax,
         text_field.xMin, text_field.yMin,
         text_field.xMax, text_field.yMax,
-        +text_field.uniqueKey, cacheKey, +text_field.changed
+        +text_field.uniqueKey, cacheKey, +text_field.changed,
+        xScale, yScale,
+        text_field.instanceId // フィルターキャッシュ用のユニークキー
     );
 
     if (text_field.$cache && !text_field.$cache.has(text_field.uniqueKey)) {
@@ -294,6 +304,8 @@ export const execute = (
                 params.length
             );
             renderQueue.set(new Float32Array(params));
+        } else {
+            renderQueue.push(0);
         }
 
         $poolBoundsArray(bounds);

@@ -1,4 +1,5 @@
-import type { Context } from "@next2d/webgl";
+import type { Context as WebGLContext } from "@next2d/webgl";
+import type { Context as WebGPUContext } from "@next2d/webgpu";
 import type { IRGBA } from "./interface/IRGBA";
 
 /**
@@ -8,21 +9,21 @@ import type { IRGBA } from "./interface/IRGBA";
 export const $samples: number = 4;
 
 /**
- * @type {Context}
+ * @type {WebGLContext | WebGPUContext}
  * @public
  */
-export let $context: Context;
+export let $context: WebGLContext | WebGPUContext;
 
 /**
- * @description Next2DのWebGLの描画コンテキストを設定
- *              Set the drawing context of Next2D's WebGL
+ * @description Next2Dの描画コンテキストを設定（WebGLまたはWebGPU）
+ *              Set the drawing context of Next2D (WebGL or WebGPU)
  *
- * @param  {number} context
+ * @param  {WebGLContext | WebGPUContext} context
  * @return {void}
  * @method
  * @public
  */
-export const $setContext = (context: Context): void =>
+export const $setContext = (context: WebGLContext | WebGPUContext): void =>
 {
     $context = context;
 };

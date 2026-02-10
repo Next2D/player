@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { IAttachmentObject } from "../../interface/IAttachmentObject.ts";
 import {
     $setCurrentAttachment,
-    $getCurrentAttachment
+    $currentAttachment
 } from "../../FrameBufferManager.ts";
 import {
     $setMaskDrawing,
@@ -102,9 +102,12 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                     "SCISSOR_TEST": "SCISSOR_TEST",
                     "STENCIL_BUFFER_BIT": "STENCIL_BUFFER_BIT",
                 },
+                $enableScissorTest: vi.fn(),
+                $disableScissorTest: vi.fn(),
+                $disableStencilTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
-                        return $getCurrentAttachment();
+                        return $currentAttachment;
                     }
                 }
             }
@@ -266,9 +269,12 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                     "SCISSOR_TEST": "SCISSOR_TEST",
                     "STENCIL_BUFFER_BIT": "STENCIL_BUFFER_BIT",
                 },
+                $enableScissorTest: vi.fn(),
+                $disableScissorTest: vi.fn(),
+                $disableStencilTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
-                        return $getCurrentAttachment();
+                        return $currentAttachment;
                     }
                 }
             }

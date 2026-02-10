@@ -1,0 +1,216 @@
+import type { IAttachmentObject } from "../../interface/IAttachmentObject";
+import type { IBlendMode } from "../../interface/IBlendMode";
+import type { BufferManager } from "../../BufferManager";
+import type { FrameBufferManager } from "../../FrameBufferManager";
+import type { TextureManager } from "../../TextureManager";
+import type { PipelineManager } from "../../Shader/PipelineManager";
+import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
+import { $currentBlendMode } from "../../Blend";
+import { renderQueue } from "@next2d/render-queue";
+import {
+    $isMaskTestEnabled,
+    $getMaskStencilReference
+} from "../../Mask";
+import { $getAtlasAttachmentObject } from "../../AtlasManager";
+
+let $cachedBindGroup: GPUBindGroup | null = null;
+let $cachedAtlasView: GPUTextureView | null = null;
+
+export const execute = (
+    device: GPUDevice,
+    commandEncoder: GPUCommandEncoder,
+    renderPassEncoder: GPURenderPassEncoder | null,
+    mainAttachment: IAttachmentObject,
+    bufferManager: BufferManager,
+    frameBufferManager: FrameBufferManager,
+    textureManager: TextureManager,
+    pipelineManager: PipelineManager,
+    useIndirect: boolean = true,
+    useStorageBuffer: boolean = true
+): GPURenderPassEncoder | null => {
+    const shaderManager = getInstancedShaderManager();
+
+    if (shaderManager.count === 0) {
+        return renderPassEncoder;
+    }
+
+    // 既存のレンダーパスを終了
+    if (renderPassEncoder) {
+        renderPassEncoder.end();
+        renderPassEncoder = null;
+    }
+
+    const isMasked = $isMaskTestEnabled();
+    const maskReference = $getMaskStencilReference();
+
+    // 現在のブレンドモードを取得
+    const blendMode: IBlendMode = $currentBlendMode;
+
+    // ブレンドモードに応じたパイプライン名を生成
+    const getPipelineName = (mode: IBlendMode): string => {
+        switch (mode) {
+            case "add":
+                return "instanced_add";
+            case "screen":
+                return "instanced_screen";
+            case "alpha":
+                return "instanced_alpha";
+            case "erase":
+                return "instanced_erase";
+            case "copy":
+                return "instanced_copy";
+            default:
+                // normal, layer
+                return "instanced";
+        }
+    };
+
+    const pipelineName = getPipelineName(blendMode);
+    const normalPipeline = pipelineManager.getPipeline(pipelineName);
+    const maskedPipeline = pipelineManager.getPipeline("instanced_masked");
+
+    const useStencil = isMasked && maskedPipeline
+        && (mainAttachment.msaaStencil?.view || mainAttachment.stencil?.view);
+
+    const pipeline = useStencil ? maskedPipeline : normalPipeline;
+
+    if (!pipeline) {
+        console.error("[WebGPU] Instanced pipeline not found");
+        return null;
+    }
+
+    // レンダーパスを作成
+    let passEncoder: GPURenderPassEncoder;
+
+    if (useStencil) {
+        // MSAA対応
+        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
+        const stencilView = useMsaa && mainAttachment.msaaStencil?.view
+            ? mainAttachment.msaaStencil.view : mainAttachment.stencil!.view;
+        const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
+
+        const renderPassDescriptor = frameBufferManager.createStencilRenderPassDescriptor(
+            colorView,
+            stencilView,
+            "load",
+            "load",
+            resolveTarget
+        );
+        passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    } else {
+        // 通常のレンダーパス（MSAA対応）
+        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
+        const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
+        const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
+            colorView,
+            0, 0, 0, 0,
+            "load",
+            resolveTarget
+        );
+        passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    }
+
+    passEncoder.setPipeline(pipeline);
+
+    if (useStencil) {
+        passEncoder.setStencilReference(maskReference);
+    }
+
+    // インスタンスデータを準備
+    const instanceData = new Float32Array(
+        renderQueue.buffer.buffer,
+        renderQueue.buffer.byteOffset,
+        renderQueue.offset
+    );
+
+    // インスタンスバッファを作成または取得
+    let instanceBuffer: GPUBuffer;
+    if (useStorageBuffer) {
+        // Storage Buffer最適化: プールから再利用してメモリアロケーション削減
+        // Storage BufferはVERTEXフラグ付きで作成されているため、setVertexBufferで使用可能
+        instanceBuffer = bufferManager.acquireStorageBuffer(instanceData.byteLength);
+        bufferManager.writeStorageBuffer(instanceBuffer, instanceData);
+    } else {
+        // 従来方式: プールから再利用
+        instanceBuffer = bufferManager.acquireVertexBuffer(instanceData.byteLength, instanceData);
+    }
+
+    // 頂点バッファ（矩形）を取得（キャッシュ済み）
+    const vertexBuffer = bufferManager.getUnitRectBuffer();
+
+    // アトラステクスチャをバインド（複数アトラス対応）
+    // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
+    const atlasAttachment = $getAtlasAttachmentObject() || frameBufferManager.getAttachment("atlas");
+    if (!atlasAttachment) {
+        console.error("[WebGPU] Atlas attachment not found");
+        passEncoder.end();
+        return null;
+    }
+
+    // アトラス用サンプラーを取得（キャッシュ済み）
+    const sampler = textureManager.createSampler("atlas_instanced_sampler", false);
+
+    const bindGroupLayout = pipelineManager.getBindGroupLayout("instanced");
+    if (!bindGroupLayout) {
+        console.error("[WebGPU] Instanced bind group layout not found");
+        passEncoder.end();
+        return null;
+    }
+
+    // BindGroupキャッシュ: アトラスのテクスチャビューが同じなら再利用
+    const atlasView = atlasAttachment.texture!.view;
+    if (!$cachedBindGroup || $cachedAtlasView !== atlasView) {
+        $cachedBindGroup = device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                {
+                    "binding": 0,
+                    "resource": sampler
+                },
+                {
+                    "binding": 1,
+                    "resource": atlasView
+                }
+            ]
+        });
+        $cachedAtlasView = atlasView;
+    }
+
+    // 描画
+    passEncoder.setVertexBuffer(0, vertexBuffer);
+    passEncoder.setVertexBuffer(1, instanceBuffer);
+    passEncoder.setBindGroup(0, $cachedBindGroup);
+
+    if (useIndirect) {
+        // Indirect Drawing: CPU-GPU間のオーバーヘッドを削減
+        // 注意: 1フレーム内で複数回呼び出される場合があるため、
+        // 毎回新しいIndirect Bufferを作成する必要がある
+        // （共有バッファを使うとqueue.writeBufferの更新が全てGPU実行前に行われ、
+        // 全てのdrawIndirectが最後の更新値を使用してしまう）
+        const indirectBuffer = bufferManager.createIndirectBuffer(
+            6,                    // vertexCount (2 triangles = 6 vertices)
+            shaderManager.count,  // instanceCount
+            0,                    // firstVertex
+            0                     // firstInstance
+        );
+        passEncoder.drawIndirect(indirectBuffer, 0);
+    } else {
+        // 通常の描画
+        passEncoder.draw(6, shaderManager.count, 0, 0);
+    }
+
+    // レンダーパスを終了
+    passEncoder.end();
+
+    // 注意: Storage Bufferはここで解放しない
+    // GPUがまだ描画を実行していないため、同一フレーム内で再利用されると
+    // データが上書きされてしまう。
+    // フレーム終了時（clearFrameBuffers）でまとめて解放される。
+
+    // インスタンスデータをクリア
+    shaderManager.clear();
+
+    return null;
+};

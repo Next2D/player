@@ -24,6 +24,21 @@ vi.mock("../../Shader/Variants/Gradient/usecase/VariantsGradientShapeShaderUseCa
 vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetGradientFillUniformService", () => ({
     execute: vi.fn()
 }));
+vi.mock("../../Stencil/service/StencilSetMaskModeService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilSetFillModeService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilEnableSampleAlphaToCoverageService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilDisableSampleAlphaToCoverageService", () => ({
+    execute: vi.fn()
+}));
+vi.mock("../../Stencil/service/StencilResetService", () => ({
+    execute: vi.fn()
+}));
 
 vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
     const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
@@ -55,7 +70,9 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
         $linearGradientXY: vi.fn(() => new Float32Array([0, 0, 1, 1])),
         $inverseMatrix: vi.fn(() => new Float32Array([1, 0, 0, 1, 0, 0])),
         $poolFloat32Array4: vi.fn(),
-        $poolFloat32Array6: vi.fn()
+        $poolFloat32Array6: vi.fn(),
+        $enableStencilTest: vi.fn(),
+        $disableStencilTest: vi.fn()
     };
 });
 

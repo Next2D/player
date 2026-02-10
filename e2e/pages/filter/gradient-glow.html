@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - GradientGlowFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape } = next2d.display;
+        const { GradientGlowFilter } = next2d.filters;
+
+        // テスト用シェイプを作成
+        const createTestShape = (color = 0x333333) => {
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(color, 1.0)
+                .drawRoundRect(0, 0, 70, 45, 6)
+                .endFill();
+            return shape;
+        };
+
+        // ===== フィルターなし（参照用）=====
+        const noFilter = createTestShape(0x666666);
+        noFilter.x = 30;
+        noFilter.y = 30;
+        root.addChild(noFilter);
+
+        // ===== 基本的なグラデーショングロー =====
+        const basic = createTestShape();
+        basic.x = 120;
+        basic.y = 30;
+        basic.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFFFF00, 0xFFFFFF],
+            [0, 1, 0],
+            [0, 128, 255],
+            8, 8, 1, 1, "outer"
+        )];
+        root.addChild(basic);
+
+        // ===== 赤→黄のグラデーショングロー =====
+        const redYellow = createTestShape();
+        redYellow.x = 210;
+        redYellow.y = 30;
+        redYellow.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF0000, 0xFFFF00],
+            [0, 1, 1],
+            [0, 128, 255],
+            10, 10, 1, 1, "outer"
+        )];
+        root.addChild(redYellow);
+
+        // ===== 虹色グロー =====
+        const rainbow = createTestShape();
+        rainbow.x = 300;
+        rainbow.y = 30;
+        rainbow.filters = [new GradientGlowFilter(
+            4, 45,
+            [0xFF0000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0xFF00FF],
+            [1, 1, 1, 1, 1, 1],
+            [0, 51, 102, 153, 204, 255],
+            12, 12, 1, 1, "outer"
+        )];
+        root.addChild(rainbow);
+
+        // ===== 白→青のグラデーショングロー =====
+        const whiteBlue = createTestShape();
+        whiteBlue.x = 400;
+        whiteBlue.y = 30;
+        whiteBlue.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFFFFFF, 0x0088FF],
+            [0, 1, 1],
+            [0, 100, 255],
+            10, 10, 1, 1, "outer"
+        )];
+        root.addChild(whiteBlue);
+
+        // ===== ネオン緑 =====
+        const neonGreen = createTestShape(0x003300);
+        neonGreen.x = 500;
+        neonGreen.y = 30;
+        neonGreen.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x00FF00, 0x00FF00, 0x000000],
+            [0, 1, 0],
+            [0, 80, 255],
+            15, 15, 2, 1, "outer"
+        )];
+        root.addChild(neonGreen);
+
+        // ===== type: inner =====
+        const innerGlow = createTestShape(0x666666);
+        innerGlow.x = 30;
+        innerGlow.y = 100;
+        innerGlow.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF0000, 0xFFFF00],
+            [1, 1, 0],
+            [0, 128, 255],
+            8, 8, 1, 1, "inner"
+        )];
+        root.addChild(innerGlow);
+
+        // ===== type: full =====
+        const fullGlow = createTestShape(0x666666);
+        fullGlow.x = 120;
+        fullGlow.y = 100;
+        fullGlow.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF0000, 0xFFFF00],
+            [1, 1, 1],
+            [0, 128, 255],
+            8, 8, 1, 1, "full"
+        )];
+        root.addChild(fullGlow);
+
+        // ===== 距離が大きい =====
+        const farGlow = createTestShape();
+        farGlow.x = 210;
+        farGlow.y = 100;
+        farGlow.filters = [new GradientGlowFilter(
+            15, 45,
+            [0x000000, 0x00FFFF],
+            [0, 1],
+            [0, 255],
+            8, 8, 1, 1, "outer"
+        )];
+        root.addChild(farGlow);
+
+        // ===== 角度0度 =====
+        const angle0 = createTestShape();
+        angle0.x = 300;
+        angle0.y = 100;
+        angle0.filters = [new GradientGlowFilter(
+            8, 0,
+            [0x000000, 0xFFFF00],
+            [0, 1],
+            [0, 255],
+            8, 8, 1, 1, "outer"
+        )];
+        root.addChild(angle0);
+
+        // ===== 角度180度 =====
+        const angle180 = createTestShape();
+        angle180.x = 400;
+        angle180.y = 100;
+        angle180.filters = [new GradientGlowFilter(
+            8, 180,
+            [0x000000, 0xFFFF00],
+            [0, 1],
+            [0, 255],
+            8, 8, 1, 1, "outer"
+        )];
+        root.addChild(angle180);
+
+        // ===== ブラー大 =====
+        const bigBlur = createTestShape();
+        bigBlur.x = 500;
+        bigBlur.y = 100;
+        bigBlur.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF00FF],
+            [0, 1],
+            [0, 255],
+            20, 20, 1, 1, "outer"
+        )];
+        root.addChild(bigBlur);
+
+        // ===== strength強 =====
+        const strongStr = createTestShape();
+        strongStr.x = 30;
+        strongStr.y = 180;
+        strongStr.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFFFF00],
+            [0, 1],
+            [0, 255],
+            8, 8, 3, 1, "outer"
+        )];
+        root.addChild(strongStr);
+
+        // ===== quality高 =====
+        const highQuality = createTestShape();
+        highQuality.x = 120;
+        highQuality.y = 180;
+        highQuality.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFFFF00],
+            [0, 1],
+            [0, 255],
+            10, 10, 1, 3, "outer"
+        )];
+        root.addChild(highQuality);
+
+        // ===== knockout = true =====
+        const knockout = createTestShape(0x666666);
+        knockout.x = 210;
+        knockout.y = 180;
+        knockout.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF0000, 0xFFFF00],
+            [0, 1, 1],
+            [0, 128, 255],
+            10, 10, 1, 1, "outer", true
+        )];
+        root.addChild(knockout);
+
+        // ===== 炎風 =====
+        const flame = createTestShape(0x220000);
+        flame.x = 300;
+        flame.y = 180;
+        flame.filters = [new GradientGlowFilter(
+            4, 270,
+            [0x000000, 0xFF0000, 0xFF8800, 0xFFFF00, 0xFFFFFF],
+            [0, 1, 1, 1, 0.5],
+            [0, 60, 120, 180, 255],
+            12, 16, 1.5, 1, "outer"
+        )];
+        root.addChild(flame);
+
+        // ===== 氷風 =====
+        const ice = createTestShape(0x001133);
+        ice.x = 400;
+        ice.y = 180;
+        ice.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0x0044FF, 0x00CCFF, 0xFFFFFF],
+            [0, 1, 1, 0.5],
+            [0, 80, 170, 255],
+            12, 12, 1.5, 1, "outer"
+        )];
+        root.addChild(ice);
+
+        // ===== 太陽風 =====
+        const sun = createTestShape(0x332200);
+        sun.x = 500;
+        sun.y = 180;
+        sun.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF8800, 0xFFFF00, 0xFFFFFF],
+            [0, 1, 1, 0.3],
+            [0, 100, 180, 255],
+            15, 15, 1.5, 1, "outer"
+        )];
+        root.addChild(sun);
+
+        // ===== 円への適用 =====
+        const circleShape = new Shape();
+        circleShape.graphics
+            .beginFill(0x333333, 1.0)
+            .drawCircle(35, 25, 25)
+            .endFill();
+        circleShape.x = 30;
+        circleShape.y = 270;
+        circleShape.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF00FF, 0xFFFFFF],
+            [0, 1, 0],
+            [0, 128, 255],
+            10, 10, 1, 1, "outer"
+        )];
+        root.addChild(circleShape);
+
+        // ===== 星形への適用 =====
+        const starShape = new Shape();
+        starShape.graphics.beginFill(0x333333, 1.0);
+        const cx = 35, cy = 25, outerR = 25, innerR = 10;
+        for (let i = 0; i < 10; i++) {
+            const angle = (i * 36 - 90) * Math.PI / 180;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            if (i === 0) {
+                starShape.graphics.moveTo(x, y);
+            } else {
+                starShape.graphics.lineTo(x, y);
+            }
+        }
+        starShape.graphics.endFill();
+        starShape.x = 120;
+        starShape.y = 270;
+        starShape.filters = [new GradientGlowFilter(
+            4, 45,
+            [0xFFFF00, 0xFFCC00, 0xFF8800, 0x000000],
+            [0.5, 1, 1, 0],
+            [0, 80, 180, 255],
+            10, 10, 1.5, 1, "outer"
+        )];
+        root.addChild(starShape);
+
+        // ===== 枠線への適用 =====
+        const strokeShape = new Shape();
+        strokeShape.graphics
+            .lineStyle(3, 0x666666, 1.0)
+            .drawRect(0, 0, 60, 40);
+        strokeShape.x = 220;
+        strokeShape.y = 275;
+        strokeShape.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0x00FF00],
+            [0, 1],
+            [0, 255],
+            8, 8, 1, 1, "outer"
+        )];
+        root.addChild(strokeShape);
+
+        // ===== テキスト風への適用 =====
+        const textShape = new Shape();
+        textShape.graphics
+            .beginFill(0x666666, 1.0)
+            .drawRect(0, 0, 50, 8)
+            .drawRect(20, 0, 8, 35)
+            .endFill();
+        textShape.x = 310;
+        textShape.y = 275;
+        textShape.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF0000, 0xFFFF00],
+            [0, 1, 0.5],
+            [0, 128, 255],
+            6, 6, 2, 1, "outer"
+        )];
+        root.addChild(textShape);
+
+        // ===== 複数グラデーショングロー =====
+        const multiGlow = createTestShape(0x222222);
+        multiGlow.x = 400;
+        multiGlow.y = 270;
+        multiGlow.filters = [
+            new GradientGlowFilter(
+                8, 45,
+                [0x000000, 0x0000FF],
+                [0, 0.5],
+                [0, 255],
+                20, 20, 1, 1, "outer"
+            ),
+            new GradientGlowFilter(
+                4, 45,
+                [0x000000, 0x00FFFF],
+                [0, 1],
+                [0, 255],
+                8, 8, 1, 1, "outer"
+            )
+        ];
+        root.addChild(multiGlow);
+
+        // ===== ハロー効果 =====
+        const halo = createTestShape(0x111111);
+        halo.x = 500;
+        halo.y = 270;
+        halo.filters = [new GradientGlowFilter(
+            4, 45,
+            [0xFFFFFF, 0xFFFFFF, 0x000000],
+            [0, 1, 0],
+            [0, 40, 255],
+            15, 15, 2, 1, "outer"
+        )];
+        root.addChild(halo);
+
+        // ===== エネルギー風 =====
+        const energy = new Shape();
+        energy.graphics
+            .beginFill(0x003366, 1.0)
+            .drawCircle(45, 30, 25)
+            .endFill();
+        energy.x = 30;
+        energy.y = 360;
+        energy.filters = [
+            new GradientGlowFilter(
+                4, 45,
+                [0x000000, 0x00FFFF, 0xFFFFFF],
+                [0, 1, 0],
+                [0, 150, 255],
+                12, 12, 2, 1, "outer"
+            ),
+            new GradientGlowFilter(
+                2, 45,
+                [0x000000, 0xFFFFFF],
+                [0, 0.5],
+                [0, 255],
+                4, 4, 1, 1, "inner"
+            )
+        ];
+        root.addChild(energy);
+
+        // ===== 非対称ブラー =====
+        const asymGlow = createTestShape();
+        asymGlow.x = 130;
+        asymGlow.y = 360;
+        asymGlow.filters = [new GradientGlowFilter(
+            4, 45,
+            [0x000000, 0xFF0000, 0xFFFF00],
+            [0, 1, 0.5],
+            [0, 128, 255],
+            20, 5, 1, 1, "outer"
+        )];
+        root.addChild(asymGlow);
+
+        // ===== 内側と外側の組み合わせ =====
+        const innerOuter = createTestShape(0x444444);
+        innerOuter.x = 230;
+        innerOuter.y = 360;
+        innerOuter.filters = [
+            new GradientGlowFilter(
+                4, 45,
+                [0x000000, 0xFFFFFF],
+                [1, 0],
+                [0, 255],
+                6, 6, 1, 1, "inner"
+            ),
+            new GradientGlowFilter(
+                4, 45,
+                [0x000000, 0x00FF00],
+                [0, 1],
+                [0, 255],
+                10, 10, 1, 1, "outer"
+            )
+        ];
+        root.addChild(innerOuter);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

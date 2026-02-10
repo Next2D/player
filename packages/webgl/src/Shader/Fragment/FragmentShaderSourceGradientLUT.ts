@@ -1,14 +1,3 @@
-/**
- * @description グラデーションのLUTのフラグメントシェーダーソース
- *              Fragment shader source of gradient LUT
- *
- * @param  {number} mediump_length
- * @param  {number} stops_length
- * @param  {number} is_linear_space
- * @return {string}
- * @method
- * @protected
- */
 export const GRADIENT_LUT_TEMPLATE = (
     mediump_length: number,
     stops_length: number,

@@ -1,11 +1,3 @@
-/**
- * @description 頂点シェーダから受け取ったカラー情報をそのまま出力。
- *              Outputs the color information received from the vertex shader as it is.
- *
- * @return {string}
- * @method
- * @static
- */
 export const SOLID_FILL_COLOR = (): string =>
 {
     return `#version 300 es
@@ -19,14 +11,6 @@ void main() {
 }`;
 };
 
-/**
- * @description ビットマップの繰り返しではない場合の塗りつぶし。
- *              Filling when the bitmap is not repeated.
- *
- * @return {string}
- * @method
- * @static
- */
 export const BITMAP_CLIPPED = (): string =>
 {
     return `#version 300 es
@@ -46,14 +30,6 @@ void main() {
 }`;
 };
 
-/**
- * @description ビットマップの繰り返しの場合の塗りつぶし。
- *              Filling in the case of repeating the bitmap.
- *
- * @return {string}
- * @method
- * @static
- */
 export const BITMAP_PATTERN = (): string =>
 {
     return `#version 300 es
@@ -67,20 +43,12 @@ out vec4 o_color;
 
 void main() {
     vec2 uv = fract(vec2(v_uv.x, -v_uv.y) / u_mediump[0].xy);
-    
+
     vec4 src = texture(u_texture, uv);
     o_color = src;
 }`;
 };
 
-/**
- * @description マスク専用のシェーダ。
- *              Shader dedicated to masks.
- *
- * @return {string}
- * @method
- * @static
- */
 export const MASK = (): string =>
 {
     return `#version 300 es
@@ -90,28 +58,22 @@ in vec2 v_bezier;
 out vec4 o_color;
 
 void main() {
-    vec2 px = dFdx(v_bezier);
-    vec2 py = dFdy(v_bezier);
+    float f_val = v_bezier.x * v_bezier.x - v_bezier.y;
 
-    vec2 f = (2.0 * v_bezier.x) * vec2(px.x, py.x) - vec2(px.y, py.y);
-    float alpha = 0.5 - (v_bezier.x * v_bezier.x - v_bezier.y) / length(f);
+    float dx = dFdx(f_val);
+    float dy = dFdy(f_val);
 
-    if (alpha > 0.0) {
+    float dist = f_val / length(vec2(dx, dy));
+    float alpha = smoothstep(0.5, -0.5, dist);
+
+    if (alpha > 0.001) {
         o_color = vec4(min(alpha, 1.0));
     } else {
         discard;
-    }    
+    }
 }`;
 };
 
-/**
- * @description 矩形の塗りつぶし、カラーは固定。
- *              Fill the rectangle, the color is fixed.
- *
- * @return {string}
- * @method
- * @static
- */
 export const FILL_RECT_COLOR = (): string =>
 {
     return `#version 300 es

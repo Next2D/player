@@ -4,6 +4,7 @@ import { execute as shapeClipRenderUseCase } from "../../Shape/usecase/ShapeClip
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
 import { execute as videoRenderUseCase } from "../../Video/usecase/VideoRenderUseCase";
 import { execute as displayObjectContainerClipRenderUseCase } from "./DisplayObjectContainerClipRenderUseCase";
+import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 
 /**
  * @description DisplayObjectContainerの描画を実行します。
@@ -21,6 +22,82 @@ export const execute = (
     index: number,
     image_bitmaps: ImageBitmap[] | null
 ): number => {
+
+    let endClipDepth = 0;
+    let canRenderMask = true;
+
+    // use layer
+    const blendMode = displayObjectGetBlendModeService(render_queue[index++]);
+    const useLayer  = Boolean(render_queue[index++]);
+
+    // layer size
+    let layerWidth  = 0;
+    let layerHeight = 0;
+
+    let useFilter = false;
+    let uniqueKey = "";
+    let filterKey = "";
+    let filterBounds: Float32Array | null = null;
+    let filterParams: Float32Array | null = null;
+    let matrix: Float32Array | null = null;
+    let colorTransform: Float32Array | null = null;
+    if (useLayer) {
+
+        layerWidth  = render_queue[index++];
+        layerHeight = render_queue[index++];
+
+        useFilter = Boolean(render_queue[index++]);
+
+        if (useFilter) {
+            // フィルターパス: filterCache/uniqueKey/filterKey を読む
+            const filterCache = Boolean(render_queue[index++]);
+            uniqueKey = `${render_queue[index++]}`;
+            filterKey = `${render_queue[index++]}`;
+            if (filterCache) {
+                filterBounds = render_queue.subarray(index, index + 4);
+                index += 4;
+
+                matrix = render_queue.subarray(index, index + 6);
+                index += 6;
+
+                colorTransform = render_queue.subarray(index, index + 8);
+                index += 8;
+
+                // キャッシュされたフィルターテクスチャを描画
+                $context.containerDrawCachedFilter(
+                    blendMode, matrix, colorTransform,
+                    filterBounds, uniqueKey, filterKey
+                );
+                return index;
+            }
+
+            filterBounds = render_queue.subarray(index, index + 4);
+            index += 4;
+
+            matrix = render_queue.subarray(index, index + 6);
+            index += 6;
+
+            colorTransform = render_queue.subarray(index, index + 8);
+            index += 8;
+
+            const length = render_queue[index++];
+            filterParams = render_queue.subarray(index, index + length);
+            index += length;
+
+        } else {
+            // ブレンドのみパス: matrix + colorTransform
+            matrix = render_queue.subarray(index, index + 6);
+            index += 6;
+
+            colorTransform = render_queue.subarray(index, index + 8);
+            index += 8;
+        }
+    }
+
+    // コンテナのフィルター/ブレンド用にレイヤーを開始
+    if (useLayer) {
+        $context.containerBeginLayer(layerWidth, layerHeight);
+    }
 
     const useMaskDisplayObject = Boolean(render_queue[index++]);
     if (useMaskDisplayObject) {
@@ -59,9 +136,6 @@ export const execute = (
         }
         $context.endMask();
     }
-
-    let endClipDepth = 0;
-    let canRenderMask = true;
 
     const length = render_queue[index++];
     for (let idx = 0; length > idx; idx++) {
@@ -133,7 +207,8 @@ export const execute = (
         }
 
         // hidden
-        if (!render_queue[index++]) {
+        const hidden = render_queue[index++];
+        if (!hidden) {
             continue;
         }
 
@@ -157,7 +232,6 @@ export const execute = (
                 break;
 
             default:
-                console.error("unknown type", type);
                 break;
 
         }
@@ -167,6 +241,15 @@ export const execute = (
     if (endClipDepth || useMaskDisplayObject) {
         $context.restore();
         $context.leaveMask();
+    }
+
+    // コンテナのフィルター/ブレンド結果をメインに合成
+    if (useLayer) {
+        $context.containerEndLayer(
+            blendMode, matrix!, colorTransform,
+            useFilter, filterBounds, filterParams,
+            uniqueKey, filterKey
+        );
     }
 
     return index;

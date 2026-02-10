@@ -3,13 +3,13 @@ import type { ITextureObject } from "../../interface/ITextureObject";
 import { execute as textureManagerGetTextureUseCase } from "../../TextureManager/usecase/TextureManagerGetTextureUseCase";
 import { execute as frameBufferManagerTransferAtlasTextureService } from "../../FrameBufferManager/service/FrameBufferManagerTransferAtlasTextureService";
 import {
-    $getDrawBitmapFrameBuffer,
-    $getReadBitmapFrameBuffer,
+    $drawBitmapFramebuffer,
+    $readBitmapFramebuffer,
     $readFrameBuffer
 } from "../../FrameBufferManager";
 import { $gl } from "../../WebGLUtil";
 import {
-    $getActiveAtlasIndex,
+    $activeAtlasIndex,
     $setActiveAtlasIndex,
     $getAtlasTextureObject
 } from "../../AtlasManager";
@@ -26,12 +26,11 @@ import {
 export const execute = (node: Node): ITextureObject =>
 {
     // 指定されたindexのフレームバッファの描画をアトラステクスチャに転送
-    const activeIndex = $getActiveAtlasIndex();
+    const activeIndex = $activeAtlasIndex;
     $setActiveAtlasIndex(node.index);
     frameBufferManagerTransferAtlasTextureService();
 
-    const readBitmapFrameBuffer = $getReadBitmapFrameBuffer();
-    $gl.bindFramebuffer($gl.FRAMEBUFFER, readBitmapFrameBuffer);
+    $gl.bindFramebuffer($gl.FRAMEBUFFER, $readBitmapFramebuffer);
 
     const atlasTextureObject = $getAtlasTextureObject();
     $gl.framebufferTexture2D(
@@ -39,8 +38,7 @@ export const execute = (node: Node): ITextureObject =>
         $gl.TEXTURE_2D, atlasTextureObject.resource, 0
     );
 
-    const drawBitmapFrameBuffer = $getDrawBitmapFrameBuffer();
-    $gl.bindFramebuffer($gl.FRAMEBUFFER, drawBitmapFrameBuffer);
+    $gl.bindFramebuffer($gl.FRAMEBUFFER, $drawBitmapFramebuffer);
 
     const textureObject = textureManagerGetTextureUseCase(node.w, node.h);
     $gl.framebufferTexture2D(
@@ -49,8 +47,8 @@ export const execute = (node: Node): ITextureObject =>
     );
 
     $gl.bindFramebuffer($gl.FRAMEBUFFER, null);
-    $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, readBitmapFrameBuffer);
-    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, drawBitmapFrameBuffer);
+    $gl.bindFramebuffer($gl.READ_FRAMEBUFFER, $readBitmapFramebuffer);
+    $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, $drawBitmapFramebuffer);
 
     // execute
     $gl.blitFramebuffer(

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField Thickness</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { TextField, TextFormat } = next2d.text;
+        const { GlowFilter } = next2d.filters;
+
+        // ===== 1行目（y=20）: thickness テスト =====
+
+        // thickness=0（参照用）
+        const tf1 = new TextField();
+        tf1.text = "Hello";
+        tf1.x = 20; tf1.y = 20;
+        tf1.autoSize = "left";
+        tf1.textColor = 0xFFFFFF;
+        root.addChild(tf1);
+
+        // thickness=1, thicknessColor=0xFF0000
+        const tf2 = new TextField();
+        tf2.text = "Hello";
+        tf2.x = 150; tf2.y = 20;
+        tf2.autoSize = "left";
+        tf2.textColor = 0xFFFFFF;
+        tf2.thickness = 1;
+        tf2.thicknessColor = 0xFF0000;
+        root.addChild(tf2);
+
+        // thickness=2, thicknessColor=0x0000FF
+        const tf3 = new TextField();
+        tf3.text = "Hello";
+        tf3.x = 300; tf3.y = 20;
+        tf3.autoSize = "left";
+        tf3.textColor = 0xFFFFFF;
+        tf3.thickness = 2;
+        tf3.thicknessColor = 0x0000FF;
+        root.addChild(tf3);
+
+        // thickness=3, thicknessColor=0x00FF00
+        const tf4 = new TextField();
+        tf4.text = "Hello";
+        tf4.x = 450; tf4.y = 20;
+        tf4.autoSize = "left";
+        tf4.textColor = 0xFFFFFF;
+        tf4.thickness = 3;
+        tf4.thicknessColor = 0x00FF00;
+        root.addChild(tf4);
+
+        // ===== 2行目（y=80）: 異なるフォントサイズで thickness =====
+
+        // fontSize=20 thickness=1, thicknessColor=0xFFFF00
+        const tf5 = new TextField();
+        const format5 = new TextFormat();
+        format5.size = 20;
+        tf5.defaultTextFormat = format5;
+        tf5.text = "Big Text";
+        tf5.x = 20; tf5.y = 80;
+        tf5.autoSize = "left";
+        tf5.textColor = 0xFFFFFF;
+        tf5.thickness = 1;
+        tf5.thicknessColor = 0xFFFF00;
+        root.addChild(tf5);
+
+        // fontSize=24 thickness=2, thicknessColor=0xFF00FF
+        const tf6 = new TextField();
+        const format6 = new TextFormat();
+        format6.size = 24;
+        tf6.defaultTextFormat = format6;
+        tf6.text = "Large";
+        tf6.x = 250; tf6.y = 80;
+        tf6.autoSize = "left";
+        tf6.textColor = 0xFFFFFF;
+        tf6.thickness = 2;
+        tf6.thicknessColor = 0xFF00FF;
+        root.addChild(tf6);
+
+        // ===== 3行目（y=160）: thickness + フィルター =====
+
+        // thickness + GlowFilter
+        const tf7 = new TextField();
+        tf7.text = "Glow + Thickness";
+        tf7.x = 20; tf7.y = 160;
+        tf7.autoSize = "left";
+        tf7.textColor = 0xFFFFFF;
+        tf7.thickness = 1;
+        tf7.thicknessColor = 0xFF0000;
+        tf7.filters = [new GlowFilter(0xFFFF00, 1, 4, 4, 2, 1)];
+        root.addChild(tf7);
+
+        // ===== 4行目（y=240）: htmlText + thickness =====
+
+        const tf8 = new TextField();
+        tf8.htmlText = "<b>Bold</b> Normal";
+        tf8.x = 20; tf8.y = 240;
+        tf8.autoSize = "left";
+        tf8.textColor = 0xFFFFFF;
+        tf8.thickness = 1;
+        tf8.thicknessColor = 0x00FFFF;
+        root.addChild(tf8);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

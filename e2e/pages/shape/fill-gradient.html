@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Fill Gradient</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // ===== 線形グラデーション =====
+
+        // 線形グラデーション - 水平（左から右）
+        const linearH = new Shape();
+        const matrixH = new Matrix();
+        matrixH.createGradientBox(120, 60, 0, 20, 20);
+        linearH.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixH
+            )
+            .drawRect(20, 20, 120, 60)
+            .endFill();
+        root.addChild(linearH);
+
+        // 線形グラデーション - 垂直（上から下）
+        const linearV = new Shape();
+        const matrixV = new Matrix();
+        matrixV.createGradientBox(120, 60, Math.PI / 2, 160, 20);
+        linearV.graphics
+            .beginGradientFill(
+                "linear",
+                [0x00FF00, 0xFFFF00],
+                [1, 1],
+                [0, 255],
+                matrixV
+            )
+            .drawRect(160, 20, 120, 60)
+            .endFill();
+        root.addChild(linearV);
+
+        // 線形グラデーション - 斜め（45度）
+        const linearD = new Shape();
+        const matrixD = new Matrix();
+        matrixD.createGradientBox(120, 60, Math.PI / 4, 300, 20);
+        linearD.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF00FF, 0x00FFFF],
+                [1, 1],
+                [0, 255],
+                matrixD
+            )
+            .drawRect(300, 20, 120, 60)
+            .endFill();
+        root.addChild(linearD);
+
+        // 線形グラデーション - 3色
+        const linear3 = new Shape();
+        const matrix3 = new Matrix();
+        matrix3.createGradientBox(150, 60, 0, 440, 20);
+        linear3.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x00FF00, 0x0000FF],
+                [1, 1, 1],
+                [0, 127, 255],
+                matrix3
+            )
+            .drawRect(440, 20, 150, 60)
+            .endFill();
+        root.addChild(linear3);
+
+        // ===== 放射グラデーション =====
+
+        // 放射グラデーション - 基本
+        const radial1 = new Shape();
+        const matrixR1 = new Matrix();
+        matrixR1.createGradientBox(120, 120, 0, 20, 100);
+        radial1.graphics
+            .beginGradientFill(
+                "radial",
+                [0xFFFFFF, 0x000000],
+                [1, 1],
+                [0, 255],
+                matrixR1
+            )
+            .drawRect(20, 100, 120, 120)
+            .endFill();
+        root.addChild(radial1);
+
+        // 放射グラデーション - 楕円
+        const radialE = new Shape();
+        const matrixRE = new Matrix();
+        matrixRE.createGradientBox(150, 80, 0, 160, 100);
+        radialE.graphics
+            .beginGradientFill(
+                "radial",
+                [0xFFFF00, 0xFF0000],
+                [1, 1],
+                [0, 255],
+                matrixRE
+            )
+            .drawRect(160, 100, 150, 80)
+            .endFill();
+        root.addChild(radialE);
+
+        // 放射グラデーション - 3色
+        const radial3 = new Shape();
+        const matrixR3 = new Matrix();
+        matrixR3.createGradientBox(120, 120, 0, 330, 100);
+        radial3.graphics
+            .beginGradientFill(
+                "radial",
+                [0xFFFFFF, 0xFF0000, 0x000000],
+                [1, 1, 1],
+                [0, 127, 255],
+                matrixR3
+            )
+            .drawRect(330, 100, 120, 120)
+            .endFill();
+        root.addChild(radial3);
+
+        // ===== SpreadMethod テスト =====
+
+        // spreadMethod: pad
+        const padShape = new Shape();
+        const matrixPad = new Matrix();
+        matrixPad.createGradientBox(60, 60, 0, 50, 270);
+        padShape.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixPad,
+                "pad"
+            )
+            .drawRect(20, 250, 150, 80)
+            .endFill();
+        root.addChild(padShape);
+
+        // spreadMethod: reflect
+        const reflectShape = new Shape();
+        const matrixReflect = new Matrix();
+        matrixReflect.createGradientBox(60, 60, 0, 220, 270);
+        reflectShape.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixReflect,
+                "reflect"
+            )
+            .drawRect(190, 250, 150, 80)
+            .endFill();
+        root.addChild(reflectShape);
+
+        // spreadMethod: repeat
+        const repeatShape = new Shape();
+        const matrixRepeat = new Matrix();
+        matrixRepeat.createGradientBox(60, 60, 0, 390, 270);
+        repeatShape.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixRepeat,
+                "repeat"
+            )
+            .drawRect(360, 250, 150, 80)
+            .endFill();
+        root.addChild(repeatShape);
+
+        // ===== Alpha付きグラデーション =====
+        const alphaGrad = new Shape();
+        const matrixAlpha = new Matrix();
+        matrixAlpha.createGradientBox(200, 80, 0, 20, 360);
+        alphaGrad.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0xFF0000],
+                [1.0, 0.0],
+                [0, 255],
+                matrixAlpha
+            )
+            .drawRect(20, 360, 200, 80)
+            .endFill();
+        root.addChild(alphaGrad);
+
+        // 放射グラデーション with focal point
+        const focalShape = new Shape();
+        const matrixFocal = new Matrix();
+        matrixFocal.createGradientBox(120, 120, 0, 250, 350);
+        focalShape.graphics
+            .beginGradientFill(
+                "radial",
+                [0xFFFFFF, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixFocal,
+                "pad",
+                "rgb",
+                0.7
+            )
+            .drawRect(250, 350, 120, 120)
+            .endFill();
+        root.addChild(focalShape);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

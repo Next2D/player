@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Sprite Filter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape, Sprite } = next2d.display;
+        const {
+            BlurFilter, DropShadowFilter, GlowFilter,
+            BevelFilter, ColorMatrixFilter
+        } = next2d.filters;
+
+        // Sprite内に複数子要素を配置するヘルパー
+        const createTestSprite = (x, y) => {
+            const sprite = new Sprite();
+            sprite.x = x;
+            sprite.y = y;
+
+            // 赤い矩形
+            const rect = new Shape();
+            rect.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 100, 80)
+                .endFill();
+            sprite.addChild(rect);
+
+            // 緑の円
+            const circle = new Shape();
+            circle.graphics
+                .beginFill(0x00FF00, 1.0)
+                .drawCircle(50, 40, 30)
+                .endFill();
+            sprite.addChild(circle);
+
+            // 青い小さい矩形
+            const small = new Shape();
+            small.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(60, 10, 30, 30)
+                .endFill();
+            sprite.addChild(small);
+
+            return sprite;
+        };
+
+        // ===== フィルターなし（参照用）=====
+        const noFilter = createTestSprite(30, 30);
+        root.addChild(noFilter);
+
+        // ===== BlurFilter =====
+        const blurSprite = createTestSprite(180, 30);
+        blurSprite.filters = [new BlurFilter(8, 8, 1)];
+        root.addChild(blurSprite);
+
+        // ===== DropShadowFilter =====
+        const shadowSprite = createTestSprite(330, 30);
+        shadowSprite.filters = [new DropShadowFilter(4, 45, 0x000000, 0.8, 6, 6, 1, 1)];
+        root.addChild(shadowSprite);
+
+        // ===== GlowFilter =====
+        const glowSprite = createTestSprite(510, 30);
+        glowSprite.filters = [new GlowFilter(0xFFFF00, 1.0, 10, 10, 2, 1)];
+        root.addChild(glowSprite);
+
+        // ===== BevelFilter =====
+        const bevelSprite = createTestSprite(30, 180);
+        bevelSprite.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 6, 6, 1, 1)];
+        root.addChild(bevelSprite);
+
+        // ===== ColorMatrixFilter (セピア) =====
+        const sepiaSprite = createTestSprite(180, 180);
+        sepiaSprite.filters = [new ColorMatrixFilter([
+            0.393, 0.769, 0.189, 0, 0,
+            0.349, 0.686, 0.168, 0, 0,
+            0.272, 0.534, 0.131, 0, 0,
+            0,     0,     0,     1, 0
+        ])];
+        root.addChild(sepiaSprite);
+
+        // ===== 複合フィルター（Glow + DropShadow）=====
+        const multiSprite = createTestSprite(330, 180);
+        multiSprite.filters = [
+            new GlowFilter(0x00FFFF, 0.8, 8, 8, 1.5, 1),
+            new DropShadowFilter(6, 135, 0x000000, 0.6, 8, 8, 1, 1)
+        ];
+        root.addChild(multiSprite);
+
+        // ===== DropShadow inner =====
+        const innerShadowSprite = createTestSprite(510, 180);
+        innerShadowSprite.filters = [new DropShadowFilter(4, 45, 0x000000, 1, 8, 8, 1, 1, true, false, false)];
+        root.addChild(innerShadowSprite);
+
+        // ===== Glow knockout =====
+        const knockoutSprite = createTestSprite(30, 340);
+        knockoutSprite.filters = [new GlowFilter(0xFF00FF, 1.0, 12, 12, 2, 1, false, true)];
+        root.addChild(knockoutSprite);
+
+        // ===== BlurFilter 強め =====
+        const strongBlur = createTestSprite(180, 340);
+        strongBlur.filters = [new BlurFilter(20, 20, 2)];
+        root.addChild(strongBlur);
+
+        // ===== スケール + フィルター =====
+        const scaledSprite = createTestSprite(330, 340);
+        scaledSprite.scaleX = 1.5;
+        scaledSprite.scaleY = 1.5;
+        scaledSprite.filters = [new GlowFilter(0xFF0000, 1.0, 6, 6, 2, 1)];
+        root.addChild(scaledSprite);
+
+        // ===== 回転 + フィルター =====
+        const rotatedSprite = createTestSprite(580, 340);
+        rotatedSprite.rotation = 15;
+        rotatedSprite.filters = [new DropShadowFilter(5, 45, 0x000000, 0.8, 8, 8, 1, 1)];
+        root.addChild(rotatedSprite);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

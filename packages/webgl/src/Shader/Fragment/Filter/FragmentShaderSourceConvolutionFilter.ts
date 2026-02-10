@@ -1,15 +1,5 @@
 import { FUNCTION_IS_INSIDE } from "../FragmentShaderLibrary";
 
-/**
- * @param  {number}  mediump_length
- * @param  {number}  x
- * @param  {number}  y
- * @param  {boolean} preserve_alpha
- * @param  {boolean} clamp
- * @return {string}
- * @method
- * @static
- */
 export const CONVOLUTION_FILTER_TEMPLATE = (
     mediump_length: number,
     x: number,

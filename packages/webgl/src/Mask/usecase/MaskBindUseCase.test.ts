@@ -15,12 +15,11 @@ describe("MaskBindUseCase.js method test", () =>
             return {
                 ...mod,
                 "$gl": {
-                    "enable": vi.fn((cap) =>
-                    {
-                        expect(cap).toBe("STENCIL_TEST");
-                    }),
+                    "enable": vi.fn(),
                     "STENCIL_TEST": "STENCIL_TEST",
                 },
+                $enableStencilTest: vi.fn(),
+                $disableStencilTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return null;
@@ -45,20 +44,14 @@ describe("MaskBindUseCase.js method test", () =>
             return {
                 ...mod,
                 "$gl": {
-                    "disable": vi.fn((cap) =>
-                    {
-                        switch (cap) {
-                            case "STENCIL_TEST":
-                            case "SCISSOR_TEST":
-                                return;
-                            default:
-                                throw new Error("Invalid cap");
-                        }
-                    }),
+                    "disable": vi.fn(),
                     "enable": vi.fn(),
                     "STENCIL_TEST": "STENCIL_TEST",
                     "SCISSOR_TEST": "SCISSOR_TEST",
                 },
+                $enableStencilTest: vi.fn(),
+                $disableStencilTest: vi.fn(),
+                $disableScissorTest: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return null;

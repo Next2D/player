@@ -4,11 +4,12 @@ import type { ITextureObject } from "../../interface/ITextureObject";
 import type { IStencilBufferObject } from "../../interface/IStencilBufferObject";
 import { $gl } from "../../WebGLUtil";
 import { execute as textureManagerBind0UseCase } from "../../TextureManager/usecase/TextureManagerBind0UseCase";
+import { execute as textureManagerBindService } from "../../TextureManager/service/TextureManagerBindService";
 import {
     $setFramebufferBound,
     $setCurrentAttachment,
     $readFrameBuffer,
-    $useFramebufferBound
+    $isFramebufferBound
 } from "../../FrameBufferManager";
 
 /**
@@ -24,7 +25,7 @@ export const execute = (attachment_object: IAttachmentObject): void =>
 {
     $setCurrentAttachment(attachment_object);
 
-    if (!$useFramebufferBound()) {
+    if (!$isFramebufferBound) {
         $setFramebufferBound(true);
         $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
     }
@@ -42,6 +43,12 @@ export const execute = (attachment_object: IAttachmentObject): void =>
             $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
             $gl.TEXTURE_2D, (attachment_object.texture as ITextureObject).resource, 0
         );
+
+        // テクスチャフィードバックループを防止:
+        // WebGL2ではテクスチャユニットにバインドされたテクスチャが描画フレームバッファにも
+        // アタッチされている場合、drawArrays等がINVALID_OPERATIONを生成する。
+        // framebufferTexture2Dにはテクスチャユニットへのバインドは不要なため、アンバインドする。
+        textureManagerBindService(0, $gl.TEXTURE0, null);
     }
 
     $gl.bindRenderbuffer($gl.RENDERBUFFER, (attachment_object.stencil as IStencilBufferObject).resource);

@@ -8,6 +8,7 @@ import { execute as shapeClearBitmapBufferService } from "./Shape/usecase/ShapeC
 import { execute as shapeSetBitmapBufferUseCase } from "./Shape/usecase/ShapeSetBitmapBufferUseCase";
 import { execute as shapeLoadSrcUseCase } from "./Shape/usecase/ShapeLoadSrcUseCase";
 import { execute as shapeBuildFromCharacterUseCase } from "./Shape/usecase/ShapeBuildFromCharacterUseCase";
+import { execute as shapeLoadAsyncUseCase } from "./Shape/usecase/ShapeLoadAsyncUseCase";
 import {
     $graphicMap,
     $getArray
@@ -171,6 +172,20 @@ export class Shape extends DisplayObject
         this._$src = src;
 
         shapeLoadSrcUseCase(this, src);
+    }
+
+    /**
+     * @description 指定されたURLから画像を非同期で読み込み、Graphicsを生成します
+     *              Asynchronously loads images from the specified URL and generates Graphics.
+     *
+     * @param  {string} url
+     * @return {Promise<void>}
+     * @method
+     * @public
+     */
+    load (url: string): Promise<void>
+    {
+        return shapeLoadAsyncUseCase(this, url);
     }
 
     /**

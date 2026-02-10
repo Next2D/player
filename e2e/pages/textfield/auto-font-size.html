@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField AutoFontSize</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 300, 60);
+        const { TextField } = next2d.text;
+
+        // ===== 短いテキスト =====
+        const tf1 = new TextField();
+        tf1.text = "Hi";
+        tf1.x = 20; tf1.y = 20;
+        tf1.width = 200; tf1.height = 50;
+        tf1.autoFontSize = true;
+        tf1.textColor = 0xFFFFFF;
+        tf1.border = true;
+        tf1.borderColor = 0x888888;
+        root.addChild(tf1);
+
+        // ===== 長いテキスト =====
+        const tf2 = new TextField();
+        tf2.text = "This is a longer text string";
+        tf2.x = 20; tf2.y = 90;
+        tf2.width = 200; tf2.height = 50;
+        tf2.autoFontSize = true;
+        tf2.textColor = 0xFFFFFF;
+        tf2.border = true;
+        tf2.borderColor = 0x888888;
+        root.addChild(tf2);
+
+        // ===== さらに長いテキスト =====
+        const tf3 = new TextField();
+        tf3.text = "This is a much much longer text string that needs to shrink significantly";
+        tf3.x = 20; tf3.y = 160;
+        tf3.width = 200; tf3.height = 50;
+        tf3.autoFontSize = true;
+        tf3.textColor = 0xFFFFFF;
+        tf3.border = true;
+        tf3.borderColor = 0x888888;
+        root.addChild(tf3);
+
+        // ===== 大きいボックス =====
+        const tf4 = new TextField();
+        tf4.text = "Test";
+        tf4.x = 300; tf4.y = 20;
+        tf4.width = 250; tf4.height = 80;
+        tf4.autoFontSize = true;
+        tf4.textColor = 0xFFFFFF;
+        tf4.border = true;
+        tf4.borderColor = 0x888888;
+        root.addChild(tf4);
+
+        // ===== 小さいボックス =====
+        const tf5 = new TextField();
+        tf5.text = "Test";
+        tf5.x = 300; tf5.y = 120;
+        tf5.width = 100; tf5.height = 30;
+        tf5.autoFontSize = true;
+        tf5.textColor = 0xFFFFFF;
+        tf5.border = true;
+        tf5.borderColor = 0x888888;
+        root.addChild(tf5);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

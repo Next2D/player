@@ -21,6 +21,9 @@ vi.mock("./ContextRadialGradientFillUseCase", () => ({
 vi.mock("./ContextPatternBitmapFillUseCase", () => ({
     execute: vi.fn()
 }));
+vi.mock("../../Stencil/service/StencilResetService", () => ({
+    execute: vi.fn()
+}));
 
 vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
     const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
@@ -33,7 +36,9 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) => {
             stencilMask: vi.fn(),
             STENCIL_TEST: 0,
             CCW: 1
-        }
+        },
+        $enableStencilTest: vi.fn(),
+        $disableStencilTest: vi.fn()
     };
 });
 

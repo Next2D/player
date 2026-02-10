@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Multiple TextFields Test</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { TextField, TextFormat } = next2d.text;
+
+        const format = new TextFormat();
+        format.size = 24;
+        format.color = 0xFFFFFF;
+
+        // 複数のTextFieldを作成して表示
+        // バグがあると最後のTextFieldだけが表示される
+
+        const tf1 = new TextField();
+        tf1.defaultTextFormat = format;
+        tf1.text = "TextField 1";
+        tf1.x = 20;
+        tf1.y = 20;
+        tf1.width = 200;
+        tf1.height = 40;
+        root.addChild(tf1);
+
+        const tf2 = new TextField();
+        tf2.defaultTextFormat = format;
+        tf2.text = "TextField 2";
+        tf2.x = 20;
+        tf2.y = 70;
+        tf2.width = 200;
+        tf2.height = 40;
+        root.addChild(tf2);
+
+        const tf3 = new TextField();
+        tf3.defaultTextFormat = format;
+        tf3.text = "TextField 3";
+        tf3.x = 20;
+        tf3.y = 120;
+        tf3.width = 200;
+        tf3.height = 40;
+        root.addChild(tf3);
+
+        const tf4 = new TextField();
+        tf4.defaultTextFormat = format;
+        tf4.text = "TextField 4";
+        tf4.x = 20;
+        tf4.y = 170;
+        tf4.width = 200;
+        tf4.height = 40;
+        root.addChild(tf4);
+
+        const tf5 = new TextField();
+        tf5.defaultTextFormat = format;
+        tf5.text = "TextField 5";
+        tf5.x = 20;
+        tf5.y = 220;
+        tf5.width = 200;
+        tf5.height = 40;
+        root.addChild(tf5);
+
+        // 右側にも配置
+        const format2 = new TextFormat();
+        format2.size = 20;
+        format2.color = 0x00FF00;
+
+        const tf6 = new TextField();
+        tf6.defaultTextFormat = format2;
+        tf6.text = "Green Text A";
+        tf6.x = 300;
+        tf6.y = 20;
+        tf6.width = 250;
+        tf6.height = 40;
+        root.addChild(tf6);
+
+        const tf7 = new TextField();
+        tf7.defaultTextFormat = format2;
+        tf7.text = "Green Text B";
+        tf7.x = 300;
+        tf7.y = 70;
+        tf7.width = 250;
+        tf7.height = 40;
+        root.addChild(tf7);
+
+        const tf8 = new TextField();
+        tf8.defaultTextFormat = format2;
+        tf8.text = "Green Text C";
+        tf8.x = 300;
+        tf8.y = 120;
+        tf8.width = 250;
+        tf8.height = 40;
+        root.addChild(tf8);
+
+        // 異なるサイズのTextFormat
+        const format3 = new TextFormat();
+        format3.size = 32;
+        format3.color = 0xFF6600;
+
+        const tf9 = new TextField();
+        tf9.defaultTextFormat = format3;
+        tf9.text = "Large Orange";
+        tf9.x = 300;
+        tf9.y = 180;
+        tf9.width = 250;
+        tf9.height = 50;
+        root.addChild(tf9);
+
+        const format4 = new TextFormat();
+        format4.size = 16;
+        format4.color = 0x00FFFF;
+
+        const tf10 = new TextField();
+        tf10.defaultTextFormat = format4;
+        tf10.text = "Small Cyan Text";
+        tf10.x = 300;
+        tf10.y = 240;
+        tf10.width = 250;
+        tf10.height = 30;
+        root.addChild(tf10);
+
+        // 下段にも追加
+        const tf11 = new TextField();
+        tf11.defaultTextFormat = format;
+        tf11.text = "Bottom Left";
+        tf11.x = 20;
+        tf11.y = 300;
+        tf11.width = 200;
+        tf11.height = 40;
+        root.addChild(tf11);
+
+        const tf12 = new TextField();
+        tf12.defaultTextFormat = format2;
+        tf12.text = "Bottom Right";
+        tf12.x = 300;
+        tf12.y = 300;
+        tf12.width = 250;
+        tf12.height = 40;
+        root.addChild(tf12);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

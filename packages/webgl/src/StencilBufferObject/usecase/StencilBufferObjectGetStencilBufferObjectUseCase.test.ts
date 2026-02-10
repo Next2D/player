@@ -59,7 +59,7 @@ describe("StencilBufferObjectGetStencilBufferObjectUseCase.js method test", () =
         expect(cacheStencilBufferObject.height).toBe(256);
         expect(cacheStencilBufferObject.area).toBe(256 * 256);
 
-        // no hit
+        // no hit (best-fit: 512x512, then re-allocated to 320x240)
         const newStencilBufferObject = execute(320, 240);
         expect($objectPool.length).toBe(2);
         expect(newStencilBufferObject.width).toBe(320);

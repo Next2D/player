@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - ColorMatrixFilter</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, BitmapData } = next2d.display;
+        const { ColorMatrixFilter } = next2d.filters;
+        const { Matrix } = next2d.geom;
+
+        // カラフルなテストパターンを作成
+        const createColorPattern = () => {
+            const shape = new Shape();
+
+            // 赤
+            shape.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 25, 40)
+                .endFill();
+
+            // 緑
+            shape.graphics
+                .beginFill(0x00FF00, 1.0)
+                .drawRect(25, 0, 25, 40)
+                .endFill();
+
+            // 青
+            shape.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(50, 0, 25, 40)
+                .endFill();
+
+            // 黄
+            shape.graphics
+                .beginFill(0xFFFF00, 1.0)
+                .drawRect(0, 40, 25, 40)
+                .endFill();
+
+            // シアン
+            shape.graphics
+                .beginFill(0x00FFFF, 1.0)
+                .drawRect(25, 40, 25, 40)
+                .endFill();
+
+            // マゼンタ
+            shape.graphics
+                .beginFill(0xFF00FF, 1.0)
+                .drawRect(50, 40, 25, 40)
+                .endFill();
+
+            // グレースケール
+            shape.graphics
+                .beginFill(0x000000, 1.0)
+                .drawRect(75, 0, 15, 20)
+                .endFill()
+                .beginFill(0x555555, 1.0)
+                .drawRect(75, 20, 15, 20)
+                .endFill()
+                .beginFill(0xAAAAAA, 1.0)
+                .drawRect(75, 40, 15, 20)
+                .endFill()
+                .beginFill(0xFFFFFF, 1.0)
+                .drawRect(75, 60, 15, 20)
+                .endFill();
+
+            return shape;
+        };
+
+        // 単位行列（フィルターなし参照用）
+        const identity = [
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // グレースケール
+        const grayscale = [
+            0.299, 0.587, 0.114, 0, 0,
+            0.299, 0.587, 0.114, 0, 0,
+            0.299, 0.587, 0.114, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // セピア
+        const sepia = [
+            0.393, 0.769, 0.189, 0, 0,
+            0.349, 0.686, 0.168, 0, 0,
+            0.272, 0.534, 0.131, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // 反転
+        const invert = [
+            -1, 0, 0, 0, 255,
+            0, -1, 0, 0, 255,
+            0, 0, -1, 0, 255,
+            0, 0, 0, 1, 0
+        ];
+
+        // 彩度を上げる
+        const saturate = [
+            1.5, -0.25, -0.25, 0, 0,
+            -0.25, 1.5, -0.25, 0, 0,
+            -0.25, -0.25, 1.5, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // 彩度を下げる
+        const desaturate = [
+            0.5, 0.25, 0.25, 0, 0,
+            0.25, 0.5, 0.25, 0, 0,
+            0.25, 0.25, 0.5, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // 明度を上げる
+        const brighten = [
+            1, 0, 0, 0, 50,
+            0, 1, 0, 0, 50,
+            0, 0, 1, 0, 50,
+            0, 0, 0, 1, 0
+        ];
+
+        // 明度を下げる
+        const darken = [
+            1, 0, 0, 0, -50,
+            0, 1, 0, 0, -50,
+            0, 0, 1, 0, -50,
+            0, 0, 0, 1, 0
+        ];
+
+        // コントラストを上げる
+        const contrast = [
+            2, 0, 0, 0, -128,
+            0, 2, 0, 0, -128,
+            0, 0, 2, 0, -128,
+            0, 0, 0, 1, 0
+        ];
+
+        // 赤チャンネルのみ
+        const redOnly = [
+            1, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // 緑チャンネルのみ
+        const greenOnly = [
+            0, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // 青チャンネルのみ
+        const blueOnly = [
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // 色相回転（RGBシフト）
+        const hueRotate = [
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            1, 0, 0, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // Alpha 半分
+        const halfAlpha = [
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, 0.5, 0
+        ];
+
+        // 暖色系
+        const warm = [
+            1.2, 0, 0, 0, 20,
+            0, 1.0, 0, 0, 0,
+            0, 0, 0.8, 0, -20,
+            0, 0, 0, 1, 0
+        ];
+
+        // 寒色系
+        const cool = [
+            0.8, 0, 0, 0, -20,
+            0, 1.0, 0, 0, 0,
+            0, 0, 1.2, 0, 20,
+            0, 0, 0, 1, 0
+        ];
+
+        // フィルターの設定
+        const filters = [
+            { matrix: identity, name: "オリジナル" },
+            { matrix: grayscale, name: "グレースケール" },
+            { matrix: sepia, name: "セピア" },
+            { matrix: invert, name: "反転" },
+            { matrix: saturate, name: "彩度++" },
+            { matrix: desaturate, name: "彩度--" },
+            { matrix: brighten, name: "明度++" },
+            { matrix: darken, name: "明度--" },
+            { matrix: contrast, name: "コントラスト++" },
+            { matrix: redOnly, name: "赤のみ" },
+            { matrix: greenOnly, name: "緑のみ" },
+            { matrix: blueOnly, name: "青のみ" },
+            { matrix: hueRotate, name: "色相回転" },
+            { matrix: halfAlpha, name: "Alpha 50%" },
+            { matrix: warm, name: "暖色" },
+            { matrix: cool, name: "寒色" }
+        ];
+
+        // 各フィルターを適用して配置
+        const cols = 4;
+        const cellWidth = 130;
+        const cellHeight = 110;
+
+        filters.forEach((item, index) => {
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            const x = 30 + col * cellWidth;
+            const y = 20 + row * cellHeight;
+
+            const pattern = createColorPattern();
+            pattern.x = x;
+            pattern.y = y;
+
+            if (index > 0) {
+                pattern.filters = [new ColorMatrixFilter(item.matrix)];
+            }
+
+            root.addChild(pattern);
+        });
+
+        // ===== グラデーションへの適用 =====
+        const gradShape = new Shape();
+        const gradMatrix = new Matrix();
+        gradMatrix.createGradientBox(200, 50, 0, 0, 0);
+        gradShape.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0xFF00FF],
+                [1, 1, 1, 1, 1, 1],
+                [0, 51, 102, 153, 204, 255],
+                gradMatrix
+            )
+            .drawRect(0, 0, 200, 50)
+            .endFill();
+        gradShape.x = 30;
+        gradShape.y = 450;
+        gradShape.filters = [new ColorMatrixFilter(grayscale)];
+        root.addChild(gradShape);
+
+        // 同じグラデーション（フィルターなし参照用）
+        const gradRef = new Shape();
+        const gradRefMatrix = new Matrix();
+        gradRefMatrix.createGradientBox(200, 50, 0, 0, 0);
+        gradRef.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF, 0xFF00FF],
+                [1, 1, 1, 1, 1, 1],
+                [0, 51, 102, 153, 204, 255],
+                gradRefMatrix
+            )
+            .drawRect(0, 0, 200, 50)
+            .endFill();
+        gradRef.x = 260;
+        gradRef.y = 450;
+        root.addChild(gradRef);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

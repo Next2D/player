@@ -35,6 +35,13 @@ export const execute = async (
     // reset
     $context.reset();
     $context.setTransform(1, 0, 0, 1, 0, 0);
+
+    // cache current background color
+    const red   = $context.$clearColorR;
+    const green = $context.$clearColorG;
+    const blue  = $context.$clearColorB;
+    const alpha = $context.$clearColorA;
+
     $context.updateBackgroundColor(
         (bg_color >> 16 & 0xff) / 255,
         (bg_color >> 8 & 0xff) / 255,
@@ -79,5 +86,10 @@ export const execute = async (
 
     $context.drawArraysInstanced();
 
-    return await $context.createImageBitmap(width, height);
+    const imageBitmap = await $context.createImageBitmap(width, height);
+
+    // reset background color
+    $context.updateBackgroundColor(red, green, blue, alpha);
+
+    return imageBitmap;
 };

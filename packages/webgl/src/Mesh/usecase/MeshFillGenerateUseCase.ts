@@ -1,10 +1,11 @@
 import type { IPath } from "../../interface/IPath";
 import type { IFillMesh } from "../../interface/IFillMesh";
 import { execute as meshFillGenerateService } from "../service/MeshFillGenerateService";
+import { $getMeshTempBuffer } from "../../Mesh";
 import {
     $context,
-    $getViewportWidth,
-    $getViewportHeight
+    $viewportWidth,
+    $viewportHeight
 } from "../../WebGLUtil";
 
 /**
@@ -31,8 +32,8 @@ export const execute = (
     const alpha = colorStyle[3];
 
     const matrix = $context.$matrix;
-    const width  = $getViewportWidth();
-    const height = $getViewportHeight();
+    const width  = $viewportWidth;
+    const height = $viewportHeight;
 
     const a  = matrix[0] / width;
     const c  = matrix[3] / width;
@@ -46,7 +47,8 @@ export const execute = (
         length += (vertices[idx].length / 3 - 2) * 51;
     }
 
-    const buffer = new Float32Array(length);
+    // 再利用可能なバッファを取得（GC回避）
+    const buffer = $getMeshTempBuffer(length);
 
     let currentIndex = 0;
     for (let idx = 0; idx < vertices.length; ++idx) {
@@ -58,7 +60,7 @@ export const execute = (
     }
 
     return {
-        "buffer": buffer,
+        "buffer": buffer.subarray(0, length),
         "indexCount": currentIndex
     };
 };

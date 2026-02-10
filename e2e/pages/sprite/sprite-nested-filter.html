@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Sprite Nested Filter + ColorTransform</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(960, 700, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { TextField, TextFormat } = next2d.text;
+        const { Video } = next2d.media;
+        const { ColorTransform } = next2d.geom;
+        const {
+            BlurFilter, DropShadowFilter, GlowFilter,
+            BevelFilter, ColorMatrixFilter
+        } = next2d.filters;
+
+        const videoPath = "/e2e/fixtures/videos/movie.mp4";
+        const videoScale = 0.12;
+        const allVideos = [];
+
+        // ラベル用のフォーマット
+        const labelFormat = new TextFormat();
+        labelFormat.size = 11;
+        labelFormat.color = 0xFFFFFF;
+
+        const createLabel = (text, x, y) => {
+            const label = new TextField();
+            label.x = x;
+            label.y = y;
+            label.width = 200;
+            label.height = 16;
+            label.defaultTextFormat = labelFormat;
+            label.text = text;
+            root.addChild(label);
+            return label;
+        };
+
+        // =============================================
+        // 行1: Sprite内の Shape+Text+Video に個別フィルター + Spriteにもフィルター
+        // layerBoundsが正しく機能しているかの検証
+        // =============================================
+
+        // --- テスト1: 子にBlur + 親にGlow ---
+        createLabel("Children:Blur + Sprite:Glow", 20, 5);
+        {
+            const sprite = new Sprite();
+            sprite.x = 20;
+            sprite.y = 25;
+
+            // Shape子要素 - BlurFilter
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRoundRect(0, 0, 80, 60, 10)
+                .endFill();
+            shape.filters = [new BlurFilter(4, 4, 1)];
+            sprite.addChild(shape);
+
+            // TextField子要素 - GlowFilter
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Filter";
+            tf.filters = [new GlowFilter(0x00FFFF, 1.0, 4, 4, 2, 1)];
+            sprite.addChild(tf);
+
+            // Video子要素 - DropShadowFilter
+            const video = new Video();
+            video.x = 0;
+            video.y = 95;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = [new DropShadowFilter(3, 290, 0x000000, 0.8, 4, 4, 1, 1)];
+            video.src = videoPath;
+            sprite.addChild(video);
+            allVideos.push(video);
+
+            // Sprite自体にGlowFilter
+            sprite.filters = [new GlowFilter(0xFFFF00, 1.0, 8, 8, 2, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト2: 子にGlow + 親にDropShadow ---
+        createLabel("Children:Glow + Sprite:Shadow", 220, 5);
+        {
+            const sprite = new Sprite();
+            sprite.x = 220;
+            sprite.y = 25;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0x0066FF, 1.0)
+                .drawCircle(40, 30, 30)
+                .endFill();
+            shape.filters = [new GlowFilter(0xFF00FF, 1.0, 6, 6, 1.5, 1)];
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0x00FF00;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Nested";
+            tf.filters = [new GlowFilter(0x009900, 1.0, 3, 3, 2, 1)];
+            sprite.addChild(tf);
+
+            const video = new Video();
+            video.x = 0;
+            video.y = 95;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = [new BlurFilter(3, 3, 1)];
+            video.src = videoPath;
+            sprite.addChild(video);
+            allVideos.push(video);
+
+            sprite.filters = [new DropShadowFilter(5, 275, 0x000000, 0.8, 8, 8, 1, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト3: 子にBevel + 親にBlur ---
+        createLabel("Children:Bevel + Sprite:Blur", 420, 5);
+        {
+            const sprite = new Sprite();
+            sprite.x = 420;
+            sprite.y = 25;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xFF6600, 1.0)
+                .drawRect(0, 0, 80, 60)
+                .endFill();
+            shape.filters = [new BevelFilter(3, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1)];
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Bevel";
+            tf.filters = [new BevelFilter(2, 45, 0xFFFFFF, 1, 0x333333, 1, 3, 3, 1, 1)];
+            sprite.addChild(tf);
+
+            const video = new Video();
+            video.x = 0;
+            video.y = 95;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = [new BevelFilter(2, 135, 0xFFFF00, 1, 0x0000FF, 1, 3, 3, 1, 1)];
+            video.src = videoPath;
+            sprite.addChild(video);
+            allVideos.push(video);
+
+            sprite.filters = [new BlurFilter(6, 6, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト4: 子にColorMatrix + 親にGlow ---
+        createLabel("Children:Sepia + Sprite:Glow", 640, 5);
+        {
+            const sprite = new Sprite();
+            sprite.x = 640;
+            sprite.y = 25;
+
+            const sepiaMatrix = [
+                0.393, 0.769, 0.189, 0, 0,
+                0.349, 0.686, 0.168, 0, 0,
+                0.272, 0.534, 0.131, 0, 0,
+                0,     0,     0,     1, 0
+            ];
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0x00CCCC, 1.0)
+                .drawRoundRect(0, 0, 80, 60, 8)
+                .endFill();
+            shape.filters = [new ColorMatrixFilter(sepiaMatrix)];
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFF6600;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Sepia";
+            tf.filters = [new ColorMatrixFilter(sepiaMatrix)];
+            sprite.addChild(tf);
+
+            const video = new Video();
+            video.x = 0;
+            video.y = 95;
+            video.scaleX = videoScale;
+            video.scaleY = videoScale;
+            video.filters = [new ColorMatrixFilter(sepiaMatrix)];
+            video.src = videoPath;
+            sprite.addChild(video);
+            allVideos.push(video);
+
+            sprite.filters = [new GlowFilter(0xFF0000, 1.0, 6, 6, 2, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト5: 子に複合フィルター + 親に複合フィルター ---
+        createLabel("Multi-filter children+sprite", 840, 5);
+        {
+            const sprite = new Sprite();
+            sprite.x = 840;
+            sprite.y = 25;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0x9900CC, 1.0)
+                .drawCircle(40, 30, 30)
+                .endFill();
+            shape.filters = [
+                new GlowFilter(0xFFFF00, 1.0, 4, 4, 1, 1),
+                new BlurFilter(2, 2, 1)
+            ];
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Multi";
+            tf.filters = [
+                new DropShadowFilter(2, 45, 0x000000, 1, 3, 3, 1, 1),
+                new GlowFilter(0x00FF00, 0.8, 3, 3, 1, 1)
+            ];
+            sprite.addChild(tf);
+
+            sprite.filters = [
+                new GlowFilter(0x00FFFF, 0.8, 6, 6, 1.5, 1),
+                new DropShadowFilter(4, 135, 0x000000, 0.6, 6, 6, 1, 1)
+            ];
+            root.addChild(sprite);
+        }
+
+        // =============================================
+        // 行2: スケール・回転 + ネストフィルター (layerBoundsの変換行列テスト)
+        // =============================================
+
+        // --- テスト6: スケールされたSprite + ネストフィルター ---
+        createLabel("Scaled(1.3x) + nested filters", 20, 235);
+        {
+            const sprite = new Sprite();
+            sprite.x = 20;
+            sprite.y = 255;
+            sprite.scaleX = 1.3;
+            sprite.scaleY = 1.3;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xFF3366, 1.0)
+                .drawRect(0, 0, 70, 50)
+                .endFill();
+            shape.filters = [new GlowFilter(0xFFFF00, 1.0, 4, 4, 1.5, 1)];
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 0;
+            tf.y = 55;
+            tf.width = 70;
+            tf.height = 20;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 12;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Scaled";
+            tf.filters = [new BlurFilter(2, 2, 1)];
+            sprite.addChild(tf);
+
+            sprite.filters = [new DropShadowFilter(4, 45, 0x000000, 0.8, 6, 6, 1, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト7: 回転されたSprite + ネストフィルター ---
+        createLabel("Rotated(15deg) + nested filters", 220, 235);
+        {
+            const sprite = new Sprite();
+            sprite.x = 280;
+            sprite.y = 280;
+            sprite.rotation = 15;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0x3366FF, 1.0)
+                .drawRoundRect(0, 0, 70, 50, 8)
+                .endFill();
+            shape.filters = [new BevelFilter(2, 45, 0xFFFFFF, 1, 0x000000, 1, 3, 3, 1, 1)];
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 0;
+            tf.y = 55;
+            tf.width = 70;
+            tf.height = 20;
+            tf.textColor = 0x00FF00;
+            const fmt = new TextFormat();
+            fmt.size = 12;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Rotated";
+            sprite.addChild(tf);
+
+            sprite.filters = [new GlowFilter(0xFF00FF, 1.0, 8, 8, 2, 1)];
+            root.addChild(sprite);
+        }
+
+        // =============================================
+        // 行3: ColorTransform + フィルターの組み合わせテスト
+        // =============================================
+
+        // --- テスト8: ColorTransform(赤乗算0.5) + GlowFilter ---
+        createLabel("CT(R*0.5) + Glow", 20, 435);
+        {
+            const sprite = new Sprite();
+            sprite.x = 20;
+            sprite.y = 455;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xFFFFFF, 1.0)
+                .drawRoundRect(0, 0, 80, 60, 10)
+                .endFill();
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "CT+Glow";
+            sprite.addChild(tf);
+
+            // ColorTransform: 赤を50%に減衰
+            sprite.colorTransform = new ColorTransform(0.5, 1, 1, 1, 0, 0, 0, 0);
+            sprite.filters = [new GlowFilter(0xFFFF00, 1.0, 8, 8, 2, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト9: ColorTransform(青オフセット+128) + DropShadow ---
+        createLabel("CT(B+128) + Shadow", 220, 435);
+        {
+            const sprite = new Sprite();
+            sprite.x = 220;
+            sprite.y = 455;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawCircle(40, 30, 30)
+                .endFill();
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "CT+Shd";
+            sprite.addChild(tf);
+
+            // ColorTransform: 青にオフセットを加算
+            sprite.colorTransform = new ColorTransform(1, 1, 1, 1, 0, 0, 128, 0);
+            sprite.filters = [new DropShadowFilter(5, 45, 0x000000, 0.8, 8, 8, 1, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト10: ColorTransform(alpha*0.5) + Blur + Glow ---
+        createLabel("CT(A*0.5) + Blur+Glow", 420, 435);
+        {
+            const sprite = new Sprite();
+            sprite.x = 420;
+            sprite.y = 455;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0x00FF00, 1.0)
+                .drawRect(0, 0, 80, 60)
+                .endFill();
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "HalfA";
+            sprite.addChild(tf);
+
+            // ColorTransform: アルファを50%に
+            sprite.colorTransform = new ColorTransform(1, 1, 1, 0.5, 0, 0, 0, 0);
+            sprite.filters = [
+                new BlurFilter(4, 4, 1),
+                new GlowFilter(0xFF00FF, 1.0, 6, 6, 2, 1)
+            ];
+            root.addChild(sprite);
+        }
+
+        // --- テスト11: ColorTransform(色乗算+オフセット混合) + BevelFilter ---
+        createLabel("CT(mixed) + Bevel", 640, 435);
+        {
+            const sprite = new Sprite();
+            sprite.x = 640;
+            sprite.y = 455;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xCCCCCC, 1.0)
+                .drawRoundRect(0, 0, 80, 60, 6)
+                .endFill();
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Mixed";
+            sprite.addChild(tf);
+
+            // ColorTransform: 赤0.3乗算 + 緑128オフセット + アルファ0.8
+            sprite.colorTransform = new ColorTransform(0.3, 1, 0.5, 0.8, 0, 128, 0, 0);
+            sprite.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 6, 6, 1, 1)];
+            root.addChild(sprite);
+        }
+
+        // --- テスト12: 参照用（フィルターなし + ColorTransformなし）---
+        createLabel("Reference (no filter/CT)", 840, 435);
+        {
+            const sprite = new Sprite();
+            sprite.x = 840;
+            sprite.y = 455;
+
+            const shape = new Shape();
+            shape.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRoundRect(0, 0, 80, 60, 10)
+                .endFill();
+            sprite.addChild(shape);
+
+            const tf = new TextField();
+            tf.x = 5;
+            tf.y = 65;
+            tf.width = 80;
+            tf.height = 24;
+            tf.textColor = 0xFFFFFF;
+            const fmt = new TextFormat();
+            fmt.size = 14;
+            fmt.bold = true;
+            tf.defaultTextFormat = fmt;
+            tf.text = "Ref";
+            sprite.addChild(tf);
+
+            root.addChild(sprite);
+        }
+
+        // ===== Videoのロード完了待機 =====
+        if (allVideos.length > 0) {
+            await Promise.all(allVideos.map(video => {
+                return new Promise((resolve) => {
+                    if (video.loaded && !video.paused) {
+                        resolve();
+                    } else {
+                        video.addEventListener("complete", () => resolve());
+                    }
+                });
+            }));
+
+            const SEEK_TIME = 1.0;
+            await Promise.all(allVideos.map(video => {
+                return new Promise((resolve) => {
+                    if (!video.$videoElement) {
+                        resolve();
+                        return;
+                    }
+                    const onSeeked = () => {
+                        video.$videoElement.removeEventListener("seeked", onSeeked);
+                        video.pause();
+                        resolve();
+                    };
+                    video.$videoElement.addEventListener("seeked", onSeeked);
+                    video.seek(SEEK_TIME);
+                });
+            }));
+
+            const applyChanges = (displayObject) => {
+                displayObject.changed = true;
+                let parent = displayObject.parent;
+                while (parent && !parent.changed) {
+                    parent.changed = true;
+                    parent = parent.parent;
+                }
+            };
+
+            allVideos.forEach((video) => {
+                if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                    applyChanges(video);
+                }
+            });
+
+            await new Promise((resolve) => {
+                let frameCount = 0;
+                const waitFrames = () => {
+                    allVideos.forEach((video) => {
+                        if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                            applyChanges(video);
+                        }
+                    });
+                    frameCount++;
+                    if (frameCount >= 10) {
+                        resolve();
+                    } else {
+                        requestAnimationFrame(waitFrames);
+                    }
+                };
+                requestAnimationFrame(waitFrames);
+            });
+        }
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

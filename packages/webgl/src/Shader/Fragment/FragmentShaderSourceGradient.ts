@@ -1,41 +1,23 @@
-/**
- * @param  {number} index
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_FOCAL_POINT_ON = (index: number): string =>
 {
     return `
     vec2 focal = vec2(u_highp[${index}][1], 0.0);
 
-    vec2 dir = normalize(coord - focal);
-
-    float a = dot(dir, dir);
+    vec2 diff = coord - focal;
+    float lenDiff = length(diff);
+    vec2 dir = diff / lenDiff;
     float b = 2.0 * dot(dir, focal);
     float c = dot(focal, focal) - 1.0;
-    float x = (-b + sqrt(b * b - 4.0 * a * c)) / (2.0 * a);
+    float x = (-b + sqrt(max(b * b - 4.0 * c, 0.0))) * 0.5;
 
-    float t = distance(focal, coord) / distance(focal, focal + dir * x);`;
+    float t = lenDiff / abs(x);`;
 };
 
-/**
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_FOCAL_POINT_OFF = (): string =>
 {
     return "float t = length(coord);";
 };
 
-/**
- * @param  {number} index
- * @param  {boolean} has_focal_point
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_GRADIENT_TYPE_RADIAL = (index: number, has_focal_point: boolean): string =>
 {
     const focalPointStatement = has_focal_point
@@ -49,12 +31,6 @@ const STATEMENT_GRADIENT_TYPE_RADIAL = (index: number, has_focal_point: boolean)
 `;
 };
 
-/**
- * @param {number} index
- * @return {string}
- * @method
- * @private
- */
 const STATEMENT_GRADIENT_TYPE_LINEAR = (index: number): string =>
 {
     return `
@@ -67,16 +43,6 @@ const STATEMENT_GRADIENT_TYPE_LINEAR = (index: number): string =>
     float t = dot(ab, ap) / dot(ab, ab);`;
 };
 
-/**
- * @param  {number} highp_length
- * @param  {number} fragment_index
- * @param  {boolean} is_radial
- * @param  {boolean} has_focal_point
- * @param  {number} spread_method
- * @return {string}
- * @method
- * @private
- */
 export const GRADIENT_TEMPLATE = (
     highp_length: number,
     fragment_index: number,
@@ -111,10 +77,10 @@ precision highp float;
 
 uniform sampler2D u_texture;
 uniform vec4 u_highp[${highp_length}];
-    
+
 in vec2 v_uv;
 out vec4 o_color;
-    
+
 void main() {
     vec2 p = v_uv;
     ${gradientTypeStatement}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Shape Load Image Flip Test</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 400, 60);
+        const { Shape, TextField, TextFormat } = next2d.display;
+
+        // 非対称な画像（上下で異なる見た目）
+        const imagePath = "/e2e/fixtures/images/test-asymmetric.png";
+
+        // ===== 複数のShape.loadを並べて表示 =====
+        // Y軸反転のバグがあると、スライムが逆さまになる
+
+        // 1個目
+        const shape1 = new Shape();
+        await shape1.load(imagePath);
+        shape1.x = 20;
+        shape1.y = 20;
+        shape1.scaleX = 0.5;
+        shape1.scaleY = 0.5;
+        root.addChild(shape1);
+
+        // 2個目
+        const shape2 = new Shape();
+        await shape2.load(imagePath);
+        shape2.x = 200;
+        shape2.y = 20;
+        shape2.scaleX = 0.5;
+        shape2.scaleY = 0.5;
+        root.addChild(shape2);
+
+        // 3個目
+        const shape3 = new Shape();
+        await shape3.load(imagePath);
+        shape3.x = 380;
+        shape3.y = 20;
+        shape3.scaleX = 0.5;
+        shape3.scaleY = 0.5;
+        root.addChild(shape3);
+
+        // 4個目
+        const shape4 = new Shape();
+        await shape4.load(imagePath);
+        shape4.x = 560;
+        shape4.y = 20;
+        shape4.scaleX = 0.5;
+        shape4.scaleY = 0.5;
+        root.addChild(shape4);
+
+        // ===== 下段: srcプロパティでの読み込み =====
+
+        const shapeSrc1 = new Shape();
+        shapeSrc1.src = imagePath;
+        shapeSrc1.x = 20;
+        shapeSrc1.y = 200;
+        shapeSrc1.scaleX = 0.5;
+        shapeSrc1.scaleY = 0.5;
+        root.addChild(shapeSrc1);
+
+        const shapeSrc2 = new Shape();
+        shapeSrc2.src = imagePath;
+        shapeSrc2.x = 200;
+        shapeSrc2.y = 200;
+        shapeSrc2.scaleX = 0.5;
+        shapeSrc2.scaleY = 0.5;
+        root.addChild(shapeSrc2);
+
+        const shapeSrc3 = new Shape();
+        shapeSrc3.src = imagePath;
+        shapeSrc3.x = 380;
+        shapeSrc3.y = 200;
+        shapeSrc3.scaleX = 0.5;
+        shapeSrc3.scaleY = 0.5;
+        root.addChild(shapeSrc3);
+
+        const shapeSrc4 = new Shape();
+        shapeSrc4.src = imagePath;
+        shapeSrc4.x = 560;
+        shapeSrc4.y = 200;
+        shapeSrc4.scaleX = 0.5;
+        shapeSrc4.scaleY = 0.5;
+        root.addChild(shapeSrc4);
+
+        // src読み込み完了を待つ
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

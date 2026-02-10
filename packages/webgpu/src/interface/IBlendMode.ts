@@ -1,0 +1,16 @@
+export type IBlendMode =
+    | "normal"
+    | "layer"
+    | "multiply"
+    | "screen"
+    | "lighten"
+    | "darken"
+    | "difference"
+    | "add"
+    | "subtract"
+    | "invert"
+    | "alpha"
+    | "erase"
+    | "overlay"
+    | "hardlight"
+    | "copy";

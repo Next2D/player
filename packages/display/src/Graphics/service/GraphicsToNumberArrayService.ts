@@ -78,6 +78,11 @@ export const execute = (recodes : any[] | null): any[] =>
                             array.push(2);
                             break;
 
+                        default:
+                            // 無効な値の場合はデフォルトで"none"(0)を使用
+                            array.push(0);
+                            break;
+
                     }
 
                     const lineJoin = recodes[idx++];
@@ -92,6 +97,11 @@ export const execute = (recodes : any[] | null): any[] =>
                             break;
 
                         case "round":
+                            array.push(2);
+                            break;
+
+                        default:
+                            // 無効な値の場合はデフォルトで"round"(2)を使用
                             array.push(2);
                             break;
 
@@ -181,6 +191,11 @@ export const execute = (recodes : any[] | null): any[] =>
                             array.push(2);
                             break;
 
+                        default:
+                            // 無効な値の場合はデフォルトで"none"(0)を使用
+                            array.push(0);
+                            break;
+
                     }
 
                     const lineJoin: IJointStyle = recodes[idx++];
@@ -195,6 +210,11 @@ export const execute = (recodes : any[] | null): any[] =>
                             break;
 
                         case "round":
+                            array.push(2);
+                            break;
+
+                        default:
+                            // 無効な値の場合はデフォルトで"round"(2)を使用
                             array.push(2);
                             break;
 
@@ -304,6 +324,11 @@ export const execute = (recodes : any[] | null): any[] =>
                             array.push(2);
                             break;
 
+                        default:
+                            // 無効な値の場合はデフォルトで"none"(0)を使用
+                            array.push(0);
+                            break;
+
                     }
 
                     const lineJoin: IJointStyle = recodes[idx++];
@@ -318,6 +343,11 @@ export const execute = (recodes : any[] | null): any[] =>
                             break;
 
                         case "round":
+                            array.push(2);
+                            break;
+
+                        default:
+                            // 無効な値の場合はデフォルトで"round"(2)を使用
                             array.push(2);
                             break;
 
@@ -343,9 +373,9 @@ export const execute = (recodes : any[] | null): any[] =>
                         array.push(...buffer.subarray(idx, idx + 4096));
                     }
 
-                    const matrix: Float32Array = recodes[idx++];
+                    const matrix: Matrix = recodes[idx++];
                     if (matrix) {
-                        array.push(...matrix);
+                        array.push(...matrix.rawData);
                     } else {
                         array.push(1, 0, 0, 1, 0, 0);
                     }

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Line Gradient</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { Shape } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // ===== 線形グラデーション線 =====
+
+        // 水平線形グラデーション
+        const line1 = new Shape();
+        const matrix1 = new Matrix();
+        matrix1.createGradientBox(200, 20, 0, 30, 30);
+        line1.graphics
+            .lineStyle(10)
+            .lineGradientStyle(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrix1
+            )
+            .moveTo(30, 40)
+            .lineTo(230, 40);
+        root.addChild(line1);
+
+        // 3色グラデーション線
+        const line2 = new Shape();
+        const matrix2 = new Matrix();
+        matrix2.createGradientBox(200, 20, 0, 280, 30);
+        line2.graphics
+            .lineStyle(10)
+            .lineGradientStyle(
+                "linear",
+                [0xFF0000, 0x00FF00, 0x0000FF],
+                [1, 1, 1],
+                [0, 127, 255],
+                matrix2
+            )
+            .moveTo(280, 40)
+            .lineTo(480, 40);
+        root.addChild(line2);
+
+        // ===== 放射グラデーション線 =====
+        const line3 = new Shape();
+        const matrix3 = new Matrix();
+        matrix3.createGradientBox(200, 100, 0, 30, 80);
+        line3.graphics
+            .lineStyle(8)
+            .lineGradientStyle(
+                "radial",
+                [0xFFFFFF, 0xFF0000],
+                [1, 1],
+                [0, 255],
+                matrix3
+            )
+            .moveTo(30, 100)
+            .lineTo(230, 100)
+            .lineTo(230, 180)
+            .lineTo(30, 180)
+            .lineTo(30, 100);
+        root.addChild(line3);
+
+        // ===== round caps + round joints =====
+        const line4 = new Shape();
+        const matrix4 = new Matrix();
+        matrix4.createGradientBox(200, 100, 0, 280, 80);
+        line4.graphics
+            .lineStyle(12, 0, 1, "round", "round", 3)
+            .lineGradientStyle(
+                "linear",
+                [0xFFFF00, 0xFF00FF],
+                [1, 1],
+                [0, 255],
+                matrix4
+            )
+            .moveTo(280, 100)
+            .lineTo(380, 170)
+            .lineTo(480, 100);
+        root.addChild(line4);
+
+        // ===== Alpha付きグラデーション線 =====
+        const line5 = new Shape();
+        const matrix5 = new Matrix();
+        matrix5.createGradientBox(300, 20, 0, 30, 210);
+        line5.graphics
+            .lineStyle(15)
+            .lineGradientStyle(
+                "linear",
+                [0xFF0000, 0xFF0000],
+                [1.0, 0.0],
+                [0, 255],
+                matrix5
+            )
+            .moveTo(30, 220)
+            .lineTo(330, 220);
+        root.addChild(line5);
+
+        // ===== SpreadMethod: pad =====
+        const linePad = new Shape();
+        const matrixPad = new Matrix();
+        matrixPad.createGradientBox(50, 20, 0, 50, 260);
+        linePad.graphics
+            .lineStyle(8)
+            .lineGradientStyle(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixPad,
+                "pad"
+            )
+            .moveTo(30, 270)
+            .lineTo(180, 270);
+        root.addChild(linePad);
+
+        // ===== SpreadMethod: reflect =====
+        const lineReflect = new Shape();
+        const matrixReflect = new Matrix();
+        matrixReflect.createGradientBox(50, 20, 0, 230, 260);
+        lineReflect.graphics
+            .lineStyle(8)
+            .lineGradientStyle(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixReflect,
+                "reflect"
+            )
+            .moveTo(210, 270)
+            .lineTo(360, 270);
+        root.addChild(lineReflect);
+
+        // ===== SpreadMethod: repeat =====
+        const lineRepeat = new Shape();
+        const matrixRepeat = new Matrix();
+        matrixRepeat.createGradientBox(50, 20, 0, 410, 260);
+        lineRepeat.graphics
+            .lineStyle(8)
+            .lineGradientStyle(
+                "linear",
+                [0xFF0000, 0x0000FF],
+                [1, 1],
+                [0, 255],
+                matrixRepeat,
+                "repeat"
+            )
+            .moveTo(390, 270)
+            .lineTo(540, 270);
+        root.addChild(lineRepeat);
+
+        // ===== ジグザグパス =====
+        const zigzag = new Shape();
+        const matrixZigzag = new Matrix();
+        matrixZigzag.createGradientBox(400, 100, Math.PI / 4, 100, 300);
+        zigzag.graphics
+            .lineStyle(6)
+            .lineGradientStyle(
+                "linear",
+                [0xFF0000, 0xFFFF00, 0x00FF00, 0x00FFFF, 0x0000FF],
+                [1, 1, 1, 1, 1],
+                [0, 63, 127, 191, 255],
+                matrixZigzag
+            )
+            .moveTo(100, 320)
+            .lineTo(150, 360)
+            .lineTo(200, 320)
+            .lineTo(250, 360)
+            .lineTo(300, 320)
+            .lineTo(350, 360)
+            .lineTo(400, 320);
+        root.addChild(zigzag);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

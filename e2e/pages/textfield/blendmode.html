@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField BlendModes</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape, Sprite, BlendMode } = next2d.display;
+        const { TextField, TextFormat } = next2d.text;
+
+        // 背景
+        const bgFill = new Shape();
+        bgFill.graphics
+            .beginFill(0x404040, 1.0)
+            .drawRect(0, 0, 800, 600)
+            .endFill();
+        root.addChild(bgFill);
+
+        // ブレンドテスト用のテキストを作成
+        const createBlendTextField = (x, y, blendMode, label) => {
+            const container = new Sprite();
+            container.x = x;
+            container.y = y;
+
+            // 下地（赤と青の背景）
+            const base = new Shape();
+            base.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 80, 50)
+                .endFill();
+            container.addChild(base);
+
+            const baseBlue = new Shape();
+            baseBlue.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(40, 0, 40, 50)
+                .endFill();
+            container.addChild(baseBlue);
+
+            // ブレンドされるテキスト
+            const textField = new TextField();
+            textField.x = 5;
+            textField.y = 5;
+            textField.width = 70;
+            textField.height = 40;
+            textField.background = true;
+            textField.backgroundColor = 0x00FF00;
+            const format = new TextFormat();
+            format.size = 16;
+            format.color = 0xFFFFFF;
+            format.bold = true;
+            format.align = "center";
+            textField.defaultTextFormat = format;
+            textField.text = "TEXT";
+            textField.blendMode = blendMode;
+            container.addChild(textField);
+
+            // ラベル
+            const labelText = new TextField();
+            labelText.x = 0;
+            labelText.y = 52;
+            labelText.width = 80;
+            labelText.height = 16;
+            const labelFormat = new TextFormat();
+            labelFormat.size = 9;
+            labelFormat.color = 0xFFFFFF;
+            labelFormat.align = "center";
+            labelText.defaultTextFormat = labelFormat;
+            labelText.text = label;
+            container.addChild(labelText);
+
+            return container;
+        };
+
+        // 全14種類のBlendMode
+        const blendModes = [
+            { mode: BlendMode.NORMAL, name: "NORMAL" },
+            { mode: BlendMode.ADD, name: "ADD" },
+            { mode: BlendMode.ALPHA, name: "ALPHA" },
+            { mode: BlendMode.DARKEN, name: "DARKEN" },
+            { mode: BlendMode.DIFFERENCE, name: "DIFFERENCE" },
+            { mode: BlendMode.ERASE, name: "ERASE" },
+            { mode: BlendMode.HARDLIGHT, name: "HARDLIGHT" },
+            { mode: BlendMode.INVERT, name: "INVERT" },
+            { mode: BlendMode.LAYER, name: "LAYER" },
+            { mode: BlendMode.LIGHTEN, name: "LIGHTEN" },
+            { mode: BlendMode.MULTIPLY, name: "MULTIPLY" },
+            { mode: BlendMode.OVERLAY, name: "OVERLAY" },
+            { mode: BlendMode.SCREEN, name: "SCREEN" },
+            { mode: BlendMode.SUBTRACT, name: "SUBTRACT" }
+        ];
+
+        // 各ブレンドモードを配置（7x2グリッド）
+        const cols = 7;
+        const cellWidth = 100;
+        const cellHeight = 80;
+        const startX = 30;
+        const startY = 20;
+
+        blendModes.forEach((item, index) => {
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            const x = startX + col * cellWidth;
+            const y = startY + row * cellHeight;
+
+            const textField = createBlendTextField(x, y, item.mode, item.name);
+            root.addChild(textField);
+        });
+
+        // ===== グラデーション背景テスト =====
+        const titleFormat = new TextFormat();
+        titleFormat.size = 14;
+        titleFormat.color = 0xFFFFFF;
+        titleFormat.bold = true;
+
+        const sectionTitle1 = new TextField();
+        sectionTitle1.x = 30;
+        sectionTitle1.y = 190;
+        sectionTitle1.width = 300;
+        sectionTitle1.height = 20;
+        sectionTitle1.defaultTextFormat = titleFormat;
+        sectionTitle1.text = "Gradient Background Test";
+        root.addChild(sectionTitle1);
+
+        const testContainer = new Sprite();
+        testContainer.x = 30;
+        testContainer.y = 215;
+        root.addChild(testContainer);
+
+        // グラデーション背景
+        const { Matrix } = next2d.geom;
+        const matrix = new Matrix();
+        matrix.createGradientBox(400, 100, 0, 0, 0);
+        const gradBg = new Shape();
+        gradBg.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x00FF00, 0x0000FF],
+                [1, 1, 1],
+                [0, 127, 255],
+                matrix
+            )
+            .drawRect(0, 0, 400, 100)
+            .endFill();
+        testContainer.addChild(gradBg);
+
+        // MULTIPLY
+        const textMultiply = new TextField();
+        textMultiply.x = 10;
+        textMultiply.y = 30;
+        textMultiply.width = 80;
+        textMultiply.height = 40;
+        textMultiply.background = true;
+        textMultiply.backgroundColor = 0xCCCCCC;
+        const textFormat = new TextFormat();
+        textFormat.size = 14;
+        textFormat.color = 0x000000;
+        textFormat.bold = true;
+        textFormat.align = "center";
+        textMultiply.defaultTextFormat = textFormat;
+        textMultiply.text = "MULT";
+        textMultiply.blendMode = BlendMode.MULTIPLY;
+        testContainer.addChild(textMultiply);
+
+        // SCREEN
+        const textScreen = new TextField();
+        textScreen.x = 110;
+        textScreen.y = 30;
+        textScreen.width = 80;
+        textScreen.height = 40;
+        textScreen.background = true;
+        textScreen.backgroundColor = 0x333333;
+        textScreen.defaultTextFormat = textFormat;
+        textScreen.text = "SCRN";
+        textScreen.blendMode = BlendMode.SCREEN;
+        testContainer.addChild(textScreen);
+
+        // OVERLAY
+        const textOverlay = new TextField();
+        textOverlay.x = 210;
+        textOverlay.y = 30;
+        textOverlay.width = 80;
+        textOverlay.height = 40;
+        textOverlay.background = true;
+        textOverlay.backgroundColor = 0x888888;
+        textOverlay.defaultTextFormat = textFormat;
+        textOverlay.text = "OVLY";
+        textOverlay.blendMode = BlendMode.OVERLAY;
+        testContainer.addChild(textOverlay);
+
+        // ADD
+        const textAdd = new TextField();
+        textAdd.x = 310;
+        textAdd.y = 30;
+        textAdd.width = 80;
+        textAdd.height = 40;
+        textAdd.background = true;
+        textAdd.backgroundColor = 0x444444;
+        textAdd.defaultTextFormat = textFormat;
+        textAdd.text = "ADD";
+        textAdd.blendMode = BlendMode.ADD;
+        testContainer.addChild(textAdd);
+
+        // ===== 放射グラデーション =====
+        const sectionTitle2 = new TextField();
+        sectionTitle2.x = 460;
+        sectionTitle2.y = 190;
+        sectionTitle2.width = 300;
+        sectionTitle2.height = 20;
+        sectionTitle2.defaultTextFormat = titleFormat;
+        sectionTitle2.text = "Radial Gradient Test";
+        root.addChild(sectionTitle2);
+
+        const radialContainer = new Sprite();
+        radialContainer.x = 460;
+        radialContainer.y = 215;
+        root.addChild(radialContainer);
+
+        const radialMatrix = new Matrix();
+        radialMatrix.createGradientBox(200, 200, 0, 0, 0);
+        const radialBg = new Shape();
+        radialBg.graphics
+            .beginGradientFill(
+                "radial",
+                [0xFFFFFF, 0x000000],
+                [1, 1],
+                [0, 255],
+                radialMatrix
+            )
+            .drawRect(0, 0, 200, 100)
+            .endFill();
+        radialContainer.addChild(radialBg);
+
+        // ADD
+        const textRadialAdd = new TextField();
+        textRadialAdd.x = 10;
+        textRadialAdd.y = 35;
+        textRadialAdd.width = 55;
+        textRadialAdd.height = 30;
+        textRadialAdd.background = true;
+        textRadialAdd.backgroundColor = 0xFF0000;
+        const smallFormat = new TextFormat();
+        smallFormat.size = 10;
+        smallFormat.color = 0xFFFFFF;
+        smallFormat.bold = true;
+        smallFormat.align = "center";
+        textRadialAdd.defaultTextFormat = smallFormat;
+        textRadialAdd.text = "ADD";
+        textRadialAdd.blendMode = BlendMode.ADD;
+        radialContainer.addChild(textRadialAdd);
+
+        // SUBTRACT
+        const textRadialSub = new TextField();
+        textRadialSub.x = 75;
+        textRadialSub.y = 35;
+        textRadialSub.width = 55;
+        textRadialSub.height = 30;
+        textRadialSub.background = true;
+        textRadialSub.backgroundColor = 0x00FF00;
+        textRadialSub.defaultTextFormat = smallFormat;
+        textRadialSub.text = "SUB";
+        textRadialSub.blendMode = BlendMode.SUBTRACT;
+        radialContainer.addChild(textRadialSub);
+
+        // DIFFERENCE
+        const textRadialDiff = new TextField();
+        textRadialDiff.x = 140;
+        textRadialDiff.y = 35;
+        textRadialDiff.width = 55;
+        textRadialDiff.height = 30;
+        textRadialDiff.background = true;
+        textRadialDiff.backgroundColor = 0x0000FF;
+        textRadialDiff.defaultTextFormat = smallFormat;
+        textRadialDiff.text = "DIFF";
+        textRadialDiff.blendMode = BlendMode.DIFFERENCE;
+        radialContainer.addChild(textRadialDiff);
+
+        // ===== LAYER BlendMode =====
+        const sectionTitle3 = new TextField();
+        sectionTitle3.x = 30;
+        sectionTitle3.y = 330;
+        sectionTitle3.width = 200;
+        sectionTitle3.height = 20;
+        sectionTitle3.defaultTextFormat = titleFormat;
+        sectionTitle3.text = "LAYER BlendMode";
+        root.addChild(sectionTitle3);
+
+        const layerContainer = new Sprite();
+        layerContainer.x = 30;
+        layerContainer.y = 355;
+        layerContainer.blendMode = BlendMode.LAYER;
+        root.addChild(layerContainer);
+
+        const layerBg = new Shape();
+        layerBg.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        layerContainer.addChild(layerBg);
+
+        const textLayer1 = new TextField();
+        textLayer1.x = 10;
+        textLayer1.y = 20;
+        textLayer1.width = 80;
+        textLayer1.height = 40;
+        textLayer1.background = true;
+        textLayer1.backgroundColor = 0xFF0000;
+        textLayer1.alpha = 0.5;
+        textLayer1.defaultTextFormat = smallFormat;
+        textLayer1.text = "Layer1";
+        layerContainer.addChild(textLayer1);
+
+        const textLayer2 = new TextField();
+        textLayer2.x = 50;
+        textLayer2.y = 40;
+        textLayer2.width = 80;
+        textLayer2.height = 40;
+        textLayer2.background = true;
+        textLayer2.backgroundColor = 0x0000FF;
+        textLayer2.alpha = 0.5;
+        textLayer2.defaultTextFormat = smallFormat;
+        textLayer2.text = "Layer2";
+        layerContainer.addChild(textLayer2);
+
+        const textLayer3 = new TextField();
+        textLayer3.x = 90;
+        textLayer3.y = 30;
+        textLayer3.width = 80;
+        textLayer3.height = 40;
+        textLayer3.background = true;
+        textLayer3.backgroundColor = 0x00FF00;
+        textLayer3.alpha = 0.5;
+        textLayer3.defaultTextFormat = smallFormat;
+        textLayer3.text = "Layer3";
+        layerContainer.addChild(textLayer3);
+
+        // ===== ERASE Test =====
+        const sectionTitle4 = new TextField();
+        sectionTitle4.x = 250;
+        sectionTitle4.y = 330;
+        sectionTitle4.width = 200;
+        sectionTitle4.height = 20;
+        sectionTitle4.defaultTextFormat = titleFormat;
+        sectionTitle4.text = "ERASE Test";
+        root.addChild(sectionTitle4);
+
+        const eraseContainer = new Sprite();
+        eraseContainer.x = 250;
+        eraseContainer.y = 355;
+        eraseContainer.blendMode = BlendMode.LAYER;
+        root.addChild(eraseContainer);
+
+        const eraseBg = new Shape();
+        eraseBg.graphics
+            .beginFill(0x00AAFF, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        eraseContainer.addChild(eraseBg);
+
+        const textErase = new TextField();
+        textErase.x = 40;
+        textErase.y = 30;
+        textErase.width = 100;
+        textErase.height = 40;
+        textErase.background = true;
+        textErase.backgroundColor = 0xFFFFFF;
+        textErase.defaultTextFormat = smallFormat;
+        textErase.text = "ERASE";
+        textErase.blendMode = BlendMode.ERASE;
+        eraseContainer.addChild(textErase);
+
+        // ===== INVERT Test =====
+        const sectionTitle5 = new TextField();
+        sectionTitle5.x = 470;
+        sectionTitle5.y = 330;
+        sectionTitle5.width = 200;
+        sectionTitle5.height = 20;
+        sectionTitle5.defaultTextFormat = titleFormat;
+        sectionTitle5.text = "INVERT Test";
+        root.addChild(sectionTitle5);
+
+        const invertContainer = new Sprite();
+        invertContainer.x = 470;
+        invertContainer.y = 355;
+        root.addChild(invertContainer);
+
+        const invertBg = new Shape();
+        invertBg.graphics
+            .beginFill(0xFF8800, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        invertContainer.addChild(invertBg);
+
+        const textInvert = new TextField();
+        textInvert.x = 40;
+        textInvert.y = 30;
+        textInvert.width = 100;
+        textInvert.height = 40;
+        textInvert.background = true;
+        textInvert.backgroundColor = 0xFFFFFF;
+        textInvert.defaultTextFormat = smallFormat;
+        textInvert.text = "INVERT";
+        textInvert.blendMode = BlendMode.INVERT;
+        invertContainer.addChild(textInvert);
+
+        // ===== HARDLIGHT Test =====
+        const sectionTitle6 = new TextField();
+        sectionTitle6.x = 30;
+        sectionTitle6.y = 470;
+        sectionTitle6.width = 200;
+        sectionTitle6.height = 20;
+        sectionTitle6.defaultTextFormat = titleFormat;
+        sectionTitle6.text = "HARDLIGHT Test";
+        root.addChild(sectionTitle6);
+
+        const hardlightContainer = new Sprite();
+        hardlightContainer.x = 30;
+        hardlightContainer.y = 495;
+        root.addChild(hardlightContainer);
+
+        const hardlightBg = new Shape();
+        hardlightBg.graphics
+            .beginFill(0x888888, 1.0)
+            .drawRect(0, 0, 200, 80)
+            .endFill();
+        hardlightContainer.addChild(hardlightBg);
+
+        const textHardLight = new TextField();
+        textHardLight.x = 20;
+        textHardLight.y = 20;
+        textHardLight.width = 70;
+        textHardLight.height = 40;
+        textHardLight.background = true;
+        textHardLight.backgroundColor = 0xCCCCCC;
+        textHardLight.defaultTextFormat = smallFormat;
+        textHardLight.text = "Light";
+        textHardLight.blendMode = BlendMode.HARDLIGHT;
+        hardlightContainer.addChild(textHardLight);
+
+        const textHardDark = new TextField();
+        textHardDark.x = 110;
+        textHardDark.y = 20;
+        textHardDark.width = 70;
+        textHardDark.height = 40;
+        textHardDark.background = true;
+        textHardDark.backgroundColor = 0x333333;
+        textHardDark.defaultTextFormat = smallFormat;
+        textHardDark.text = "Dark";
+        textHardDark.blendMode = BlendMode.HARDLIGHT;
+        hardlightContainer.addChild(textHardDark);
+
+        // ===== DARKEN/LIGHTEN Test =====
+        const sectionTitle7 = new TextField();
+        sectionTitle7.x = 270;
+        sectionTitle7.y = 470;
+        sectionTitle7.width = 200;
+        sectionTitle7.height = 20;
+        sectionTitle7.defaultTextFormat = titleFormat;
+        sectionTitle7.text = "DARKEN / LIGHTEN";
+        root.addChild(sectionTitle7);
+
+        const darkenLightenContainer = new Sprite();
+        darkenLightenContainer.x = 270;
+        darkenLightenContainer.y = 495;
+        root.addChild(darkenLightenContainer);
+
+        const dlBg = new Shape();
+        dlBg.graphics
+            .beginFill(0x888888, 1.0)
+            .drawRect(0, 0, 200, 80)
+            .endFill();
+        darkenLightenContainer.addChild(dlBg);
+
+        const textDarken = new TextField();
+        textDarken.x = 20;
+        textDarken.y = 20;
+        textDarken.width = 70;
+        textDarken.height = 40;
+        textDarken.background = true;
+        textDarken.backgroundColor = 0x444444;
+        textDarken.defaultTextFormat = smallFormat;
+        textDarken.text = "DARKEN";
+        textDarken.blendMode = BlendMode.DARKEN;
+        darkenLightenContainer.addChild(textDarken);
+
+        const textLighten = new TextField();
+        textLighten.x = 110;
+        textLighten.y = 20;
+        textLighten.width = 70;
+        textLighten.height = 40;
+        textLighten.background = true;
+        textLighten.backgroundColor = 0xCCCCCC;
+        textLighten.defaultTextFormat = smallFormat;
+        textLighten.text = "LIGHTEN";
+        textLighten.blendMode = BlendMode.LIGHTEN;
+        darkenLightenContainer.addChild(textLighten);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

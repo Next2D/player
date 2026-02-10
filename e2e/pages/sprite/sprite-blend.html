@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Sprite BlendMode</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape, Sprite, BlendMode } = next2d.display;
+
+        // 背景
+        const bg = new Shape();
+        bg.graphics
+            .beginFill(0x404040, 1.0)
+            .drawRect(0, 0, 800, 600)
+            .endFill();
+        root.addChild(bg);
+
+        // Sprite内に複数子要素を配置するヘルパー
+        const createBlendSprite = (x, y, blendMode) => {
+            // 下地
+            const base = new Shape();
+            base.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(x, y, 80, 60)
+                .endFill()
+            root.addChild(base);
+
+            const baseBlue = new Shape();
+            baseBlue.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(x + 40, y, 40, 60)
+                .endFill();
+            root.addChild(baseBlue);
+
+            // ブレンドされるSprite（コンテナ全体にblendMode）
+            const sprite = new Sprite();
+            sprite.x = x;
+            sprite.y = y;
+            sprite.blendMode = blendMode;
+
+            const green = new Shape();
+            green.graphics
+                .beginFill(0x00FF00, 0.8)
+                .drawCircle(40, 30, 25)
+                .endFill();
+            sprite.addChild(green);
+
+            const white = new Shape();
+            white.graphics
+                .beginFill(0xFFFFFF, 0.5)
+                .drawCircle(50, 40, 15)
+                .endFill();
+            sprite.addChild(white);
+
+            return sprite;
+        };
+
+        // ブレンドモード一覧
+        const modes = [
+            BlendMode.NORMAL, BlendMode.ADD, BlendMode.ALPHA,
+            BlendMode.DARKEN, BlendMode.DIFFERENCE, BlendMode.ERASE,
+            BlendMode.HARDLIGHT, BlendMode.INVERT, BlendMode.LAYER,
+            BlendMode.LIGHTEN, BlendMode.MULTIPLY, BlendMode.OVERLAY,
+            BlendMode.SCREEN, BlendMode.SUBTRACT
+        ];
+
+        const cols = 7;
+        const cellW = 100;
+        const cellH = 80;
+        const startX = 30;
+        const startY = 20;
+
+        modes.forEach((mode, i) => {
+            const col = i % cols;
+            const row = Math.floor(i / cols);
+            const x = startX + col * cellW;
+            const y = startY + row * cellH;
+            root.addChild(createBlendSprite(x, y, mode));
+        });
+
+        // ===== LAYER + ERASE コンテナテスト =====
+        const layerContainer = new Sprite();
+        layerContainer.x = 30;
+        layerContainer.y = 220;
+        layerContainer.blendMode = BlendMode.LAYER;
+        root.addChild(layerContainer);
+
+        const layerBg = new Shape();
+        layerBg.graphics
+            .beginFill(0x00AAFF, 1.0)
+            .drawRect(0, 0, 160, 100)
+            .endFill();
+        layerContainer.addChild(layerBg);
+
+        const eraseChild = new Shape();
+        eraseChild.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(80, 50, 35)
+            .endFill();
+        eraseChild.blendMode = BlendMode.ERASE;
+        layerContainer.addChild(eraseChild);
+
+        // ===== ネストされたSprite + ブレンド =====
+        const outerSprite = new Sprite();
+        outerSprite.x = 220;
+        outerSprite.y = 220;
+        outerSprite.blendMode = BlendMode.LAYER;
+        root.addChild(outerSprite);
+
+        const outerBg = new Shape();
+        outerBg.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(0, 0, 160, 100)
+            .endFill();
+        outerSprite.addChild(outerBg);
+
+        const innerSprite = new Sprite();
+        innerSprite.x = 10;
+        innerSprite.y = 10;
+        innerSprite.blendMode = BlendMode.MULTIPLY;
+
+        const innerR = new Shape();
+        innerR.graphics
+            .beginFill(0xFF0000, 0.8)
+            .drawCircle(30, 40, 30)
+            .endFill();
+        innerSprite.addChild(innerR);
+
+        const innerG = new Shape();
+        innerG.graphics
+            .beginFill(0x00FF00, 0.8)
+            .drawCircle(70, 40, 30)
+            .endFill();
+        innerSprite.addChild(innerG);
+
+        const innerB = new Shape();
+        innerB.graphics
+            .beginFill(0x0000FF, 0.8)
+            .drawCircle(110, 40, 30)
+            .endFill();
+        innerSprite.addChild(innerB);
+
+        outerSprite.addChild(innerSprite);
+
+        // ===== alpha + blendMode =====
+        const alphaSprite = new Sprite();
+        alphaSprite.x = 410;
+        alphaSprite.y = 220;
+        alphaSprite.alpha = 0.5;
+        alphaSprite.blendMode = BlendMode.ADD;
+
+        const alphaBgBase = new Shape();
+        alphaBgBase.graphics
+            .beginFill(0x888888, 1.0)
+            .drawRect(410, 220, 160, 100)
+            .endFill();
+        root.addChild(alphaBgBase);
+
+        const alphaR = new Shape();
+        alphaR.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRect(0, 0, 80, 100)
+            .endFill();
+        alphaSprite.addChild(alphaR);
+
+        const alphaB = new Shape();
+        alphaB.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(80, 0, 80, 100)
+            .endFill();
+        alphaSprite.addChild(alphaB);
+
+        root.addChild(alphaSprite);
+
+        // ===== スケール + ブレンド =====
+        const scaledBase = new Shape();
+        scaledBase.graphics
+            .beginFill(0xFF8800, 1.0)
+            .drawRect(30, 360, 150, 100)
+            .endFill();
+        root.addChild(scaledBase);
+
+        const scaledBlend = new Sprite();
+        scaledBlend.x = 30;
+        scaledBlend.y = 360;
+        scaledBlend.scaleX = 1.5;
+        scaledBlend.scaleY = 1.5;
+        scaledBlend.blendMode = BlendMode.SCREEN;
+
+        const scaledChild = new Shape();
+        scaledChild.graphics
+            .beginFill(0x4444FF, 1.0)
+            .drawCircle(50, 35, 30)
+            .endFill();
+        scaledBlend.addChild(scaledChild);
+        root.addChild(scaledBlend);
+
+        // ===== 回転 + ブレンド =====
+        const rotBase = new Shape();
+        rotBase.graphics
+            .beginFill(0x00AA00, 1.0)
+            .drawRect(230, 360, 150, 100)
+            .endFill();
+        root.addChild(rotBase);
+
+        const rotBlend = new Sprite();
+        rotBlend.x = 305;
+        rotBlend.y = 410;
+        rotBlend.rotation = 30;
+        rotBlend.blendMode = BlendMode.DIFFERENCE;
+
+        const rotChild = new Shape();
+        rotChild.graphics
+            .beginFill(0xFFFF00, 0.8)
+            .drawRect(-40, -30, 80, 60)
+            .endFill();
+        rotBlend.addChild(rotChild);
+        root.addChild(rotBlend);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

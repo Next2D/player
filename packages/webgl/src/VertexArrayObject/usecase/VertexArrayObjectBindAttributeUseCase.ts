@@ -30,15 +30,17 @@ export const execute = (): void =>
 
         $attributeBufferLength = renderQueue.buffer.length;
 
+        // STREAM_DRAW: 毎フレーム更新されるデータに最適
+        // STREAM_DRAW: Optimal for data updated every frame
         $gl.bufferData(
             $gl.ARRAY_BUFFER,
             $attributeBufferLength * 4, // renderQueue.buffer.byteLength
-            $gl.DYNAMIC_DRAW
+            $gl.STREAM_DRAW
         );
     }
 
     $gl.bufferSubData(
         $gl.ARRAY_BUFFER, 0,
-        renderQueue.buffer.subarray(0, renderQueue.offset)
+        renderQueue.buffer, 0, renderQueue.offset
     );
 };

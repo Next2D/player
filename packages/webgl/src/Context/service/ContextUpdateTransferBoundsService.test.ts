@@ -19,7 +19,7 @@ describe("ContextUpdateTransferBoundsService.js method test", () =>
         
         expect(bounds[0]).toBe(10);
         expect(bounds[1]).toBe(20);
-        expect(bounds[2]).toBe(110);
-        expect(bounds[3]).toBe(220);
+        expect(bounds[2]).toBe(111);
+        expect(bounds[3]).toBe(221);
     });
 });

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - All BlendModes</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape, Sprite, BlendMode } = next2d.display;
+        const { TextField, TextFormat } = next2d.text;
+
+        // 背景を塗りつぶし
+        const bgFill = new Shape();
+        bgFill.graphics
+            .beginFill(0x404040, 1.0)
+            .drawRect(0, 0, 800, 600)
+            .endFill();
+        root.addChild(bgFill);
+
+        // ブレンドテスト用のシェイプを作成
+        const createBlendShape = (x, y, blendMode, label) => {
+            const container = new Sprite();
+            container.x = x;
+            container.y = y;
+
+            // 下地（赤と青の背景）
+            const base = new Shape();
+            base.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 80, 60)
+                .endFill();
+            container.addChild(base);
+
+            const baseBlue = new Shape();
+            baseBlue.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(40, 0, 40, 60)
+                .endFill();
+            container.addChild(baseBlue);
+
+            // ブレンドされるシェイプ（緑の円）
+            const blend = new Shape();
+            blend.graphics
+                .beginFill(0x00FF00, 0.8)
+                .drawCircle(40, 30, 25)
+                .endFill();
+            blend.blendMode = blendMode;
+            container.addChild(blend);
+
+            // 白い円（重ねてテスト）
+            const white = new Shape();
+            white.graphics
+                .beginFill(0xFFFFFF, 0.5)
+                .drawCircle(50, 40, 15)
+                .endFill();
+            white.blendMode = blendMode;
+            container.addChild(white);
+
+            // ラベル
+            const labelText = new TextField();
+            labelText.x = 0;
+            labelText.y = 62;
+            labelText.width = 80;
+            labelText.height = 16;
+            const format = new TextFormat();
+            format.size = 10;
+            format.color = 0xFFFFFF;
+            format.align = "center";
+            labelText.defaultTextFormat = format;
+            labelText.text = label;
+            container.addChild(labelText);
+
+            return container;
+        };
+
+        // 全14種類のBlendMode
+        const blendModes = [
+            { mode: BlendMode.NORMAL, name: "NORMAL" },
+            { mode: BlendMode.ADD, name: "ADD" },
+            { mode: BlendMode.ALPHA, name: "ALPHA" },
+            { mode: BlendMode.DARKEN, name: "DARKEN" },
+            { mode: BlendMode.DIFFERENCE, name: "DIFFERENCE" },
+            { mode: BlendMode.ERASE, name: "ERASE" },
+            { mode: BlendMode.HARDLIGHT, name: "HARDLIGHT" },
+            { mode: BlendMode.INVERT, name: "INVERT" },
+            { mode: BlendMode.LAYER, name: "LAYER" },
+            { mode: BlendMode.LIGHTEN, name: "LIGHTEN" },
+            { mode: BlendMode.MULTIPLY, name: "MULTIPLY" },
+            { mode: BlendMode.OVERLAY, name: "OVERLAY" },
+            { mode: BlendMode.SCREEN, name: "SCREEN" },
+            { mode: BlendMode.SUBTRACT, name: "SUBTRACT" }
+        ];
+
+        // 各ブレンドモードを配置（7x2グリッド）
+        const cols = 7;
+        const cellWidth = 100;
+        const cellHeight = 90;
+        const startX = 30;
+        const startY = 20;
+
+        blendModes.forEach((item, index) => {
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            const x = startX + col * cellWidth;
+            const y = startY + row * cellHeight;
+
+            const shape = createBlendShape(x, y, item.mode, item.name);
+            root.addChild(shape);
+        });
+
+        // ===== セクションタイトル =====
+        const sectionTitle1 = new TextField();
+        sectionTitle1.x = 30;
+        sectionTitle1.y = 200;
+        sectionTitle1.width = 300;
+        sectionTitle1.height = 20;
+        const titleFormat = new TextFormat();
+        titleFormat.size = 14;
+        titleFormat.color = 0xFFFFFF;
+        titleFormat.bold = true;
+        sectionTitle1.defaultTextFormat = titleFormat;
+        sectionTitle1.text = "Gradient Background Test";
+        root.addChild(sectionTitle1);
+
+        // ===== 追加テスト: グラデーション背景に対するブレンドモード =====
+
+        const testContainer = new Sprite();
+        testContainer.x = 30;
+        testContainer.y = 220;
+        root.addChild(testContainer);
+
+        // グラデーション背景
+        const gradBg = new Shape();
+        const { Matrix } = next2d.geom;
+        const matrix = new Matrix();
+        matrix.createGradientBox(350, 80, 0, 0, 0);
+        gradBg.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x00FF00, 0x0000FF],
+                [1, 1, 1],
+                [0, 127, 255],
+                matrix
+            )
+            .drawRect(0, 0, 350, 80)
+            .endFill();
+        testContainer.addChild(gradBg);
+
+        // MULTIPLY
+        const multiplyShape = new Shape();
+        multiplyShape.graphics
+            .beginFill(0xCCCCCC, 1.0)
+            .drawRect(10, 10, 70, 60)
+            .endFill();
+        multiplyShape.blendMode = BlendMode.MULTIPLY;
+        testContainer.addChild(multiplyShape);
+
+        const multiplyLabel = new TextField();
+        multiplyLabel.x = 10;
+        multiplyLabel.y = 65;
+        multiplyLabel.width = 70;
+        multiplyLabel.height = 14;
+        const smallFormat = new TextFormat();
+        smallFormat.size = 9;
+        smallFormat.color = 0xFFFFFF;
+        smallFormat.align = "center";
+        multiplyLabel.defaultTextFormat = smallFormat;
+        multiplyLabel.text = "MULTIPLY";
+        testContainer.addChild(multiplyLabel);
+
+        // SCREEN
+        const screenShape = new Shape();
+        screenShape.graphics
+            .beginFill(0x333333, 1.0)
+            .drawRect(100, 10, 70, 60)
+            .endFill();
+        screenShape.blendMode = BlendMode.SCREEN;
+        testContainer.addChild(screenShape);
+
+        const screenLabel = new TextField();
+        screenLabel.x = 100;
+        screenLabel.y = 65;
+        screenLabel.width = 70;
+        screenLabel.height = 14;
+        screenLabel.defaultTextFormat = smallFormat;
+        screenLabel.text = "SCREEN";
+        testContainer.addChild(screenLabel);
+
+        // OVERLAY
+        const overlayShape = new Shape();
+        overlayShape.graphics
+            .beginFill(0x888888, 1.0)
+            .drawRect(190, 10, 70, 60)
+            .endFill();
+        overlayShape.blendMode = BlendMode.OVERLAY;
+        testContainer.addChild(overlayShape);
+
+        const overlayLabel = new TextField();
+        overlayLabel.x = 190;
+        overlayLabel.y = 65;
+        overlayLabel.width = 70;
+        overlayLabel.height = 14;
+        overlayLabel.defaultTextFormat = smallFormat;
+        overlayLabel.text = "OVERLAY";
+        testContainer.addChild(overlayLabel);
+
+        // ADD
+        const addShape = new Shape();
+        addShape.graphics
+            .beginFill(0x444444, 1.0)
+            .drawRect(280, 10, 60, 60)
+            .endFill();
+        addShape.blendMode = BlendMode.ADD;
+        testContainer.addChild(addShape);
+
+        const addLabel = new TextField();
+        addLabel.x = 280;
+        addLabel.y = 65;
+        addLabel.width = 60;
+        addLabel.height = 14;
+        addLabel.defaultTextFormat = smallFormat;
+        addLabel.text = "ADD";
+        testContainer.addChild(addLabel);
+
+        // ===== セクションタイトル =====
+        const sectionTitle2 = new TextField();
+        sectionTitle2.x = 420;
+        sectionTitle2.y = 200;
+        sectionTitle2.width = 300;
+        sectionTitle2.height = 20;
+        sectionTitle2.defaultTextFormat = titleFormat;
+        sectionTitle2.text = "Radial Gradient Test";
+        root.addChild(sectionTitle2);
+
+        // ===== 追加テスト: 複雑なブレンド =====
+
+        const complexContainer = new Sprite();
+        complexContainer.x = 420;
+        complexContainer.y = 220;
+        root.addChild(complexContainer);
+
+        // 放射グラデーション背景
+        const radialBg = new Shape();
+        const radialMatrix = new Matrix();
+        radialMatrix.createGradientBox(180, 180, 0, 0, 0);
+        radialBg.graphics
+            .beginGradientFill(
+                "radial",
+                [0xFFFFFF, 0x000000],
+                [1, 1],
+                [0, 255],
+                radialMatrix
+            )
+            .drawRect(0, 0, 180, 120)
+            .endFill();
+        complexContainer.addChild(radialBg);
+
+        // ADD
+        const addCircle = new Shape();
+        addCircle.graphics
+            .beginFill(0xFF0000, 0.7)
+            .drawCircle(45, 60, 35)
+            .endFill();
+        addCircle.blendMode = BlendMode.ADD;
+        complexContainer.addChild(addCircle);
+
+        // SUBTRACT
+        const subtractCircle = new Shape();
+        subtractCircle.graphics
+            .beginFill(0x00FF00, 0.7)
+            .drawCircle(90, 60, 35)
+            .endFill();
+        subtractCircle.blendMode = BlendMode.SUBTRACT;
+        complexContainer.addChild(subtractCircle);
+
+        // DIFFERENCE
+        const diffCircle = new Shape();
+        diffCircle.graphics
+            .beginFill(0x0000FF, 0.7)
+            .drawCircle(135, 60, 35)
+            .endFill();
+        diffCircle.blendMode = BlendMode.DIFFERENCE;
+        complexContainer.addChild(diffCircle);
+
+        // ===== セクションタイトル =====
+        const sectionTitle3 = new TextField();
+        sectionTitle3.x = 30;
+        sectionTitle3.y = 350;
+        sectionTitle3.width = 200;
+        sectionTitle3.height = 20;
+        sectionTitle3.defaultTextFormat = titleFormat;
+        sectionTitle3.text = "Alpha Blending (NORMAL)";
+        root.addChild(sectionTitle3);
+
+        // ===== 半透明同士のブレンド =====
+
+        const alphaTestContainer = new Sprite();
+        alphaTestContainer.x = 30;
+        alphaTestContainer.y = 370;
+        root.addChild(alphaTestContainer);
+
+        // 背景
+        const alphaBg = new Shape();
+        alphaBg.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        alphaTestContainer.addChild(alphaBg);
+
+        // 半透明の重なり（NORMAL）
+        const alpha1 = new Shape();
+        alpha1.graphics
+            .beginFill(0xFF0000, 0.5)
+            .drawCircle(50, 50, 40)
+            .endFill();
+        alphaTestContainer.addChild(alpha1);
+
+        const alpha2 = new Shape();
+        alpha2.graphics
+            .beginFill(0x0000FF, 0.5)
+            .drawCircle(80, 50, 40)
+            .endFill();
+        alphaTestContainer.addChild(alpha2);
+
+        const alpha3 = new Shape();
+        alpha3.graphics
+            .beginFill(0x00FF00, 0.5)
+            .drawCircle(65, 70, 40)
+            .endFill();
+        alphaTestContainer.addChild(alpha3);
+
+        // ===== セクションタイトル =====
+        const sectionTitle4 = new TextField();
+        sectionTitle4.x = 250;
+        sectionTitle4.y = 350;
+        sectionTitle4.width = 200;
+        sectionTitle4.height = 20;
+        sectionTitle4.defaultTextFormat = titleFormat;
+        sectionTitle4.text = "LAYER BlendMode";
+        root.addChild(sectionTitle4);
+
+        // LAYER blendMode
+        const layerContainer = new Sprite();
+        layerContainer.x = 250;
+        layerContainer.y = 370;
+        layerContainer.blendMode = BlendMode.LAYER;
+        root.addChild(layerContainer);
+
+        const layerBg = new Shape();
+        layerBg.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        layerContainer.addChild(layerBg);
+
+        const layer1 = new Shape();
+        layer1.graphics
+            .beginFill(0xFF0000, 0.5)
+            .drawCircle(50, 50, 40)
+            .endFill();
+        layerContainer.addChild(layer1);
+
+        const layer2 = new Shape();
+        layer2.graphics
+            .beginFill(0x0000FF, 0.5)
+            .drawCircle(80, 50, 40)
+            .endFill();
+        layerContainer.addChild(layer2);
+
+        const layer3 = new Shape();
+        layer3.graphics
+            .beginFill(0x00FF00, 0.5)
+            .drawCircle(65, 70, 40)
+            .endFill();
+        layerContainer.addChild(layer3);
+
+        // ===== セクションタイトル =====
+        const sectionTitle5 = new TextField();
+        sectionTitle5.x = 470;
+        sectionTitle5.y = 350;
+        sectionTitle5.width = 200;
+        sectionTitle5.height = 20;
+        sectionTitle5.defaultTextFormat = titleFormat;
+        sectionTitle5.text = "ERASE Test";
+        root.addChild(sectionTitle5);
+
+        // ERASE blendMode test
+        const eraseContainer = new Sprite();
+        eraseContainer.x = 470;
+        eraseContainer.y = 370;
+        eraseContainer.blendMode = BlendMode.LAYER;
+        root.addChild(eraseContainer);
+
+        const eraseBg = new Shape();
+        eraseBg.graphics
+            .beginFill(0x00AAFF, 1.0)
+            .drawRect(0, 0, 180, 100)
+            .endFill();
+        eraseContainer.addChild(eraseBg);
+
+        const eraseShape = new Shape();
+        eraseShape.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(90, 50, 40)
+            .endFill();
+        eraseShape.blendMode = BlendMode.ERASE;
+        eraseContainer.addChild(eraseShape);
+
+        // ===== セクションタイトル =====
+        const sectionTitle6 = new TextField();
+        sectionTitle6.x = 30;
+        sectionTitle6.y = 490;
+        sectionTitle6.width = 200;
+        sectionTitle6.height = 20;
+        sectionTitle6.defaultTextFormat = titleFormat;
+        sectionTitle6.text = "INVERT Test";
+        root.addChild(sectionTitle6);
+
+        // INVERT test
+        const invertContainer = new Sprite();
+        invertContainer.x = 30;
+        invertContainer.y = 510;
+        root.addChild(invertContainer);
+
+        const invertBg = new Shape();
+        invertBg.graphics
+            .beginFill(0xFF8800, 1.0)
+            .drawRect(0, 0, 180, 70)
+            .endFill();
+        invertContainer.addChild(invertBg);
+
+        const invertShape = new Shape();
+        invertShape.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawCircle(90, 35, 30)
+            .endFill();
+        invertShape.blendMode = BlendMode.INVERT;
+        invertContainer.addChild(invertShape);
+
+        // ===== セクションタイトル =====
+        const sectionTitle7 = new TextField();
+        sectionTitle7.x = 250;
+        sectionTitle7.y = 490;
+        sectionTitle7.width = 200;
+        sectionTitle7.height = 20;
+        sectionTitle7.defaultTextFormat = titleFormat;
+        sectionTitle7.text = "HARDLIGHT Test";
+        root.addChild(sectionTitle7);
+
+        // HARDLIGHT test
+        const hardlightContainer = new Sprite();
+        hardlightContainer.x = 250;
+        hardlightContainer.y = 510;
+        root.addChild(hardlightContainer);
+
+        const hardlightBg = new Shape();
+        hardlightBg.graphics
+            .beginFill(0x888888, 1.0)
+            .drawRect(0, 0, 180, 70)
+            .endFill();
+        hardlightContainer.addChild(hardlightBg);
+
+        const hardlightLight = new Shape();
+        hardlightLight.graphics
+            .beginFill(0xCCCCCC, 1.0)
+            .drawCircle(60, 35, 25)
+            .endFill();
+        hardlightLight.blendMode = BlendMode.HARDLIGHT;
+        hardlightContainer.addChild(hardlightLight);
+
+        const hardlightDark = new Shape();
+        hardlightDark.graphics
+            .beginFill(0x333333, 1.0)
+            .drawCircle(120, 35, 25)
+            .endFill();
+        hardlightDark.blendMode = BlendMode.HARDLIGHT;
+        hardlightContainer.addChild(hardlightDark);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+import type { ITexturePoolBuckets } from "./interface/IPooledTexture";
+import { execute as texturePoolAcquireUseCase } from "./TexturePool/usecase/TexturePoolAcquireUseCase";
+import { execute as texturePoolReleaseService } from "./TexturePool/service/TexturePoolReleaseService";
+import { execute as texturePoolCleanupService } from "./TexturePool/service/TexturePoolCleanupService";
+
+/**
+ * @description プールの最大サイズ
+ */
+const MAX_POOL_SIZE = 32;
+
+/**
+ * @description キャッシュのクリーンアップ閾値（フレーム数）
+ */
+const CACHE_CLEANUP_THRESHOLD = 180; // 3秒（60FPS想定）
+
+/**
+ * @description テクスチャプールマネージャー（Power-of-2バケット版）
+ *              Texture pool manager for WebGPU optimization
+ *
+ *              リクエストサイズをPower-of-2に切り上げてバケット化。
+ *              同一バケット内で高いキャッシュヒット率を実現。
+ *              LRUベースで未使用テクスチャを回収。
+ */
+export class TexturePool
+{
+    private device: GPUDevice;
+    private buckets: ITexturePoolBuckets;
+    private currentFrame: number;
+    private totalCount: number[];
+
+    /**
+     * @param {GPUDevice} device
+     * @constructor
+     */
+    constructor(device: GPUDevice)
+    {
+        this.device = device;
+        this.buckets = new Map();
+        this.currentFrame = 0;
+        this.totalCount = [0];
+    }
+
+    /**
+     * @description フレーム開始時に呼び出し
+     * @return {void}
+     */
+    beginFrame(): void
+    {
+        this.currentFrame++;
+
+        // 定期的にプールをクリーンアップ（LRU回収）
+        if (this.currentFrame % 60 === 0) {
+            texturePoolCleanupService(this.buckets, this.currentFrame, CACHE_CLEANUP_THRESHOLD, this.totalCount);
+        }
+    }
+
+    /**
+     * @description テクスチャを取得または作成
+     * @param {number} width - テクスチャの幅
+     * @param {number} height - テクスチャの高さ
+     * @param {GPUTextureFormat} format - テクスチャフォーマット
+     * @param {GPUTextureUsageFlags} usage - テクスチャ使用フラグ
+     * @return {GPUTexture}
+     */
+    acquire(
+        width: number,
+        height: number,
+        format: GPUTextureFormat = "rgba8unorm",
+        usage: GPUTextureUsageFlags = GPUTextureUsage.TEXTURE_BINDING |
+                                      GPUTextureUsage.COPY_DST |
+                                      GPUTextureUsage.RENDER_ATTACHMENT
+    ): GPUTexture {
+        return texturePoolAcquireUseCase(
+            this.device,
+            this.buckets,
+            width,
+            height,
+            format,
+            usage,
+            this.currentFrame,
+            MAX_POOL_SIZE,
+            this.totalCount
+        );
+    }
+
+    /**
+     * @description テクスチャをプールに返却
+     * @param {GPUTexture} texture - 返却するテクスチャ
+     * @return {void}
+     */
+    release(texture: GPUTexture): void
+    {
+        texturePoolReleaseService(this.buckets, texture, this.currentFrame);
+    }
+
+    /**
+     * @description プール統計を取得
+     * @return {{ total: number, inUse: number, available: number }}
+     */
+    getStats(): { total: number; inUse: number; available: number }
+    {
+        let inUse = 0;
+        let available = 0;
+
+        for (const bucket of this.buckets.values()) {
+            for (const entry of bucket) {
+                if (entry.inUse) {
+                    inUse++;
+                } else {
+                    available++;
+                }
+            }
+        }
+
+        return {
+            "total": this.totalCount[0],
+            inUse,
+            available
+        };
+    }
+
+    /**
+     * @description 解放
+     * @return {void}
+     */
+    dispose(): void
+    {
+        for (const bucket of this.buckets.values()) {
+            for (const entry of bucket) {
+                entry.texture.destroy();
+            }
+        }
+        this.buckets.clear();
+        this.totalCount[0] = 0;
+    }
+}
+
+/**
+ * @description グローバルテクスチャプールインスタンス
+ */
+let $texturePool: TexturePool | null = null;
+
+/**
+ * @description テクスチャプールを初期化
+ * @param {GPUDevice} device
+ * @return {void}
+ */
+export const initTexturePool = (device: GPUDevice): void =>
+{
+    $texturePool = new TexturePool(device);
+};
+
+/**
+ * @description テクスチャプールを取得
+ * @return {TexturePool | null}
+ */
+export const getTexturePool = (): TexturePool | null =>
+{
+    return $texturePool;
+};
+
+/**
+ * @description テクスチャプールをクリア
+ * @return {void}
+ */
+export const clearTexturePool = (): void =>
+{
+    if ($texturePool) {
+        $texturePool.dispose();
+    }
+};

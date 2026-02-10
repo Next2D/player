@@ -214,10 +214,8 @@ export const execute = (
                         );
                     }
 
-                    const matrix = new Float32Array([
-                        commands[index++], commands[index++], commands[index++],
-                        commands[index++], commands[index++], commands[index++]
-                    ]);
+                    const matrix = commands.subarray(index, index + 6);
+                    index += 6;
 
                     const spread = commands[index++];
                     const interpolation = commands[index++];
@@ -250,10 +248,8 @@ export const execute = (
                     );
                     index += length;
 
-                    const matrix = new Float32Array([
-                        commands[index++], commands[index++], commands[index++],
-                        commands[index++], commands[index++], commands[index++]
-                    ]);
+                    const matrix = commands.subarray(index, index + 6);
+                    index += 6;
 
                     $context.bitmapFill(
                         buffer, matrix, width, height,
@@ -290,10 +286,8 @@ export const execute = (
                         );
                     }
 
-                    const matrix = new Float32Array([
-                        commands[index++], commands[index++], commands[index++],
-                        commands[index++], commands[index++], commands[index++]
-                    ]);
+                    const matrix = commands.subarray(index, index + 6);
+                    index += 6;
 
                     const spread = commands[index++];
                     const interpolation = commands[index++];
@@ -331,10 +325,8 @@ export const execute = (
                     );
                     index += length;
 
-                    const matrix = new Float32Array([
-                        commands[index++], commands[index++], commands[index++],
-                        commands[index++], commands[index++], commands[index++]
-                    ]);
+                    const matrix = commands.subarray(index, index + 6);
+                    index += 6;
 
                     $context.bitmapStroke(
                         buffer, matrix, width, height,

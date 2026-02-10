@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Graphics Clear</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 300, 60);
+        const { Shape } = next2d.display;
+
+        // Shape1: 赤い四角を描画 → clear() → 青い円を描画
+        const shape1 = new Shape();
+        shape1.graphics.beginFill(0xFF0000, 1.0).drawRect(0, 0, 100, 80).endFill();
+        shape1.graphics.clear();
+        shape1.graphics.beginFill(0x0000FF, 1.0).drawCircle(50, 40, 40).endFill();
+        shape1.x = 20; shape1.y = 20;
+        root.addChild(shape1);
+
+        // Shape2: グラデーション塗り → clear() → 緑の角丸四角
+        const shape2 = new Shape();
+        shape2.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawRect(0, 0, 100, 80)
+            .endFill();
+        shape2.graphics.clear();
+        shape2.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawRoundRect(0, 0, 100, 80, 15)
+            .endFill();
+        shape2.x = 180; shape2.y = 20;
+        root.addChild(shape2);
+
+        // Shape3: clear() せずにそのまま表示（比較用）
+        const shape3 = new Shape();
+        shape3.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawRect(0, 0, 100, 80)
+            .endFill();
+        shape3.x = 340; shape3.y = 20;
+        root.addChild(shape3);
+
+        // Shape4: 複数回のclear + 再描画
+        const shape4 = new Shape();
+        shape4.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 50, 50).endFill();
+        shape4.graphics.clear();
+        shape4.graphics.beginFill(0x00FF00, 1).drawRect(0, 0, 50, 50).endFill();
+        shape4.graphics.clear();
+        shape4.graphics.beginFill(0x0000FF, 1).drawRect(0, 0, 50, 50).endFill();
+        shape4.graphics.clear();
+        shape4.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawCircle(40, 40, 35)
+            .endFill();
+        shape4.x = 20; shape4.y = 140;
+        root.addChild(shape4);
+
+        // Shape5: clear() 後に異なるサイズで描画
+        const shape5 = new Shape();
+        shape5.graphics.beginFill(0xFFFFFF, 1).drawRect(0, 0, 150, 30).endFill();
+        shape5.graphics.clear();
+        shape5.graphics.beginFill(0x00FFFF, 1).drawRect(0, 0, 80, 80).endFill();
+        shape5.x = 180; shape5.y = 140;
+        root.addChild(shape5);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

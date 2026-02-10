@@ -3,7 +3,7 @@ import { execute as textureManagerBind0UseCase } from "../../TextureManager/usec
 import { execute as textureManagerGetMainTextureFromBoundsUseCase } from "../../TextureManager/usecase/TextureManagerGetMainTextureFromBoundsUseCase";
 import {
     $readFrameBuffer,
-    $getPixelFrameBuffer
+    $pixelFrameBuffer
 } from "../../FrameBufferManager";
 import {
     $context,
@@ -45,7 +45,7 @@ export const execute = async (width: number, height: number): Promise<ImageBitma
     const mainTextureObject = textureManagerGetMainTextureFromBoundsUseCase(0, 0, width, height);
     textureManagerBind0UseCase(mainTextureObject);
 
-    $gl.bindFramebuffer($gl.FRAMEBUFFER, $getPixelFrameBuffer());
+    $gl.bindFramebuffer($gl.FRAMEBUFFER, $pixelFrameBuffer);
     $gl.framebufferTexture2D(
         $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
         $gl.TEXTURE_2D, mainTextureObject.resource, 0

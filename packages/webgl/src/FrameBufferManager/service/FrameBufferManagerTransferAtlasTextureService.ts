@@ -1,22 +1,17 @@
 import {
     $getActiveTransferBounds,
-    $getActiveAtlasIndex,
-    $getActiveAllTransferBounds
+    $activeAtlasIndex
 } from "../../AtlasManager";
 import {
     $gl,
-    $context
+    $context,
+    $enableScissorTest,
+    $disableScissorTest
 } from "../../WebGLUtil";
 import {
     $atlasFrameBuffer,
     $setFramebufferBound
 } from "../../FrameBufferManager";
-
-/**
- * @type {number}
- * @private
- */
-let $currentIndex: number = 0;
 
 /**
  * @description アトラステクスチャに転写します。
@@ -28,6 +23,10 @@ let $currentIndex: number = 0;
  */
 export const execute = (): void =>
 {
+    if (!$context.newDrawState) {
+        return ;
+    }
+
     const currentAttachmentObject = $context.currentAttachmentObject;
 
     const atlasAttachmentObject = $context.atlasAttachmentObject;
@@ -39,46 +38,26 @@ export const execute = (): void =>
     );
     $setFramebufferBound(false);
 
-    if ($currentIndex === $getActiveAtlasIndex()) {
-        const bounds = $getActiveTransferBounds($getActiveAtlasIndex());
-        if (bounds[2] !== -Number.MAX_VALUE
-            && bounds[3] !== -Number.MAX_VALUE
-        ) {
-            $gl.enable($gl.SCISSOR_TEST);
-            $gl.scissor(
-                bounds[0], bounds[1],
-                bounds[2], bounds[3]
-            );
+    const atlasIdx = $activeAtlasIndex;
+    const bounds = $getActiveTransferBounds(atlasIdx);
 
-            $gl.blitFramebuffer(
-                0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
-                0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
-                $gl.COLOR_BUFFER_BIT,
-                $gl.NEAREST
-            );
-            $gl.disable($gl.SCISSOR_TEST);
-        }
-    } else {
-        const bounds = $getActiveAllTransferBounds($getActiveAtlasIndex());
+    $enableScissorTest();
+    $gl.scissor(
+        bounds[0], bounds[1],
+        bounds[2] - bounds[0], bounds[3] - bounds[1]
+    );
 
-        $gl.enable($gl.SCISSOR_TEST);
-        $gl.scissor(
-            bounds[0], bounds[1],
-            bounds[2], bounds[3]
-        );
-
-        $gl.blitFramebuffer(
-            0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
-            0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
-            $gl.COLOR_BUFFER_BIT,
-            $gl.NEAREST
-        );
-        $gl.disable($gl.SCISSOR_TEST);
-
-        $currentIndex = $getActiveAtlasIndex();
-    }
+    $gl.blitFramebuffer(
+        0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
+        0, 0, atlasAttachmentObject.width, atlasAttachmentObject.height,
+        $gl.COLOR_BUFFER_BIT,
+        $gl.NEAREST
+    );
+    $disableScissorTest();
 
     if (currentAttachmentObject) {
         $context.bind(currentAttachmentObject);
     }
+
+    $context.newDrawState = false;
 };

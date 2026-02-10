@@ -20,6 +20,6 @@ export const execute = (node: Node): void =>
 
     bounds[0] = Math.min(node.x, xMin);
     bounds[1] = Math.min(node.y, yMin);
-    bounds[2] = Math.max(node.x + node.w, xMax);
-    bounds[3] = Math.max(node.y + node.h, yMax);
+    bounds[2] = Math.max(node.x + node.w + 1, xMax);
+    bounds[3] = Math.max(node.y + node.h + 1, yMax);
 };

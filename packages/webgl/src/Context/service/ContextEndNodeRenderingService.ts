@@ -1,5 +1,5 @@
 
-import { $gl } from "../../WebGLUtil";
+import { $disableScissorTest } from "../../WebGLUtil";
 
 /**
  * @description アトラスへの描画終了
@@ -11,5 +11,5 @@ import { $gl } from "../../WebGLUtil";
  */
 export const execute = (): void =>
 {
-    $gl.disable($gl.SCISSOR_TEST);
+    $disableScissorTest();
 };

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Graphics Clone</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 300, 60);
+        const { Shape } = next2d.display;
+
+        // 1. 元のShape（赤い角丸 + 緑の円）とcopyFrom()したShape
+        const original1 = new Shape();
+        original1.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawRoundRect(0, 0, 80, 60, 10)
+            .endFill()
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(40, 30, 20)
+            .endFill();
+        original1.x = 20; original1.y = 20;
+        root.addChild(original1);
+
+        const copy1 = new Shape();
+        copy1.graphics.copyFrom(original1.graphics);
+        copy1.x = 20; copy1.y = 120;
+        root.addChild(copy1);
+
+        // 2. 複雑な形状のcopyFrom（青い四角 + 黄色い楕円）
+        const original2 = new Shape();
+        original2.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(0, 0, 100, 80)
+            .endFill()
+            .beginFill(0xFFFF00, 1.0)
+            .drawEllipse(10, 10, 80, 60)
+            .endFill();
+        original2.x = 150; original2.y = 20;
+        root.addChild(original2);
+
+        const copy2 = new Shape();
+        copy2.graphics.copyFrom(original2.graphics);
+        copy2.x = 150; copy2.y = 120;
+        root.addChild(copy2);
+
+        // 3. copyFrom後にプロパティ変更（半透明）
+        const original3 = new Shape();
+        original3.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawCircle(40, 40, 35)
+            .endFill();
+        original3.x = 300; original3.y = 20;
+        root.addChild(original3);
+
+        const copy3 = new Shape();
+        copy3.graphics.copyFrom(original3.graphics);
+        copy3.x = 300; copy3.y = 120;
+        copy3.alpha = 0.5;
+        root.addChild(copy3);
+
+        // 4. 線を含む形状のcopyFrom
+        const original4 = new Shape();
+        original4.graphics
+            .lineStyle(3, 0xFFFFFF)
+            .beginFill(0x008800, 1.0)
+            .drawRect(0, 0, 80, 60)
+            .endFill();
+        original4.x = 430; original4.y = 20;
+        root.addChild(original4);
+
+        const copy4 = new Shape();
+        copy4.graphics.copyFrom(original4.graphics);
+        copy4.x = 430; copy4.y = 120;
+        root.addChild(copy4);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

@@ -37,7 +37,7 @@ export class BitmapData
 
     /**
      * @type {Uint8Array | null}
-     * @private
+     * @public
      */
     public buffer: Uint8Array | null;
 
@@ -49,25 +49,8 @@ export class BitmapData
      */
     constructor (width: number = 0, height: number = 0)
     {
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
-        this.width = width | 0;
-
-        /**
-         * @type {number}
-         * @default 0
-         * @private
-         */
+        this.width  = width | 0;
         this.height = height | 0;
-
-        /**
-         * @type {Uint8Array}
-         * @default null
-         * @private
-         */
         this.buffer = null;
     }
 

@@ -1,0 +1,183 @@
+import type { Node } from "@next2d/texture-packer";
+import type { IComplexBlendItem } from "../interface/IComplexBlendItem";
+import { ShaderInstancedManager } from "../Shader/ShaderInstancedManager";
+import { $currentBlendMode, $setCurrentBlendMode } from "../Blend";
+import { $getCurrentAtlasIndex, $setCurrentAtlasIndex, $setActiveAtlasIndex } from "../AtlasManager";
+import { renderQueue } from "@next2d/render-queue";
+import { $context } from "../WebGPUUtil";
+
+/**
+ * @description シンプルなブレンドモード（インスタンス描画可能）
+ */
+const SIMPLE_BLEND_MODES: ReadonlySet<string> = new Set([
+    "normal", "layer", "add", "screen", "alpha", "erase", "copy"
+]);
+
+/**
+ * @description 複雑なブレンドモード描画キュー
+ */
+const $complexBlendQueue: IComplexBlendItem[] = [];
+
+/**
+ * @description Float32Array(8) プール（color_transform 用）
+ */
+const $ct8Pool: Float32Array[] = [];
+
+/**
+ * @description Float32Array(9) プール（matrix 用）
+ */
+const $m9Pool: Float32Array[] = [];
+
+/**
+ * @description 複雑なブレンドモードの描画キューを取得
+ * @return {IComplexBlendItem[]}
+ */
+export const getComplexBlendQueue = (): IComplexBlendItem[] =>
+{
+    return $complexBlendQueue;
+};
+
+/**
+ * @description 複雑なブレンドモードの描画キューをクリア
+ * @return {void}
+ */
+export const clearComplexBlendQueue = (): void =>
+{
+    // プールに返却してから配列をクリア
+    for (let i = 0; i < $complexBlendQueue.length; i++) {
+        const item = $complexBlendQueue[i];
+        $ct8Pool.push(item.color_transform as Float32Array);
+        $m9Pool.push(item.matrix as Float32Array);
+    }
+    $complexBlendQueue.length = 0;
+};
+
+/**
+ * @description インスタンスシェーダーマネージャーのキャッシュ
+ * @private
+ */
+const shaderManagers = new Map<string, ShaderInstancedManager>();
+
+/**
+ * @description インスタンスシェーダーマネージャーを取得
+ * @return {ShaderInstancedManager}
+ */
+export const getInstancedShaderManager = (): ShaderInstancedManager =>
+{
+    const key = "blend_instanced";
+    if (!shaderManagers.has(key)) {
+        shaderManagers.set(key, new ShaderInstancedManager());
+    }
+    return shaderManagers.get(key)!;
+};
+
+/**
+ * @description DisplayObject単体の描画をインスタンス配列に追加
+ * @param {Node} node
+ * @param {number} x_min
+ * @param {number} y_min
+ * @param {number} x_max
+ * @param {number} y_max
+ * @param {Float32Array} color_transform
+ * @param {Float32Array} matrix
+ * @param {string} blend_mode
+ * @param {number} viewport_width
+ * @param {number} viewport_height
+ * @param {number} render_max_size
+ * @param {number} global_alpha
+ * @return {void}
+ */
+export const addDisplayObjectToInstanceArray = (
+    node: Node,
+    x_min: number,
+    y_min: number,
+    x_max: number,
+    y_max: number,
+    color_transform: Float32Array,
+    matrix: Float32Array,
+    blend_mode: string,
+    viewport_width: number,
+    viewport_height: number,
+    render_max_size: number,
+    global_alpha: number
+): void => {
+
+    // WebGL版と同じ: mulColor.a には globalAlpha を使用
+    const ct0 = color_transform[0];
+    const ct1 = color_transform[1];
+    const ct2 = color_transform[2];
+    const ct3 = global_alpha; // WebGL: $context.globalAlpha
+    const ct4 = color_transform[4] / 255;
+    const ct5 = color_transform[5] / 255;
+    const ct6 = color_transform[6] / 255;
+    const ct7 = 0;
+
+    if (SIMPLE_BLEND_MODES.has(blend_mode)) {
+        // ブレンドモードまたはアトラスインデックスが変わった場合
+        if ($currentBlendMode !== blend_mode || $getCurrentAtlasIndex() !== node.index) {
+            // 異なるブレンドモード/アトラスになるので、切り替え前にバッチを描画
+            if ($context) {
+                $setActiveAtlasIndex($getCurrentAtlasIndex());
+                $context.drawArraysInstanced();
+            }
+
+            // 新しいブレンドモードとアトラスインデックスをセット
+            $setCurrentBlendMode(blend_mode as any);
+            $setCurrentAtlasIndex(node.index);
+            $setActiveAtlasIndex(node.index);
+        }
+
+        // インスタンスデータを配列に追加
+        const shaderManager = getInstancedShaderManager();
+
+        renderQueue.pushInstanceBuffer(
+            // texture rectangle (vec4) - normalized coordinates (half-pixel inset)
+            (node.x + 0.5) / render_max_size, (node.y + 0.5) / render_max_size,
+            (node.w - 1.0) / render_max_size, (node.h - 1.0) / render_max_size,
+            // texture width, height and viewport width, height (vec4)
+            node.w, node.h, viewport_width, viewport_height,
+            // matrix tx, ty (vec2) + padding (vec2)
+            matrix[6], matrix[7], 0, 0,
+            // matrix scale0, rotate0, scale1, rotate1 (vec4)
+            matrix[0], matrix[1], matrix[3], matrix[4],
+            // mulColor (vec4)
+            ct0, ct1, ct2, ct3,
+            // addColor (vec4)
+            ct4, ct5, ct6, ct7
+        );
+
+        shaderManager.count++;
+    } else {
+        // 複雑なブレンドモード（個別描画が必要）
+        // 先に現在のインスタンス配列を描画
+        if ($context) {
+            $setActiveAtlasIndex($getCurrentAtlasIndex());
+            $context.drawArraysInstanced();
+        }
+
+        // キューに追加して後で処理（プールからFloat32Arrayを再利用）
+        const ct = $ct8Pool.length > 0 ? $ct8Pool.pop()! : new Float32Array(8);
+        ct.set(color_transform);
+        const m = $m9Pool.length > 0 ? $m9Pool.pop()! : new Float32Array(9);
+        m.set(matrix);
+        $complexBlendQueue.push({
+            node,
+            x_min,
+            y_min,
+            x_max,
+            y_max,
+            "color_transform": ct,
+            "matrix": m,
+            blend_mode,
+            viewport_width,
+            viewport_height,
+            render_max_size,
+            global_alpha
+        });
+
+        // ブレンドモードをセット
+        $setCurrentBlendMode(blend_mode as any);
+        $setCurrentAtlasIndex(node.index);
+        $setActiveAtlasIndex(node.index);
+    }
+};

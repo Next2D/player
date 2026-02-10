@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Fill Bitmap</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(500, 400, 60);
+        const { Shape, BitmapData } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // テスト用のチェッカーパターンBitmapDataを作成（Canvas経由）
+        const createCheckerPattern = (size, color1, color2) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = size * 2;
+            canvas.height = size * 2;
+            const ctx = canvas.getContext("2d");
+
+            for (let y = 0; y < 2; y++) {
+                for (let x = 0; x < 2; x++) {
+                    const isEven = ((x + y) % 2) === 0;
+                    const color = isEven ? color1 : color2;
+                    ctx.fillStyle = `#${color.toString(16).padStart(6, "0")}`;
+                    ctx.fillRect(x * size, y * size, size, size);
+                }
+            }
+
+            const bitmapData = new BitmapData(canvas.width, canvas.height);
+            bitmapData.canvas = canvas;
+            return bitmapData;
+        };
+
+        // カラフルなグラデーションパターン（Canvas経由）
+        const createGradientPattern = (width, height) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+
+            const imageData = ctx.createImageData(width, height);
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const index = (y * width + x) * 4;
+                    imageData.data[index] = Math.floor((x / width) * 255);     // R
+                    imageData.data[index + 1] = Math.floor((y / height) * 255); // G
+                    imageData.data[index + 2] = 128;                            // B
+                    imageData.data[index + 3] = 255;                            // A
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            const bitmapData = new BitmapData(width, height);
+            bitmapData.canvas = canvas;
+            return bitmapData;
+        };
+
+        const checkerBitmap = createCheckerPattern(16, 0xFF0000, 0xFFFFFF);
+        const gradientBitmap = createGradientPattern(32, 32);
+
+        // ===== 基本的なビットマップ塗り =====
+
+        // repeat: true（デフォルト）
+        const shape1 = new Shape();
+        shape1.graphics
+            .beginBitmapFill(checkerBitmap, null, true, false)
+            .drawRect(20, 20, 140, 100)
+            .endFill();
+        root.addChild(shape1);
+
+        // repeat: false
+        const shape2 = new Shape();
+        shape2.graphics
+            .beginBitmapFill(checkerBitmap, null, false, false)
+            .drawRect(180, 20, 140, 100)
+            .endFill();
+        root.addChild(shape2);
+
+        // smooth: true
+        const shape3 = new Shape();
+        shape3.graphics
+            .beginBitmapFill(gradientBitmap, null, true, true)
+            .drawRect(340, 20, 140, 100)
+            .endFill();
+        root.addChild(shape3);
+
+        // ===== Matrix変換付きビットマップ塗り =====
+
+        // スケール変換
+        const matrixScale = new Matrix();
+        matrixScale.scale(2, 2);
+        const shapeScale = new Shape();
+        shapeScale.graphics
+            .beginBitmapFill(checkerBitmap, matrixScale, true, false)
+            .drawRect(20, 140, 140, 100)
+            .endFill();
+        root.addChild(shapeScale);
+
+        // 回転変換
+        const matrixRotate = new Matrix();
+        matrixRotate.rotate(Math.PI / 4);
+        const shapeRotate = new Shape();
+        shapeRotate.graphics
+            .beginBitmapFill(checkerBitmap, matrixRotate, true, false)
+            .drawRect(180, 140, 140, 100)
+            .endFill();
+        root.addChild(shapeRotate);
+
+        // 移動変換
+        const matrixTranslate = new Matrix();
+        matrixTranslate.translate(8, 8);
+        const shapeTranslate = new Shape();
+        shapeTranslate.graphics
+            .beginBitmapFill(checkerBitmap, matrixTranslate, true, false)
+            .drawRect(340, 140, 140, 100)
+            .endFill();
+        root.addChild(shapeTranslate);
+
+        // ===== 複合変換 =====
+
+        // スケール + 回転
+        const matrixComplex = new Matrix();
+        matrixComplex.scale(1.5, 1.5);
+        matrixComplex.rotate(Math.PI / 6);
+        const shapeComplex = new Shape();
+        shapeComplex.graphics
+            .beginBitmapFill(gradientBitmap, matrixComplex, true, true)
+            .drawRect(20, 260, 200, 120)
+            .endFill();
+        root.addChild(shapeComplex);
+
+        // グラデーションパターン（repeat: true, smooth: true）
+        const shapeFinal = new Shape();
+        shapeFinal.graphics
+            .beginBitmapFill(gradientBitmap, null, true, true)
+            .drawRect(240, 260, 240, 120)
+            .endFill();
+        root.addChild(shapeFinal);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

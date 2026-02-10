@@ -6,3 +6,6 @@ coverage
 .DS_Store
 .idea
 Thumbs.db
+.playwright-mcp
+playwright-report
+test-results

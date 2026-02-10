@@ -37,7 +37,7 @@ describe("FrameBufferManagerTransferAtlasTextureService.ts test", () =>
             const mod = await importOriginal<typeof import("../../AtlasManager")>();
             return {
                 ...mod,
-                "$getActiveAtlasIndex": vi.fn(() => 0),
+                "$activeAtlasIndex": 0,
                 "$getActiveTransferBounds": vi.fn(() => [0, 0, 100, 100]),
                 "$getActiveAllTransferBounds": vi.fn(() => [0, 0, 200, 200]),
             }

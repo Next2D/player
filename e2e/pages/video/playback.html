@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Video Playback</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Video } = next2d.media;
+        const { Shape, Sprite, BlendMode } = next2d.display;
+        const { TextField, TextFormat } = next2d.text;
+        const { GlowFilter, BlurFilter, BevelFilter } = next2d.filters;
+
+        const videoPath = "/e2e/fixtures/videos/movie.mp4";
+        const videoScale = 0.2;
+
+        // ラベル用のフォーマット
+        const labelFormat = new TextFormat();
+        labelFormat.size = 12;
+        labelFormat.color = 0xFFFFFF;
+
+        // 全ビデオを追跡
+        const allVideos = [];
+
+        // ===== 通常サイズのビデオ =====
+        const label1 = new TextField();
+        label1.x = 20;
+        label1.y = 5;
+        label1.width = 200;
+        label1.height = 16;
+        label1.defaultTextFormat = labelFormat;
+        label1.text = "Normal (scale 0.2)";
+        root.addChild(label1);
+
+        const video1 = new Video();
+        video1.x = 20;
+        video1.y = 25;
+        video1.scaleX = videoScale;
+        video1.scaleY = videoScale;
+        video1.src = videoPath;
+        root.addChild(video1);
+        allVideos.push(video1);
+
+        // ===== スケールされたビデオ =====
+        const label2 = new TextField();
+        label2.x = 280;
+        label2.y = 5;
+        label2.width = 200;
+        label2.height = 16;
+        label2.defaultTextFormat = labelFormat;
+        label2.text = "Scaled (0.15x)";
+        root.addChild(label2);
+
+        const video2 = new Video();
+        video2.x = 280;
+        video2.y = 25;
+        video2.scaleX = 0.15;
+        video2.scaleY = 0.15;
+        video2.src = videoPath;
+        root.addChild(video2);
+        allVideos.push(video2);
+
+        // ===== 回転されたビデオ =====
+        const label3 = new TextField();
+        label3.x = 500;
+        label3.y = 5;
+        label3.width = 200;
+        label3.height = 16;
+        label3.defaultTextFormat = labelFormat;
+        label3.text = "Rotated (15deg)";
+        root.addChild(label3);
+
+        const video3 = new Video();
+        video3.x = 550;
+        video3.y = 100;
+        video3.scaleX = videoScale;
+        video3.scaleY = videoScale;
+        video3.rotation = 15;
+        video3.src = videoPath;
+        root.addChild(video3);
+        allVideos.push(video3);
+
+        // ===== BlendMode: ADD =====
+        const label4 = new TextField();
+        label4.x = 20;
+        label4.y = 200;
+        label4.width = 200;
+        label4.height = 16;
+        label4.defaultTextFormat = labelFormat;
+        label4.text = "BlendMode: ADD";
+        root.addChild(label4);
+
+        const addContainer = new Sprite();
+        addContainer.x = 20;
+        addContainer.y = 220;
+        root.addChild(addContainer);
+
+        const addBg = new Shape();
+        addBg.graphics
+            .beginFill(0x003366, 1.0)
+            .drawRect(0, 0, 180, 130)
+            .endFill();
+        addContainer.addChild(addBg);
+
+        const videoAdd = new Video();
+        videoAdd.x = 10;
+        videoAdd.y = 10;
+        videoAdd.scaleX = videoScale;
+        videoAdd.scaleY = videoScale;
+        videoAdd.blendMode = BlendMode.ADD;
+        videoAdd.src = videoPath;
+        addContainer.addChild(videoAdd);
+        allVideos.push(videoAdd);
+
+        // ===== BlendMode: MULTIPLY =====
+        const label5 = new TextField();
+        label5.x = 220;
+        label5.y = 200;
+        label5.width = 200;
+        label5.height = 16;
+        label5.defaultTextFormat = labelFormat;
+        label5.text = "BlendMode: MULTIPLY";
+        root.addChild(label5);
+
+        const multiplyContainer = new Sprite();
+        multiplyContainer.x = 220;
+        multiplyContainer.y = 220;
+        root.addChild(multiplyContainer);
+
+        const multiplyBg = new Shape();
+        multiplyBg.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawRect(0, 0, 180, 130)
+            .endFill();
+        multiplyContainer.addChild(multiplyBg);
+
+        const videoMultiply = new Video();
+        videoMultiply.x = 10;
+        videoMultiply.y = 10;
+        videoMultiply.scaleX = videoScale;
+        videoMultiply.scaleY = videoScale;
+        videoMultiply.blendMode = BlendMode.MULTIPLY;
+        videoMultiply.src = videoPath;
+        multiplyContainer.addChild(videoMultiply);
+        allVideos.push(videoMultiply);
+
+        // ===== BlendMode: SCREEN =====
+        const label6 = new TextField();
+        label6.x = 420;
+        label6.y = 200;
+        label6.width = 200;
+        label6.height = 16;
+        label6.defaultTextFormat = labelFormat;
+        label6.text = "BlendMode: SCREEN";
+        root.addChild(label6);
+
+        const screenContainer = new Sprite();
+        screenContainer.x = 420;
+        screenContainer.y = 220;
+        root.addChild(screenContainer);
+
+        const screenBg = new Shape();
+        screenBg.graphics
+            .beginFill(0x660066, 1.0)
+            .drawRect(0, 0, 180, 130)
+            .endFill();
+        screenContainer.addChild(screenBg);
+
+        const videoScreen = new Video();
+        videoScreen.x = 10;
+        videoScreen.y = 10;
+        videoScreen.scaleX = videoScale;
+        videoScreen.scaleY = videoScale;
+        videoScreen.blendMode = BlendMode.SCREEN;
+        videoScreen.src = videoPath;
+        screenContainer.addChild(videoScreen);
+        allVideos.push(videoScreen);
+
+        // ===== フィルター: BlurFilter =====
+        const label7 = new TextField();
+        label7.x = 20;
+        label7.y = 370;
+        label7.width = 200;
+        label7.height = 16;
+        label7.defaultTextFormat = labelFormat;
+        label7.text = "Filter: Blur";
+        root.addChild(label7);
+
+        const videoBlur = new Video();
+        videoBlur.x = 20;
+        videoBlur.y = 390;
+        videoBlur.scaleX = videoScale;
+        videoBlur.scaleY = videoScale;
+        videoBlur.filters = [new BlurFilter(6, 6, 1)];
+        videoBlur.src = videoPath;
+        root.addChild(videoBlur);
+        allVideos.push(videoBlur);
+
+        // ===== フィルター: GlowFilter =====
+        const label8 = new TextField();
+        label8.x = 220;
+        label8.y = 370;
+        label8.width = 200;
+        label8.height = 16;
+        label8.defaultTextFormat = labelFormat;
+        label8.text = "Filter: Glow";
+        root.addChild(label8);
+
+        const videoGlow = new Video();
+        videoGlow.x = 220;
+        videoGlow.y = 390;
+        videoGlow.scaleX = videoScale;
+        videoGlow.scaleY = videoScale;
+        videoGlow.filters = [new GlowFilter(0x00FFFF, 1, 10, 10, 2, 1)];
+        videoGlow.src = videoPath;
+        root.addChild(videoGlow);
+        allVideos.push(videoGlow);
+
+        // ===== フィルター: BevelFilter =====
+        const label9 = new TextField();
+        label9.x = 420;
+        label9.y = 370;
+        label9.width = 200;
+        label9.height = 16;
+        label9.defaultTextFormat = labelFormat;
+        label9.text = "Filter: Bevel";
+        root.addChild(label9);
+
+        const videoBevel = new Video();
+        videoBevel.x = 420;
+        videoBevel.y = 390;
+        videoBevel.scaleX = videoScale;
+        videoBevel.scaleY = videoScale;
+        videoBevel.filters = [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 4, 4, 1, 1)];
+        videoBevel.src = videoPath;
+        root.addChild(videoBevel);
+        allVideos.push(videoBevel);
+
+        // ===== 複合: BlendMode + Filter =====
+        const label10 = new TextField();
+        label10.x = 620;
+        label10.y = 200;
+        label10.width = 180;
+        label10.height = 16;
+        label10.defaultTextFormat = labelFormat;
+        label10.text = "ADD + Glow";
+        root.addChild(label10);
+
+        const compositeContainer = new Sprite();
+        compositeContainer.x = 620;
+        compositeContainer.y = 220;
+        root.addChild(compositeContainer);
+
+        const compositeBg = new Shape();
+        compositeBg.graphics
+            .beginFill(0x333300, 1.0)
+            .drawRect(0, 0, 160, 280)
+            .endFill();
+        compositeContainer.addChild(compositeBg);
+
+        const videoComposite = new Video();
+        videoComposite.x = 10;
+        videoComposite.y = 10;
+        videoComposite.scaleX = videoScale;
+        videoComposite.scaleY = videoScale;
+        videoComposite.blendMode = BlendMode.ADD;
+        videoComposite.filters = [new GlowFilter(0xFF8800, 1, 8, 8, 1.5, 1)];
+        videoComposite.src = videoPath;
+        compositeContainer.addChild(videoComposite);
+        allVideos.push(videoComposite);
+
+        // 異なるフィルター設定の複合
+        const label11 = new TextField();
+        label11.x = 10;
+        label11.y = 130;
+        label11.width = 140;
+        label11.height = 16;
+        label11.defaultTextFormat = labelFormat;
+        label11.text = "OVERLAY + Bevel";
+        compositeContainer.addChild(label11);
+
+        const videoComposite2 = new Video();
+        videoComposite2.x = 10;
+        videoComposite2.y = 150;
+        videoComposite2.scaleX = videoScale;
+        videoComposite2.scaleY = videoScale;
+        videoComposite2.blendMode = BlendMode.OVERLAY;
+        videoComposite2.filters = [new BevelFilter(3, 135, 0xFF0000, 1, 0x0000FF, 1, 5, 5, 1, 1)];
+        videoComposite2.src = videoPath;
+        compositeContainer.addChild(videoComposite2);
+        allVideos.push(videoComposite2);
+
+        // 各ビデオのCOMPLETEイベントを待機
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (video.loaded && !video.paused) {
+                    resolve();
+                } else {
+                    video.addEventListener("complete", () => resolve());
+                }
+            });
+        }));
+
+        // 固定フレームのためにシークして一時停止
+        const SEEK_TIME = 1.0; // 1秒の位置にシーク
+
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (!video.$videoElement) {
+                    resolve();
+                    return;
+                }
+
+                const onSeeked = () => {
+                    video.$videoElement.removeEventListener("seeked", onSeeked);
+                    video.pause();
+                    resolve();
+                };
+
+                video.$videoElement.addEventListener("seeked", onSeeked);
+                video.seek(SEEK_TIME);
+            });
+        }));
+
+        // 親のchangedフラグも更新する関数
+        const applyChanges = (displayObject) => {
+            displayObject.changed = true;
+            let parent = displayObject.parent;
+            while (parent && !parent.changed) {
+                parent.changed = true;
+                parent = parent.parent;
+            }
+        };
+
+        // ビデオのchangedフラグを更新してレンダリングを強制
+        allVideos.forEach((video) => {
+            if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                applyChanges(video);
+            }
+        });
+
+        // レンダリング安定化のため数フレーム待機
+        await new Promise((resolve) => {
+            let frameCount = 0;
+            const waitFrames = () => {
+                allVideos.forEach((video) => {
+                    if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                        applyChanges(video);
+                    }
+                });
+                frameCount++;
+                if (frameCount >= 10) {
+                    resolve();
+                } else {
+                    requestAnimationFrame(waitFrames);
+                }
+            };
+            requestAnimationFrame(waitFrames);
+        });
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>
