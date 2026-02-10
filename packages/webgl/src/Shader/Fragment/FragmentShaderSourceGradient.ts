@@ -3,14 +3,14 @@ const STATEMENT_FOCAL_POINT_ON = (index: number): string =>
     return `
     vec2 focal = vec2(u_highp[${index}][1], 0.0);
 
-    vec2 dir = normalize(coord - focal);
-
-    float a = dot(dir, dir);
+    vec2 diff = coord - focal;
+    float lenDiff = length(diff);
+    vec2 dir = diff / lenDiff;
     float b = 2.0 * dot(dir, focal);
     float c = dot(focal, focal) - 1.0;
-    float x = (-b + sqrt(b * b - 4.0 * a * c)) / (2.0 * a);
+    float x = (-b + sqrt(max(b * b - 4.0 * c, 0.0))) * 0.5;
 
-    float t = distance(focal, coord) / distance(focal, focal + dir * x);`;
+    float t = lenDiff / abs(x);`;
 };
 
 const STATEMENT_FOCAL_POINT_OFF = (): string =>
