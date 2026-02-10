@@ -111,7 +111,10 @@ export const execute = (
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
-    const pipeline = pipelineManager.getPipeline("glow_filter");
+    const pipeline = pipelineManager.getFilterPipeline("glow_filter", {
+        "IS_INNER": inner ? 1 : 0,
+        "IS_KNOCKOUT": knockout ? 1 : 0
+    });
     const bindGroupLayout = pipelineManager.getBindGroupLayout("glow_filter");
 
     if (!pipeline || !bindGroupLayout) {
@@ -148,12 +151,14 @@ export const execute = (
     $uniform16[15] = 0.0;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer($uniform16.byteLength)
+        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform16)
         : device.createBuffer({
             "size": $uniform16.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform16);
+    if (!config.bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform16);
+    }
 
     // バインドグループを作成（元テクスチャとブラーテクスチャを直接バインド）
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;

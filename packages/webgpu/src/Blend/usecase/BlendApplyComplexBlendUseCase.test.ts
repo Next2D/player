@@ -78,7 +78,8 @@ describe("BlendApplyComplexBlendUseCase", () =>
         };
 
         const mockBufferManager = {
-            "acquireUniformBuffer": vi.fn(() => mockBuffer)
+            "acquireUniformBuffer": vi.fn(() => mockBuffer),
+            "acquireAndWriteUniformBuffer": vi.fn(() => mockBuffer)
         };
 
         return {
@@ -87,7 +88,8 @@ describe("BlendApplyComplexBlendUseCase", () =>
             "frameBufferManager": mockFrameBufferManager,
             "pipelineManager": mockPipelineManager,
             "textureManager": mockTextureManager,
-            "bufferManager": mockBufferManager
+            "bufferManager": mockBufferManager,
+            "frameTextures": []
         } as unknown as IFilterConfig;
     };
 
@@ -183,7 +185,7 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
             execute(srcAttachment, dstAttachment, "multiply", colorTransform, config);
 
-            expect(config.bufferManager.acquireUniformBuffer).toHaveBeenCalledWith(48);
+            expect(config.bufferManager.acquireAndWriteUniformBuffer).toHaveBeenCalled();
         });
 
         it("should write color transform to buffer", () =>
@@ -195,7 +197,7 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
             execute(srcAttachment, dstAttachment, "multiply", colorTransform, config);
 
-            expect(config.device.queue.writeBuffer).toHaveBeenCalled();
+            expect(config.bufferManager.acquireAndWriteUniformBuffer).toHaveBeenCalled();
         });
     });
 

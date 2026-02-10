@@ -121,18 +121,6 @@ export const execute = (
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
-    const pipeline = pipelineManager.getPipeline("drop_shadow_filter");
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("drop_shadow_filter");
-
-    if (!pipeline || !bindGroupLayout) {
-        console.error("[WebGPU DropShadowFilter] Pipeline not found");
-        frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-        return sourceAttachment;
-    }
-
-    // サンプラーを作成
-    const sampler = textureManager.createSampler("drop_shadow_sampler", true);
-
     // タイプとノックアウト状態を決定
     const isInner = inner;
     let isKnockout = knockout;
@@ -145,6 +133,22 @@ export const execute = (
         isKnockout = true;
         isHideObject = true;
     }
+
+    const pipeline = pipelineManager.getFilterPipeline("drop_shadow_filter", {
+        "IS_INNER": isInner ? 1 : 0,
+        "IS_KNOCKOUT": isKnockout ? 1 : 0,
+        "IS_HIDE_OBJECT": isHideObject ? 1 : 0
+    });
+    const bindGroupLayout = pipelineManager.getBindGroupLayout("drop_shadow_filter");
+
+    if (!pipeline || !bindGroupLayout) {
+        console.error("[WebGPU DropShadowFilter] Pipeline not found");
+        frameBufferManager.releaseTemporaryAttachment(blurAttachment);
+        return sourceAttachment;
+    }
+
+    // サンプラーを作成
+    const sampler = textureManager.createSampler("drop_shadow_sampler", true);
 
     // ユニフォームバッファを作成
     // color: vec4<f32> (16 bytes)
@@ -191,12 +195,14 @@ export const execute = (
     $uniform16[15] = isHideObject ? 1.0 : 0.0;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer($uniform16.byteLength)
+        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform16)
         : device.createBuffer({
             "size": $uniform16.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform16);
+    if (!config.bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform16);
+    }
 
     // バインドグループを作成（オリジナルテクスチャを直接使用）
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;

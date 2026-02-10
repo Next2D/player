@@ -33,6 +33,7 @@ describe("MaskUnionMaskService", () =>
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
+            "acquireAndWriteUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
             "dynamicUniform": {
                 "allocate": vi.fn(() => 0),
                 "getBuffer": vi.fn(() => ({ "label": "mockDynamicBuffer" }))

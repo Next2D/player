@@ -125,12 +125,14 @@ export const execute = (
         $uniform8[7] = 0;
 
         const eraseUniformBuffer = config.bufferManager
-            ? config.bufferManager.acquireUniformBuffer($uniform8.byteLength)
+            ? config.bufferManager.acquireAndWriteUniformBuffer($uniform8)
             : device.createBuffer({
                 "size": $uniform8.byteLength,
                 "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
             });
-        device.queue.writeBuffer(eraseUniformBuffer, 0, $uniform8);
+        if (!config.bufferManager) {
+            device.queue.writeBuffer(eraseUniformBuffer, 0, $uniform8);
+        }
 
         ($entries3[0].resource as GPUBufferBinding).buffer = eraseUniformBuffer;
         $entries3[1].resource = eraseSampler;
@@ -196,7 +198,10 @@ export const execute = (
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
-    const pipeline = pipelineManager.getPipeline("bevel_filter");
+    const pipeline = pipelineManager.getFilterPipeline("bevel_filter", {
+        "BEVEL_TYPE": type,
+        "IS_KNOCKOUT": knockout ? 1 : 0
+    });
     const bindGroupLayout = pipelineManager.getBindGroupLayout("bevel_filter");
 
     if (!pipeline || !bindGroupLayout) {
@@ -240,12 +245,14 @@ export const execute = (
     $uniform20[19] = blurOffsetUVY;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer($uniform20.byteLength)
+        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform20)
         : device.createBuffer({
             "size": $uniform20.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform20);
+    if (!config.bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform20);
+    }
 
     // バインドグループを作成（元テクスチャとブラーテクスチャを直接バインド）
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;

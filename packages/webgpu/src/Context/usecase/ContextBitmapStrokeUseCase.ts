@@ -108,8 +108,7 @@ export const execute = (
     $uniformData32[30] = 1;
     $uniformData32[31] = 0;
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData32.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniformData32.buffer, $uniformData32.byteOffset, $uniformData32.byteLength);
+    const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniformData32);
 
     // サンプラーを取得（キャッシュ済み）
     const samplerKey = `bitmap_${smooth ? "s" : "n"}_${repeat ? "r" : "c"}`;

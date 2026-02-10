@@ -149,7 +149,10 @@ export const execute = (
     // ===== 最終合成パス =====
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
-    const pipeline = pipelineManager.getPipeline("gradient_glow_filter");
+    const pipeline = pipelineManager.getFilterPipeline("gradient_glow_filter", {
+        "GLOW_TYPE": type,
+        "IS_KNOCKOUT": knockout ? 1 : 0
+    });
     const bindGroupLayout = pipelineManager.getBindGroupLayout("gradient_glow_filter");
 
     if (!pipeline || !bindGroupLayout) {
@@ -175,12 +178,14 @@ export const execute = (
     $uniform12[11] = blurOffsetUVY;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer($uniform12.byteLength)
+        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform12)
         : device.createBuffer({
             "size": $uniform12.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
+    if (!config.bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
+    }
 
     // バインドグループを作成（オリジナルテクスチャを直接使用）
     ($entries5[0].resource as GPUBufferBinding).buffer = uniformBuffer;

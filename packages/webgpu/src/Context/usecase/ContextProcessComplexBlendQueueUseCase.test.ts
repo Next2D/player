@@ -119,7 +119,8 @@ describe("ContextProcessComplexBlendQueueUseCase", () =>
     const createMockBufferManager = () =>
     {
         return {
-            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
+            "acquireAndWriteUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
         } as unknown as BufferManager;
     };
 

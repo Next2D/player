@@ -47,8 +47,7 @@ const copyTextureRegionViaRenderPass = (
     $uniform4[1] = copyHeight / srcHeight;
     $uniform4[2] = srcX / srcWidth;
     $uniform4[3] = srcY / srcHeight;
-    const uniformBuffer = bufferManager.acquireUniformBuffer(16);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+    const uniformBuffer = bufferManager.acquireAndWriteUniformBuffer($uniform4);
 
     const sampler = textureManager.createSampler("complex_blend_copy_sampler", false);
 
@@ -102,8 +101,7 @@ const drawToMainAttachment = (
     $uniform8[5] = mainAttachment.height;
     $uniform8[6] = 0;
     $uniform8[7] = 0;
-    const uniformBuffer = bufferManager.acquireUniformBuffer(32);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
+    const uniformBuffer = bufferManager.acquireAndWriteUniformBuffer($uniform8);
 
     const sampler = textureManager.createSampler("complex_blend_output_sampler", false);
 
@@ -232,8 +230,7 @@ export const execute = (
                 $uniform12[9] = blendHeight;
                 $uniform12[10] = 0;
                 $uniform12[11] = 0;
-                const uniformBuffer = bufferManager.acquireUniformBuffer(48);
-                device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
+                const uniformBuffer = bufferManager.acquireAndWriteUniformBuffer($uniform12, 48);
 
                 const sampler = textureManager.createSampler("scale_sampler", true);
                 ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
@@ -327,7 +324,8 @@ export const execute = (
                 bufferManager,
                 frameBufferManager,
                 pipelineManager,
-                textureManager
+                textureManager,
+                "frameTextures": []
             }
         );
 

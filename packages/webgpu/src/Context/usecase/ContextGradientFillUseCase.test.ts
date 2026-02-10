@@ -90,6 +90,7 @@ describe("ContextGradientFillUseCase", () =>
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
+            "acquireAndWriteUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
             "createUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
             "dynamicUniform": {
                 "allocate": vi.fn(() => 0),
@@ -461,7 +462,7 @@ describe("ContextGradientFillUseCase", () =>
                 true
             );
 
-            expect(device.queue.writeBuffer).toHaveBeenCalled();
+            expect(bufferManager.acquireAndWriteUniformBuffer).toHaveBeenCalled();
         });
 
         it("should pass type parameter to uniform buffer for radial gradient", () =>
@@ -489,7 +490,7 @@ describe("ContextGradientFillUseCase", () =>
                 true
             );
 
-            expect(device.queue.writeBuffer).toHaveBeenCalled();
+            expect(bufferManager.acquireAndWriteUniformBuffer).toHaveBeenCalled();
         });
     });
 });

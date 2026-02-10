@@ -65,8 +65,7 @@ const applyColorTransform = (
     $uniform8[5] = colorTransform[5];
     $uniform8[6] = colorTransform[6];
     $uniform8[7] = 0;
-    const uniformBuffer = config.bufferManager.acquireUniformBuffer(32);
-    config.device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
+    const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($uniform8);
 
     const sampler = config.textureManager.createSampler("container_ct_sampler", false);
 
@@ -122,8 +121,7 @@ const copyRegionToFilterAttachment = (
     $uniform4[1] = scaleY;
     $uniform4[2] = offsetX;
     $uniform4[3] = offsetY;
-    const uniformBuffer = config.bufferManager.acquireUniformBuffer(16);
-    config.device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+    const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($uniform4);
 
     const sampler = config.textureManager.createSampler("container_copy_sampler", false);
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
@@ -234,8 +232,7 @@ const drawFilterResultToMain = (
         $uniform4[1] = uvScaleY;
         $uniform4[2] = uvOffsetX;
         $uniform4[3] = uvOffsetY;
-        const uniformBuffer = bufferManager.acquireUniformBuffer(16);
-        config.device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+        const uniformBuffer = bufferManager.acquireAndWriteUniformBuffer($uniform4);
 
         ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
         $entries3[1].resource = sampler;
@@ -296,7 +293,8 @@ const drawFilterResultToMain = (
                 "bufferManager": config.bufferManager,
                 "frameBufferManager": config.frameBufferManager,
                 "pipelineManager": config.pipelineManager,
-                "textureManager": config.textureManager
+                "textureManager": config.textureManager,
+                "frameTextures": config.frameTextures
             }
         );
 
@@ -316,8 +314,7 @@ const drawFilterResultToMain = (
             $uniform8[5] = mainAttachment.height;
             $uniform8[6] = 0;
             $uniform8[7] = 0;
-            const uniformBuffer = bufferManager.acquireUniformBuffer(32);
-            config.device.queue.writeBuffer(uniformBuffer, 0, $uniform8);
+            const uniformBuffer = bufferManager.acquireAndWriteUniformBuffer($uniform8);
 
             const sampler = config.textureManager.createSampler("container_blend_output_sampler", false);
 

@@ -92,11 +92,13 @@ describe("FilterApplyGradientBevelFilterUseCase", () =>
             },
             "pipelineManager": {
                 "getPipeline": vi.fn(() => ({ "label": "mockPipeline" })),
+                "getFilterPipeline": vi.fn(() => ({ "label": "mockPipeline" })),
                 "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
             },
             "textureManager": {
                 "createSampler": vi.fn(() => ({ "label": "mockSampler" }))
-            }
+            },
+            "frameTextures": []
         } as unknown as IFilterConfig;
     };
 
@@ -344,7 +346,7 @@ describe("FilterApplyGradientBevelFilterUseCase", () =>
             const alphas = new Float32Array([1.0, 1.0]);
             const ratios = new Float32Array([0, 255]);
             const config = createMockConfig();
-            (config.pipelineManager.getPipeline as ReturnType<typeof vi.fn>).mockReturnValue(null);
+            (config.pipelineManager.getFilterPipeline as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
             const result = execute(
                 sourceAttachment,
@@ -356,7 +358,7 @@ describe("FilterApplyGradientBevelFilterUseCase", () =>
                 config
             );
 
-            expect(console.error).toHaveBeenCalledWith("[WebGPU GradientBevelFilter] bevel_base pipeline not found");
+            expect(console.error).toHaveBeenCalledWith("[WebGPU GradientBevelFilter] Pipeline not found");
             expect(result).toBe(sourceAttachment);
         });
     });

@@ -1897,8 +1897,7 @@ export class Context
         uniformData[5] = attachment.height;
         uniformData[6] = 0.0;
         uniformData[7] = 0.0;
-        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer(uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
         const tempTextureView = $getOrCreateView(tempTexture);
@@ -2022,8 +2021,7 @@ export class Context
         uniformData[5] = attachment.height;
         uniformData[6] = 0.0;
         uniformData[7] = 0.0;
-        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer(uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
         const tempTextureView = $getOrCreateView(tempTexture);
@@ -2114,8 +2112,7 @@ export class Context
         uniformData[5] = attachment.height;
         uniformData[6] = 0.0;
         uniformData[7] = 0.0;
-        const uniformBuffer = this.bufferManager.acquireUniformBuffer(uniformData.byteLength);
-        this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer(uniformData);
 
         const sampler = this.textureManager.createSampler("linear_sampler", true);
         const tempTextureView = $getOrCreateView(tempTexture);
@@ -2380,8 +2377,7 @@ export class Context
                 $ctUniform8[6] = color_transform[6];
                 $ctUniform8[7] = 0;
                 const ctUniformData = $ctUniform8;
-                const ctUniformBuffer = this.bufferManager.acquireUniformBuffer(32);
-                this.device.queue.writeBuffer(ctUniformBuffer, 0, ctUniformData);
+                const ctUniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer(ctUniformData);
                 const ctSampler = this.textureManager.createSampler("cached_ct_sampler", false);
                 ($entries3[0].resource as GPUBufferBinding).buffer = ctUniformBuffer;
                 $entries3[1].resource = ctSampler;
@@ -2440,8 +2436,7 @@ export class Context
         }
 
         const sampler = this.textureManager.createSampler("cached_filter_sampler", true);
-        const uniformBuffer = this.bufferManager.acquireUniformBuffer(16);
-        this.device.queue.writeBuffer(uniformBuffer, 0, $IDENTITY_UV.buffer, $IDENTITY_UV.byteOffset, $IDENTITY_UV.byteLength);
+        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer($IDENTITY_UV);
 
         ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
         $entries3[1].resource = sampler;
@@ -2566,6 +2561,9 @@ export class Context
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
+
+        // DynamicUniformAllocatorのステージングバッファをGPUに一括書き込み
+        this.bufferManager.dynamicUniform.flush();
 
         // コマンドをsubmit
         if (this.commandEncoder) {

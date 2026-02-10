@@ -10,6 +10,7 @@ export interface IFilterConfig {
     commandEncoder: GPUCommandEncoder;
     bufferManager?: {
         acquireUniformBuffer(requiredSize: number): GPUBuffer;
+        acquireAndWriteUniformBuffer(data: Float32Array, byteLength?: number): GPUBuffer;
     };
     frameBufferManager: {
         createTemporaryAttachment(width: number, height: number): IAttachmentObject;
@@ -22,6 +23,7 @@ export interface IFilterConfig {
     };
     pipelineManager: {
         getPipeline(name: string): GPURenderPipeline | undefined;
+        getFilterPipeline(baseName: string, constants: Record<string, number>): GPURenderPipeline | undefined;
         getBindGroupLayout(name: string): GPUBindGroupLayout | undefined;
     };
     textureManager: {

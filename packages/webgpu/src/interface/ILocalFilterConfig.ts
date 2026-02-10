@@ -18,4 +18,5 @@ export interface ILocalFilterConfig {
     textureManager: TextureManager;
     mainAttachment?: IAttachmentObject;
     computePipelineManager?: ComputePipelineManager;
+    frameTextures: GPUTexture[];
 }

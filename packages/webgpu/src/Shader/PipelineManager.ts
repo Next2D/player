@@ -2766,6 +2766,66 @@ export class PipelineManager
     }
 
     /**
+     * @description フィルターパイプラインのoverride定数バリアントを取得
+     *              GPU warp divergenceを排除するコンパイル時分岐特殊化
+     */
+    getFilterPipeline(baseName: string, constants: Record<string, number>): GPURenderPipeline | undefined
+    {
+        // キャッシュキーを生成
+        const keys = Object.keys(constants).sort();
+        const suffix = keys.map((k) => `${k}${constants[k]}`).join("_");
+        const cacheKey = `${baseName}_${suffix}`;
+
+        let pipeline = this.pipelines.get(cacheKey);
+        if (pipeline) {
+            return pipeline;
+        }
+
+        // ベースグループのロードを確保
+        this.ensureLazyGroup(baseName);
+
+        const fragmentModule = this.shaderModuleCache.get(`filter_${baseName}`);
+        const vertexModule = this.shaderModuleCache.get("blurFilterVertex");
+        const bindGroupLayout = this.bindGroupLayouts.get(baseName);
+
+        if (!fragmentModule || !vertexModule || !bindGroupLayout) {
+            return this.pipelines.get(baseName);
+        }
+
+        const pipelineLayout = this.device.createPipelineLayout({
+            "bindGroupLayouts": [bindGroupLayout]
+        });
+
+        pipeline = this.device.createRenderPipeline({
+            "layout": pipelineLayout,
+            "vertex": {
+                "module": vertexModule,
+                "entryPoint": "main",
+                "buffers": []
+            },
+            "fragment": {
+                "module": fragmentModule,
+                "entryPoint": "main",
+                "targets": [{
+                    "format": "rgba8unorm",
+                    "blend": {
+                        "color": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" },
+                        "alpha": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" }
+                    }
+                }],
+                "constants": constants
+            },
+            "primitive": {
+                "topology": "triangle-list",
+                "cullMode": "none"
+            }
+        });
+
+        this.pipelines.set(cacheKey, pipeline);
+        return pipeline;
+    }
+
+    /**
      * @description グラデーションタイプとスプレッドモードに応じた特殊化パイプラインを取得
      *              override定数でGPU warp divergenceを排除
      */

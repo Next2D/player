@@ -45,7 +45,7 @@ export const execute = (
     dest: IAttachmentObject,
     isHorizontal: boolean,
     blur: number,
-    bufferManager?: { acquireUniformBuffer(requiredSize: number): GPUBuffer }
+    bufferManager?: { acquireAndWriteUniformBuffer(data: Float32Array, byteLength?: number): GPUBuffer }
 ): void => {
 
     // radius 8～24 の場合は共有メモリ版を使用（MAX_APRON=24の制限）
@@ -75,12 +75,15 @@ export const execute = (
     $params8[7] = 0.0;                        // padding
 
     const paramsBuffer = bufferManager
-        ? bufferManager.acquireUniformBuffer($params8.byteLength)
-        : device.createBuffer({
-            "size": $params8.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-    device.queue.writeBuffer(paramsBuffer, 0, $params8);
+        ? bufferManager.acquireAndWriteUniformBuffer($params8)
+        : (() => {
+            const buf = device.createBuffer({
+                "size": $params8.byteLength,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+            device.queue.writeBuffer(buf, 0, $params8);
+            return buf;
+        })();
 
     $computeEntries3[0].resource = source.texture!.view;
     $computeEntries3[1].resource = dest.texture!.view;

@@ -81,12 +81,14 @@ export const execute = (
     $uniform20[19] = matrix[19] / 255;
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer($uniform20.byteLength)
+        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform20)
         : device.createBuffer({
             "size": $uniform20.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform20);
+    if (!config.bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform20);
+    }
 
     // バインドグループを作成
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;

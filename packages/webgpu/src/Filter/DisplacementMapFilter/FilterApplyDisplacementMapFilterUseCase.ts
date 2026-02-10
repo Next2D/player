@@ -196,12 +196,14 @@ export const execute = (
     }
 
     const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireUniformBuffer(uniformSize)
+        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform12, uniformSize)
         : device.createBuffer({
             "size": uniformSize,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform12, 0, uniformSize / 4);
+    if (!config.bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform12, 0, uniformSize / 4);
+    }
 
     // バインドグループを作成
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;

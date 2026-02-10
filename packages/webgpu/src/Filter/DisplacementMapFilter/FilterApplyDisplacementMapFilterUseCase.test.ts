@@ -92,7 +92,8 @@ describe("FilterApplyDisplacementMapFilterUseCase", () =>
             },
             "textureManager": {
                 "createSampler": vi.fn(() => ({ "label": "mockSampler" }))
-            }
+            },
+            "frameTextures": []
         } as unknown as IFilterConfig;
     };
 

@@ -198,12 +198,14 @@ const copyTextureToAttachment = (
     $uniform4[2] = 0;
     $uniform4[3] = 0;
     const uniformBuffer = bufferManager
-        ? bufferManager.acquireUniformBuffer($uniform4.byteLength)
+        ? bufferManager.acquireAndWriteUniformBuffer($uniform4)
         : device.createBuffer({
             "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+    if (!bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+    }
 
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;
@@ -261,12 +263,14 @@ const upscaleTexture = (
     $uniform4[2] = 0;
     $uniform4[3] = 0;
     const uniformBuffer = bufferManager
-        ? bufferManager.acquireUniformBuffer($uniform4.byteLength)
+        ? bufferManager.acquireAndWriteUniformBuffer($uniform4)
         : device.createBuffer({
             "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+    if (!bufferManager) {
+        device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+    }
 
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;

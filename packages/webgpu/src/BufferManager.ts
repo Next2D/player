@@ -23,11 +23,16 @@ export class DynamicUniformAllocator
     private capacity: number;
     readonly alignment: number = 256;
     private pendingDestroyBuffers: GPUBuffer[] = [];
+    private stagingBuffer: ArrayBuffer;
+    private stagingFloat32: Float32Array;
+    private dirtyEnd: number = 0;
 
     constructor (device: GPUDevice, capacity: number = 65536)
     {
         this.device = device;
         this.capacity = capacity;
+        this.stagingBuffer = new ArrayBuffer(capacity);
+        this.stagingFloat32 = new Float32Array(this.stagingBuffer);
     }
 
     /**
@@ -37,6 +42,7 @@ export class DynamicUniformAllocator
     resetFrame (): void
     {
         this.offset = 0;
+        this.dirtyEnd = 0;
 
         for (const buf of this.pendingDestroyBuffers) {
             buf.destroy();
@@ -59,7 +65,8 @@ export class DynamicUniformAllocator
     }
 
     /**
-     * @description uniform データを書き込み、アライメント済みオフセットを返す
+     * @description uniform データをCPUステージングバッファにコピーし、アライメント済みオフセットを返す
+     *              実際のGPU書き込みはflush()で一括実行される
      * @param data - 書き込むデータ
      * @return アライメント済みオフセット（バイト単位）
      */
@@ -74,6 +81,9 @@ export class DynamicUniformAllocator
         const dataSize = data.byteLength;
 
         if (alignedOffset + dataSize > this.capacity) {
+            // 旧バッファにステージングデータをフラッシュ
+            this.flush();
+
             // バッファが足りない場合は容量を倍増して再作成
             this.capacity *= 2;
             const oldBuffer = this.buffer;
@@ -87,14 +97,36 @@ export class DynamicUniformAllocator
                 // フレーム終了後のresetFrame()で安全に破棄する
                 this.pendingDestroyBuffers.push(oldBuffer);
             }
+
+            // ステージングバッファも拡張
+            this.stagingBuffer = new ArrayBuffer(this.capacity);
+            this.stagingFloat32 = new Float32Array(this.stagingBuffer);
         }
 
-        this.device.queue.writeBuffer(this.buffer!, alignedOffset, data.buffer, data.byteOffset, data.byteLength);
+        // CPUステージングバッファにコピー（writeBuffer呼ばない）
+        this.stagingFloat32.set(data, alignedOffset / 4);
+
+        const end = alignedOffset + dataSize;
+        if (end > this.dirtyEnd) {
+            this.dirtyEnd = end;
+        }
 
         // 次のアロケーションは256バイトアライメント
         this.offset = alignedOffset + Math.ceil(dataSize / this.alignment) * this.alignment;
 
         return alignedOffset;
+    }
+
+    /**
+     * @description ステージングバッファの内容をGPUバッファに一括書き込み
+     *              submit前に1回だけ呼び出す
+     */
+    flush (): void
+    {
+        if (this.dirtyEnd > 0 && this.buffer) {
+            this.device.queue.writeBuffer(this.buffer, 0, this.stagingBuffer, 0, this.dirtyEnd);
+            this.dirtyEnd = 0;
+        }
     }
 
     dispose (): void
@@ -220,6 +252,21 @@ export class BufferManager
             requiredSize
         );
         this.frameUniformPoolBuffers.push(buffer);
+        return buffer;
+    }
+
+    /**
+     * @description Uniform Bufferの取得と書き込みを一括で行うヘルパー
+     *              acquireUniformBuffer + writeBuffer の2ステップを1呼び出しに統合
+     * @param data - 書き込むデータ
+     * @param byteLength - 書き込みバイト数（省略時はdata.byteLength）
+     * @return GPUBuffer
+     */
+    acquireAndWriteUniformBuffer (data: Float32Array, byteLength?: number): GPUBuffer
+    {
+        const writeBytes = byteLength ?? data.byteLength;
+        const buffer = this.acquireUniformBuffer(writeBytes);
+        this.device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, writeBytes);
         return buffer;
     }
 

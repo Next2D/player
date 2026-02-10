@@ -71,7 +71,8 @@ describe("ContextBitmapFillUseCase", () =>
             "createVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
             "createUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
             "acquireVertexBuffer": vi.fn(() => ({ "label": "mockVertexBuffer" })),
-            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
+            "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
+            "acquireAndWriteUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
         } as unknown as BufferManager;
     };
 

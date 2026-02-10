@@ -134,8 +134,7 @@ export const execute = (
     $uniformData36[34] = 1;
     $uniformData36[35] = 0;
 
-    const uniformBuffer = buffer_manager.acquireUniformBuffer($uniformData36.byteLength);
-    device.queue.writeBuffer(uniformBuffer, 0, $uniformData36.buffer, $uniformData36.byteOffset, $uniformData36.byteLength);
+    const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniformData36);
 
     // サンプラーを取得（キャッシュ済み）
     if (!$gradientSampler) {
