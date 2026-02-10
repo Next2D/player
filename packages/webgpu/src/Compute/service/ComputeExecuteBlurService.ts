@@ -48,7 +48,12 @@ export const execute = (
     bufferManager?: { acquireUniformBuffer(requiredSize: number): GPUBuffer }
 ): void => {
 
-    const pipelineName = isHorizontal ? "blur_compute_horizontal" : "blur_compute_vertical";
+    // radius 8～24 の場合は共有メモリ版を使用（MAX_APRON=24の制限）
+    const halfBlur = Math.ceil(blur * 0.5);
+    const useShared = halfBlur >= 8 && halfBlur <= 24;
+    const pipelineName = useShared
+        ? isHorizontal ? "blur_compute_shared_horizontal" : "blur_compute_shared_vertical"
+        : isHorizontal ? "blur_compute_horizontal" : "blur_compute_vertical";
     const pipeline = computePipelineManager.getPipeline(pipelineName);
     const bindGroupLayout = computePipelineManager.getBindGroupLayout("blur_compute");
 
@@ -57,7 +62,6 @@ export const execute = (
     }
 
     // ボックスブラーパラメータ（Fragment ShaderのcalculateDirectionalBlurParamsと同一ロジック）
-    const halfBlur = Math.ceil(blur * 0.5);
     const fraction = 1 - (halfBlur - blur * 0.5);
     const samples = 1 + blur;
 

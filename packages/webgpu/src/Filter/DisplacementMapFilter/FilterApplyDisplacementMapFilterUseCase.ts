@@ -224,8 +224,8 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ
-    mapTexture.destroy();
+    // クリーンアップ（mapTextureはsubmit後に遅延破棄）
+    config.frameTextures.push(mapTexture);
 
     return destAttachment;
 };

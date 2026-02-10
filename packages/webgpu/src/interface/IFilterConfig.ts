@@ -28,4 +28,5 @@ export interface IFilterConfig {
         createSampler(name: string, smooth: boolean): GPUSampler;
     };
     computePipelineManager?: ComputePipelineManager;
+    frameTextures: GPUTexture[];
 }

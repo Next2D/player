@@ -14,6 +14,9 @@ const $bitmapSamplerCache = new Map<string, GPUSampler>();
 const $uniformData32 = new Float32Array(32);
 const $stencilData16 = new Float32Array(16);
 
+let $stencilDynamicBindGroup: GPUBindGroup | null = null;
+let $stencilDynamicBuffer: GPUBuffer | null = null;
+
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
@@ -171,17 +174,21 @@ export const execute = (
         $stencilData16[14] = 1;
         $stencilData16[15] = 0;
         const offset = buffer_manager.dynamicUniform.allocate($stencilData16);
-        const stencilBindGroup = device.createBindGroup({
-            "layout": dynamicLayout,
-            "entries": [{
-                "binding": 0,
-                "resource": {
-                    "buffer": buffer_manager.dynamicUniform.getBuffer(),
-                    "size": 256
-                }
-            }]
-        });
-        return { "bindGroup": stencilBindGroup, "offset": offset };
+        const currentBuffer = buffer_manager.dynamicUniform.getBuffer();
+        if (!$stencilDynamicBindGroup || $stencilDynamicBuffer !== currentBuffer) {
+            $stencilDynamicBindGroup = device.createBindGroup({
+                "layout": dynamicLayout,
+                "entries": [{
+                    "binding": 0,
+                    "resource": {
+                        "buffer": currentBuffer,
+                        "size": 256
+                    }
+                }]
+            });
+            $stencilDynamicBuffer = currentBuffer;
+        }
+        return { "bindGroup": $stencilDynamicBindGroup, "offset": offset };
     };
 
     // アトラス描画時は2パスステンシル処理を使用（WebGL版と同じ）

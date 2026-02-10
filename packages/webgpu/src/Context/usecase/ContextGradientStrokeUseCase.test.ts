@@ -88,8 +88,10 @@ describe("ContextGradientStrokeUseCase", () =>
 
     const createMockPipelineManager = (hasPipeline: boolean = true, hasLayout: boolean = true) =>
     {
+        const mockPipeline = hasPipeline ? { "label": "mockPipeline" } : null;
         return {
-            "getPipeline": vi.fn(() => hasPipeline ? { "label": "mockPipeline" } : null),
+            "getPipeline": vi.fn(() => mockPipeline),
+            "getGradientPipeline": vi.fn(() => mockPipeline),
             "getBindGroupLayout": vi.fn(() => hasLayout ? { "label": "mockLayout" } : null)
         } as unknown as PipelineManager;
     };
@@ -229,7 +231,7 @@ describe("ContextGradientStrokeUseCase", () =>
                 false   // useStencilPipeline
             );
 
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill");
+            expect(pipelineManager.getGradientPipeline).toHaveBeenCalledWith("gradient_fill", 0, 0);
         });
 
         it("should use gradient_fill_bgra pipeline for canvas target without stencil", () =>
@@ -259,7 +261,7 @@ describe("ContextGradientStrokeUseCase", () =>
                 false   // useStencilPipeline
             );
 
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_bgra");
+            expect(pipelineManager.getGradientPipeline).toHaveBeenCalledWith("gradient_fill_bgra", 0, 0);
         });
 
         it("should use gradient_stroke_atlas pipeline for atlas target with stencil", () =>
@@ -289,7 +291,7 @@ describe("ContextGradientStrokeUseCase", () =>
                 true    // useStencilPipeline
             );
 
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_stroke_atlas");
+            expect(pipelineManager.getGradientPipeline).toHaveBeenCalledWith("gradient_stroke_atlas", 0, 0);
         });
     });
 

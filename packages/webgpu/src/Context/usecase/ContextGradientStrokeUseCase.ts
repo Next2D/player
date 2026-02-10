@@ -169,7 +169,7 @@ export const execute = (
     const pipelineName = use_stencil_pipeline
         ? use_atlas_target ? "gradient_stroke_atlas" : "gradient_stroke_bgra"
         : use_atlas_target ? "gradient_fill" : "gradient_fill_bgra";
-    const pipeline = pipeline_manager.getPipeline(pipelineName);
+    const pipeline = pipeline_manager.getGradientPipeline(pipelineName, type, spread);
     if (!pipeline) {
         console.error(`[WebGPU] ${pipelineName} pipeline not found`);
         return null;

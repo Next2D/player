@@ -19,7 +19,9 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
             "createBuffer": vi.fn((descriptor) => ({
                 "id": ++bufferId,
                 "size": descriptor.size,
-                "usage": descriptor.usage
+                "usage": descriptor.usage,
+                "getMappedRange": vi.fn(() => new ArrayBuffer(descriptor.size)),
+                "unmap": vi.fn()
             })),
             "queue": {
                 "writeBuffer": vi.fn()
@@ -100,9 +102,14 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
         const device = createMockDevice();
         const data = new Float32Array([1, 2, 3, 4]);
 
-        execute(device, buckets, 256, data);
+        const result = execute(device, buckets, 256, data);
 
-        expect(device.queue.writeBuffer).toHaveBeenCalled();
+        // 新規バッファ + data有り: mappedAtCreation方式 (writeBufferは呼ばれない)
+        expect(device.createBuffer).toHaveBeenCalledWith(
+            expect.objectContaining({ "mappedAtCreation": true })
+        );
+        expect((result as any).getMappedRange).toHaveBeenCalled();
+        expect((result as any).unmap).toHaveBeenCalled();
     });
 
     it("should not write data if not provided", () =>
@@ -136,18 +143,17 @@ describe("BufferManagerAcquireVertexBufferUseCase", () =>
     it("should handle data with byte offset", () =>
     {
         const device = createMockDevice();
-        const buffer = new ArrayBuffer(64);
-        const data = new Float32Array(buffer, 16, 4); // Offset of 16 bytes
+        const arrayBuffer = new ArrayBuffer(64);
+        const data = new Float32Array(arrayBuffer, 16, 4); // Offset of 16 bytes
 
-        execute(device, buckets, 256, data);
+        const result = execute(device, buckets, 256, data);
 
-        expect(device.queue.writeBuffer).toHaveBeenCalledWith(
-            expect.anything(),
-            0,
-            buffer,
-            16, // byteOffset
-            16  // byteLength (4 floats * 4 bytes)
+        // 新規バッファ + data有り: mappedAtCreation方式
+        expect(device.createBuffer).toHaveBeenCalledWith(
+            expect.objectContaining({ "mappedAtCreation": true })
         );
+        expect((result as any).getMappedRange).toHaveBeenCalled();
+        expect((result as any).unmap).toHaveBeenCalled();
     });
 
     it("should pop last buffer from bucket (LIFO)", () =>

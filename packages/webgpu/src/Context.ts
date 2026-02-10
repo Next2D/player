@@ -283,6 +283,7 @@ export class Context
         textureManager: TextureManager;
         mainAttachment?: IAttachmentObject;
         computePipelineManager: ComputePipelineManager;
+        frameTextures: GPUTexture[];
     };
 
     constructor (
@@ -378,7 +379,8 @@ export class Context
             "frameBufferManager": this.frameBufferManager,
             "pipelineManager": this.pipelineManager,
             "textureManager": this.textureManager,
-            "computePipelineManager": this.computePipelineManager
+            "computePipelineManager": this.computePipelineManager,
+            "frameTextures": this.frameTextures
         };
 
         // コンテキストをグローバル変数にセット

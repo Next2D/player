@@ -11,7 +11,7 @@ struct VertexOutput {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var src = textureSample(textureData, textureSampler, input.texCoord);
+    var src = textureSampleLevel(textureData, textureSampler, input.texCoord, 0);
     src = vec4<f32>(src.rgb / max(0.0001, src.a), src.a);
     src = clamp(src * input.mulColor + input.addColor, vec4<f32>(0.0), vec4<f32>(1.0));
     src = vec4<f32>(src.rgb * src.a, src.a);

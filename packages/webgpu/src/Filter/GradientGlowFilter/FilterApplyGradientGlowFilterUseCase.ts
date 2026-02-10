@@ -204,8 +204,8 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ
-    lutTexture.destroy();
+    // クリーンアップ（lutTextureはsubmit後に遅延破棄）
+    config.frameTextures.push(lutTexture);
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
 
     // WebGL版と同じオフセット更新

@@ -100,11 +100,13 @@ describe("ContextGradientFillUseCase", () =>
 
     const createMockPipelineManager = (hasPipeline: boolean = true, hasLayout: boolean = true) =>
     {
+        const mockPipeline = hasPipeline ? {
+            "label": "mockPipeline",
+            "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
+        } : null;
         return {
-            "getPipeline": vi.fn(() => hasPipeline ? {
-                "label": "mockPipeline",
-                "getBindGroupLayout": vi.fn(() => ({ "label": "mockLayout" }))
-            } : null),
+            "getPipeline": vi.fn(() => mockPipeline),
+            "getGradientPipeline": vi.fn(() => mockPipeline),
             "getBindGroupLayout": vi.fn(() => hasLayout ? { "label": "mockLayout" } : null)
         } as unknown as PipelineManager;
     };
@@ -240,7 +242,7 @@ describe("ContextGradientFillUseCase", () =>
             );
 
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("stencil_write_atlas");
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_stencil_atlas");
+            expect(pipelineManager.getGradientPipeline).toHaveBeenCalledWith("gradient_fill_stencil_atlas", 0, 0);
         });
 
         it("should draw twice for atlas target (2-pass)", () =>
@@ -303,7 +305,7 @@ describe("ContextGradientFillUseCase", () =>
             // Pass 1: ステンシル書き込み
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("stencil_write_main");
             // Pass 2: グラデーション描画
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_stencil_main");
+            expect(pipelineManager.getGradientPipeline).toHaveBeenCalledWith("gradient_fill_stencil_main", 0, 0);
         });
 
         it("should draw twice for canvas target (2-pass stencil fill)", () =>
@@ -365,7 +367,7 @@ describe("ContextGradientFillUseCase", () =>
             // Pass 1: ステンシル書き込み
             expect(pipelineManager.getPipeline).toHaveBeenCalledWith("stencil_write_main");
             // Pass 2: マスクテスト付きグラデーション描画
-            expect(pipelineManager.getPipeline).toHaveBeenCalledWith("gradient_fill_bgra_stencil_masked");
+            expect(pipelineManager.getGradientPipeline).toHaveBeenCalledWith("gradient_fill_bgra_stencil_masked", 0, 0);
         });
 
         it("should return null when mask drawing and stencil pipeline", () =>

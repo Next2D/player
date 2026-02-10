@@ -23,7 +23,7 @@ struct VertexOutput {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let textureColor = textureSample(textureData, textureSampler, input.texCoord);
+    let textureColor = textureSampleLevel(textureData, textureSampler, input.texCoord, 0);
     return textureColor * input.color;
 }
 `;

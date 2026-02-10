@@ -120,6 +120,8 @@ export class BufferManager
     private uniformBufferBuckets: Map<number, GPUBuffer[]>;
     private storageBufferPool: IPooledStorageBuffer[];
     private indirectBuffer: GPUBuffer | null;
+    private indirectBufferPool: GPUBuffer[];
+    private frameIndirectBuffers: GPUBuffer[];
     private frameNumber: number;
     private unitRectBuffer: GPUBuffer | null;
     private frameVertexPoolBuffers: GPUBuffer[];
@@ -135,6 +137,8 @@ export class BufferManager
         this.uniformBufferBuckets = new Map();
         this.storageBufferPool = [];
         this.indirectBuffer = null;
+        this.indirectBufferPool = [];
+        this.frameIndirectBuffers = [];
         this.frameNumber = 0;
         this.unitRectBuffer = null;
         this.frameVertexPoolBuffers = [];
@@ -275,6 +279,16 @@ export class BufferManager
             this.indirectBuffer = null;
         }
 
+        for (const buffer of this.indirectBufferPool) {
+            buffer.destroy();
+        }
+        this.indirectBufferPool = [];
+
+        for (const buffer of this.frameIndirectBuffers) {
+            buffer.destroy();
+        }
+        this.frameIndirectBuffers = [];
+
         if (this.unitRectBuffer) {
             this.unitRectBuffer.destroy();
             this.unitRectBuffer = null;
@@ -324,6 +338,12 @@ export class BufferManager
             bufferManagerReleaseUniformBufferService(this.uniformBufferBuckets, buffer);
         }
         this.frameUniformPoolBuffers.length = 0;
+
+        // フレーム内で使用したIndirect Bufferをプールに返却
+        for (const buffer of this.frameIndirectBuffers) {
+            this.indirectBufferPool.push(buffer);
+        }
+        this.frameIndirectBuffers.length = 0;
 
         this.releaseAllStorageBuffers();
 
@@ -396,13 +416,27 @@ export class BufferManager
         firstVertex: number = 0,
         firstInstance: number = 0
     ): GPUBuffer {
-        return bufferManagerCreateIndirectBufferService(
-            this.device,
-            vertexCount,
-            instanceCount,
-            firstVertex,
-            firstInstance
-        );
+        let buffer = this.indirectBufferPool.pop();
+        if (buffer) {
+            updateIndirectBuffer(
+                this.device,
+                buffer,
+                vertexCount,
+                instanceCount,
+                firstVertex,
+                firstInstance
+            );
+        } else {
+            buffer = bufferManagerCreateIndirectBufferService(
+                this.device,
+                vertexCount,
+                instanceCount,
+                firstVertex,
+                firstInstance
+            );
+        }
+        this.frameIndirectBuffers.push(buffer);
+        return buffer;
     }
 
     getUnitRectBuffer (): GPUBuffer

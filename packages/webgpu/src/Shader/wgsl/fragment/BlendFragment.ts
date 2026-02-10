@@ -24,8 +24,8 @@ const createBlendFragment = (blendLogic: string): string =>
     BLEND_HEADER + /* wgsl */`
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var src = textureSample(texture1, sampler0, input.texCoord);
-    var dst = textureSample(texture0, sampler0, input.texCoord);
+    var src = textureSampleLevel(texture1, sampler0, input.texCoord, 0);
+    var dst = textureSampleLevel(texture0, sampler0, input.texCoord, 0);
     if (src.a == 0.0) { return dst; }
     if (dst.a == 0.0) { return src; }
     src = src * uniforms.colorTransform + vec4<f32>(uniforms.addColor.rgb, 0.0);
@@ -42,8 +42,8 @@ ${blendLogic}
 export const MultiplyBlendFragment = BLEND_HEADER + /* wgsl */`
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var src = textureSample(texture1, sampler0, input.texCoord);
-    var dst = textureSample(texture0, sampler0, input.texCoord);
+    var src = textureSampleLevel(texture1, sampler0, input.texCoord, 0);
+    var dst = textureSampleLevel(texture0, sampler0, input.texCoord, 0);
     src = src * uniforms.colorTransform + vec4<f32>(uniforms.addColor.rgb, 0.0);
     let a = src - src * dst.a;
     let b = dst - dst * src.a;

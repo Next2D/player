@@ -24,10 +24,10 @@ ${WgslIsInside}
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
-    let baseColor = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+    let baseColor = textureSampleLevel(baseTexture, textureSampler, baseUV, 0) * isInside(baseUV);
 
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
-    let blurColor = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+    let blurColor = textureSampleLevel(blurTexture, textureSampler, blurUV, 0) * isInside(blurUV);
 
     var rawAlpha = blurColor.a;
     if (uniforms.inner > 0.5) {
@@ -76,10 +76,10 @@ ${WgslIsInside}
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
-    let baseColor = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+    let baseColor = textureSampleLevel(baseTexture, textureSampler, baseUV, 0) * isInside(baseUV);
 
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
-    let blur = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+    let blur = textureSampleLevel(blurTexture, textureSampler, blurUV, 0) * isInside(blurUV);
 
     var rawAlpha = blur.a;
     if (uniforms.inner > 0.5) {
@@ -131,13 +131,13 @@ ${WgslIsInside}
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
-    let base = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+    let base = textureSampleLevel(baseTexture, textureSampler, baseUV, 0) * isInside(baseUV);
 
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
-    var blur = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+    var blur = textureSampleLevel(blurTexture, textureSampler, blurUV, 0) * isInside(blurUV);
 
     blur.a = clamp(blur.a * uniforms.strength, 0.0, 1.0);
-    let glowColor = textureSample(gradientLUT, textureSampler, vec2<f32>(blur.a, 0.5));
+    let glowColor = textureSampleLevel(gradientLUT, textureSampler, vec2<f32>(blur.a, 0.5), 0);
     var result: vec4<f32>;
     let glowType = uniforms.glowType;
     let knockout = uniforms.knockout > 0.5;
@@ -188,13 +188,13 @@ ${WgslIsInside}
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
-    let base = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+    let base = textureSampleLevel(baseTexture, textureSampler, baseUV, 0) * isInside(baseUV);
 
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
-    let blur1 = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+    let blur1 = textureSampleLevel(blurTexture, textureSampler, blurUV, 0) * isInside(blurUV);
 
     let mirrorUV = (1.0 - input.texCoord) * uniforms.blurScale - uniforms.blurOffset;
-    let blur2 = textureSample(blurTexture, textureSampler, mirrorUV) * isInside(mirrorUV);
+    let blur2 = textureSampleLevel(blurTexture, textureSampler, mirrorUV, 0) * isInside(mirrorUV);
 
     var highlightAlpha = blur1.a - blur2.a;
     var shadowAlpha = blur2.a - blur1.a;
@@ -202,7 +202,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     shadowAlpha = clamp(shadowAlpha * uniforms.strength, 0.0, 1.0);
 
     let lutCoord = 0.5019607843137255 - 0.5019607843137255 * shadowAlpha + 0.4980392156862745 * highlightAlpha;
-    let bevelColor = textureSample(gradientLUT, textureSampler, vec2<f32>(lutCoord, 0.5));
+    let bevelColor = textureSampleLevel(gradientLUT, textureSampler, vec2<f32>(lutCoord, 0.5), 0);
 
     var result: vec4<f32>;
     let bevelType = uniforms.bevelType;
@@ -257,13 +257,13 @@ ${WgslIsInside}
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let baseUV = input.texCoord * uniforms.baseScale - uniforms.baseOffset;
-    let base = textureSample(baseTexture, textureSampler, baseUV) * isInside(baseUV);
+    let base = textureSampleLevel(baseTexture, textureSampler, baseUV, 0) * isInside(baseUV);
 
     let blurUV = input.texCoord * uniforms.blurScale - uniforms.blurOffset;
-    let blur1 = textureSample(blurTexture, textureSampler, blurUV) * isInside(blurUV);
+    let blur1 = textureSampleLevel(blurTexture, textureSampler, blurUV, 0) * isInside(blurUV);
 
     let mirrorUV = (1.0 - input.texCoord) * uniforms.blurScale - uniforms.blurOffset;
-    let blur2 = textureSample(blurTexture, textureSampler, mirrorUV) * isInside(mirrorUV);
+    let blur2 = textureSampleLevel(blurTexture, textureSampler, mirrorUV, 0) * isInside(mirrorUV);
 
     var highlightAlpha = blur1.a - blur2.a;
     var shadowAlpha = blur2.a - blur1.a;
@@ -314,9 +314,9 @@ ${WgslIsInside}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let original = textureSample(sourceTexture, textureSampler, input.texCoord);
+    let original = textureSampleLevel(sourceTexture, textureSampler, input.texCoord, 0);
     let shiftedUV = input.texCoord - uniforms.offset;
-    let shifted = textureSample(sourceTexture, textureSampler, shiftedUV) * isInside(shiftedUV);
+    let shifted = textureSampleLevel(sourceTexture, textureSampler, shiftedUV, 0) * isInside(shiftedUV);
     return original * (1.0 - shifted.a);
 }
 `;

@@ -15,7 +15,7 @@ struct CopyUniforms {
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let uv = input.texCoord * uniforms.scale + uniforms.offset;
-    return textureSample(inputTexture, textureSampler, uv);
+    return textureSampleLevel(inputTexture, textureSampler, uv, 0);
 }
 `;
 
@@ -35,7 +35,7 @@ struct CopyUniforms {
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let uv = (input.texCoord - uniforms.offset) * uniforms.scale;
     let clampedUv = clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0));
-    let color = textureSample(inputTexture, textureSampler, clampedUv);
+    let color = textureSampleLevel(inputTexture, textureSampler, clampedUv, 0);
     let inBounds = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
     return select(vec4<f32>(0.0, 0.0, 0.0, 0.0), color, inBounds);
 }
@@ -57,7 +57,7 @@ struct CopyUniforms {
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let uv = input.texCoord * uniforms.scale + uniforms.offset;
     let clampedUv = clamp(uv, vec2<f32>(0.0), vec2<f32>(1.0));
-    let color = textureSample(inputTexture, textureSampler, clampedUv);
+    let color = textureSampleLevel(inputTexture, textureSampler, clampedUv, 0);
     let inBounds = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
     return select(vec4<f32>(0.0, 0.0, 0.0, 0.0), color, inBounds);
 }
@@ -77,7 +77,7 @@ struct ColorTransformUniforms {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var color = textureSample(inputTexture, textureSampler, input.texCoord);
+    var color = textureSampleLevel(inputTexture, textureSampler, input.texCoord, 0);
 
     color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
     color = clamp(color * ct.mul + ct.add, vec4<f32>(0.0), vec4<f32>(1.0));
@@ -104,7 +104,7 @@ struct YFlipCTUniforms {
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let uv = input.texCoord * uniforms.scale + uniforms.offset;
-    var color = textureSample(inputTexture, textureSampler, uv);
+    var color = textureSampleLevel(inputTexture, textureSampler, uv, 0);
 
     color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
     color = clamp(color * uniforms.mul + uniforms.add, vec4<f32>(0.0), vec4<f32>(1.0));
@@ -128,7 +128,7 @@ struct ColorMatrixUniforms {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var color = textureSample(inputTexture, textureSampler, input.texCoord);
+    var color = textureSampleLevel(inputTexture, textureSampler, input.texCoord, 0);
 
     color = vec4<f32>(color.rgb / max(vec3<f32>(0.0001), vec3<f32>(color.a)), color.a);
     var result = uniforms.matrix * color + uniforms.offset;
@@ -154,7 +154,7 @@ ${WgslVertexOutput}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(inputTexture, textureSampler, input.texCoord);
+    return textureSampleLevel(inputTexture, textureSampler, input.texCoord, 0);
 }
 `;
 
@@ -166,7 +166,7 @@ ${WgslVertexOutput}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    return textureSample(inputTexture, textureSampler, input.texCoord);
+    return textureSampleLevel(inputTexture, textureSampler, input.texCoord, 0);
 }
 `;
 
@@ -205,8 +205,8 @@ fn blendAdd(src: vec4<f32>, dst: vec4<f32>) -> vec4<f32> {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    let src = textureSample(srcTexture, srcSampler, input.texCoord);
-    let dst = textureSample(dstTexture, dstSampler, input.texCoord);
+    let src = textureSampleLevel(srcTexture, srcSampler, input.texCoord, 0);
+    let dst = textureSampleLevel(dstTexture, dstSampler, input.texCoord, 0);
     var result: vec4<f32>;
     if (blend.blendMode < 0.5) {
         result = blendNormal(src, dst);

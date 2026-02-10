@@ -16,6 +16,9 @@ let $gradientSampler: GPUSampler | null = null;
 const $uniformData36 = new Float32Array(36);
 const $stencilData16 = new Float32Array(16);
 
+let $stencilDynamicBindGroup: GPUBindGroup | null = null;
+let $stencilDynamicBuffer: GPUBuffer | null = null;
+
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
@@ -204,17 +207,21 @@ export const execute = (
         $stencilData16[15] = 0;
 
         const offset = buffer_manager.dynamicUniform.allocate($stencilData16);
-        const stencilBindGroup = device.createBindGroup({
-            "layout": dynamicLayout,
-            "entries": [{
-                "binding": 0,
-                "resource": {
-                    "buffer": buffer_manager.dynamicUniform.getBuffer(),
-                    "size": 256
-                }
-            }]
-        });
-        return { "bindGroup": stencilBindGroup, "offset": offset };
+        const currentBuffer = buffer_manager.dynamicUniform.getBuffer();
+        if (!$stencilDynamicBindGroup || $stencilDynamicBuffer !== currentBuffer) {
+            $stencilDynamicBindGroup = device.createBindGroup({
+                "layout": dynamicLayout,
+                "entries": [{
+                    "binding": 0,
+                    "resource": {
+                        "buffer": currentBuffer,
+                        "size": 256
+                    }
+                }]
+            });
+            $stencilDynamicBuffer = currentBuffer;
+        }
+        return { "bindGroup": $stencilDynamicBindGroup, "offset": offset };
     };
 
     // アトラス描画時：2パスステンシルフィル（WebGL版と同じアルゴリズム）
@@ -234,7 +241,7 @@ export const execute = (
         }
 
         // === Pass 2: グラデーション描画（ステンシルテスト付き） ===
-        const gradientPipeline = pipeline_manager.getPipeline("gradient_fill_stencil_atlas");
+        const gradientPipeline = pipeline_manager.getGradientPipeline("gradient_fill_stencil_atlas", type, spread);
         if (gradientPipeline) {
             render_pass_encoder.setPipeline(gradientPipeline);
             render_pass_encoder.setStencilReference(0);
@@ -269,7 +276,7 @@ export const execute = (
         ? "gradient_fill_bgra_stencil_masked"
         : "gradient_fill_stencil_main";
 
-    const gradientPipeline = pipeline_manager.getPipeline(pipelineName);
+    const gradientPipeline = pipeline_manager.getGradientPipeline(pipelineName, type, spread);
     if (gradientPipeline) {
         render_pass_encoder.setPipeline(gradientPipeline);
         render_pass_encoder.setStencilReference(use_stencil_pipeline ? $getMaskStencilReference() : 0);

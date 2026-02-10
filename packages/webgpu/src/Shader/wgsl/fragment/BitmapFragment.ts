@@ -36,7 +36,7 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     if (uniforms.repeat > 0.5) {
         uv = fract(uv);
     }
-    let bitmapColor = textureSample(bitmapTexture, bitmapSampler, uv);
+    let bitmapColor = textureSampleLevel(bitmapTexture, bitmapSampler, uv, 0);
     let alpha = bitmapColor.a * input.color.a;
     return vec4<f32>(bitmapColor.rgb * input.color.a, alpha);
 }

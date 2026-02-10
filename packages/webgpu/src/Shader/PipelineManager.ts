@@ -1347,11 +1347,15 @@ export class PipelineManager
         const pipelineLayout = this.device.createPipelineLayout({
             "bindGroupLayouts": [bindGroupLayout]
         });
+        this.gradientPipelineLayout = pipelineLayout;
 
         const vertexShaderModule = this.getOrCreateShaderModule("gradientFillVertex", ShaderSource.getGradientFillVertexShader());
+        this.gradientVertexShaderModule = vertexShaderModule;
 
         const fragmentShaderModule = this.getOrCreateShaderModule("gradientFillFragment", ShaderSource.getGradientFillFragmentShader());
+        this.gradientFragmentShaderModule = fragmentShaderModule;
         const stencilFragmentShaderModule = this.getOrCreateShaderModule("gradientFillStencilFragment", ShaderSource.getGradientFillStencilFragmentShader());
+        this.gradientStencilFragmentShaderModule = stencilFragmentShaderModule;
 
         const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
         const blendState = BLEND_PREMULTIPLIED_ALPHA;
@@ -2759,6 +2763,129 @@ export class PipelineManager
             pipeline = this.pipelines.get(name);
         }
         return pipeline;
+    }
+
+    /**
+     * @description グラデーションタイプとスプレッドモードに応じた特殊化パイプラインを取得
+     *              override定数でGPU warp divergenceを排除
+     */
+    getGradientPipeline(baseName: string, gradientType: number, spreadMode: number): GPURenderPipeline | undefined
+    {
+        const key = `${baseName}_t${gradientType}s${spreadMode}`;
+        let pipeline = this.pipelines.get(key);
+        if (pipeline) {
+            return pipeline;
+        }
+
+        if (!this.gradientPipelineLayout) {
+            return this.getPipeline(baseName);
+        }
+
+        // ベースパイプラインと同じ構成でoverride定数を変えて作成
+        pipeline = this.createGradientVariant(baseName, gradientType, spreadMode);
+        if (pipeline) {
+            this.pipelines.set(key, pipeline);
+            return pipeline;
+        }
+
+        // フォールバック: デフォルト定数のベースパイプラインを使用
+        return this.getPipeline(baseName);
+    }
+
+    private gradientPipelineLayout: GPUPipelineLayout | null = null;
+    private gradientVertexShaderModule: GPUShaderModule | null = null;
+    private gradientFragmentShaderModule: GPUShaderModule | null = null;
+    private gradientStencilFragmentShaderModule: GPUShaderModule | null = null;
+
+    private createGradientVariant(baseName: string, gradientType: number, spreadMode: number): GPURenderPipeline | undefined
+    {
+        if (!this.gradientPipelineLayout) {
+            return undefined;
+        }
+
+        const constants = {
+            "GRADIENT_TYPE": gradientType,
+            "SPREAD_MODE": spreadMode
+        };
+
+        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
+        const blendState = BLEND_PREMULTIPLIED_ALPHA;
+
+        // ベース名からパイプライン構成を決定
+        const isStencilFragment = baseName.includes("stencil_atlas") || baseName === "gradient_fill_stencil_main";
+        const fragModule = isStencilFragment ? this.gradientStencilFragmentShaderModule! : this.gradientFragmentShaderModule!;
+        const isBGRA = baseName.includes("bgra") || baseName === "gradient_fill_stencil_main";
+        const format: GPUTextureFormat = isBGRA ? this.format : "rgba8unorm";
+        const needsYFlip = baseName.includes("bgra") || baseName === "gradient_fill_stencil_main";
+
+        const vertexConstants: Record<string, number> = {};
+        if (needsYFlip) {
+            vertexConstants.yFlipSign = -1.0;
+        }
+
+        let depthStencil: GPUDepthStencilState | undefined;
+        let sampleCount = this.sampleCount;
+
+        if (baseName.includes("stroke")) {
+            depthStencil = {
+                "format": "stencil8",
+                "stencilFront": { "compare": "always", "failOp": "keep", "depthFailOp": "keep", "passOp": "keep" },
+                "stencilBack": { "compare": "always", "failOp": "keep", "depthFailOp": "keep", "passOp": "keep" },
+                "stencilReadMask": 0x00,
+                "stencilWriteMask": 0x00
+            };
+        } else if (baseName === "gradient_fill_stencil" || baseName === "gradient_fill_stencil_atlas") {
+            depthStencil = {
+                "format": "stencil8",
+                "stencilFront": { "compare": "not-equal", "failOp": "keep", "depthFailOp": "zero", "passOp": "zero" },
+                "stencilBack": { "compare": "not-equal", "failOp": "keep", "depthFailOp": "zero", "passOp": "zero" },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            };
+        } else if (baseName === "gradient_fill_stencil_main") {
+            depthStencil = {
+                "format": "stencil8",
+                "stencilFront": { "compare": "not-equal", "failOp": "keep", "depthFailOp": "zero", "passOp": "zero" },
+                "stencilBack": { "compare": "not-equal", "failOp": "keep", "depthFailOp": "zero", "passOp": "zero" },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0xFF
+            };
+            sampleCount = 1;
+        } else if (baseName === "gradient_fill_bgra_stencil") {
+            depthStencil = {
+                "format": "stencil8",
+                "stencilFront": { "compare": "equal", "failOp": "keep", "depthFailOp": "keep", "passOp": "keep" },
+                "stencilBack": { "compare": "equal", "failOp": "keep", "depthFailOp": "keep", "passOp": "keep" },
+                "stencilReadMask": 0xFF,
+                "stencilWriteMask": 0x00
+            };
+        } else if (baseName === "gradient_fill_bgra_no_msaa") {
+            sampleCount = 1;
+        }
+
+        const descriptor: GPURenderPipelineDescriptor = {
+            "layout": this.gradientPipelineLayout,
+            "vertex": {
+                "module": this.gradientVertexShaderModule!,
+                "entryPoint": "main",
+                "buffers": [vertexBufferLayout],
+                "constants": Object.keys(vertexConstants).length > 0 ? vertexConstants : undefined
+            },
+            "fragment": {
+                "module": fragModule,
+                "entryPoint": "main",
+                "targets": [{ "format": format, "blend": blendState }],
+                "constants": constants
+            },
+            "primitive": { "topology": "triangle-list", "cullMode": "none" },
+            "multisample": { "count": sampleCount }
+        };
+
+        if (depthStencil) {
+            descriptor.depthStencil = depthStencil;
+        }
+
+        return this.device.createRenderPipeline(descriptor);
     }
 
     getBindGroupLayout(name: string): GPUBindGroupLayout | undefined

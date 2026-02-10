@@ -28,17 +28,25 @@ export const execute = (
 
     if (bucket && bucket.length > 0) {
         buffer = bucket.pop()!;
+        // プールヒット: writeBufferで更新
+        if (data) {
+            device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, data.byteLength);
+        }
+    } else if (data) {
+        // 新規作成 + データあり: mappedAtCreationで1コールに統合
+        buffer = device.createBuffer({
+            "size": bucketSize,
+            "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+            "mappedAtCreation": true
+        });
+        new Float32Array(buffer.getMappedRange()).set(data);
+        buffer.unmap();
     } else {
-        // 新規作成
+        // 新規作成 + データなし
         buffer = device.createBuffer({
             "size": bucketSize,
             "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         });
-    }
-
-    // データがあれば書き込み
-    if (data) {
-        device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, data.byteLength);
     }
 
     return buffer;

@@ -12,24 +12,23 @@ struct GradientUniforms {
 @group(0) @binding(1) var gradientSampler: sampler;
 @group(0) @binding(2) var gradientTexture: texture_2d<f32>;
 
-fn applySpread(t: f32, spread: f32) -> f32 {
-    switch(i32(spread)) {
-        case 0: {
-            return 1.0 - abs(fract(t * 0.5) * 2.0 - 1.0);
-        }
-        case 1: {
-            return fract(t);
-        }
-        default: {
-            return clamp(t, 0.0, 1.0);
-        }
+override GRADIENT_TYPE: u32 = 0u;
+override SPREAD_MODE: u32 = 2u;
+
+fn applySpread(t: f32) -> f32 {
+    if (SPREAD_MODE == 0u) {
+        return 1.0 - abs(fract(t * 0.5) * 2.0 - 1.0);
+    } else if (SPREAD_MODE == 1u) {
+        return fract(t);
+    } else {
+        return clamp(t, 0.0, 1.0);
     }
 }
 `;
 
 const GradientCalculation = `
     var t: f32;
-    if (gradient.gradientType < 0.5) {
+    if (GRADIENT_TYPE == 0u) {
         let a = gradient.linearPoints.xy;
         let b = gradient.linearPoints.zw;
         let ab = b - a;
@@ -69,8 +68,8 @@ const GradientCalculation = `
             }
         }
     }
-    t = applySpread(t, gradient.spread);
-    let gradientColor = textureSample(gradientTexture, gradientSampler, vec2<f32>(t, 0.5));
+    t = applySpread(t);
+    let gradientColor = textureSampleLevel(gradientTexture, gradientSampler, vec2<f32>(t, 0.5), 0);
 `;
 
 export const GradientFillFragment = /* wgsl */`
