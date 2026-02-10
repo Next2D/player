@@ -31,9 +31,9 @@ describe("ShapeLoadAsyncUseCase.js test", () =>
         // 手動で COMPLETE イベントをディスパッチ
         shape.dispatchEvent(new Event(Event.COMPLETE));
 
-        // resolve が Event オブジェクトを引数として受け取る
+        // resolve は引数なしで呼ばれるため void を返す
         const result = await promise;
-        expect(result).toBeInstanceOf(Event);
+        expect(result).toBeUndefined();
     });
 
     it("execute test case3 - sets src property on shape", async () =>
@@ -62,7 +62,7 @@ describe("ShapeLoadAsyncUseCase.js test", () =>
         shape.dispatchEvent(new Event(Event.COMPLETE));
 
         const result = await promise;
-        expect(result).toBeInstanceOf(Event);
+        expect(result).toBeUndefined();
     });
 
     it("execute test case5 - handles relative URL", async () =>
@@ -77,7 +77,7 @@ describe("ShapeLoadAsyncUseCase.js test", () =>
         shape.dispatchEvent(new Event(Event.COMPLETE));
 
         const result = await promise;
-        expect(result).toBeInstanceOf(Event);
+        expect(result).toBeUndefined();
     });
 
     it("execute test case6 - handles absolute URL", async () =>
@@ -92,7 +92,7 @@ describe("ShapeLoadAsyncUseCase.js test", () =>
         shape.dispatchEvent(new Event(Event.COMPLETE));
 
         const result = await promise;
-        expect(result).toBeInstanceOf(Event);
+        expect(result).toBeUndefined();
     });
 
     it("execute test case7 - handles empty string URL", async () =>
@@ -107,7 +107,7 @@ describe("ShapeLoadAsyncUseCase.js test", () =>
         shape.dispatchEvent(new Event(Event.COMPLETE));
 
         const result = await promise;
-        expect(result).toBeInstanceOf(Event);
+        expect(result).toBeUndefined();
     });
 
     it("execute test case8 - addEventListener called before src assignment", () =>
@@ -174,6 +174,6 @@ describe("ShapeLoadAsyncUseCase.js test", () =>
         shape.dispatchEvent(new Event(Event.COMPLETE));
         
         const result = await promise2;
-        expect(result).toBeInstanceOf(Event);
+        expect(result).toBeUndefined();
     });
 });

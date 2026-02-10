@@ -15,7 +15,12 @@ export const execute = (shape: Shape, url: string): Promise<void> =>
 {
     return new Promise<void>((resolve): void =>
     {
-        shape.addEventListener(Event.COMPLETE, resolve);
+        const onComplete = (): void =>
+        {
+            shape.removeEventListener(Event.COMPLETE, onComplete);
+            resolve();
+        };
+        shape.addEventListener(Event.COMPLETE, onComplete);
         shape.src = url;
     });
 };
