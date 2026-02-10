@@ -24,9 +24,36 @@ jobs:
       - run: npm install -g npm@latest
       - run: npm install
       - run: npm run publish:dist
-      - name: Publish packages
-        run: |
-          find ./dist -name "package.json" -not -path "*/node_modules/*" -exec dirname {} \; | while read dir; do
-            npm publish --workspace="${dir}"
-          done
+      - run: npm publish
+        working-directory: ./dist/src
+      - run: npm publish
+        working-directory: ./dist/packages/cache
+      - run: npm publish
+        working-directory: ./dist/packages/core
+      - run: npm publish
+        working-directory: ./dist/packages/display
+      - run: npm publish
+        working-directory: ./dist/packages/events
+      - run: npm publish
+        working-directory: ./dist/packages/filters
+      - run: npm publish
+        working-directory: ./dist/packages/geom
+      - run: npm publish
+        working-directory: ./dist/packages/media
+      - run: npm publish
+        working-directory: ./dist/packages/net
+      - run: npm publish
+        working-directory: ./dist/packages/render-queue
+      - run: npm publish
+        working-directory: ./dist/packages/renderer
+      - run: npm publish
+        working-directory: ./dist/packages/text
+      - run: npm publish
+        working-directory: ./dist/packages/texture-packer
+      - run: npm publish
+        working-directory: ./dist/packages/ui
+      - run: npm publish
+        working-directory: ./dist/packages/webgl
+      - run: npm publish
+        working-directory: ./dist/packages/webgpu
       - run: npm run clean
