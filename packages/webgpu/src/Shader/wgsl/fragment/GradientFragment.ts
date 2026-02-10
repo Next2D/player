@@ -56,15 +56,12 @@ const GradientCalculation = `
             } else {
                 let dir = diff / lenDiff;
 
-                // Solve quadratic equation for unit circle intersection
-                let a_coef = dot(dir, dir);
+                // Solve quadratic equation for unit circle intersection (a=1 since dir is normalized)
                 let b_coef = 2.0 * dot(dir, focal);
                 let c_coef = dot(focal, focal) - 1.0;
-                let discriminant = b_coef * b_coef - 4.0 * a_coef * c_coef;
-                let x = (-b_coef + sqrt(max(discriminant, 0.0))) / (2.0 * a_coef);
-
-                let edgePoint = focal + dir * x;
-                t = distance(focal, coord) / distance(focal, edgePoint);
+                let discriminant = b_coef * b_coef - 4.0 * c_coef;
+                let x = (-b_coef + sqrt(max(discriminant, 0.0))) * 0.5;
+                t = lenDiff / abs(x);
             }
         }
     }

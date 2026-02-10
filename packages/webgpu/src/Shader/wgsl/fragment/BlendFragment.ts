@@ -65,43 +65,17 @@ export const DarkenBlendFragment = createBlendFragment(
 );
 
 export const OverlayBlendFragment = createBlendFragment(
-    `    var overlayRgb: vec3<f32>;
-    if (dstRgb.r < 0.5) {
-        overlayRgb.r = 2.0 * srcRgb.r * dstRgb.r;
-    } else {
-        overlayRgb.r = 1.0 - 2.0 * (1.0 - srcRgb.r) * (1.0 - dstRgb.r);
-    }
-    if (dstRgb.g < 0.5) {
-        overlayRgb.g = 2.0 * srcRgb.g * dstRgb.g;
-    } else {
-        overlayRgb.g = 1.0 - 2.0 * (1.0 - srcRgb.g) * (1.0 - dstRgb.g);
-    }
-    if (dstRgb.b < 0.5) {
-        overlayRgb.b = 2.0 * srcRgb.b * dstRgb.b;
-    } else {
-        overlayRgb.b = 1.0 - 2.0 * (1.0 - srcRgb.b) * (1.0 - dstRgb.b);
-    }
-    var c = vec4<f32>(overlayRgb, src.a * dst.a);`
+    `    let s = step(vec3<f32>(0.5), dstRgb);
+    let lo = 2.0 * srcRgb * dstRgb;
+    let hi = 1.0 - 2.0 * (1.0 - srcRgb) * (1.0 - dstRgb);
+    var c = vec4<f32>(mix(lo, hi, s), src.a * dst.a);`
 );
 
 export const HardLightBlendFragment = createBlendFragment(
-    `    var hardLightRgb: vec3<f32>;
-    if (srcRgb.r < 0.5) {
-        hardLightRgb.r = 2.0 * srcRgb.r * dstRgb.r;
-    } else {
-        hardLightRgb.r = 1.0 - 2.0 * (1.0 - srcRgb.r) * (1.0 - dstRgb.r);
-    }
-    if (srcRgb.g < 0.5) {
-        hardLightRgb.g = 2.0 * srcRgb.g * dstRgb.g;
-    } else {
-        hardLightRgb.g = 1.0 - 2.0 * (1.0 - srcRgb.g) * (1.0 - dstRgb.g);
-    }
-    if (srcRgb.b < 0.5) {
-        hardLightRgb.b = 2.0 * srcRgb.b * dstRgb.b;
-    } else {
-        hardLightRgb.b = 1.0 - 2.0 * (1.0 - srcRgb.b) * (1.0 - dstRgb.b);
-    }
-    var c = vec4<f32>(hardLightRgb, src.a * dst.a);`
+    `    let s = step(vec3<f32>(0.5), srcRgb);
+    let lo = 2.0 * srcRgb * dstRgb;
+    let hi = 1.0 - 2.0 * (1.0 - srcRgb) * (1.0 - dstRgb);
+    var c = vec4<f32>(mix(lo, hi, s), src.a * dst.a);`
 );
 
 export const DifferenceBlendFragment = createBlendFragment(

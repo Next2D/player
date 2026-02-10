@@ -232,20 +232,12 @@ describe("BlendModeShader", () =>
             expect(shader).toContain("@fragment");
         });
 
-        it("should implement overlay blend with 0.5 threshold", () =>
+        it("should implement branchless overlay blend with step on dst", () =>
         {
             const shader = BlendModeShader.getOverlayShader();
 
-            expect(shader).toContain("if (dstRgb.r < 0.5)");
-            expect(shader).toContain("if (dstRgb.g < 0.5)");
-            expect(shader).toContain("if (dstRgb.b < 0.5)");
-        });
-
-        it("should use overlayRgb variable", () =>
-        {
-            const shader = BlendModeShader.getOverlayShader();
-
-            expect(shader).toContain("overlayRgb");
+            expect(shader).toContain("step(vec3<f32>(0.5), dstRgb)");
+            expect(shader).toContain("mix(lo, hi, s)");
         });
     });
 
@@ -266,20 +258,12 @@ describe("BlendModeShader", () =>
             expect(shader).toContain("@fragment");
         });
 
-        it("should implement hard light blend with 0.5 threshold on source", () =>
+        it("should implement branchless hard light blend with step on src", () =>
         {
             const shader = BlendModeShader.getHardLightShader();
 
-            expect(shader).toContain("if (srcRgb.r < 0.5)");
-            expect(shader).toContain("if (srcRgb.g < 0.5)");
-            expect(shader).toContain("if (srcRgb.b < 0.5)");
-        });
-
-        it("should use hardLightRgb variable", () =>
-        {
-            const shader = BlendModeShader.getHardLightShader();
-
-            expect(shader).toContain("hardLightRgb");
+            expect(shader).toContain("step(vec3<f32>(0.5), srcRgb)");
+            expect(shader).toContain("mix(lo, hi, s)");
         });
     });
 
