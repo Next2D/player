@@ -38,8 +38,6 @@ src/
 ├── MovieClip.ts                 # Timeline-based animation object / タイムラインベースのアニメーションオブジェクト
 ├── Shape.ts                     # Lightweight graphics display object / 軽量なグラフィックス表示オブジェクト
 ├── Stage.ts                     # Root display object / ルート表示オブジェクト
-├── TextField.ts                 # Text display and input / テキスト表示と入力
-├── Video.ts                     # Video display object / ビデオ表示オブジェクト
 │
 ├── Graphics.ts                  # Vector drawing API / ベクター描画 API
 ├── Graphics/                    # Graphics implementation details / Graphics 実装の詳細
@@ -116,8 +114,6 @@ classDiagram
     DisplayObjectContainer <|-- Stage
     Sprite <|-- MovieClip
     DisplayObject <|-- Shape
-    DisplayObject <|-- TextField
-    DisplayObject <|-- Video
 
     class EventDispatcher {
         +addEventListener()
@@ -200,18 +196,6 @@ classDiagram
         +stageHeight: number
         +frameRate: number
         +color: number
-    }
-
-    class TextField {
-        +text: string
-        +htmlText: string
-        +textColor: number
-        +autoSize: string
-    }
-
-    class Video {
-        +videoWidth: number
-        +videoHeight: number
     }
 ```
 
@@ -378,8 +362,8 @@ This architecture ensures:
 - `@next2d/events` - Event system / イベントシステム
 - `@next2d/geom` - Geometric primitives / 幾何プリミティブ
 - `@next2d/filters` - Display filters / 表示フィルター
-- `@next2d/text` - Text rendering / テキストレンダリング
-- `@next2d/media` - Media playback / メディア再生
+- `@next2d/text` - Text rendering (includes TextField) / テキストレンダリング（TextFieldを含む）
+- `@next2d/media` - Media playback (includes Video) / メディア再生（Videoを含む）
 - `@next2d/net` - Network communication / ネットワーク通信
 - `@next2d/ui` - User interface components / ユーザーインターフェースコンポーネント
 

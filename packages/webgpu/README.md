@@ -41,13 +41,20 @@ src/
 ├── FillTexturePool.ts              # Fill/gradient texture pooling / 塗り/グラデーションテクスチャプーリング
 ├── SamplerCache.ts                 # GPU sampler caching / GPUサンプラーキャッシュ
 ├── Blend.ts                        # Blend mode handling / ブレンドモード処理
+├── Blend/
+│   └── BlendInstancedManager.ts    # Blend instanced rendering / ブレンドインスタンスレンダリング
 ├── Mask.ts                         # Stencil-based masking / ステンシルベースのマスキング
-├── Mesh.ts                         # Mesh generation for fills and strokes / 塗りと線のメッシュ生成
+├── Mesh/                           # Mesh generation / メッシュ生成
+│   ├── service/                    # Mesh services / メッシュサービス
+│   └── usecase/                    # Mesh use cases (fill, stroke, gradient stroke) / メッシュユースケース
 ├── PathCommand.ts                  # Path command processing / パスコマンド処理
 ├── Compute/                        # GPU compute shader execution / GPUコンピュートシェーダー実行
 │   ├── ComputePipelineManager.ts   # Compute pipeline management / コンピュートパイプライン管理
 │   └── ComputeExecuteBlurService.ts # Blur compute execution / ブラーコンピュート実行
 ├── Filter/                         # Filter implementations / フィルター実装
+│   ├── FilterGradientLUTCache.ts   # Gradient LUT cache / グラデーションLUTキャッシュ
+│   ├── FilterOffset.ts             # Filter offset calculation / フィルターオフセット計算
+│   ├── BitmapFilterShader.ts       # Bitmap filter shader / ビットマップフィルターシェーダー
 │   ├── BevelFilter/                # Bevel filter / ベベルフィルター
 │   ├── BlurFilter/                 # Blur filter / ブラーフィルター
 │   ├── ColorMatrixFilter/          # Color matrix filter / カラーマトリックスフィルター
@@ -57,19 +64,28 @@ src/
 │   ├── GlowFilter/                 # Glow filter / グローフィルター
 │   ├── GradientBevelFilter/        # Gradient bevel filter / グラデーションベベルフィルター
 │   └── GradientGlowFilter/         # Gradient glow filter / グラデーショングローフィルター
-├── Gradient/                       # Gradient LUT generation and caching / グラデーションLUT生成とキャッシュ
+├── Gradient/
+│   └── GradientLUTGenerator.ts     # Gradient LUT generation and caching / グラデーションLUT生成とキャッシュ
 ├── Shader/                         # WGSL shader system / WGSLシェーダーシステム
 │   ├── PipelineManager.ts          # Render pipeline management / レンダーパイプライン管理
 │   ├── ShaderSource.ts             # Shader source management / シェーダーソース管理
 │   ├── ShaderInstancedManager.ts   # Instanced rendering manager / インスタンスレンダリング管理
 │   ├── BlendModeShader.ts          # Blend mode shader definitions / ブレンドモードシェーダー定義
-│   ├── GradientLUTGenerator.ts     # Gradient LUT generation / グラデーションLUT生成
+│   ├── GradientLUTGenerator/        # Gradient LUT generation / グラデーションLUT生成
+│   │   ├── service/                # LUT generation services / LUT生成サービス
+│   │   └── usecase/                # LUT generation use cases / LUT生成ユースケース
 │   └── wgsl/                       # WGSL shader sources / WGSLシェーダーソース
 │       ├── vertex/                 # Vertex shaders / バーテックスシェーダー
 │       ├── fragment/               # Fragment shaders / フラグメントシェーダー
 │       └── common/                 # Shared WGSL utilities / 共有WGSLユーティリティ
 ├── Grid.ts                         # Grid system for rendering / レンダリング用グリッドシステム
-├── BezierConverter.ts              # Bezier curve conversion / ベジェ曲線変換
+├── BezierConverter/                # Bezier curve conversion / ベジェ曲線変換
+│   ├── BezierConverter.ts          # Main class / メインクラス
+│   ├── service/                    # BezierConverter services / サービス
+│   └── usecase/                    # BezierConverter use cases / ユースケース
+├── TexturePool/                    # Temporary texture pooling services / 一時テクスチャプーリングサービス
+│   ├── service/                    # TexturePool services / サービス
+│   └── usecase/                    # TexturePool use cases / ユースケース
 ├── WebGPUUtil.ts                   # WebGPU utility functions / WebGPUユーティリティ関数
 └── interface/                      # TypeScript interfaces / TypeScript インターフェース
 ```
