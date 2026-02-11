@@ -269,6 +269,10 @@ export class Context
     // Storage Buffer + Indirect Drawing を使用するかどうか
     private useOptimizedInstancing: boolean = true;
 
+    // リサイズ後にcanvasContextの再設定が必要かどうか
+    // ($resizeComplete()でcanvas.width/heightが設定された後、ensureMainTexture()でconfigure()を呼ぶ)
+    private $needsReconfigure: boolean = false;
+
     // Hot Path 用の事前割り当てバッファ
     private readonly $uniformData8 = new Float32Array(8);
     private readonly $scissorRect: { "x": number; "y": number; "w": number; "h": number } = { "x": 0, "y": 0, "w": 0, "h": 0 };
@@ -497,14 +501,9 @@ export class Context
         // マスク状態をリセット
         $resetMaskState();
 
-        // キャンバスのサイズを更新
-        const canvas = this.canvasContext.canvas;
-
-        // 型チェックを安全に実行（Worker環境対応）
-        if (canvas && "width" in canvas && "height" in canvas) {
-            (canvas as any).width = width;
-            (canvas as any).height = height;
-        }
+        // キャンバスのサイズ更新は$resizeComplete()に任せる
+        // WebGPUではcanvas.width/height設定でコンテキストが暗黙的にunconfigureされるため、
+        // 描画フレーム開始前に$resizeComplete()→configure()→getCurrentTexture()の順で実行する
 
         // WebGL版と同じ: スタックにあるアタッチメントも解放
         if (this.$stackAttachmentObject.length) {
@@ -553,12 +552,9 @@ export class Context
         // アンバインド（WebGL版と同じ）
         this.frameBufferManager.setCurrentAttachment(null);
 
-        // canvasContextを再設定
-        this.canvasContext.configure({
-            "device": this.device,
-            "format": this.preferredFormat,
-            "alphaMode": "premultiplied"
-        });
+        // canvasContextの再設定はensureMainTexture()で行う
+        // $resizeComplete()でcanvas.width/heightが設定された後にconfigure()→getCurrentTexture()を実行するため
+        this.$needsReconfigure = true;
 
         // リサイズ時にスワップチェーンテクスチャをリセット
         // 古いテクスチャ参照を解放して、次のフレームで新しいサイズのテクスチャを取得
@@ -2490,6 +2486,16 @@ export class Context
     private ensureMainTexture(): void
     {
         if (!this.mainTexture) {
+            // リサイズ後はcanvas.width/heightが$resizeComplete()で更新されているので
+            // ここでconfigure()を呼んでからgetCurrentTexture()を取得する
+            if (this.$needsReconfigure) {
+                this.canvasContext.configure({
+                    "device": this.device,
+                    "format": this.preferredFormat,
+                    "alphaMode": "premultiplied"
+                });
+                this.$needsReconfigure = false;
+            }
             this.mainTexture = this.canvasContext.getCurrentTexture();
             this.mainTextureView = this.mainTexture.createView();
         }
