@@ -594,4 +594,141 @@ describe("Context", () =>
             expect(context["renderPassEncoder"]).toBeNull();
         });
     });
+
+    describe("resize と reconfigure フロー", () =>
+    {
+        it("resize()後に$needsReconfigureがtrueになること", () =>
+        {
+            context.resize(800, 600);
+            expect(context["$needsReconfigure"]).toBe(true);
+        });
+
+        it("resize()後にmainTexture/mainTextureViewがnullになること", () =>
+        {
+            // beginFrameでmainTextureを取得
+            context.beginFrame();
+            expect(context["mainTexture"]).not.toBeNull();
+            expect(context["mainTextureView"]).not.toBeNull();
+
+            // endFrameしてからresizeする
+            context.endFrame();
+            context.resize(800, 600);
+
+            expect(context["mainTexture"]).toBeNull();
+            expect(context["mainTextureView"]).toBeNull();
+        });
+
+        it("resize()自体ではcanvasContext.configure()が呼ばれないこと", () =>
+        {
+            // コンストラクタで1回呼ばれているのでクリア
+            mockCanvasContext.configure.mockClear();
+
+            context.resize(800, 600);
+
+            // resize()内ではconfigure()を呼ばず、遅延実行する
+            expect(mockCanvasContext.configure).not.toHaveBeenCalled();
+        });
+
+        it("resize()後のbeginFrame()でconfigure()がgetCurrentTexture()の前に1回だけ呼ばれること", () =>
+        {
+            context.resize(800, 600);
+
+            // コンストラクタ分のconfigure/getCurrentTextureをクリア
+            mockCanvasContext.configure.mockClear();
+            mockCanvasContext.getCurrentTexture.mockClear();
+
+            // 呼び出し順序を記録
+            const callOrder: string[] = [];
+            mockCanvasContext.configure.mockImplementation(() =>
+            {
+                callOrder.push("configure");
+            });
+            mockCanvasContext.getCurrentTexture.mockImplementation(() =>
+            {
+                callOrder.push("getCurrentTexture");
+                return mockTexture;
+            });
+
+            context.beginFrame();
+
+            // configure()が1回だけ呼ばれる
+            expect(mockCanvasContext.configure).toHaveBeenCalledTimes(1);
+            // getCurrentTexture()が1回だけ呼ばれる
+            expect(mockCanvasContext.getCurrentTexture).toHaveBeenCalledTimes(1);
+            // configure()がgetCurrentTexture()の前に呼ばれている
+            expect(callOrder).toEqual(["configure", "getCurrentTexture"]);
+        });
+
+        it("resize()後のbeginFrame()でconfigure()に正しいパラメータが渡されること", () =>
+        {
+            context.resize(800, 600);
+            mockCanvasContext.configure.mockClear();
+
+            context.beginFrame();
+
+            expect(mockCanvasContext.configure).toHaveBeenCalledWith({
+                "device": mockDevice,
+                "format": "bgra8unorm",
+                "alphaMode": "premultiplied"
+            });
+        });
+
+        it("resize()後のbeginFrame()で$needsReconfigureがfalseに戻ること", () =>
+        {
+            context.resize(800, 600);
+            expect(context["$needsReconfigure"]).toBe(true);
+
+            context.beginFrame();
+            expect(context["$needsReconfigure"]).toBe(false);
+        });
+
+        it("2フレーム目のbeginFrame()ではconfigure()が呼ばれないこと", () =>
+        {
+            context.resize(800, 600);
+
+            // 1フレーム目
+            context.beginFrame();
+            context.endFrame();
+
+            // 2フレーム目開始前にmockをクリア
+            mockCanvasContext.configure.mockClear();
+            mockCanvasContext.getCurrentTexture.mockClear();
+
+            // 2フレーム目
+            context.beginFrame();
+
+            // configure()は呼ばれない（リサイズなし）
+            expect(mockCanvasContext.configure).not.toHaveBeenCalled();
+            // getCurrentTexture()は呼ばれる
+            expect(mockCanvasContext.getCurrentTexture).toHaveBeenCalledTimes(1);
+        });
+
+        it("resize()なしのbeginFrame()ではconfigure()が呼ばれないこと", () =>
+        {
+            // コンストラクタ分をクリア
+            mockCanvasContext.configure.mockClear();
+            mockCanvasContext.getCurrentTexture.mockClear();
+
+            context.beginFrame();
+
+            // リサイズしていないのでconfigure()は呼ばれない
+            expect(mockCanvasContext.configure).not.toHaveBeenCalled();
+            // getCurrentTexture()は呼ばれる
+            expect(mockCanvasContext.getCurrentTexture).toHaveBeenCalledTimes(1);
+        });
+
+        it("連続resize()でも最終的にconfigure()は1回だけ呼ばれること", () =>
+        {
+            // 2回連続でresizeする
+            context.resize(800, 600);
+            context.resize(1024, 768);
+
+            mockCanvasContext.configure.mockClear();
+
+            context.beginFrame();
+
+            // 2回resizeしてもconfigure()は1回だけ
+            expect(mockCanvasContext.configure).toHaveBeenCalledTimes(1);
+        });
+    });
 });

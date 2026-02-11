@@ -29,6 +29,14 @@ export const execute = (
     image_bitmaps: ImageBitmap[] | null
 ): void => {
 
+    // リサイズ完了処理を描画開始前に実行
+    // WebGPUではcanvas.width/height設定がコンテキストをunconfigureするため、
+    // beginFrame()→ensureMainTexture()でconfigure()→getCurrentTexture()する前に
+    // canvas.width/heightを確定させる必要がある
+    if ($isResize()) {
+        $resizeComplete();
+    }
+
     // reset transfer bounds
     $context.clearTransferBounds();
 
@@ -90,10 +98,6 @@ export const execute = (
     }
 
     $context.drawArraysInstanced();
-
-    if ($isResize()) {
-        $resizeComplete();
-    }
 
     $context.transferMainCanvas();
 };
