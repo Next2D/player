@@ -114,8 +114,9 @@ movieClip.addEventListener("exitFrame", function(event) {
 
 ### Basic Animation Control
 
-```javascript
+```typescript
 const { Loader } = next2d.display;
+const { PointerEvent } = next2d.events;
 const { URLRequest } = next2d.net;
 
 // Load MovieClip from JSON
@@ -129,7 +130,7 @@ stage.addChild(mc);
 mc.stop();
 
 // Play/pause on button click
-button.addEventListener("click", function() {
+button.addEventListener(PointerEvent.POINTER_DOWN, () => {
     if (mc.isPlaying) {
         mc.stop();
     } else {

@@ -1,6 +1,6 @@
 # Event System
 
-Next2D Player uses an event model similar to Flash Player.
+Next2D Player uses a three-phase event flow mechanism similar to the W3C DOM event model.
 
 ## EventDispatcher
 
@@ -10,33 +10,53 @@ The base class for all event-capable objects.
 
 Registers an event listener.
 
-```javascript
-displayObject.addEventListener("click", function(event) {
-    console.log("Clicked");
+```typescript
+const { PointerEvent } = next2d.events;
+
+displayObject.addEventListener(PointerEvent.POINTER_DOWN, (event) => {
+    console.log("Pointer pressed");
 });
 
 // Receive in capture phase
-displayObject.addEventListener("click", handler, true);
+displayObject.addEventListener(PointerEvent.POINTER_DOWN, handler, true);
 
 // Specify priority
-displayObject.addEventListener("click", handler, false, 10);
+displayObject.addEventListener(PointerEvent.POINTER_DOWN, handler, false, 10);
 ```
 
 ### removeEventListener(type, listener, useCapture)
 
 Removes an event listener.
 
-```javascript
-displayObject.removeEventListener("click", handler);
+```typescript
+displayObject.removeEventListener(PointerEvent.POINTER_DOWN, handler);
+```
+
+### removeAllEventListener(type, useCapture)
+
+Removes all event listeners of a specific type.
+
+```typescript
+displayObject.removeAllEventListener(PointerEvent.POINTER_DOWN);
 ```
 
 ### hasEventListener(type)
 
 Checks if a listener of the specified type is registered.
 
-```javascript
-if (displayObject.hasEventListener("click")) {
-    console.log("Click listener is registered");
+```typescript
+if (displayObject.hasEventListener(PointerEvent.POINTER_DOWN)) {
+    console.log("Pointer down listener is registered");
+}
+```
+
+### willTrigger(type)
+
+Checks if this object or any ancestor has a listener for the event type.
+
+```typescript
+if (displayObject.willTrigger(PointerEvent.POINTER_DOWN)) {
+    console.log("This object or an ancestor has a listener");
 }
 ```
 
@@ -44,7 +64,7 @@ if (displayObject.hasEventListener("click")) {
 
 Dispatches an event.
 
-```javascript
+```typescript
 const { Event } = next2d.events;
 
 const event = new Event("customEvent");
@@ -62,7 +82,6 @@ displayObject.dispatchEvent(event);
 | `currentTarget` | Object | Current listener target |
 | `eventPhase` | Number | Event phase |
 | `bubbles` | Boolean | Whether bubbles |
-| `cancelable` | Boolean | Whether cancelable |
 
 ### Methods
 
@@ -70,7 +89,6 @@ displayObject.dispatchEvent(event);
 |--------|-------------|
 | `stopPropagation()` | Stop propagation |
 | `stopImmediatePropagation()` | Stop propagation immediately |
-| `preventDefault()` | Cancel default behavior |
 
 ## Standard Event Types
 
@@ -83,8 +101,8 @@ displayObject.dispatchEvent(event);
 | `removed` | Removed from DisplayObjectContainer |
 | `removedFromStage` | Removed from Stage |
 
-```javascript
-sprite.addEventListener("addedToStage", function(event) {
+```typescript
+sprite.addEventListener("addedToStage", (event) => {
     console.log("Added to stage");
 });
 ```
@@ -97,8 +115,8 @@ sprite.addEventListener("addedToStage", function(event) {
 | `frameConstructed` | Frame construction complete |
 | `exitFrame` | When leaving frame |
 
-```javascript
-movieClip.addEventListener("enterFrame", function(event) {
+```typescript
+movieClip.addEventListener("enterFrame", (event) => {
     // Processing executed every frame
     updatePosition();
 });
@@ -111,59 +129,68 @@ movieClip.addEventListener("enterFrame", function(event) {
 | `complete` | Load complete |
 | `progress` | Load progress |
 | `ioError` | IO error |
+| `httpStatus` | HTTP status received |
 
-```javascript
+```typescript
 const { Loader } = next2d.display;
 const { URLRequest } = next2d.net;
 
 const loader = new Loader();
 
-loader.contentLoaderInfo.addEventListener("complete", function(event) {
-    const content = event.currentTarget.content;
-    stage.addChild(content);
-});
+// Loading with async/await
+await loader.load(new URLRequest("animation.json"));
+const content = loader.content;
+stage.addChild(content);
 
-loader.contentLoaderInfo.addEventListener("progress", function(event) {
+// Using progress events
+loader.contentLoaderInfo.addEventListener("progress", (event) => {
     const percent = (event.bytesLoaded / event.bytesTotal) * 100;
-    console.log(percent + "% loaded");
+    console.log(`${percent}% loaded`);
 });
-
-loader.load(new URLRequest("animation.json"));
 ```
 
-## Mouse Events
+## Pointer Events
 
-| Event | Description |
-|-------|-------------|
-| `click` | Click |
-| `doubleClick` | Double click |
-| `mouseDown` | Mouse button pressed |
-| `mouseUp` | Mouse button released |
-| `mouseMove` | Mouse move |
-| `mouseOver` | Mouse over |
-| `mouseOut` | Mouse out |
-| `rollOver` | Roll over |
-| `rollOut` | Roll out |
+PointerEvent handles pointer device interactions (mouse, pen, touch) in a unified way.
 
-```javascript
-sprite.addEventListener("click", function(event) {
-    console.log("Click position:", event.localX, event.localY);
+| Event | Constant | Description |
+|-------|----------|-------------|
+| `pointerDown` | `PointerEvent.POINTER_DOWN` | Button press started |
+| `pointerUp` | `PointerEvent.POINTER_UP` | Button released |
+| `pointerMove` | `PointerEvent.POINTER_MOVE` | Pointer coordinates changed |
+| `pointerOver` | `PointerEvent.POINTER_OVER` | Pointer entered hit test boundary |
+| `pointerOut` | `PointerEvent.POINTER_OUT` | Pointer left hit test boundary |
+| `pointerLeave` | `PointerEvent.POINTER_LEAVE` | Pointer left element area |
+| `pointerCancel` | `PointerEvent.POINTER_CANCEL` | Pointer interaction canceled |
+| `doubleClick` | `PointerEvent.DOUBLE_CLICK` | Double-click/tap occurred |
+
+```typescript
+const { PointerEvent } = next2d.events;
+
+sprite.addEventListener(PointerEvent.POINTER_DOWN, (event) => {
+    console.log("Pointer down:", event.localX, event.localY);
 });
 
-sprite.addEventListener("mouseMove", function(event) {
-    console.log("Mouse position:", event.stageX, event.stageY);
+sprite.addEventListener(PointerEvent.POINTER_MOVE, (event) => {
+    console.log("Pointer move:", event.stageX, event.stageY);
+});
+
+sprite.addEventListener(PointerEvent.DOUBLE_CLICK, (event) => {
+    console.log("Double click");
 });
 ```
 
 ## Keyboard Events
 
-| Event | Description |
-|-------|-------------|
-| `keyDown` | Key pressed |
-| `keyUp` | Key released |
+| Event | Constant | Description |
+|-------|----------|-------------|
+| `keyDown` | `KeyboardEvent.KEY_DOWN` | Key pressed |
+| `keyUp` | `KeyboardEvent.KEY_UP` | Key released |
 
-```javascript
-stage.addEventListener("keyDown", function(event) {
+```typescript
+const { KeyboardEvent } = next2d.events;
+
+stage.addEventListener(KeyboardEvent.KEY_DOWN, (event) => {
     console.log("Key code:", event.keyCode);
 
     switch (event.keyCode) {
@@ -177,9 +204,56 @@ stage.addEventListener("keyDown", function(event) {
 });
 ```
 
+## Focus Events
+
+| Event | Constant | Description |
+|-------|----------|-------------|
+| `focusIn` | `FocusEvent.FOCUS_IN` | Element received focus |
+| `focusOut` | `FocusEvent.FOCUS_OUT` | Element lost focus |
+
+```typescript
+const { FocusEvent } = next2d.events;
+
+textField.addEventListener(FocusEvent.FOCUS_IN, (event) => {
+    console.log("Received focus");
+});
+```
+
+## Wheel Events
+
+| Event | Constant | Description |
+|-------|----------|-------------|
+| `wheel` | `WheelEvent.WHEEL` | Mouse wheel rotated |
+
+```typescript
+const { WheelEvent } = next2d.events;
+
+stage.addEventListener(WheelEvent.WHEEL, (event) => {
+    console.log("Wheel rotated");
+});
+```
+
+## Video Events
+
+| Event | Constant | Description |
+|-------|----------|-------------|
+| `play` | `VideoEvent.PLAY` | Play requested |
+| `playing` | `VideoEvent.PLAYING` | Playback started |
+| `pause` | `VideoEvent.PAUSE` | Paused |
+| `seek` | `VideoEvent.SEEK` | Seek operation |
+
+## Job Events
+
+Events for Tween animations.
+
+| Event | Constant | Description |
+|-------|----------|-------------|
+| `update` | `JobEvent.UPDATE` | Property updated |
+| `stop` | `JobEvent.STOP` | Job stopped |
+
 ## Custom Events
 
-```javascript
+```typescript
 const { Event } = next2d.events;
 
 // Define custom event
@@ -189,7 +263,7 @@ const customEvent = new Event("gameOver", true, true);
 gameManager.dispatchEvent(customEvent);
 
 // Listen to event
-gameManager.addEventListener("gameOver", function(event) {
+gameManager.addEventListener("gameOver", (event) => {
     showGameOverScreen();
 });
 ```
@@ -198,16 +272,18 @@ gameManager.addEventListener("gameOver", function(event) {
 
 Events propagate in three phases:
 
-1. **Capture phase**: From root to target
-2. **Target phase**: Processed at target
-3. **Bubbling phase**: From target to root
+1. **Capture phase**: From root to target (eventPhase = 1)
+2. **Target phase**: Processed at target (eventPhase = 2)
+3. **Bubbling phase**: From target to root (eventPhase = 3)
 
-```javascript
+```typescript
+const { PointerEvent } = next2d.events;
+
 // Process in capture phase
-parent.addEventListener("click", handler, true);
+parent.addEventListener(PointerEvent.POINTER_DOWN, handler, true);
 
 // Process in bubbling phase (default)
-child.addEventListener("click", handler, false);
+child.addEventListener(PointerEvent.POINTER_DOWN, handler, false);
 ```
 
 ## Related

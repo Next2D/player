@@ -358,19 +358,18 @@ stage.addChild(shape);
 
 #### Bitmap Fill
 
-```javascript
-const { Shape, Loader } = next2d.display;
+```typescript
+const { Shape } = next2d.display;
 
-const loader = new Loader();
-await loader.load("texture.png");
+// Load image using Shape's load() method
+const textureShape = new Shape();
+await textureShape.load("texture.png");
 
-const bitmapData = loader.contentLoaderInfo
-    .content.bitmapData;
-
+// Use the loaded bitmapData for bitmap fill
 const shape = new Shape();
 const g = shape.graphics;
 
-g.beginBitmapFill(bitmapData, null, true, true);
+g.beginBitmapFill(textureShape.bitmapData, null, true, true);
 g.drawRect(0, 0, 400, 300);
 g.endFill();
 

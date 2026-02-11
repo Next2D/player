@@ -14,15 +14,15 @@ Next2D Player
 [![Twitter](https://img.shields.io/twitter/follow/Next2D?style=social)](https://twitter.com/Next2D)
 
 [日本語]  
-Next2D Playerは、WebGLのハードウェアアクセラレーションでグラフィックス処理負荷を軽減し、OffscreenCanvasのマルチスレッド処理で描画パフォーマンスを向上させています。  
+Next2D Playerは、WebGL/WebGPUのハードウェアアクセラレーションでグラフィックス処理負荷を軽減し、OffscreenCanvasのマルチスレッド処理で描画パフォーマンスを向上させています。  
 ベクター描画、Tweenアニメーション、テキスト、音声、動画など、さまざまな要素をサポートしているので、ゲーム制作、インタラクティブなデータビジュアライゼーション、クリエイティブなウェブアプリケーションなど、豊かな表現が必要とされるプロジェクトで活用が期待できます。  
   
 [English]  
-Next2D Player reduces graphics processing load with WebGL hardware acceleration and improves drawing performance with OffscreenCanvas multi-threaded processing.  
+Next2D Player reduces graphics processing load with WebGL/WebGPU hardware acceleration and improves drawing performance with OffscreenCanvas multi-threaded processing.  
 With support for vector rendering, tween animation, text, audio, video, and many other elements, Next2D Player can be used for game production, interactive data visualization, creative web applications, and other projects that require rich expression. The software is expected to be used in game production, interactive data visualization, creative web applications and other projects requiring rich expression.  
   
 [简体中文]  
-Next2D Player通过WebGL硬件加速降低了图形处理负载，通过OffscreenCanvas多线程处理提高了绘图性能。  
+Next2D Player通过WebGL/WebGPU硬件加速降低了图形处理负载，通过OffscreenCanvas多线程处理提高了绘图性能。  
 由于支持矢量绘图、Tween动画、文本、音频、视频和许多其他元素，它可用于游戏制作、交互式数据可视化、创意网络应用和其他需要丰富表达的项目。 该软件可用于需要丰富表现力的项目中。  
   
 ## Support

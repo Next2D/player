@@ -1,6 +1,6 @@
 # Tweenアニメーション
 
-Next2D Playerでは、プログラムによるアニメーション（Tween）を実装できます。位置、サイズ、透明度などのプロパティを滑らかに変化させることができます。
+Next2D Playerでは、`@next2d/ui`パッケージのTweenシステムを使用して、プログラムによるアニメーションを実装できます。位置、サイズ、透明度などのプロパティを滑らかに変化させることができます。
 
 ## Tweenの基本概念
 
@@ -10,194 +10,243 @@ flowchart LR
     Progress --> End["終了値"]
 
     subgraph Easing["イージング"]
-        Linear["Linear"]
-        EaseIn["EaseIn"]
-        EaseOut["EaseOut"]
-        EaseInOut["EaseInOut"]
+        Linear["linear"]
+        InQuad["inQuad"]
+        OutQuad["outQuad"]
+        InOutQuad["inOutQuad"]
     end
 ```
 
-## 基本的なTweenクラス
+## Tween.add()
+
+`Tween.add()`メソッドでアニメーション用の`Job`インスタンスを作成します。
 
 ```typescript
-class Tween {
-    private _target;
-    private _properties = {};
-    private _duration;
-    private _easing;
-    private _startTime = 0;
-    private _isPlaying = false;
-    private _onUpdate;
-    private _onComplete;
+const { Tween, Easing } = next2d.ui;
 
-    constructor(target, options) {
-        this._target = target;
-        this._duration = options.duration;
-        this._easing = options.easing || Easing.linear;
-        this._onUpdate = options.onUpdate;
-        this._onComplete = options.onComplete;
-    }
+const job = Tween.add(
+    target,    // アニメーション対象オブジェクト
+    from,      // 開始プロパティ値
+    to,        // 終了プロパティ値
+    delay,     // 遅延時間（秒、デフォルト: 0）
+    duration,  // アニメーション時間（秒、デフォルト: 1）
+    ease       // イージング関数（デフォルト: linear）
+);
 
-    to(properties) {
-        for (const key in properties) {
-            this._properties[key] = {
-                start: this._target[key],
-                end: properties[key]
-            };
-        }
-        return this;
-    }
-
-    play() {
-        this._startTime = Date.now();
-        this._isPlaying = true;
-        this._update();
-        return this;
-    }
-
-    private _update = () => {
-        if (!this._isPlaying) return;
-
-        const elapsed = Date.now() - this._startTime;
-        let progress = Math.min(1, elapsed / this._duration);
-        progress = this._easing(progress);
-
-        // プロパティを更新
-        for (const key in this._properties) {
-            const prop = this._properties[key];
-            this._target[key] = prop.start + (prop.end - prop.start) * progress;
-        }
-
-        if (this._onUpdate) {
-            this._onUpdate();
-        }
-
-        if (elapsed < this._duration) {
-            requestAnimationFrame(this._update);
-        } else {
-            this._isPlaying = false;
-            if (this._onComplete) {
-                this._onComplete();
-            }
-        }
-    };
-
-    stop() {
-        this._isPlaying = false;
-    }
-}
+// アニメーションを開始
+job.start();
 ```
+
+### パラメータ
+
+| パラメータ | 型 | デフォルト | 説明 |
+|-----------|------|----------|------|
+| `target` | any | - | アニメーション対象オブジェクト |
+| `from` | object | - | 開始プロパティ値 |
+| `to` | object | - | 終了プロパティ値 |
+| `delay` | number | 0 | アニメーション開始前の遅延（秒） |
+| `duration` | number | 1 | アニメーション継続時間（秒） |
+| `ease` | Function \| null | null | イージング関数（デフォルトはlinear） |
+
+### 戻り値
+
+`Job` - アニメーションジョブインスタンス
+
+## Job クラス
+
+Jobクラスは個別のアニメーションジョブを管理します。EventDispatcherを継承しています。
+
+### メソッド
+
+| メソッド | 戻り値 | 説明 |
+|---------|--------|------|
+| `start()` | void | アニメーションを開始します |
+| `stop()` | void | アニメーションを停止します |
+| `chain(nextJob: Job \| null)` | Job \| null | このジョブの完了後に別のジョブを連結します |
+
+### プロパティ
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `target` | any | 対象オブジェクト |
+| `from` | object | 開始値 |
+| `to` | object | 終了値 |
+| `delay` | number | 遅延時間 |
+| `duration` | number | 継続時間 |
+| `ease` | Function | イージング関数 |
+| `currentTime` | number | 現在のアニメーション時間 |
+| `nextJob` | Job \| null | 次の連結ジョブ |
+
+### イベント
+
+| イベント | 説明 |
+|----------|------|
+| `enterFrame` | 各アニメーションフレームで発行 |
+| `complete` | アニメーション完了時に発行 |
 
 ## イージング関数
 
+`Easing`クラスは、11種類のイージングタイプでIn、Out、InOutのバリエーションを含む32種類のイージング関数を提供します。
+
+### Linear / リニア
+- `Easing.linear` - 一定速度
+
+### Quadratic (Quad) / 二次関数
+- `Easing.inQuad` - ゼロ速度から加速
+- `Easing.outQuad` - ゼロ速度まで減速
+- `Easing.inOutQuad` - 中間まで加速、その後減速
+
+### Cubic / 三次関数
+- `Easing.inCubic` / `Easing.outCubic` / `Easing.inOutCubic`
+
+### Quartic (Quart) / 四次関数
+- `Easing.inQuart` / `Easing.outQuart` / `Easing.inOutQuart`
+
+### Quintic (Quint) / 五次関数
+- `Easing.inQuint` / `Easing.outQuint` / `Easing.inOutQuint`
+
+### Sinusoidal (Sine) / 正弦波
+- `Easing.inSine` / `Easing.outSine` / `Easing.inOutSine`
+
+### Exponential (Expo) / 指数関数
+- `Easing.inExpo` / `Easing.outExpo` / `Easing.inOutExpo`
+
+### Circular (Circ) / 円形
+- `Easing.inCirc` / `Easing.outCirc` / `Easing.inOutCirc`
+
+### Elastic / 弾性
+- `Easing.inElastic` / `Easing.outElastic` / `Easing.inOutElastic`
+
+### Back / バック
+- `Easing.inBack` / `Easing.outBack` / `Easing.inOutBack`
+
+### Bounce / バウンス
+- `Easing.inBounce` / `Easing.outBounce` / `Easing.inOutBounce`
+
+### イージング関数のパラメータ
+
+すべてのイージング関数は4つのパラメータを受け取ります：
+
 ```typescript
-const Easing = {
-    // 線形
-    linear: (t) => t,
-
-    // 加速
-    easeInQuad: (t) => t * t,
-    easeInCubic: (t) => t * t * t,
-    easeInQuart: (t) => t * t * t * t,
-
-    // 減速
-    easeOutQuad: (t) => t * (2 - t),
-    easeOutCubic: (t) => (--t) * t * t + 1,
-    easeOutQuart: (t) => 1 - (--t) * t * t * t,
-
-    // 加速→減速
-    easeInOutQuad: (t) =>
-        t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
-    easeInOutCubic: (t) =>
-        t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1,
-
-    // バウンス
-    easeOutBounce: (t) => {
-        if (t < 1 / 2.75) {
-            return 7.5625 * t * t;
-        } else if (t < 2 / 2.75) {
-            return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-        } else if (t < 2.5 / 2.75) {
-            return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
-        } else {
-            return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
-        }
-    },
-
-    // バック（行き過ぎて戻る）
-    easeOutBack: (t) => {
-        const c1 = 1.70158;
-        const c3 = c1 + 1;
-        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-    },
-
-    // エラスティック（ゴムのような動き）
-    easeOutElastic: (t) => {
-        if (t === 0 || t === 1) return t;
-        return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
-    }
-};
+ease(t: number, b: number, c: number, d: number): number
 ```
+
+- `t` - 現在の時間 (0 to d)
+- `b` - 開始値
+- `c` - 変化量 (終了値 - 開始値)
+- `d` - 継続時間
 
 ## 使用例
 
 ### 基本的な移動アニメーション
 
 ```typescript
-const { Sprite } = next2d.display;
+const { Tween, Easing } = next2d.ui;
 
 const sprite = new Sprite();
-sprite.x = 0;
-sprite.y = 100;
 stage.addChild(sprite);
 
-// 右に移動
-new Tween(sprite, { duration: 1000, easing: Easing.easeOutQuad })
-    .to({ x: 400 })
-    .play();
+// xを0から400に1秒かけて移動
+const job = Tween.add(
+    sprite,
+    { x: 0, y: 100 },
+    { x: 400, y: 100 },
+    0,
+    1,
+    Easing.outQuad
+);
+
+job.start();
 ```
 
 ### 複数プロパティの同時アニメーション
 
 ```typescript
+const { Tween, Easing } = next2d.ui;
+
 // 移動 + 拡大 + フェードイン
-new Tween(sprite, {
-    duration: 500,
-    easing: Easing.easeOutCubic
-})
-    .to({
-        x: 200,
-        y: 150,
-        scaleX: 2,
-        scaleY: 2,
-        alpha: 1
-    })
-    .play();
+const job = Tween.add(
+    sprite,
+    { x: 0, y: 0, scaleX: 1, scaleY: 1, alpha: 0 },
+    { x: 200, y: 150, scaleX: 2, scaleY: 2, alpha: 1 },
+    0,
+    0.5,
+    Easing.outCubic
+);
+
+job.start();
 ```
 
-### シーケンシャルアニメーション
+### アニメーションの連結 (chain)
 
 ```typescript
-// 連続したアニメーション
-function sequentialAnimation(sprite) {
-    new Tween(sprite, {
-        duration: 500,
-        onComplete: () => {
-            new Tween(sprite, {
-                duration: 300,
-                onComplete: () => {
-                    new Tween(sprite, { duration: 500 })
-                        .to({ alpha: 0 })
-                        .play();
-                }
-            })
-                .to({ scaleX: 1.5, scaleY: 1.5 })
-                .play();
-        }
-    })
-        .to({ y: 100 })
-        .play();
-}
+const { Tween, Easing } = next2d.ui;
+
+// 最初のアニメーション
+const job1 = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 100 },
+    0, 1,
+    Easing.outQuad
+);
+
+// 2つ目のアニメーション
+const job2 = Tween.add(
+    sprite,
+    { x: 100 },
+    { x: 200 },
+    0, 1,
+    Easing.inQuad
+);
+
+// 連結して実行
+job1.chain(job2);
+job1.start();
+```
+
+### 遅延付きアニメーション
+
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+// 0.5秒遅延後に1秒かけてフェードアウト
+const job = Tween.add(
+    sprite,
+    { alpha: 1 },
+    { alpha: 0 },
+    0.5,
+    1,
+    Easing.inQuad
+);
+
+job.start();
+```
+
+### イベントの活用
+
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+const job = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 300 },
+    0, 2,
+    Easing.inOutQuad
+);
+
+// フレームごとの処理
+job.addEventListener("enterFrame", (event) => {
+    console.log("進行中:", job.currentTime);
+});
+
+// 完了時の処理
+job.addEventListener("complete", (event) => {
+    console.log("アニメーション完了!");
+});
+
+job.start();
 ```
 
 ### ゲームでの活用例
@@ -205,166 +254,120 @@ function sequentialAnimation(sprite) {
 #### キャラクタージャンプ
 
 ```typescript
+const { Tween, Easing } = next2d.ui;
+
 function jump(character) {
     const startY = character.y;
     const jumpHeight = 100;
 
     // 上昇
-    new Tween(character, {
-        duration: 300,
-        easing: Easing.easeOutQuad,
-        onComplete: () => {
-            // 下降
-            new Tween(character, {
-                duration: 300,
-                easing: Easing.easeInQuad
-            })
-                .to({ y: startY })
-                .play();
-        }
-    })
-        .to({ y: startY - jumpHeight })
-        .play();
-}
-```
+    const upJob = Tween.add(
+        character,
+        { y: startY },
+        { y: startY - jumpHeight },
+        0, 0.3,
+        Easing.outQuad
+    );
 
-#### ダメージエフェクト
+    // 下降
+    const downJob = Tween.add(
+        character,
+        { y: startY - jumpHeight },
+        { y: startY },
+        0, 0.3,
+        Easing.inQuad
+    );
 
-```typescript
-function damageEffect(target) {
-    const originalX = target.x;
-    let shakeCount = 0;
-
-    // 点滅 + 揺れ
-    const shake = () => {
-        if (shakeCount >= 6) {
-            target.x = originalX;
-            target.alpha = 1;
-            return;
-        }
-
-        const offset = shakeCount % 2 === 0 ? 5 : -5;
-        target.x = originalX + offset;
-        target.alpha = shakeCount % 2 === 0 ? 0.5 : 1;
-        shakeCount++;
-
-        setTimeout(shake, 50);
-    };
-
-    shake();
-}
-```
-
-#### コイン取得エフェクト
-
-```typescript
-function coinCollectEffect(coin, targetY) {
-    // 上に飛んでフェードアウト
-    new Tween(coin, {
-        duration: 500,
-        easing: Easing.easeOutQuad,
-        onUpdate: () => {
-            // 回転
-            coin.rotation += 15;
-        },
-        onComplete: () => {
-            coin.parent?.removeChild(coin);
-        }
-    })
-        .to({
-            y: targetY,
-            alpha: 0,
-            scaleX: 0.5,
-            scaleY: 0.5
-        })
-        .play();
+    // 上昇 → 下降を連結
+    upJob.chain(downJob);
+    upJob.start();
 }
 ```
 
 #### UI表示アニメーション
 
 ```typescript
+const { Tween, Easing } = next2d.ui;
+
 function showPopup(popup) {
     popup.scaleX = 0;
     popup.scaleY = 0;
     popup.alpha = 0;
 
-    new Tween(popup, {
-        duration: 400,
-        easing: Easing.easeOutBack
-    })
-        .to({ scaleX: 1, scaleY: 1, alpha: 1 })
-        .play();
+    const job = Tween.add(
+        popup,
+        { scaleX: 0, scaleY: 0, alpha: 0 },
+        { scaleX: 1, scaleY: 1, alpha: 1 },
+        0, 0.4,
+        Easing.outBack
+    );
+
+    job.start();
 }
 
-function hidePopup(popup, onComplete) {
-    new Tween(popup, {
-        duration: 200,
-        easing: Easing.easeInQuad,
-        onComplete
-    })
-        .to({ scaleX: 0, scaleY: 0, alpha: 0 })
-        .play();
+function hidePopup(popup) {
+    const job = Tween.add(
+        popup,
+        { scaleX: 1, scaleY: 1, alpha: 1 },
+        { scaleX: 0, scaleY: 0, alpha: 0 },
+        0, 0.2,
+        Easing.inQuad
+    );
+
+    job.addEventListener("complete", () => {
+        popup.visible = false;
+    });
+
+    job.start();
 }
 ```
 
-## enterFrameを使った軽量Tween
+#### コイン取得エフェクト
 
 ```typescript
-// シンプルなenterFrameベースのTween
-function tweenTo(target, property, endValue, speed = 0.1) {
-    const handler = (event) => {
-        const current = target[property];
-        const diff = endValue - current;
+const { Tween, Easing } = next2d.ui;
 
-        if (Math.abs(diff) < 0.1) {
-            target[property] = endValue;
-            stage.removeEventListener("enterFrame", handler);
-        } else {
-            target[property] = current + diff * speed;
-        }
-    };
+function coinCollectEffect(coin) {
+    const job = Tween.add(
+        coin,
+        { y: coin.y, alpha: 1, scaleX: 1, scaleY: 1 },
+        { y: coin.y - 50, alpha: 0, scaleX: 0.5, scaleY: 0.5 },
+        0, 0.5,
+        Easing.outQuad
+    );
 
-    stage.addEventListener("enterFrame", handler);
+    job.addEventListener("enterFrame", () => {
+        coin.rotation += 15;
+    });
+
+    job.addEventListener("complete", () => {
+        coin.parent?.removeChild(coin);
+    });
+
+    job.start();
 }
-
-// 使用例
-tweenTo(sprite, "x", 300, 0.15);  // xを300に向かって移動
-tweenTo(sprite, "alpha", 0, 0.05);  // フェードアウト
 ```
 
-## カスタムイージング
+### 停止と制御
 
 ```typescript
-// ベジェ曲線ベースのイージング
-function bezierEasing(x1, y1, x2, y2) {
-    return (t) => {
-        // 簡易的な3次ベジェ補間
-        const cx = 3 * x1;
-        const bx = 3 * (x2 - x1) - cx;
-        const ax = 1 - cx - bx;
+const { Tween, Easing } = next2d.ui;
 
-        const cy = 3 * y1;
-        const by = 3 * (y2 - y1) - cy;
-        const ay = 1 - cy - by;
+const job = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 400 },
+    0, 2,
+    Easing.linear
+);
 
-        const sampleCurveY = (t) =>
-            ((ay * t + by) * t + cy) * t;
+job.start();
 
-        return sampleCurveY(t);
-    };
-}
-
-// CSS cubic-bezier相当
-const customEase = bezierEasing(0.25, 0.1, 0.25, 1.0);
+// 途中で停止
+stopButton.addEventListener("pointerDown", () => {
+    job.stop();
+});
 ```
-
-## パフォーマンスのヒント
-
-1. **requestAnimationFrame使用**: setTimeoutよりもスムーズ
-2. **プロパティ変更の最小化**: 必要なプロパティのみ更新
-3. **オブジェクトプール**: 大量のTweenはプールして再利用
-4. **完了後のクリーンアップ**: 不要なリスナーは削除
 
 ## 関連項目
 

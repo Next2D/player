@@ -124,8 +124,9 @@ classDiagram
 
 ### 作为按钮使用
 
-```javascript
+```typescript
 const { Sprite, Shape } = next2d.display;
+const { PointerEvent } = next2d.events;
 
 const button = new Sprite();
 
@@ -141,7 +142,7 @@ bg.graphics.endFill();
 button.addChild(bg);
 
 // 点击事件
-button.addEventListener("click", function() {
+button.addEventListener(PointerEvent.POINTER_DOWN, () => {
     console.log("按钮被点击");
 });
 
@@ -177,8 +178,9 @@ stage.addChild(maskShape);
 
 ### 拖放
 
-```javascript
+```typescript
 const { Sprite, Shape } = next2d.display;
+const { PointerEvent } = next2d.events;
 const { Rectangle } = next2d.geom;
 
 const draggable = new Sprite();
@@ -191,13 +193,13 @@ bg.graphics.endFill();
 draggable.addChild(bg);
 
 // 开始拖动
-draggable.addEventListener("mouseDown", function() {
+draggable.addEventListener(PointerEvent.POINTER_DOWN, () => {
     // 开始拖动（锁定中心，指定边界）
     draggable.startDrag(true, new Rectangle(0, 0, 400, 300));
 });
 
 // 停止拖动
-draggable.addEventListener("mouseUp", function() {
+draggable.addEventListener(PointerEvent.POINTER_UP, () => {
     draggable.stopDrag();
 });
 

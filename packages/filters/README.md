@@ -7,10 +7,10 @@
 ## Overview / 概要
 
 **English:**
-The `@next2d/filters` package provides GPU-accelerated visual effect filters for DisplayObjects in the Next2D player. This package includes a comprehensive set of bitmap filter effects that can be applied to any display object, offering high-performance image processing capabilities powered by WebGL.
+The `@next2d/filters` package provides GPU-accelerated visual effect filters for DisplayObjects in the Next2D player. This package includes a comprehensive set of bitmap filter effects that can be applied to any display object, offering high-performance image processing capabilities powered by WebGL/WebGPU.
 
 **日本語:**
-`@next2d/filters` パッケージは、Next2D プレイヤーの DisplayObject に対して GPU アクセラレーションによる視覚エフェクトフィルターを提供します。このパッケージには、任意の表示オブジェクトに適用可能なビットマップフィルター効果の包括的なセットが含まれており、WebGL によって高速化された画像処理機能を提供します。
+`@next2d/filters` パッケージは、Next2D プレイヤーの DisplayObject に対して GPU アクセラレーションによる視覚エフェクトフィルターを提供します。このパッケージには、任意の表示オブジェクトに適用可能なビットマップフィルター効果の包括的なセットが含まれており、WebGL/WebGPU によって高速化された画像処理機能を提供します。
 
 ## Installation / インストール
 
@@ -237,13 +237,13 @@ displayObject.filters = [blur, glow, shadow];
 ## Performance Considerations / パフォーマンスに関する考慮事項
 
 **English:**
-- All filters are GPU-accelerated using WebGL shaders
+- All filters are GPU-accelerated using WebGL/WebGPU shaders
 - Filter quality settings affect performance and visual output
 - Multiple filters are processed in sequence
 - Bounds calculation is optimized for minimal overhead
 
 **日本語:**
-- すべてのフィルターは WebGL シェーダーを使用して GPU アクセラレーションされています
+- すべてのフィルターは WebGL/WebGPU シェーダーを使用して GPU アクセラレーションされています
 - フィルターの品質設定はパフォーマンスと視覚出力に影響します
 - 複数のフィルターは順番に処理されます
 - バウンズ計算は最小限のオーバーヘッドに最適化されています

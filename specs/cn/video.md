@@ -39,7 +39,7 @@ classDiagram
 | `duration` | number | 0 | 总关键帧数（视频持续时间） |
 | `currentTime` | number | 0 | 当前关键帧（播放位置） |
 | `volume` | number | 1 | 音量，范围从 0（静音）到 1（最大音量） |
-| `loop` | boolean | false | 指定是否生成视频循环 |
+| `loop` | boolean | false | 指定是否循环播放视频 |
 | `autoPlay` | boolean | true | 设置自动视频播放 |
 | `smoothing` | boolean | true | 指定缩放时是否对视频进行平滑（插值） |
 | `paused` | boolean | true | 返回视频是否已暂停 |
@@ -60,17 +60,19 @@ classDiagram
 
 ### 基本视频播放
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
-// 创建 Video 对象
+// 创建 Video 对象（指定宽度、高度）
 const video = new Video(640, 360);
 
-// 设置视频源
+// 设置视频源（设置后自动开始加载）
 video.src = "video.mp4";
-video.autoPlay = true;
-video.loop = false;
-video.volume = 0.8;
+
+// 属性设置
+video.autoPlay = true;   // 自动播放
+video.loop = false;      // 不循环
+video.smoothing = true;  // 启用平滑
 
 // 添加到舞台
 stage.addChild(video);
@@ -78,43 +80,78 @@ stage.addChild(video);
 
 ### 播放控制
 
-```javascript
+```typescript
 const { Video } = next2d.media;
+const { PointerEvent } = next2d.events;
 
 const video = new Video(640, 360);
+video.autoPlay = false;  // 禁用自动播放
 video.src = "video.mp4";
+
 stage.addChild(video);
 
 // 播放按钮
-playButton.addEventListener("click", async function() {
+playButton.addEventListener(PointerEvent.POINTER_DOWN, async () => {
     await video.play();
 });
 
 // 暂停按钮
-pauseButton.addEventListener("click", function() {
+pauseButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.pause();
 });
 
 // 停止按钮（暂停并返回开始）
-stopButton.addEventListener("click", function() {
+stopButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.pause();
     video.seek(0);
 });
 
 // 快进 10 秒
-forwardButton.addEventListener("click", function() {
+forwardButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.seek(video.currentTime + 10);
 });
 
 // 后退 10 秒
-backButton.addEventListener("click", function() {
+backButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.seek(Math.max(0, video.currentTime - 10));
 });
 ```
 
+### 事件侦听
+
+```typescript
+const { Video } = next2d.media;
+const { VideoEvent } = next2d.events;
+
+const video = new Video(640, 360);
+
+// 播放事件
+video.addEventListener(VideoEvent.PLAY, () => {
+    console.log("播放请求");
+});
+
+// 开始播放事件
+video.addEventListener(VideoEvent.PLAYING, () => {
+    console.log("播放开始");
+});
+
+// 暂停事件
+video.addEventListener(VideoEvent.PAUSE, () => {
+    console.log("已暂停");
+});
+
+// 跳转事件
+video.addEventListener(VideoEvent.SEEK, () => {
+    console.log("跳转:", video.currentTime);
+});
+
+video.src = "video.mp4";
+stage.addChild(video);
+```
+
 ### 显示播放进度
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
 const video = new Video(640, 360);
@@ -122,7 +159,7 @@ video.src = "video.mp4";
 stage.addChild(video);
 
 // 每帧更新进度
-stage.addEventListener("enterFrame", function() {
+stage.addEventListener("enterFrame", () => {
     if (video.duration > 0) {
         const progress = video.currentTime / video.duration;
         progressBar.scaleX = progress;
@@ -139,129 +176,41 @@ function formatTime(seconds) {
 
 ### 音量控制
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
 const video = new Video(640, 360);
 video.src = "video.mp4";
 video.volume = 0.5;  // 50%
-stage.addChild(video);
 
-// 音量滑块
-volumeSlider.addEventListener("change", function(event) {
-    video.volume = event.target.value;  // 0.0 ~ 1.0
-});
+stage.addChild(video);
 
 // 静音切换
-let isMuted = false;
-let previousVolume = 0.5;
-
-muteButton.addEventListener("click", function() {
-    isMuted = !isMuted;
-    if (isMuted) {
-        previousVolume = video.volume;
-        video.volume = 0;
-    } else {
-        video.volume = previousVolume;
-    }
+muteButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
+    video.muted = !video.muted;
 });
 ```
 
-### 全屏支持
+### 循环播放
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
 const video = new Video(640, 360);
+video.loop = true;  // 启用循环
 video.src = "video.mp4";
-stage.addChild(video);
-
-// 全屏切换
-fullscreenButton.addEventListener("click", function() {
-    if (stage.displayState === "normal") {
-        // 切换到全屏
-        stage.displayState = "fullScreen";
-        video.width = stage.stageWidth;
-        video.height = stage.stageHeight;
-    } else {
-        // 返回正常显示
-        stage.displayState = "normal";
-        video.width = 640;
-        video.height = 360;
-    }
-});
-```
-
-### 视频播放器组件
-
-```javascript
-const { Sprite } = next2d.display;
-const { Video } = next2d.media;
-
-class VideoPlayer extends Sprite {
-    constructor(width, height) {
-        super();
-
-        this._width = width;
-        this._height = height;
-
-        this._video = new Video(width, height);
-        this.addChild(this._video);
-    }
-
-    load(url) {
-        this._video.src = url;
-    }
-
-    async play() {
-        await this._video.play();
-    }
-
-    pause() {
-        this._video.pause();
-    }
-
-    seek(time) {
-        this._video.seek(time);
-    }
-
-    get currentTime() {
-        return this._video.currentTime;
-    }
-
-    get duration() {
-        return this._video.duration || 0;
-    }
-
-    set volume(value) {
-        this._video.volume = value;
-    }
-
-    get volume() {
-        return this._video.volume;
-    }
-}
-
-// 使用
-const player = new VideoPlayer(640, 360);
-stage.addChild(player);
-player.load("video.mp4");
-player.play();
-```
-
-### 循环播放和自动播放
-
-```javascript
-const { Video } = next2d.media;
-
-const video = new Video(640, 360);
-video.src = "background-video.mp4";
-video.autoPlay = true;
-video.loop = true;
-video.volume = 0;  // 静音背景视频
 
 stage.addChild(video);
 ```
+
+## VideoEvent
+
+| 事件 | 说明 |
+|------|------|
+| `VideoEvent.PLAY` | 播放被请求时 |
+| `VideoEvent.PLAYING` | 播放开始时 |
+| `VideoEvent.PAUSE` | 暂停时 |
+| `VideoEvent.SEEK` | 跳转时 |
 
 ## 支持的格式
 

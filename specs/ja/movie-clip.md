@@ -116,6 +116,7 @@ movieClip.addEventListener("exitFrame", (event) => {
 
 ```typescript
 const { Loader, Sprite } = next2d.display;
+const { PointerEvent } = next2d.events;
 const { URLRequest } = next2d.net;
 
 // JSONからMovieClipを読み込み
@@ -129,7 +130,7 @@ stage.addChild(mc);
 mc.stop();
 
 // ボタンクリックで再生
-button.addEventListener("click", () => {
+button.addEventListener(PointerEvent.POINTER_DOWN, () => {
     if (mc.isPlaying) {
         mc.stop();
     } else {

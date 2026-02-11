@@ -1,6 +1,6 @@
 # Tween Animation
 
-Next2D Player allows you to implement programmatic animations (Tweens). You can smoothly animate properties like position, size, and transparency.
+Next2D Player allows you to implement programmatic animations using the Tween system from the `@next2d/ui` package. You can smoothly animate properties like position, size, and transparency.
 
 ## Basic Tween Concepts
 
@@ -10,363 +10,364 @@ flowchart LR
     Progress --> End["End Value"]
 
     subgraph Easing["Easing"]
-        Linear["Linear"]
-        EaseIn["EaseIn"]
-        EaseOut["EaseOut"]
-        EaseInOut["EaseInOut"]
+        Linear["linear"]
+        InQuad["inQuad"]
+        OutQuad["outQuad"]
+        InOutQuad["inOutQuad"]
     end
 ```
 
-## Basic Tween Class
+## Tween.add()
 
-```javascript
-class Tween {
-    constructor(target, options) {
-        this._target = target;
-        this._properties = {};
-        this._duration = options.duration;
-        this._easing = options.easing || Easing.linear;
-        this._startTime = 0;
-        this._isPlaying = false;
-        this._onUpdate = options.onUpdate;
-        this._onComplete = options.onComplete;
-    }
+Use the `Tween.add()` method to create a `Job` instance for animation.
 
-    to(properties) {
-        for (const key in properties) {
-            this._properties[key] = {
-                start: this._target[key],
-                end: properties[key]
-            };
-        }
-        return this;
-    }
+```typescript
+const { Tween, Easing } = next2d.ui;
 
-    play() {
-        this._startTime = Date.now();
-        this._isPlaying = true;
-        this._update();
-        return this;
-    }
+const job = Tween.add(
+    target,    // Target object to animate
+    from,      // Starting property values
+    to,        // Ending property values
+    delay,     // Delay in seconds (default: 0)
+    duration,  // Animation duration in seconds (default: 1)
+    ease       // Easing function (default: linear)
+);
 
-    _update() {
-        const self = this;
-        if (!this._isPlaying) return;
-
-        const elapsed = Date.now() - this._startTime;
-        let progress = Math.min(1, elapsed / this._duration);
-        progress = this._easing(progress);
-
-        // Update properties
-        for (const key in this._properties) {
-            const prop = this._properties[key];
-            this._target[key] = prop.start + (prop.end - prop.start) * progress;
-        }
-
-        if (this._onUpdate) {
-            this._onUpdate();
-        }
-
-        if (elapsed < this._duration) {
-            requestAnimationFrame(function() { self._update(); });
-        } else {
-            this._isPlaying = false;
-            if (this._onComplete) {
-                this._onComplete();
-            }
-        }
-    }
-
-    stop() {
-        this._isPlaying = false;
-    }
-}
+// Start the animation
+job.start();
 ```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `target` | any | - | Target object to animate |
+| `from` | object | - | Starting property values |
+| `to` | object | - | Ending property values |
+| `delay` | number | 0 | Delay before animation starts (seconds) |
+| `duration` | number | 1 | Animation duration (seconds) |
+| `ease` | Function \| null | null | Easing function (defaults to linear) |
+
+### Return Value
+
+`Job` - Animation job instance
+
+## Job Class
+
+The Job class manages individual animation jobs. It extends EventDispatcher.
+
+### Methods
+
+| Method | Return | Description |
+|--------|--------|-------------|
+| `start()` | void | Starts the animation |
+| `stop()` | void | Stops the animation |
+| `chain(nextJob: Job \| null)` | Job \| null | Chains another job to start after this one completes |
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `target` | any | Target object |
+| `from` | object | Start values |
+| `to` | object | End values |
+| `delay` | number | Delay time |
+| `duration` | number | Duration time |
+| `ease` | Function | Easing function |
+| `currentTime` | number | Current animation time |
+| `nextJob` | Job \| null | Next chained job |
+
+### Events
+
+| Event | Description |
+|-------|-------------|
+| `enterFrame` | Dispatched on each animation frame |
+| `complete` | Dispatched when animation completes |
 
 ## Easing Functions
 
-```javascript
-const Easing = {
-    // Linear
-    linear: function(t) { return t; },
+The `Easing` class provides 32 easing functions across 11 easing types with In, Out, and InOut variants.
 
-    // Acceleration
-    easeInQuad: function(t) { return t * t; },
-    easeInCubic: function(t) { return t * t * t; },
-    easeInQuart: function(t) { return t * t * t * t; },
+### Linear
+- `Easing.linear` - Constant speed
 
-    // Deceleration
-    easeOutQuad: function(t) { return t * (2 - t); },
-    easeOutCubic: function(t) { return (--t) * t * t + 1; },
-    easeOutQuart: function(t) { return 1 - (--t) * t * t * t; },
+### Quadratic (Quad)
+- `Easing.inQuad` - Accelerating from zero velocity
+- `Easing.outQuad` - Decelerating to zero velocity
+- `Easing.inOutQuad` - Acceleration until halfway, then deceleration
 
-    // Acceleration → Deceleration
-    easeInOutQuad: function(t) {
-        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    },
-    easeInOutCubic: function(t) {
-        return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-    },
+### Cubic
+- `Easing.inCubic` / `Easing.outCubic` / `Easing.inOutCubic`
 
-    // Bounce
-    easeOutBounce: function(t) {
-        if (t < 1 / 2.75) {
-            return 7.5625 * t * t;
-        } else if (t < 2 / 2.75) {
-            return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-        } else if (t < 2.5 / 2.75) {
-            return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
-        } else {
-            return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
-        }
-    },
+### Quartic (Quart)
+- `Easing.inQuart` / `Easing.outQuart` / `Easing.inOutQuart`
 
-    // Back (overshoots then returns)
-    easeOutBack: function(t) {
-        const c1 = 1.70158;
-        const c3 = c1 + 1;
-        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-    },
+### Quintic (Quint)
+- `Easing.inQuint` / `Easing.outQuint` / `Easing.inOutQuint`
 
-    // Elastic (rubber-like motion)
-    easeOutElastic: function(t) {
-        if (t === 0 || t === 1) return t;
-        return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
-    }
-};
+### Sinusoidal (Sine)
+- `Easing.inSine` / `Easing.outSine` / `Easing.inOutSine`
+
+### Exponential (Expo)
+- `Easing.inExpo` / `Easing.outExpo` / `Easing.inOutExpo`
+
+### Circular (Circ)
+- `Easing.inCirc` / `Easing.outCirc` / `Easing.inOutCirc`
+
+### Elastic
+- `Easing.inElastic` / `Easing.outElastic` / `Easing.inOutElastic`
+
+### Back
+- `Easing.inBack` / `Easing.outBack` / `Easing.inOutBack`
+
+### Bounce
+- `Easing.inBounce` / `Easing.outBounce` / `Easing.inOutBounce`
+
+### Easing Function Parameters
+
+All easing functions accept four parameters:
+
+```typescript
+ease(t: number, b: number, c: number, d: number): number
 ```
+
+- `t` - Current time (0 to d)
+- `b` - Beginning value
+- `c` - Change in value (end value - beginning value)
+- `d` - Duration
 
 ## Usage Examples
 
 ### Basic Movement Animation
 
-```javascript
-const { Sprite } = next2d.display;
+```typescript
+const { Tween, Easing } = next2d.ui;
 
 const sprite = new Sprite();
-sprite.x = 0;
-sprite.y = 100;
 stage.addChild(sprite);
 
-// Move right
-new Tween(sprite, { duration: 1000, easing: Easing.easeOutQuad })
-    .to({ x: 400 })
-    .play();
+// Move x from 0 to 400 over 1 second
+const job = Tween.add(
+    sprite,
+    { x: 0, y: 100 },
+    { x: 400, y: 100 },
+    0,
+    1,
+    Easing.outQuad
+);
+
+job.start();
 ```
 
 ### Simultaneous Multi-Property Animation
 
-```javascript
+```typescript
+const { Tween, Easing } = next2d.ui;
+
 // Move + Scale + Fade in
-new Tween(sprite, {
-    duration: 500,
-    easing: Easing.easeOutCubic
-})
-    .to({
-        x: 200,
-        y: 150,
-        scaleX: 2,
-        scaleY: 2,
-        alpha: 1
-    })
-    .play();
+const job = Tween.add(
+    sprite,
+    { x: 0, y: 0, scaleX: 1, scaleY: 1, alpha: 0 },
+    { x: 200, y: 150, scaleX: 2, scaleY: 2, alpha: 1 },
+    0,
+    0.5,
+    Easing.outCubic
+);
+
+job.start();
 ```
 
-### Sequential Animation
+### Chaining Animations
 
-```javascript
-// Consecutive animations
-function sequentialAnimation(sprite) {
-    new Tween(sprite, {
-        duration: 500,
-        onComplete: function() {
-            new Tween(sprite, {
-                duration: 300,
-                onComplete: function() {
-                    new Tween(sprite, { duration: 500 })
-                        .to({ alpha: 0 })
-                        .play();
-                }
-            })
-                .to({ scaleX: 1.5, scaleY: 1.5 })
-                .play();
-        }
-    })
-        .to({ y: 100 })
-        .play();
-}
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+// First animation
+const job1 = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 100 },
+    0, 1,
+    Easing.outQuad
+);
+
+// Second animation
+const job2 = Tween.add(
+    sprite,
+    { x: 100 },
+    { x: 200 },
+    0, 1,
+    Easing.inQuad
+);
+
+// Chain and start
+job1.chain(job2);
+job1.start();
+```
+
+### Delayed Animation
+
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+// Fade out over 1 second after 0.5 second delay
+const job = Tween.add(
+    sprite,
+    { alpha: 1 },
+    { alpha: 0 },
+    0.5,
+    1,
+    Easing.inQuad
+);
+
+job.start();
+```
+
+### Using Events
+
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+const job = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 300 },
+    0, 2,
+    Easing.inOutQuad
+);
+
+// Per-frame processing
+job.addEventListener("enterFrame", (event) => {
+    console.log("Progress:", job.currentTime);
+});
+
+// On completion
+job.addEventListener("complete", (event) => {
+    console.log("Animation complete!");
+});
+
+job.start();
 ```
 
 ### Game Examples
 
 #### Character Jump
 
-```javascript
+```typescript
+const { Tween, Easing } = next2d.ui;
+
 function jump(character) {
     const startY = character.y;
     const jumpHeight = 100;
 
     // Ascend
-    new Tween(character, {
-        duration: 300,
-        easing: Easing.easeOutQuad,
-        onComplete: function() {
-            // Descend
-            new Tween(character, {
-                duration: 300,
-                easing: Easing.easeInQuad
-            })
-                .to({ y: startY })
-                .play();
-        }
-    })
-        .to({ y: startY - jumpHeight })
-        .play();
-}
-```
+    const upJob = Tween.add(
+        character,
+        { y: startY },
+        { y: startY - jumpHeight },
+        0, 0.3,
+        Easing.outQuad
+    );
 
-#### Damage Effect
+    // Descend
+    const downJob = Tween.add(
+        character,
+        { y: startY - jumpHeight },
+        { y: startY },
+        0, 0.3,
+        Easing.inQuad
+    );
 
-```javascript
-function damageEffect(target) {
-    const originalX = target.x;
-    let shakeCount = 0;
-
-    // Flash + Shake
-    function shake() {
-        if (shakeCount >= 6) {
-            target.x = originalX;
-            target.alpha = 1;
-            return;
-        }
-
-        const offset = shakeCount % 2 === 0 ? 5 : -5;
-        target.x = originalX + offset;
-        target.alpha = shakeCount % 2 === 0 ? 0.5 : 1;
-        shakeCount++;
-
-        setTimeout(shake, 50);
-    }
-
-    shake();
-}
-```
-
-#### Coin Collect Effect
-
-```javascript
-function coinCollectEffect(coin, targetY) {
-    // Float up and fade out
-    new Tween(coin, {
-        duration: 500,
-        easing: Easing.easeOutQuad,
-        onUpdate: function() {
-            // Rotate
-            coin.rotation += 15;
-        },
-        onComplete: function() {
-            if (coin.parent) {
-                coin.parent.removeChild(coin);
-            }
-        }
-    })
-        .to({
-            y: targetY,
-            alpha: 0,
-            scaleX: 0.5,
-            scaleY: 0.5
-        })
-        .play();
+    // Chain ascend -> descend
+    upJob.chain(downJob);
+    upJob.start();
 }
 ```
 
 #### UI Animation
 
-```javascript
+```typescript
+const { Tween, Easing } = next2d.ui;
+
 function showPopup(popup) {
     popup.scaleX = 0;
     popup.scaleY = 0;
     popup.alpha = 0;
 
-    new Tween(popup, {
-        duration: 400,
-        easing: Easing.easeOutBack
-    })
-        .to({ scaleX: 1, scaleY: 1, alpha: 1 })
-        .play();
+    const job = Tween.add(
+        popup,
+        { scaleX: 0, scaleY: 0, alpha: 0 },
+        { scaleX: 1, scaleY: 1, alpha: 1 },
+        0, 0.4,
+        Easing.outBack
+    );
+
+    job.start();
 }
 
-function hidePopup(popup, onComplete) {
-    new Tween(popup, {
-        duration: 200,
-        easing: Easing.easeInQuad,
-        onComplete: onComplete
-    })
-        .to({ scaleX: 0, scaleY: 0, alpha: 0 })
-        .play();
+function hidePopup(popup) {
+    const job = Tween.add(
+        popup,
+        { scaleX: 1, scaleY: 1, alpha: 1 },
+        { scaleX: 0, scaleY: 0, alpha: 0 },
+        0, 0.2,
+        Easing.inQuad
+    );
+
+    job.addEventListener("complete", () => {
+        popup.visible = false;
+    });
+
+    job.start();
 }
 ```
 
-## Lightweight enterFrame-based Tween
+#### Coin Collect Effect
 
-```javascript
-// Simple enterFrame-based tween
-function tweenTo(target, property, endValue, speed) {
-    speed = speed || 0.1;
+```typescript
+const { Tween, Easing } = next2d.ui;
 
-    function handler(event) {
-        const current = target[property];
-        const diff = endValue - current;
+function coinCollectEffect(coin) {
+    const job = Tween.add(
+        coin,
+        { y: coin.y, alpha: 1, scaleX: 1, scaleY: 1 },
+        { y: coin.y - 50, alpha: 0, scaleX: 0.5, scaleY: 0.5 },
+        0, 0.5,
+        Easing.outQuad
+    );
 
-        if (Math.abs(diff) < 0.1) {
-            target[property] = endValue;
-            stage.removeEventListener("enterFrame", handler);
-        } else {
-            target[property] = current + diff * speed;
-        }
-    }
+    job.addEventListener("enterFrame", () => {
+        coin.rotation += 15;
+    });
 
-    stage.addEventListener("enterFrame", handler);
+    job.addEventListener("complete", () => {
+        coin.parent?.removeChild(coin);
+    });
+
+    job.start();
 }
-
-// Usage
-tweenTo(sprite, "x", 300, 0.15);  // Move x toward 300
-tweenTo(sprite, "alpha", 0, 0.05);  // Fade out
 ```
 
-## Custom Easing
+### Stopping and Control
 
-```javascript
-// Bezier curve based easing
-function bezierEasing(x1, y1, x2, y2) {
-    return function(t) {
-        // Simple cubic bezier interpolation
-        const cx = 3 * x1;
-        const bx = 3 * (x2 - x1) - cx;
-        const ax = 1 - cx - bx;
+```typescript
+const { Tween, Easing } = next2d.ui;
 
-        const cy = 3 * y1;
-        const by = 3 * (y2 - y1) - cy;
-        const ay = 1 - cy - by;
+const job = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 400 },
+    0, 2,
+    Easing.linear
+);
 
-        function sampleCurveY(t) {
-            return ((ay * t + by) * t + cy) * t;
-        }
+job.start();
 
-        return sampleCurveY(t);
-    };
-}
-
-// CSS cubic-bezier equivalent
-const customEase = bezierEasing(0.25, 0.1, 0.25, 1.0);
+// Stop midway
+stopButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
+    job.stop();
+});
 ```
-
-## Performance Tips
-
-1. **Use requestAnimationFrame**: Smoother than setTimeout
-2. **Minimize Property Changes**: Only update necessary properties
-3. **Object Pooling**: Pool and reuse tweens for many animations
-4. **Cleanup After Completion**: Remove unnecessary listeners
 
 ## Related
 

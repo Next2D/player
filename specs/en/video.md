@@ -39,7 +39,7 @@ classDiagram
 | `duration` | number | 0 | Total number of keyframes (video duration) |
 | `currentTime` | number | 0 | Current keyframe (playback position) |
 | `volume` | number | 1 | The volume, ranging from 0 (silent) to 1 (full volume) |
-| `loop` | boolean | false | Specifies whether to generate a video loop |
+| `loop` | boolean | false | Specifies whether to loop the video |
 | `autoPlay` | boolean | true | Setting up automatic video playback |
 | `smoothing` | boolean | true | Specifies whether the video should be smoothed (interpolated) when it is scaled |
 | `paused` | boolean | true | Returns whether the video is paused |
@@ -60,17 +60,19 @@ classDiagram
 
 ### Basic Video Playback
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
-// Create Video object
+// Create Video object (specify width, height)
 const video = new Video(640, 360);
 
-// Set video source
+// Set video source (loading starts automatically)
 video.src = "video.mp4";
-video.autoPlay = true;
-video.loop = false;
-video.volume = 0.8;
+
+// Property settings
+video.autoPlay = true;   // Auto play
+video.loop = false;      // No loop
+video.smoothing = true;  // Enable smoothing
 
 // Add to stage
 stage.addChild(video);
@@ -78,43 +80,78 @@ stage.addChild(video);
 
 ### Playback Control
 
-```javascript
+```typescript
 const { Video } = next2d.media;
+const { PointerEvent } = next2d.events;
 
 const video = new Video(640, 360);
+video.autoPlay = false;  // Disable auto play
 video.src = "video.mp4";
+
 stage.addChild(video);
 
 // Play button
-playButton.addEventListener("click", async function() {
+playButton.addEventListener(PointerEvent.POINTER_DOWN, async () => {
     await video.play();
 });
 
 // Pause button
-pauseButton.addEventListener("click", function() {
+pauseButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.pause();
 });
 
 // Stop button (pause and return to start)
-stopButton.addEventListener("click", function() {
+stopButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.pause();
     video.seek(0);
 });
 
 // Forward 10 seconds
-forwardButton.addEventListener("click", function() {
+forwardButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.seek(video.currentTime + 10);
 });
 
 // Back 10 seconds
-backButton.addEventListener("click", function() {
+backButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.seek(Math.max(0, video.currentTime - 10));
 });
 ```
 
+### Event Listening
+
+```typescript
+const { Video } = next2d.media;
+const { VideoEvent } = next2d.events;
+
+const video = new Video(640, 360);
+
+// Play event
+video.addEventListener(VideoEvent.PLAY, () => {
+    console.log("Play requested");
+});
+
+// Playing event
+video.addEventListener(VideoEvent.PLAYING, () => {
+    console.log("Playback started");
+});
+
+// Pause event
+video.addEventListener(VideoEvent.PAUSE, () => {
+    console.log("Paused");
+});
+
+// Seek event
+video.addEventListener(VideoEvent.SEEK, () => {
+    console.log("Seek:", video.currentTime);
+});
+
+video.src = "video.mp4";
+stage.addChild(video);
+```
+
 ### Displaying Playback Progress
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
 const video = new Video(640, 360);
@@ -122,7 +159,7 @@ video.src = "video.mp4";
 stage.addChild(video);
 
 // Update progress each frame
-stage.addEventListener("enterFrame", function() {
+stage.addEventListener("enterFrame", () => {
     if (video.duration > 0) {
         const progress = video.currentTime / video.duration;
         progressBar.scaleX = progress;
@@ -139,129 +176,41 @@ function formatTime(seconds) {
 
 ### Volume Control
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
 const video = new Video(640, 360);
 video.src = "video.mp4";
 video.volume = 0.5;  // 50%
-stage.addChild(video);
 
-// Volume slider
-volumeSlider.addEventListener("change", function(event) {
-    video.volume = event.target.value;  // 0.0 ~ 1.0
-});
+stage.addChild(video);
 
 // Mute toggle
-let isMuted = false;
-let previousVolume = 0.5;
-
-muteButton.addEventListener("click", function() {
-    isMuted = !isMuted;
-    if (isMuted) {
-        previousVolume = video.volume;
-        video.volume = 0;
-    } else {
-        video.volume = previousVolume;
-    }
+muteButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
+    video.muted = !video.muted;
 });
 ```
 
-### Fullscreen Support
+### Loop Playback
 
-```javascript
+```typescript
 const { Video } = next2d.media;
 
 const video = new Video(640, 360);
+video.loop = true;  // Enable loop
 video.src = "video.mp4";
-stage.addChild(video);
-
-// Fullscreen toggle
-fullscreenButton.addEventListener("click", function() {
-    if (stage.displayState === "normal") {
-        // Switch to fullscreen
-        stage.displayState = "fullScreen";
-        video.width = stage.stageWidth;
-        video.height = stage.stageHeight;
-    } else {
-        // Return to normal display
-        stage.displayState = "normal";
-        video.width = 640;
-        video.height = 360;
-    }
-});
-```
-
-### Video Player Component
-
-```javascript
-const { Sprite } = next2d.display;
-const { Video } = next2d.media;
-
-class VideoPlayer extends Sprite {
-    constructor(width, height) {
-        super();
-
-        this._width = width;
-        this._height = height;
-
-        this._video = new Video(width, height);
-        this.addChild(this._video);
-    }
-
-    load(url) {
-        this._video.src = url;
-    }
-
-    async play() {
-        await this._video.play();
-    }
-
-    pause() {
-        this._video.pause();
-    }
-
-    seek(time) {
-        this._video.seek(time);
-    }
-
-    get currentTime() {
-        return this._video.currentTime;
-    }
-
-    get duration() {
-        return this._video.duration || 0;
-    }
-
-    set volume(value) {
-        this._video.volume = value;
-    }
-
-    get volume() {
-        return this._video.volume;
-    }
-}
-
-// Usage
-const player = new VideoPlayer(640, 360);
-stage.addChild(player);
-player.load("video.mp4");
-player.play();
-```
-
-### Loop Playback and Auto Play
-
-```javascript
-const { Video } = next2d.media;
-
-const video = new Video(640, 360);
-video.src = "background-video.mp4";
-video.autoPlay = true;
-video.loop = true;
-video.volume = 0;  // Muted background video
 
 stage.addChild(video);
 ```
+
+## VideoEvent
+
+| Event | Description |
+|-------|-------------|
+| `VideoEvent.PLAY` | When play is requested |
+| `VideoEvent.PLAYING` | When playback starts |
+| `VideoEvent.PAUSE` | When paused |
+| `VideoEvent.SEEK` | When seeking |
 
 ## Supported Formats
 

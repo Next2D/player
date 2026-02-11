@@ -81,7 +81,8 @@ stage.addChild(video);
 ### 再生コントロール
 
 ```typescript
-const { Video, VideoEvent } = next2d.media;
+const { Video } = next2d.media;
+const { PointerEvent } = next2d.events;
 
 const video = new Video(640, 360);
 video.autoPlay = false;  // 自動再生を無効化
@@ -90,28 +91,28 @@ video.src = "video.mp4";
 stage.addChild(video);
 
 // 再生ボタン
-playButton.addEventListener("click", async () => {
+playButton.addEventListener(PointerEvent.POINTER_DOWN, async () => {
     await video.play();
 });
 
 // 一時停止ボタン
-pauseButton.addEventListener("click", () => {
+pauseButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.pause();
 });
 
 // 停止ボタン（先頭に戻って停止）
-stopButton.addEventListener("click", () => {
+stopButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.pause();
     video.seek(0);
 });
 
 // 10秒進む
-forwardButton.addEventListener("click", () => {
+forwardButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.seek(video.currentTime + 10);
 });
 
 // 10秒戻る
-backButton.addEventListener("click", () => {
+backButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.seek(Math.max(0, video.currentTime - 10));
 });
 ```
@@ -119,18 +120,18 @@ backButton.addEventListener("click", () => {
 ### イベントリスニング
 
 ```typescript
-const { Video, VideoEvent } = next2d.media;
+const { Video } = next2d.media;
+const { VideoEvent } = next2d.events;
 
 const video = new Video(640, 360);
 
-// メタデータ受信イベント
-video.addEventListener(VideoEvent.METADATA_RECEIVED, () => {
-    console.log("Duration:", video.duration);
-    console.log("Size:", video.videoWidth, "x", video.videoHeight);
-});
-
 // 再生イベント
 video.addEventListener(VideoEvent.PLAY, () => {
+    console.log("再生リクエスト");
+});
+
+// 再生開始イベント
+video.addEventListener(VideoEvent.PLAYING, () => {
     console.log("再生開始");
 });
 
@@ -144,11 +145,6 @@ video.addEventListener(VideoEvent.SEEK, () => {
     console.log("シーク:", video.currentTime);
 });
 
-// 終了イベント
-video.addEventListener(VideoEvent.ENDED, () => {
-    console.log("再生終了");
-});
-
 video.src = "video.mp4";
 stage.addChild(video);
 ```
@@ -156,7 +152,7 @@ stage.addChild(video);
 ### 再生進捗の表示
 
 ```typescript
-const { Video, VideoEvent } = next2d.media;
+const { Video } = next2d.media;
 
 const video = new Video(640, 360);
 video.src = "video.mp4";
@@ -189,13 +185,8 @@ video.volume = 0.5;  // 50%
 
 stage.addChild(video);
 
-// 音量スライダー
-volumeSlider.addEventListener("change", (event) => {
-    video.volume = event.target.value;  // 0.0 ~ 1.0
-});
-
 // ミュートトグル
-muteButton.addEventListener("click", () => {
+muteButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
     video.muted = !video.muted;
 });
 ```
@@ -216,11 +207,10 @@ stage.addChild(video);
 
 | イベント | 説明 |
 |----------|------|
-| `VideoEvent.METADATA_RECEIVED` | メタデータ受信時 |
-| `VideoEvent.PLAY` | 再生開始時 |
+| `VideoEvent.PLAY` | 再生がリクエストされた時 |
+| `VideoEvent.PLAYING` | 再生が開始された時 |
 | `VideoEvent.PAUSE` | 一時停止時 |
 | `VideoEvent.SEEK` | シーク時 |
-| `VideoEvent.ENDED` | 再生終了時 |
 
 ## サポートフォーマット
 
