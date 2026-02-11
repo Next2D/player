@@ -124,8 +124,9 @@ classDiagram
 
 ### Use as Button
 
-```javascript
+```typescript
 const { Sprite, Shape } = next2d.display;
+const { PointerEvent } = next2d.events;
 
 const button = new Sprite();
 
@@ -141,7 +142,7 @@ bg.graphics.endFill();
 button.addChild(bg);
 
 // Click event
-button.addEventListener("click", function() {
+button.addEventListener(PointerEvent.POINTER_DOWN, () => {
     console.log("Button clicked");
 });
 
@@ -177,8 +178,9 @@ stage.addChild(maskShape);
 
 ### Drag and Drop
 
-```javascript
+```typescript
 const { Sprite, Shape } = next2d.display;
+const { PointerEvent } = next2d.events;
 const { Rectangle } = next2d.geom;
 
 const draggable = new Sprite();
@@ -191,13 +193,13 @@ bg.graphics.endFill();
 draggable.addChild(bg);
 
 // Start drag
-draggable.addEventListener("mouseDown", function() {
+draggable.addEventListener(PointerEvent.POINTER_DOWN, () => {
     // Start dragging (lock center, specify bounds)
     draggable.startDrag(true, new Rectangle(0, 0, 400, 300));
 });
 
 // Stop drag
-draggable.addEventListener("mouseUp", function() {
+draggable.addEventListener(PointerEvent.POINTER_UP, () => {
     draggable.stopDrag();
 });
 

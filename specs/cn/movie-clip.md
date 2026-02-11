@@ -114,8 +114,9 @@ movieClip.addEventListener("exitFrame", function(event) {
 
 ### 基本动画控制
 
-```javascript
+```typescript
 const { Loader } = next2d.display;
+const { PointerEvent } = next2d.events;
 const { URLRequest } = next2d.net;
 
 // 从 JSON 加载 MovieClip
@@ -129,7 +130,7 @@ stage.addChild(mc);
 mc.stop();
 
 // 点击按钮播放/暂停
-button.addEventListener("click", function() {
+button.addEventListener(PointerEvent.POINTER_DOWN, () => {
     if (mc.isPlaying) {
         mc.stop();
     } else {

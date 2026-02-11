@@ -359,18 +359,17 @@ stage.addChild(shape);
 #### ビットマップ塗りつぶし
 
 ```typescript
-const { Shape, Loader } = next2d.display;
+const { Shape } = next2d.display;
 
-const loader = new Loader();
-await loader.load("texture.png");
+// Shapeのload()メソッドで画像を読み込み
+const textureShape = new Shape();
+await textureShape.load("texture.png");
 
-const bitmapData = loader.contentLoaderInfo
-    .content.bitmapData;
-
+// 読み込んだbitmapDataを使ってビットマップ塗りつぶし
 const shape = new Shape();
 const g = shape.graphics;
 
-g.beginBitmapFill(bitmapData, null, true, true);
+g.beginBitmapFill(textureShape.bitmapData, null, true, true);
 g.drawRect(0, 0, 400, 300);
 g.endFill();
 

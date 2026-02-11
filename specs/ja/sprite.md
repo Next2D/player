@@ -126,6 +126,7 @@ classDiagram
 
 ```typescript
 const { Sprite, Shape } = next2d.display;
+const { PointerEvent } = next2d.events;
 
 const button = new Sprite();
 
@@ -141,7 +142,7 @@ bg.graphics.endFill();
 button.addChild(bg);
 
 // クリックイベント
-button.addEventListener("click", () => {
+button.addEventListener(PointerEvent.POINTER_DOWN, () => {
     console.log("ボタンがクリックされました");
 });
 
@@ -179,6 +180,7 @@ stage.addChild(maskShape);
 
 ```typescript
 const { Sprite, Shape } = next2d.display;
+const { PointerEvent } = next2d.events;
 const { Rectangle } = next2d.geom;
 
 const draggable = new Sprite();
@@ -191,13 +193,13 @@ bg.graphics.endFill();
 draggable.addChild(bg);
 
 // ドラッグ開始
-draggable.addEventListener("mouseDown", () => {
+draggable.addEventListener(PointerEvent.POINTER_DOWN, () => {
     // ドラッグを開始（中心をロック、境界を指定）
     draggable.startDrag(true, new Rectangle(0, 0, 400, 300));
 });
 
 // ドラッグ終了
-draggable.addEventListener("mouseUp", () => {
+draggable.addEventListener(PointerEvent.POINTER_UP, () => {
     draggable.stopDrag();
 });
 

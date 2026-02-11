@@ -1,6 +1,6 @@
 # 补间动画
 
-Next2D Player 允许您实现程序化动画（补间）。您可以平滑地动画化位置、大小和透明度等属性。
+Next2D Player 使用 `@next2d/ui` 包的 Tween 系统来实现程序化动画。您可以平滑地动画化位置、大小和透明度等属性。
 
 ## 基本补间概念
 
@@ -10,363 +10,364 @@ flowchart LR
     Progress --> End["结束值"]
 
     subgraph Easing["缓动"]
-        Linear["线性"]
-        EaseIn["EaseIn"]
-        EaseOut["EaseOut"]
-        EaseInOut["EaseInOut"]
+        Linear["linear"]
+        InQuad["inQuad"]
+        OutQuad["outQuad"]
+        InOutQuad["inOutQuad"]
     end
 ```
 
-## 基本 Tween 类
+## Tween.add()
 
-```javascript
-class Tween {
-    constructor(target, options) {
-        this._target = target;
-        this._properties = {};
-        this._duration = options.duration;
-        this._easing = options.easing || Easing.linear;
-        this._startTime = 0;
-        this._isPlaying = false;
-        this._onUpdate = options.onUpdate;
-        this._onComplete = options.onComplete;
-    }
+使用 `Tween.add()` 方法创建动画用的 `Job` 实例。
 
-    to(properties) {
-        for (const key in properties) {
-            this._properties[key] = {
-                start: this._target[key],
-                end: properties[key]
-            };
-        }
-        return this;
-    }
+```typescript
+const { Tween, Easing } = next2d.ui;
 
-    play() {
-        this._startTime = Date.now();
-        this._isPlaying = true;
-        this._update();
-        return this;
-    }
+const job = Tween.add(
+    target,    // 动画目标对象
+    from,      // 起始属性值
+    to,        // 结束属性值
+    delay,     // 延迟时间（秒，默认：0）
+    duration,  // 动画持续时间（秒，默认：1）
+    ease       // 缓动函数（默认：linear）
+);
 
-    _update() {
-        const self = this;
-        if (!this._isPlaying) return;
-
-        const elapsed = Date.now() - this._startTime;
-        let progress = Math.min(1, elapsed / this._duration);
-        progress = this._easing(progress);
-
-        // 更新属性
-        for (const key in this._properties) {
-            const prop = this._properties[key];
-            this._target[key] = prop.start + (prop.end - prop.start) * progress;
-        }
-
-        if (this._onUpdate) {
-            this._onUpdate();
-        }
-
-        if (elapsed < this._duration) {
-            requestAnimationFrame(function() { self._update(); });
-        } else {
-            this._isPlaying = false;
-            if (this._onComplete) {
-                this._onComplete();
-            }
-        }
-    }
-
-    stop() {
-        this._isPlaying = false;
-    }
-}
+// 开始动画
+job.start();
 ```
+
+### 参数
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `target` | any | - | 动画目标对象 |
+| `from` | object | - | 起始属性值 |
+| `to` | object | - | 结束属性值 |
+| `delay` | number | 0 | 动画开始前的延迟（秒） |
+| `duration` | number | 1 | 动画持续时间（秒） |
+| `ease` | Function \| null | null | 缓动函数（默认为 linear） |
+
+### 返回值
+
+`Job` - 动画作业实例
+
+## Job 类
+
+Job 类管理各个动画作业。它继承自 EventDispatcher。
+
+### 方法
+
+| 方法 | 返回值 | 说明 |
+|------|--------|------|
+| `start()` | void | 开始动画 |
+| `stop()` | void | 停止动画 |
+| `chain(nextJob: Job \| null)` | Job \| null | 在此作业完成后连接另一个作业 |
+
+### 属性
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `target` | any | 目标对象 |
+| `from` | object | 起始值 |
+| `to` | object | 结束值 |
+| `delay` | number | 延迟时间 |
+| `duration` | number | 持续时间 |
+| `ease` | Function | 缓动函数 |
+| `currentTime` | number | 当前动画时间 |
+| `nextJob` | Job \| null | 下一个连接的作业 |
+
+### 事件
+
+| 事件 | 说明 |
+|------|------|
+| `enterFrame` | 每个动画帧触发 |
+| `complete` | 动画完成时触发 |
 
 ## 缓动函数
 
-```javascript
-const Easing = {
-    // 线性
-    linear: function(t) { return t; },
+`Easing` 类提供 11 种缓动类型的 In、Out、InOut 变体，共 32 种缓动函数。
 
-    // 加速
-    easeInQuad: function(t) { return t * t; },
-    easeInCubic: function(t) { return t * t * t; },
-    easeInQuart: function(t) { return t * t * t * t; },
+### Linear / 线性
+- `Easing.linear` - 匀速
 
-    // 减速
-    easeOutQuad: function(t) { return t * (2 - t); },
-    easeOutCubic: function(t) { return (--t) * t * t + 1; },
-    easeOutQuart: function(t) { return 1 - (--t) * t * t * t; },
+### Quadratic (Quad) / 二次函数
+- `Easing.inQuad` - 从零速度加速
+- `Easing.outQuad` - 减速到零速度
+- `Easing.inOutQuad` - 加速到中间，然后减速
 
-    // 加速 → 减速
-    easeInOutQuad: function(t) {
-        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    },
-    easeInOutCubic: function(t) {
-        return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
-    },
+### Cubic / 三次函数
+- `Easing.inCubic` / `Easing.outCubic` / `Easing.inOutCubic`
 
-    // 弹跳
-    easeOutBounce: function(t) {
-        if (t < 1 / 2.75) {
-            return 7.5625 * t * t;
-        } else if (t < 2 / 2.75) {
-            return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-        } else if (t < 2.5 / 2.75) {
-            return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
-        } else {
-            return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
-        }
-    },
+### Quartic (Quart) / 四次函数
+- `Easing.inQuart` / `Easing.outQuart` / `Easing.inOutQuart`
 
-    // Back（超调然后返回）
-    easeOutBack: function(t) {
-        const c1 = 1.70158;
-        const c3 = c1 + 1;
-        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-    },
+### Quintic (Quint) / 五次函数
+- `Easing.inQuint` / `Easing.outQuint` / `Easing.inOutQuint`
 
-    // 弹性（橡皮筋般的运动）
-    easeOutElastic: function(t) {
-        if (t === 0 || t === 1) return t;
-        return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1;
-    }
-};
+### Sinusoidal (Sine) / 正弦波
+- `Easing.inSine` / `Easing.outSine` / `Easing.inOutSine`
+
+### Exponential (Expo) / 指数函数
+- `Easing.inExpo` / `Easing.outExpo` / `Easing.inOutExpo`
+
+### Circular (Circ) / 圆形
+- `Easing.inCirc` / `Easing.outCirc` / `Easing.inOutCirc`
+
+### Elastic / 弹性
+- `Easing.inElastic` / `Easing.outElastic` / `Easing.inOutElastic`
+
+### Back
+- `Easing.inBack` / `Easing.outBack` / `Easing.inOutBack`
+
+### Bounce / 弹跳
+- `Easing.inBounce` / `Easing.outBounce` / `Easing.inOutBounce`
+
+### 缓动函数参数
+
+所有缓动函数接受 4 个参数：
+
+```typescript
+ease(t: number, b: number, c: number, d: number): number
 ```
+
+- `t` - 当前时间 (0 到 d)
+- `b` - 起始值
+- `c` - 变化量（结束值 - 起始值）
+- `d` - 持续时间
 
 ## 使用示例
 
 ### 基本移动动画
 
-```javascript
-const { Sprite } = next2d.display;
+```typescript
+const { Tween, Easing } = next2d.ui;
 
 const sprite = new Sprite();
-sprite.x = 0;
-sprite.y = 100;
 stage.addChild(sprite);
 
-// 向右移动
-new Tween(sprite, { duration: 1000, easing: Easing.easeOutQuad })
-    .to({ x: 400 })
-    .play();
+// 在 1 秒内将 x 从 0 移动到 400
+const job = Tween.add(
+    sprite,
+    { x: 0, y: 100 },
+    { x: 400, y: 100 },
+    0,
+    1,
+    Easing.outQuad
+);
+
+job.start();
 ```
 
 ### 同时多属性动画
 
-```javascript
+```typescript
+const { Tween, Easing } = next2d.ui;
+
 // 移动 + 缩放 + 淡入
-new Tween(sprite, {
-    duration: 500,
-    easing: Easing.easeOutCubic
-})
-    .to({
-        x: 200,
-        y: 150,
-        scaleX: 2,
-        scaleY: 2,
-        alpha: 1
-    })
-    .play();
+const job = Tween.add(
+    sprite,
+    { x: 0, y: 0, scaleX: 1, scaleY: 1, alpha: 0 },
+    { x: 200, y: 150, scaleX: 2, scaleY: 2, alpha: 1 },
+    0,
+    0.5,
+    Easing.outCubic
+);
+
+job.start();
 ```
 
-### 顺序动画
+### 动画连接 (chain)
 
-```javascript
-// 连续动画
-function sequentialAnimation(sprite) {
-    new Tween(sprite, {
-        duration: 500,
-        onComplete: function() {
-            new Tween(sprite, {
-                duration: 300,
-                onComplete: function() {
-                    new Tween(sprite, { duration: 500 })
-                        .to({ alpha: 0 })
-                        .play();
-                }
-            })
-                .to({ scaleX: 1.5, scaleY: 1.5 })
-                .play();
-        }
-    })
-        .to({ y: 100 })
-        .play();
-}
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+// 第一个动画
+const job1 = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 100 },
+    0, 1,
+    Easing.outQuad
+);
+
+// 第二个动画
+const job2 = Tween.add(
+    sprite,
+    { x: 100 },
+    { x: 200 },
+    0, 1,
+    Easing.inQuad
+);
+
+// 连接并执行
+job1.chain(job2);
+job1.start();
+```
+
+### 延迟动画
+
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+// 延迟 0.5 秒后在 1 秒内淡出
+const job = Tween.add(
+    sprite,
+    { alpha: 1 },
+    { alpha: 0 },
+    0.5,
+    1,
+    Easing.inQuad
+);
+
+job.start();
+```
+
+### 使用事件
+
+```typescript
+const { Tween, Easing } = next2d.ui;
+
+const job = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 300 },
+    0, 2,
+    Easing.inOutQuad
+);
+
+// 每帧处理
+job.addEventListener("enterFrame", (event) => {
+    console.log("进行中:", job.currentTime);
+});
+
+// 完成时处理
+job.addEventListener("complete", (event) => {
+    console.log("动画完成!");
+});
+
+job.start();
 ```
 
 ### 游戏示例
 
 #### 角色跳跃
 
-```javascript
+```typescript
+const { Tween, Easing } = next2d.ui;
+
 function jump(character) {
     const startY = character.y;
     const jumpHeight = 100;
 
     // 上升
-    new Tween(character, {
-        duration: 300,
-        easing: Easing.easeOutQuad,
-        onComplete: function() {
-            // 下降
-            new Tween(character, {
-                duration: 300,
-                easing: Easing.easeInQuad
-            })
-                .to({ y: startY })
-                .play();
-        }
-    })
-        .to({ y: startY - jumpHeight })
-        .play();
-}
-```
+    const upJob = Tween.add(
+        character,
+        { y: startY },
+        { y: startY - jumpHeight },
+        0, 0.3,
+        Easing.outQuad
+    );
 
-#### 伤害效果
+    // 下降
+    const downJob = Tween.add(
+        character,
+        { y: startY - jumpHeight },
+        { y: startY },
+        0, 0.3,
+        Easing.inQuad
+    );
 
-```javascript
-function damageEffect(target) {
-    const originalX = target.x;
-    let shakeCount = 0;
-
-    // 闪烁 + 震动
-    function shake() {
-        if (shakeCount >= 6) {
-            target.x = originalX;
-            target.alpha = 1;
-            return;
-        }
-
-        const offset = shakeCount % 2 === 0 ? 5 : -5;
-        target.x = originalX + offset;
-        target.alpha = shakeCount % 2 === 0 ? 0.5 : 1;
-        shakeCount++;
-
-        setTimeout(shake, 50);
-    }
-
-    shake();
-}
-```
-
-#### 金币收集效果
-
-```javascript
-function coinCollectEffect(coin, targetY) {
-    // 向上浮动并淡出
-    new Tween(coin, {
-        duration: 500,
-        easing: Easing.easeOutQuad,
-        onUpdate: function() {
-            // 旋转
-            coin.rotation += 15;
-        },
-        onComplete: function() {
-            if (coin.parent) {
-                coin.parent.removeChild(coin);
-            }
-        }
-    })
-        .to({
-            y: targetY,
-            alpha: 0,
-            scaleX: 0.5,
-            scaleY: 0.5
-        })
-        .play();
+    // 连接上升 → 下降
+    upJob.chain(downJob);
+    upJob.start();
 }
 ```
 
 #### UI 动画
 
-```javascript
+```typescript
+const { Tween, Easing } = next2d.ui;
+
 function showPopup(popup) {
     popup.scaleX = 0;
     popup.scaleY = 0;
     popup.alpha = 0;
 
-    new Tween(popup, {
-        duration: 400,
-        easing: Easing.easeOutBack
-    })
-        .to({ scaleX: 1, scaleY: 1, alpha: 1 })
-        .play();
+    const job = Tween.add(
+        popup,
+        { scaleX: 0, scaleY: 0, alpha: 0 },
+        { scaleX: 1, scaleY: 1, alpha: 1 },
+        0, 0.4,
+        Easing.outBack
+    );
+
+    job.start();
 }
 
-function hidePopup(popup, onComplete) {
-    new Tween(popup, {
-        duration: 200,
-        easing: Easing.easeInQuad,
-        onComplete: onComplete
-    })
-        .to({ scaleX: 0, scaleY: 0, alpha: 0 })
-        .play();
+function hidePopup(popup) {
+    const job = Tween.add(
+        popup,
+        { scaleX: 1, scaleY: 1, alpha: 1 },
+        { scaleX: 0, scaleY: 0, alpha: 0 },
+        0, 0.2,
+        Easing.inQuad
+    );
+
+    job.addEventListener("complete", () => {
+        popup.visible = false;
+    });
+
+    job.start();
 }
 ```
 
-## 基于 enterFrame 的轻量级补间
+#### 金币收集效果
 
-```javascript
-// 简单的基于 enterFrame 的补间
-function tweenTo(target, property, endValue, speed) {
-    speed = speed || 0.1;
+```typescript
+const { Tween, Easing } = next2d.ui;
 
-    function handler(event) {
-        const current = target[property];
-        const diff = endValue - current;
+function coinCollectEffect(coin) {
+    const job = Tween.add(
+        coin,
+        { y: coin.y, alpha: 1, scaleX: 1, scaleY: 1 },
+        { y: coin.y - 50, alpha: 0, scaleX: 0.5, scaleY: 0.5 },
+        0, 0.5,
+        Easing.outQuad
+    );
 
-        if (Math.abs(diff) < 0.1) {
-            target[property] = endValue;
-            stage.removeEventListener("enterFrame", handler);
-        } else {
-            target[property] = current + diff * speed;
-        }
-    }
+    job.addEventListener("enterFrame", () => {
+        coin.rotation += 15;
+    });
 
-    stage.addEventListener("enterFrame", handler);
+    job.addEventListener("complete", () => {
+        coin.parent?.removeChild(coin);
+    });
+
+    job.start();
 }
-
-// 使用
-tweenTo(sprite, "x", 300, 0.15);  // 将 x 移向 300
-tweenTo(sprite, "alpha", 0, 0.05);  // 淡出
 ```
 
-## 自定义缓动
+### 停止和控制
 
-```javascript
-// 基于贝塞尔曲线的缓动
-function bezierEasing(x1, y1, x2, y2) {
-    return function(t) {
-        // 简单的三次贝塞尔插值
-        const cx = 3 * x1;
-        const bx = 3 * (x2 - x1) - cx;
-        const ax = 1 - cx - bx;
+```typescript
+const { Tween, Easing } = next2d.ui;
 
-        const cy = 3 * y1;
-        const by = 3 * (y2 - y1) - cy;
-        const ay = 1 - cy - by;
+const job = Tween.add(
+    sprite,
+    { x: 0 },
+    { x: 400 },
+    0, 2,
+    Easing.linear
+);
 
-        function sampleCurveY(t) {
-            return ((ay * t + by) * t + cy) * t;
-        }
+job.start();
 
-        return sampleCurveY(t);
-    };
-}
-
-// CSS cubic-bezier 等效
-const customEase = bezierEasing(0.25, 0.1, 0.25, 1.0);
+// 中途停止
+stopButton.addEventListener(PointerEvent.POINTER_DOWN, () => {
+    job.stop();
+});
 ```
-
-## 性能提示
-
-1. **使用 requestAnimationFrame**：比 setTimeout 更流畅
-2. **最小化属性更改**：只更新必要的属性
-3. **对象池**：为多个动画池化和重用补间
-4. **完成后清理**：移除不必要的侦听器
 
 ## 相关
 
