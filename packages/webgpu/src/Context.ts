@@ -2746,10 +2746,11 @@ export class Context
      */
     async createImageBitmap (width: number, height: number): Promise<ImageBitmap>
     {
-        // アトラステクスチャから現在の描画内容を取得
-        const attachment = $getAtlasAttachmentObject();
-        if (!attachment) {
-            throw new Error("[WebGPU] Atlas attachment not found");
+        // メインアタッチメントから合成済み描画結果を取得
+        // （drawArraysInstanced()がアトラスからメインアタッチメントへ合成済み）
+        const mainAttachment = this.$mainAttachmentObject;
+        if (!mainAttachment || !mainAttachment.texture) {
+            throw new Error("[WebGPU] Main attachment not found");
         }
 
         // 描画を完了
@@ -2769,17 +2770,13 @@ export class Context
             "usage": GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
 
-        // コマンドエンコーダーを作成
-        const commandEncoder = this.device.createCommandEncoder();
+        // フレームのcommandEncoderにcopyコマンドを追加
+        // 描画コマンドの後にコピーが実行されるため、正しい順序が保証される
+        this.ensureCommandEncoder();
 
-        // アトラステクスチャからピクセルバッファにコピー
-        if (!attachment.texture) {
-            throw new Error("Attachment texture is null");
-        }
-
-        commandEncoder.copyTextureToBuffer(
+        this.commandEncoder!.copyTextureToBuffer(
             {
-                "texture": attachment.texture.resource,
+                "texture": mainAttachment.texture.resource,
                 "mipLevel": 0,
                 "origin": { "x": 0, "y": 0, "z": 0 }
             },
@@ -2795,23 +2792,36 @@ export class Context
             }
         );
 
-        // コマンドを送信
-        this.device.queue.submit([commandEncoder.finish()]);
+        // endFrame()で描画コマンドとcopyコマンドを一括submit
+        // swap chain textureの参照もクリアされる
+        this.endFrame();
 
         // バッファをマップして読み込み
         await pixelBuffer.mapAsync(GPUMapMode.READ);
         const mappedRange = pixelBuffer.getMappedRange();
         const pixels = new Uint8Array(mappedRange);
 
-        // ピクセルデータをコピー（アライメントを考慮）
+        // メインアタッチメントはbgra8unormフォーマットのため、
+        // ImageData（RGBA）用にB⇔Rチャンネルをスワップしつつコピー
+        const isBgra = this.preferredFormat === "bgra8unorm";
         const resultPixels = new Uint8Array(width * height * 4);
+        const rowBytes = width * 4;
         for (let y = 0; y < height; y++) {
             const srcOffset = y * bytesPerRow;
-            const dstOffset = y * width * 4;
-            resultPixels.set(
-                pixels.subarray(srcOffset, srcOffset + width * 4),
-                dstOffset
-            );
+            const dstOffset = y * rowBytes;
+            if (isBgra) {
+                for (let x = 0; x < rowBytes; x += 4) {
+                    resultPixels[dstOffset + x    ] = pixels[srcOffset + x + 2]; // R ← B
+                    resultPixels[dstOffset + x + 1] = pixels[srcOffset + x + 1]; // G
+                    resultPixels[dstOffset + x + 2] = pixels[srcOffset + x    ]; // B ← R
+                    resultPixels[dstOffset + x + 3] = pixels[srcOffset + x + 3]; // A
+                }
+            } else {
+                resultPixels.set(
+                    pixels.subarray(srcOffset, srcOffset + rowBytes),
+                    dstOffset
+                );
+            }
         }
 
         pixelBuffer.unmap();
