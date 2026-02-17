@@ -55,7 +55,7 @@ export class Sprite extends DisplayObjectContainer
      * @type {Sprite|null}
      * @private
      */
-    public hitArea: ISprite<any> | null;
+    public hitArea: ISprite<Sprite> | null;
 
     /**
      * @type {SoundTransform|null}
