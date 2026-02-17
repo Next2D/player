@@ -53,9 +53,9 @@ export class Sprite extends DisplayObjectContainer
      *              Designates another sprite to serve as the hit area for a sprite.
      *
      * @type {Sprite|null}
-     * @private
+     * @public
      */
-    public hitArea: ISprite<any> | null;
+    public hitArea: ISprite<Sprite> | null;
 
     /**
      * @type {SoundTransform|null}
