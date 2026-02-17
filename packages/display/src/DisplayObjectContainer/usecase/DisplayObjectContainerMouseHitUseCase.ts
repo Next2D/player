@@ -98,6 +98,7 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
     // fixed logic
     if (display_object_container.isSprite
         && (display_object_container as unknown as Sprite).hitArea
+        && ((display_object_container as unknown as Sprite).hitArea as unknown as Sprite).isSprite
     ) {
         const hitTest = execute(
             (display_object_container as unknown as Sprite).hitArea as unknown as DisplayObjectContainer,
