@@ -496,7 +496,7 @@ describe("DisplayObjectContainerMouseHitUseCase.js test", () =>
 
         const container = new DisplayObjectContainer();
         const textField = new TextField();
-        textField.type = "dynamic";
+        textField.type = "static";
         container.addChild(textField);
 
         const hitObject = createHitObject(50, 50);
@@ -529,8 +529,6 @@ describe("DisplayObjectContainerMouseHitUseCase.js test", () =>
 
         const container = new DisplayObjectContainer();
         const movieClip = new MovieClip();
-        movieClip.buttonMode = true;
-        movieClip.useHandCursor = true;
         const shape = new Shape();
         shape.graphics.xMin = 0;
         shape.graphics.yMin = 0;
@@ -544,33 +542,8 @@ describe("DisplayObjectContainerMouseHitUseCase.js test", () =>
         const result = execute(container, context, matrix, hitObject);
 
         expect(result).toBe(true);
-        // MovieClipはSpriteを継承、isSprite=trueでbuttonMode+useHandCursor=true
+        // MovieClipはSpriteを継承、isInteractive=true, mouseEnabled=true
         expect(hitObject.pointer).toBe("pointer");
-        expect(hitObject.hit).toBe(movieClip);
-    });
-
-    it("MovieClip子要素でbuttonMode=falseの場合pointerはautoのまま", () =>
-    {
-        vi.mocked(shapeHitTestMock).mockReturnValue(true);
-
-        const container = new DisplayObjectContainer();
-        const movieClip = new MovieClip();
-        // buttonModeはデフォルトfalse
-        const shape = new Shape();
-        shape.graphics.xMin = 0;
-        shape.graphics.yMin = 0;
-        shape.graphics.xMax = 100;
-        shape.graphics.yMax = 100;
-        movieClip.addChild(shape);
-        container.addChild(movieClip);
-
-        const hitObject = createHitObject(50, 50);
-
-        const result = execute(container, context, matrix, hitObject);
-
-        expect(result).toBe(true);
-        // isSprite=trueだがbuttonMode=falseなのでpointerは変更されない
-        expect(hitObject.pointer).toBe("auto");
         expect(hitObject.hit).toBe(movieClip);
     });
 
