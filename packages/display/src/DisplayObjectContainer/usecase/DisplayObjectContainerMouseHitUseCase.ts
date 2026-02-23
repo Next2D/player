@@ -109,8 +109,11 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
             && mouseChildren
             && display_object_container.mouseEnabled
         ) {
-            if ((display_object_container as unknown as Sprite).buttonMode
-                && (display_object_container as unknown as Sprite).useHandCursor
+            if ((display_object_container as unknown as Sprite).isTimelineEnabled
+                || (
+                    (display_object_container as unknown as Sprite).buttonMode
+                    && (display_object_container as unknown as Sprite).useHandCursor
+                )
             ) {
                 hit_object.pointer = "pointer";
             }
@@ -296,8 +299,11 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
                     break;
 
                 case instance.isSprite:
-                    if ((instance as unknown as Sprite).buttonMode
-                        && (instance as unknown as Sprite).useHandCursor
+                    if ((instance as unknown as Sprite).isTimelineEnabled
+                        || (
+                            (instance as unknown as Sprite).buttonMode
+                            && (instance as unknown as Sprite).useHandCursor
+                        )
                     ) {
                         hit_object.pointer = "pointer";
                     }
