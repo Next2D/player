@@ -110,10 +110,10 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
             && display_object_container.mouseEnabled
         ) {
             if ((display_object_container as unknown as Sprite).isTimelineEnabled
-                || (
+                ||
                     (display_object_container as unknown as Sprite).buttonMode
                     && (display_object_container as unknown as Sprite).useHandCursor
-                )
+
             ) {
                 hit_object.pointer = "pointer";
             }
@@ -300,10 +300,10 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
 
                 case instance.isSprite:
                     if ((instance as unknown as Sprite).isTimelineEnabled
-                        || (
+                        ||
                             (instance as unknown as Sprite).buttonMode
                             && (instance as unknown as Sprite).useHandCursor
-                        )
+
                     ) {
                         hit_object.pointer = "pointer";
                     }
