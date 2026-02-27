@@ -3,19 +3,18 @@ name: Lint
 on:
   push:
     branches:
-      - main
       - develop
   pull_request:
     branches:
       - main
       - develop
+  workflow_call:
 
 jobs:
   macos-browser-test:
     runs-on: macos-latest
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -23,14 +22,13 @@ jobs:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
       - run: npm install -g npm@latest
-      - run: npm install
+      - run: npm ci
       - run: npm run lint
 
   windows-browser-test:
     runs-on: windows-latest
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -38,5 +36,5 @@ jobs:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
       - run: npm install -g npm@latest
-      - run: npm install
+      - run: npm ci
       - run: npm run lint
