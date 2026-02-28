@@ -6,7 +6,6 @@ Next2D Player is a high-performance 2D rendering engine using WebGL/WebGPU. It p
 
 - **High-Speed Rendering**: Fast 2D rendering using WebGL/WebGPU
 - **Multi-Platform**: Supports desktop to mobile devices
-- **Flash-Compatible API**: Familiar API design derived from swf2js
 - **Rich Filters**: Supports Blur, DropShadow, Glow, Bevel, and more
 
 ## Rendering Pipeline

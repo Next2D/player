@@ -10,7 +10,14 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  integration:
+    uses: ./.github/workflows/integration.yml
+
+  publish:
+    needs: [lint, integration]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,7 +30,7 @@ jobs:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
       - run: npm install -g npm@latest
-      - run: npm install
+      - run: npm ci
       - run: npm run publish:dist
       - run: npm publish --access public
         working-directory: ./dist/src

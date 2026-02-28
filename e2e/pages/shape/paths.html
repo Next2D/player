@@ -212,6 +212,22 @@
             .curveTo(500, 500, 490, 470);
         root.addChild(freeform);
 
+        const bubble2 = new Shape();
+        bubble2.graphics
+            .beginFill(0xFFFFFF)
+            .drawRoundRect(-140, -70, 280, 80, 12)
+            .endFill()
+            .beginFill(0xFFFFFF)
+            .moveTo(-20, 10)
+            .lineTo(0, 30)
+            .lineTo(20, 10)
+            .endFill();
+
+        bubble2.scaleX = bubble2.scaleY = 0.5;
+        bubble2.x = 350;
+        bubble2.y = 160;
+        root.addChild(bubble2);
+
         window.__E2E_RENDER_COMPLETE__ = true;
     });
 </script>
