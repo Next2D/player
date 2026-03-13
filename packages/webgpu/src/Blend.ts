@@ -5,16 +5,9 @@ export type { IBlendState };
 
 export let $currentBlendMode: IBlendMode = "normal";
 
-export let $funcCode: number = 0;
-
 export const $setCurrentBlendMode = (blend_mode: IBlendMode): void =>
 {
     $currentBlendMode = blend_mode;
-};
-
-export const $setFuncCode = (code: number): void =>
-{
-    $funcCode = code;
 };
 
 export const $getBlendState = (mode: IBlendMode): IBlendState =>
