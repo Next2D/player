@@ -18,8 +18,8 @@ describe("PathCommand", () =>
             pathCommand.lineTo(30, 40);
             pathCommand.beginPath();
 
-            const paths = pathCommand.getAllPaths();
-            expect(paths.length).toBe(0);
+            const vertices = pathCommand.getVerticesForStroke();
+            expect(vertices.length).toBe(0);
         });
     });
 
@@ -28,11 +28,12 @@ describe("PathCommand", () =>
         it("should start a new path", () =>
         {
             pathCommand.moveTo(10, 20);
-            const path = pathCommand.getCurrentPath();
+            pathCommand.lineTo(30, 40);
+            const vertices = pathCommand.getVerticesForStroke();
 
-            expect(path.length).toBe(1);
-            expect(path[0].x).toBe(10);
-            expect(path[0].y).toBe(20);
+            expect(vertices.length).toBe(1);
+            expect(vertices[0][0]).toBe(10);
+            expect(vertices[0][1]).toBe(20);
         });
 
         it("should save previous path if long enough", () =>
@@ -42,9 +43,10 @@ describe("PathCommand", () =>
             pathCommand.lineTo(10, 10);
             pathCommand.lineTo(0, 10);
             pathCommand.moveTo(100, 100);
+            pathCommand.lineTo(110, 100);
 
-            const paths = pathCommand.getAllPaths();
-            expect(paths.length).toBe(2);
+            const vertices = pathCommand.getVerticesForStroke();
+            expect(vertices.length).toBe(2);
         });
     });
 
@@ -55,19 +57,23 @@ describe("PathCommand", () =>
             pathCommand.moveTo(0, 0);
             pathCommand.lineTo(10, 20);
 
-            const path = pathCommand.getCurrentPath();
-            expect(path.length).toBe(2);
-            expect(path[1].x).toBe(10);
-            expect(path[1].y).toBe(20);
+            const vertices = pathCommand.getVerticesForStroke();
+            expect(vertices.length).toBe(1);
+            // Path: [0, 0, false, 10, 20, false] = 6 elements
+            expect(vertices[0].length).toBe(6);
+            expect(vertices[0][3]).toBe(10);
+            expect(vertices[0][4]).toBe(20);
         });
 
         it("should ignore same point", () =>
         {
             pathCommand.moveTo(10, 20);
             pathCommand.lineTo(10, 20);
+            pathCommand.lineTo(30, 40);
 
-            const path = pathCommand.getCurrentPath();
-            expect(path.length).toBe(1);
+            const vertices = pathCommand.getVerticesForStroke();
+            // moveTo + lineTo(same) + lineTo = 2 unique points (6 elements)
+            expect(vertices[0].length).toBe(6);
         });
 
         it("should add multiple lines", () =>
@@ -77,8 +83,9 @@ describe("PathCommand", () =>
             pathCommand.lineTo(10, 10);
             pathCommand.lineTo(0, 10);
 
-            const path = pathCommand.getCurrentPath();
-            expect(path.length).toBe(4);
+            const vertices = pathCommand.getVerticesForStroke();
+            // 4 points * 3 elements = 12
+            expect(vertices[0].length).toBe(12);
         });
     });
 
@@ -91,7 +98,6 @@ describe("PathCommand", () =>
 
             const vertices = pathCommand.getVerticesForStroke();
             expect(vertices.length).toBe(1);
-            // Path format: [x, y, isCurve, ...]
             // Should have: start(0,0,false), control(50,100,true), end(100,0,false)
             expect(vertices[0].length).toBe(9);
         });
@@ -104,9 +110,9 @@ describe("PathCommand", () =>
             pathCommand.moveTo(0, 0);
             pathCommand.bezierCurveTo(10, 50, 90, 50, 100, 0);
 
-            const path = pathCommand.getCurrentPath();
+            const vertices = pathCommand.getVerticesForStroke();
             // Should have at least start point and some segments
-            expect(path.length).toBeGreaterThan(1);
+            expect(vertices[0].length).toBeGreaterThan(3);
         });
     });
 
@@ -117,10 +123,9 @@ describe("PathCommand", () =>
             pathCommand.moveTo(150, 100);
             pathCommand.arc(100, 100, 50);
 
-            const path = pathCommand.getCurrentPath();
+            const vertices = pathCommand.getVerticesForStroke();
             // Adaptive tessellation produces variable segment count
-            // 4 cubic bezier curves, each converted to quadratic segments
-            expect(path.length).toBeGreaterThan(1);
+            expect(vertices[0].length).toBeGreaterThan(3);
         });
 
         it("should be centered at specified position", () =>
@@ -128,10 +133,10 @@ describe("PathCommand", () =>
             pathCommand.moveTo(150, 100);
             pathCommand.arc(100, 100, 50);
 
-            const path = pathCommand.getCurrentPath();
-            // First point should be at (100+50, 100) = (150, 100) from moveTo
-            expect(path[0].x).toBeCloseTo(150, 1);
-            expect(path[0].y).toBeCloseTo(100, 1);
+            const vertices = pathCommand.getVerticesForStroke();
+            // First point should be at (150, 100) from moveTo
+            expect(vertices[0][0]).toBeCloseTo(150, 1);
+            expect(vertices[0][1]).toBeCloseTo(100, 1);
         });
     });
 
@@ -144,10 +149,11 @@ describe("PathCommand", () =>
             pathCommand.lineTo(100, 100);
             pathCommand.closePath();
 
-            const path = pathCommand.getCurrentPath();
-            const lastPoint = path[path.length - 1];
-            expect(lastPoint.x).toBe(0);
-            expect(lastPoint.y).toBe(0);
+            const vertices = pathCommand.getVerticesForStroke();
+            const path = vertices[0];
+            // Last point should be (0, 0)
+            expect(path[path.length - 3]).toBe(0);
+            expect(path[path.length - 2]).toBe(0);
         });
 
         it("should not add duplicate point if already at start", () =>
@@ -155,43 +161,15 @@ describe("PathCommand", () =>
             pathCommand.moveTo(0, 0);
             pathCommand.lineTo(100, 0);
             pathCommand.lineTo(0, 0);
-            const lengthBefore = pathCommand.getCurrentPath().length;
+            const lengthBefore = pathCommand.getVerticesForStroke()[0].length;
             pathCommand.closePath();
-            const lengthAfter = pathCommand.getCurrentPath().length;
+            const lengthAfter = pathCommand.getVerticesForStroke()[0].length;
 
             expect(lengthAfter).toBe(lengthBefore);
         });
     });
 
-    describe("generateVertices", () =>
-    {
-        it("should generate triangle vertices for simple triangle", () =>
-        {
-            pathCommand.moveTo(0, 0);
-            pathCommand.lineTo(100, 0);
-            pathCommand.lineTo(50, 100);
-            pathCommand.closePath();
-
-            const vertices = pathCommand.generateVertices();
-            // 1 triangle = 6 values (3 points * 2 coords)
-            expect(vertices.length).toBeGreaterThanOrEqual(6);
-        });
-
-        it("should generate triangles using fan triangulation", () =>
-        {
-            pathCommand.moveTo(0, 0);
-            pathCommand.lineTo(100, 0);
-            pathCommand.lineTo(100, 100);
-            pathCommand.lineTo(0, 100);
-            pathCommand.closePath();
-
-            const vertices = pathCommand.generateVertices();
-            // Square with 5 points (including close) should generate multiple triangles
-            expect(vertices.length).toBeGreaterThan(6);
-        });
-    });
-
-    describe("getAllPaths", () =>
+    describe("getVerticesForStroke", () =>
     {
         it("should return all paths", () =>
         {
@@ -205,25 +183,11 @@ describe("PathCommand", () =>
             pathCommand.lineTo(110, 110);
             pathCommand.lineTo(100, 110);
 
-            const paths = pathCommand.getAllPaths();
-            expect(paths.length).toBe(2);
-            expect(paths[0].length).toBe(4);
-            expect(paths[1].length).toBe(4);
-        });
-    });
-
-    describe("setScale", () =>
-    {
-        it("should adjust flatness threshold based on scale", () =>
-        {
-            pathCommand.setScale(2.0);
-            // We can't directly access the private threshold,
-            // but we can verify the bezierCurveTo still works
-            pathCommand.moveTo(0, 0);
-            pathCommand.bezierCurveTo(10, 50, 90, 50, 100, 0);
-
-            const path = pathCommand.getCurrentPath();
-            expect(path.length).toBeGreaterThan(1);
+            const vertices = pathCommand.getVerticesForStroke();
+            expect(vertices.length).toBe(2);
+            // Each path has 4 points * 3 elements = 12
+            expect(vertices[0].length).toBe(12);
+            expect(vertices[1].length).toBe(12);
         });
     });
 
@@ -235,11 +199,8 @@ describe("PathCommand", () =>
             pathCommand.lineTo(30, 40);
             pathCommand.reset();
 
-            const paths = pathCommand.getAllPaths();
-            expect(paths.length).toBe(0);
-
-            const currentPath = pathCommand.getCurrentPath();
-            expect(currentPath.length).toBe(0);
+            const vertices = pathCommand.getVerticesForStroke();
+            expect(vertices.length).toBe(0);
         });
     });
 });

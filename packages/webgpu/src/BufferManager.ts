@@ -347,22 +347,6 @@ export class BufferManager
         this.dynamicUniform.dispose();
     }
 
-    getPoolStats (): { vertexPoolSize: number; uniformPoolSize: number }
-    {
-        let vertexCount = 0;
-        for (const bucket of this.vertexBufferBuckets.values()) {
-            vertexCount += bucket.length;
-        }
-        let uniformCount = 0;
-        for (const bucket of this.uniformBufferBuckets.values()) {
-            uniformCount += bucket.length;
-        }
-        return {
-            "vertexPoolSize": vertexCount,
-            "uniformPoolSize": uniformCount
-        };
-    }
-
     clearFrameBuffers (): void
     {
         for (const buffer of this.vertexBuffers.values()) {
@@ -506,12 +490,4 @@ export class BufferManager
         return this.frameNumber;
     }
 
-    getStoragePoolStats (): { storagePoolSize: number; storagePoolInUse: number }
-    {
-        const inUse = this.storageBufferPool.filter((e) => e.inUse).length;
-        return {
-            "storagePoolSize": this.storageBufferPool.length,
-            "storagePoolInUse": inUse
-        };
-    }
 }

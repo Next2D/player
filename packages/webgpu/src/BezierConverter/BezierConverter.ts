@@ -11,10 +11,6 @@
  * これにより品質を維持しながら不要な計算を削減。
  */
 export {
-    execute as adaptiveCubicToQuad,
-    calculateAdaptiveThreshold
+    execute as adaptiveCubicToQuad
 } from "./usecase/BezierConverterAdaptiveCubicToQuadUseCase";
 export type { IQuadraticSegment } from "../interface/IQuadraticSegment";
-
-export { execute as calculateFlatness } from "./service/BezierConverterCalculateFlatnessService";
-export { execute as splitCubic } from "./service/BezierConverterSplitCubicService";

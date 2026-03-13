@@ -1,5 +1,4 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
-import type { ITextureObject } from "./interface/ITextureObject";
 import type { TexturePacker } from "@next2d/texture-packer";
 
 const $MAX_VALUE: number = Number.MAX_VALUE;
@@ -66,18 +65,6 @@ export const $hasAtlasAttachmentObject = (): boolean =>
 
 export const $rootNodes: TexturePacker[] = [];
 
-export let $atlasTexture: ITextureObject | null = null;
-
-export const $setAtlasTexture = (texture_object: ITextureObject | null): void =>
-{
-    $atlasTexture = texture_object;
-};
-
-export const $getAtlasTexture = (): ITextureObject | null =>
-{
-    return $atlasTexture;
-};
-
 const $transferBounds: Float32Array[] = [];
 
 export const $getActiveTransferBounds = (index: number): Float32Array =>
@@ -93,35 +80,10 @@ export const $getActiveTransferBounds = (index: number): Float32Array =>
     return $transferBounds[index];
 };
 
-const $allTransferBounds: Float32Array[] = [];
-
-export const $getActiveAllTransferBounds = (index: number): Float32Array =>
-{
-    if (!(index in $allTransferBounds)) {
-        $allTransferBounds[index] = new Float32Array([
-            $MAX_VALUE,
-            $MAX_VALUE,
-            $MIN_VALUE,
-            $MIN_VALUE
-        ]);
-    }
-    return $allTransferBounds[index];
-};
-
 export const $clearTransferBounds = (): void =>
 {
     for (let idx = 0; idx < $transferBounds.length; ++idx) {
         const bounds = $transferBounds[idx];
-        if (!bounds) {
-            continue;
-        }
-
-        bounds[0] = bounds[1] = $MAX_VALUE;
-        bounds[2] = bounds[3] = $MIN_VALUE;
-    }
-
-    for (let idx = 0; idx < $allTransferBounds.length; ++idx) {
-        const bounds = $allTransferBounds[idx];
         if (!bounds) {
             continue;
         }

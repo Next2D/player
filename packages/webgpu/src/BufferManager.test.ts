@@ -118,15 +118,6 @@ describe("BufferManager", () =>
             expect(manager.getFrameNumber()).toBe(0);
         });
 
-        it("should initialize with empty pool stats", () =>
-        {
-            const device = createMockDevice();
-            const manager = new BufferManager(device);
-
-            const stats = manager.getPoolStats();
-            expect(stats.vertexPoolSize).toBe(0);
-            expect(stats.uniformPoolSize).toBe(0);
-        });
     });
 
     describe("createVertexBuffer", () =>
@@ -253,16 +244,6 @@ describe("BufferManager", () =>
             expect(buffer).toBeDefined();
         });
 
-        it("should update pool stats", () =>
-        {
-            const device = createMockDevice();
-            const manager = new BufferManager(device);
-
-            manager.acquireVertexBuffer(256);
-
-            const stats = manager.getPoolStats();
-            expect(stats.vertexPoolSize).toBe(1);
-        });
     });
 
     describe("releaseVertexBuffer", () =>
@@ -289,16 +270,6 @@ describe("BufferManager", () =>
             expect(buffer).toBeDefined();
         });
 
-        it("should update pool stats", () =>
-        {
-            const device = createMockDevice();
-            const manager = new BufferManager(device);
-
-            manager.acquireUniformBuffer(64);
-
-            const stats = manager.getPoolStats();
-            expect(stats.uniformPoolSize).toBe(1);
-        });
     });
 
     describe("releaseUniformBuffer", () =>
@@ -354,20 +325,6 @@ describe("BufferManager", () =>
             expect(manager.getUniformBuffer("u1")).toBeUndefined();
         });
 
-        it("should reset pool stats", () =>
-        {
-            const device = createMockDevice();
-            const manager = new BufferManager(device);
-
-            manager.acquireVertexBuffer(256);
-            manager.acquireUniformBuffer(64);
-
-            manager.dispose();
-
-            const stats = manager.getPoolStats();
-            expect(stats.vertexPoolSize).toBe(0);
-            expect(stats.uniformPoolSize).toBe(0);
-        });
     });
 
     describe("acquireStorageBuffer", () =>
@@ -382,17 +339,6 @@ describe("BufferManager", () =>
             expect(buffer).toBeDefined();
         });
 
-        it("should update storage pool stats", () =>
-        {
-            const device = createMockDevice();
-            const manager = new BufferManager(device);
-
-            manager.acquireStorageBuffer(1024);
-
-            const stats = manager.getStoragePoolStats();
-            expect(stats.storagePoolSize).toBe(1);
-            expect(stats.storagePoolInUse).toBe(1);
-        });
     });
 
     describe("releaseStorageBuffer", () =>
@@ -432,10 +378,7 @@ describe("BufferManager", () =>
             manager.acquireStorageBuffer(256);
             manager.acquireStorageBuffer(512);
 
-            manager.releaseAllStorageBuffers();
-
-            const stats = manager.getStoragePoolStats();
-            expect(stats.storagePoolInUse).toBe(0);
+            expect(() => manager.releaseAllStorageBuffers()).not.toThrow();
         });
     });
 
@@ -469,10 +412,7 @@ describe("BufferManager", () =>
             const manager = new BufferManager(device);
 
             manager.acquireStorageBuffer(256);
-            manager.clearFrameBuffers();
-
-            const stats = manager.getStoragePoolStats();
-            expect(stats.storagePoolInUse).toBe(0);
+            expect(() => manager.clearFrameBuffers()).not.toThrow();
         });
     });
 

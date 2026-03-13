@@ -1,9 +1,6 @@
 import type { IPoint } from "./interface/IPoint";
 import type { IPath } from "./interface/IPath";
-import {
-    adaptiveCubicToQuad,
-    calculateAdaptiveThreshold
-} from "./BezierConverter/BezierConverter";
+import { adaptiveCubicToQuad } from "./BezierConverter/BezierConverter";
 
 /**
  * @description WebGPU用パスコマンド（WebGL互換形式）
@@ -120,11 +117,6 @@ export class PathCommand
      * @param {number} scale - 現在のスケール（行列のスケール成分）
      * @return {void}
      */
-    setScale(scale: number): void
-    {
-        this.$flatnessThreshold = calculateAdaptiveThreshold(scale);
-    }
-
     /**
      * @description 三次ベジェ曲線を二次ベジェ曲線に適応的に近似
      *              Adaptively approximate cubic bezier with quadratic beziers
@@ -248,90 +240,6 @@ export class PathCommand
             vertices.push(this.$currentPath);
         }
         return vertices;
-    }
-
-    /**
-     * @description パスから頂点配列を生成（従来互換用・単純なfan triangulation）
-     * @return {Float32Array}
-     */
-    generateVertices(): Float32Array
-    {
-        const vertices = this.$getVertices;
-        const triangles: number[] = [];
-
-        for (const path of vertices) {
-            if (path.length < 9) { continue } // 最低3点（9要素）必要
-
-            // 点を抽出
-            const points: IPoint[] = [];
-            for (let i = 0; i < path.length; i += 3) {
-                points.push({ "x": path[i] as number, "y": path[i + 1] as number });
-            }
-
-            // Fan triangulation
-            for (let i = 1; i < points.length - 1; i++) {
-                triangles.push(
-                    points[0].x, points[0].y,
-                    points[i].x, points[i].y,
-                    points[i + 1].x, points[i + 1].y
-                );
-            }
-        }
-
-        return new Float32Array(triangles);
-    }
-
-    /**
-     * @description 現在のパスを取得（ストローク用）
-     * @return {IPoint[]}
-     */
-    getCurrentPath(): IPoint[]
-    {
-        const points: IPoint[] = [];
-        for (let i = 0; i < this.$currentPath.length; i += 3) {
-            points.push({
-                "x": this.$currentPath[i] as number,
-                "y": this.$currentPath[i + 1] as number
-            });
-        }
-        return points;
-    }
-
-    /**
-     * @description すべてのパスを取得（ストローク用）
-     * @return {IPoint[][]}
-     */
-    getAllPaths(): IPoint[][]
-    {
-        const allPaths: IPoint[][] = [];
-
-        for (const path of this.$vertices) {
-            const points: IPoint[] = [];
-            for (let i = 0; i < path.length; i += 3) {
-                points.push({
-                    "x": path[i] as number,
-                    "y": path[i + 1] as number
-                });
-            }
-            if (points.length > 0) {
-                allPaths.push(points);
-            }
-        }
-
-        if (this.$currentPath.length >= 3) {
-            const points: IPoint[] = [];
-            for (let i = 0; i < this.$currentPath.length; i += 3) {
-                points.push({
-                    "x": this.$currentPath[i] as number,
-                    "y": this.$currentPath[i + 1] as number
-                });
-            }
-            if (points.length > 0) {
-                allPaths.push(points);
-            }
-        }
-
-        return allPaths;
     }
 
     /**

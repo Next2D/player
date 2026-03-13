@@ -9,21 +9,7 @@
  * @note WebGL版と同じくMSAA 4xをデフォルトで有効化
  *       曲線のアンチエイリアス品質向上のため
  */
-export let $samples: number = 4;
-
-/**
- * @description 描画のサンプリング数を変更
- *              Change the number of samples for drawing
- *
- * @param  {number} samples
- * @return {void}
- * @method
- * @protected
- */
-export const $setSamples = (samples: number): void =>
-{
-    $samples = samples;
-};
+export const $samples: number = 4;
 
 export class WebGPUUtil
 {
