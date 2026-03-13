@@ -82,6 +82,7 @@ export class PipelineManager
         ["filter_output_msaa", "texture_copy"], ["filter_output_add_msaa", "texture_copy"],
         ["filter_output_screen_msaa", "texture_copy"], ["filter_output_alpha_msaa", "texture_copy"],
         ["filter_output_erase_msaa", "texture_copy"],
+        ["filter_output_masked", "texture_copy"], ["filter_output_masked_msaa", "texture_copy"],
         ["positioned_texture", "texture_copy"], ["positioned_texture_rgba", "texture_copy"],
         ["bitmap_render_msaa", "texture_copy"], ["bitmap_render", "texture_copy"],
         ["texture_scale", "texture_copy"], ["texture_scale_blend", "texture_copy"],
@@ -2158,6 +2159,35 @@ export class PipelineManager
                 pipelineLayout, vertexShaderModule, filterOutputShaderModule, this.format, blend
             ));
         }
+
+        // マスク付きフィルター出力パイプライン（ステンシルテスト付き）
+        const filterMaskedStencil: GPUDepthStencilState = {
+            "format": "stencil8",
+            "stencilFront": {
+                "compare": "equal",
+                "failOp": "keep",
+                "depthFailOp": "keep",
+                "passOp": "keep"
+            },
+            "stencilBack": {
+                "compare": "equal",
+                "failOp": "keep",
+                "depthFailOp": "keep",
+                "passOp": "keep"
+            },
+            "stencilReadMask": 0xFF,
+            "stencilWriteMask": 0x00
+        };
+        this.pipelines.set("filter_output_masked", this.createFullscreenQuadPipeline(
+            pipelineLayout, vertexShaderModule, filterOutputShaderModule, this.format, BLEND_ALPHA, undefined, filterMaskedStencil
+        ));
+        if (this.sampleCount > 1) {
+            const normalBlendForMask: GPUBlendState = { "color": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" }, "alpha": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" } };
+            this.pipelines.set("filter_output_masked_msaa", this.createFullscreenQuadPipeline(
+                pipelineLayout, vertexShaderModule, filterOutputShaderModule, this.format, normalBlendForMask, this.sampleCount, filterMaskedStencil
+            ));
+        }
+
         if (this.sampleCount > 1) {
             const copyBlend: GPUBlendState = { "color": { "srcFactor": "one", "dstFactor": "zero", "operation": "add" }, "alpha": { "srcFactor": "one", "dstFactor": "zero", "operation": "add" } };
             this.pipelines.set("texture_copy_bgra_msaa", this.createFullscreenQuadPipeline(

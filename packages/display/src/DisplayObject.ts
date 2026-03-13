@@ -429,6 +429,16 @@ export class DisplayObject extends EventDispatcher
     public parent: ISprite<any> | null;
 
     /**
+     * @description キャッシュする際の指定Matrix、nullの場合は通常のMatrixで描画
+     *              Specified Matrix for caching, if null, draw with the normal Matrix
+     *
+     * @member {Matrix | null}
+     * @default null
+     * @public
+     */
+    public cacheTransform: Matrix | null = null;
+
+    /**
      * @constructor
      * @public
      */

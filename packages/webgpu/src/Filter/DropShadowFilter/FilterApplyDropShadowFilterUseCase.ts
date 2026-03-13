@@ -1,12 +1,8 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
+import { DEG_TO_RAD, intToPremultipliedRGBA } from "../FilterUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
-
-/**
- * @description 度からラジアンへの変換係数
- */
-const DEG_TO_RAD: number = Math.PI / 180;
 
 /**
  * @description プリアロケートされたFloat32Array (サイズ16)
@@ -22,16 +18,6 @@ const $entries4: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView },
     { "binding": 3, "resource": null as unknown as GPUTextureView }
 ];
-
-/**
- * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255 * alpha;
-    const g = (color >> 8 & 0xFF) / 255 * alpha;
-    const b = (color & 0xFF) / 255 * alpha;
-    return [r, g, b, alpha];
-};
 
 /**
  * @description ドロップシャドウフィルターを適用
@@ -161,7 +147,7 @@ export const execute = (
     // knockout: f32 (4 bytes)
     // hideObject: f32 (4 bytes)
     // Total: 64 bytes
-    const [r, g, b, a] = intToRGBA(color, alpha);
+    const [r, g, b, a] = intToPremultipliedRGBA(color, alpha);
 
     // WebGL版と同じUV変換方式:
     // uv = texCoord * scale - offset

@@ -1,12 +1,8 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
+import { DEG_TO_RAD, intToPremultipliedRGBA } from "../FilterUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
-
-/**
- * @description 度からラジアンへの変換係数
- */
-const DEG_TO_RAD: number = Math.PI / 180;
 
 /**
  * @description プリアロケートされたFloat32Array
@@ -32,16 +28,6 @@ const $entries4: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView },
     { "binding": 3, "resource": null as unknown as GPUTextureView }
 ];
-
-/**
- * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255 * alpha;
-    const g = (color >> 8 & 0xFF) / 255 * alpha;
-    const b = (color & 0xFF) / 255 * alpha;
-    return [r, g, b, alpha];
-};
 
 /**
  * @description ベベルフィルターを適用
@@ -220,8 +206,8 @@ export const execute = (
     // baseScale, baseOffset (16 bytes)
     // blurScale, blurOffset (16 bytes)
     // Total: 80 bytes → 16 floats + 4 floats = 20 floats (80 bytes)
-    const [hr, hg, hb, ha] = intToRGBA(highlightColor, highlightAlpha);
-    const [sr, sg, sb, sa] = intToRGBA(shadowColor, shadowAlpha);
+    const [hr, hg, hb, ha] = intToPremultipliedRGBA(highlightColor, highlightAlpha);
+    const [sr, sg, sb, sa] = intToPremultipliedRGBA(shadowColor, shadowAlpha);
 
     $uniform20[0] = hr;
     $uniform20[1] = hg;

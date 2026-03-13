@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
+import { intToPremultipliedRGBA } from "../FilterUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 
 /**
@@ -17,16 +18,6 @@ const $entries4: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView },
     { "binding": 3, "resource": null as unknown as GPUTextureView }
 ];
-
-/**
- * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255 * alpha;
-    const g = (color >> 8 & 0xFF) / 255 * alpha;
-    const b = (color & 0xFF) / 255 * alpha;
-    return [r, g, b, alpha];
-};
 
 /**
  * @description グローフィルターを適用
@@ -72,7 +63,6 @@ export const execute = (
     const baseWidth = sourceAttachment.width;
     const baseHeight = sourceAttachment.height;
 
-    // ブラーフィルターを適用（元テクスチャを保持）
     const blurAttachment = filterApplyBlurFilterUseCase(
         sourceAttachment, matrix,
         blurX, blurY, quality,
@@ -132,7 +122,7 @@ export const execute = (
     // blurScale: vec2<f32>, blurOffset: vec2<f32> (16 bytes)
     // strength: f32, inner: f32, knockout: f32, _padding: f32 (16 bytes)
     // Total: 64 bytes
-    const [r, g, b, a] = intToRGBA(color, alpha);
+    const [r, g, b, a] = intToPremultipliedRGBA(color, alpha);
     $uniform16[0] = r;
     $uniform16[1] = g;
     $uniform16[2] = b;

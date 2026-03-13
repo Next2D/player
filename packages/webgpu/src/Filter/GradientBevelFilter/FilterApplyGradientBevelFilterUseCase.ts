@@ -3,11 +3,7 @@ import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
-
-/**
- * @description 度からラジアンへの変換係数
- */
-const DEG_TO_RAD: number = Math.PI / 180;
+import { DEG_TO_RAD } from "../FilterUtil";
 
 /**
  * @description プリアロケートされたFloat32Array

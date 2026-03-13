@@ -101,21 +101,20 @@ const copyRegionToFilterAttachment = (
 
     const dstAttachment = config.frameBufferManager.createTemporaryAttachment(width, height);
 
-    const pipeline = config.pipelineManager.getPipeline("complex_blend_copy");
+    // texture_copy_rgba8 (BlurFilterVertex, yFlipTexCoord=true) を使用
+    const pipeline = config.pipelineManager.getPipeline("texture_copy_rgba8");
     const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
 
     if (!pipeline || !bindGroupLayout || !srcAttachment.texture || !dstAttachment.texture) {
         return dstAttachment;
     }
 
+    // BlurFilterVertex (yFlipTexCoord=true):
+    // texCoord.y=0(fb上端) → uv.y=y/H, texCoord.y=1(fb下端) → uv.y=(y+h)/H
     const scaleX = width / srcAttachment.width;
+    const scaleY = height / srcAttachment.height;
     const offsetX = x / srcAttachment.width;
-
-    // ComplexBlendCopyVertexはOpenGL座標系のtexCoord（Y軸反転）を使用するため、
-    // UV uniformでY反転を補正して正しい向きの出力を得る
-    // texCoord.y=1(fb上端) → uv.y=y/H(ソース上端), texCoord.y=0(fb下端) → uv.y=(y+h)/H(ソース下端)
-    const scaleY = -(height / srcAttachment.height);
-    const offsetY = (y + height) / srcAttachment.height;
+    const offsetY = y / srcAttachment.height;
 
     $uniform4[0] = scaleX;
     $uniform4[1] = scaleY;
@@ -492,8 +491,7 @@ const applyFilterChain = (
                     const newAtt = filterApplyGlowFilterUseCase(
                         filterAttachment, matrix,
                         params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++],
-                        Boolean(params[idx++]), Boolean(params[idx++]),
+                        params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++]),
                         devicePixelRatio, config
                     );
                     if (filterAttachment !== newAtt) {

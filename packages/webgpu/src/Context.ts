@@ -11,7 +11,6 @@ import { TextureManager } from "./TextureManager";
 import { FrameBufferManager } from "./FrameBufferManager";
 import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
-import { ComputePipelineManager } from "./Compute/ComputePipelineManager";
 import {
     $rootNodes,
     $resetAtlas,
@@ -238,7 +237,6 @@ export class Context
     private textureManager: TextureManager;
     private frameBufferManager: FrameBufferManager;
     private pipelineManager: PipelineManager;
-    private computePipelineManager: ComputePipelineManager;
     private attachmentManager: AttachmentManager;
 
     public newDrawState: boolean = false;
@@ -286,7 +284,6 @@ export class Context
         pipelineManager: PipelineManager;
         textureManager: TextureManager;
         mainAttachment?: IAttachmentObject;
-        computePipelineManager: ComputePipelineManager;
         frameTextures: GPUTexture[];
     };
 
@@ -356,7 +353,6 @@ export class Context
         this.pipelineManager = new PipelineManager(device, preferred_format);
         // 遅延パイプライン群を即座に先行作成（初回アクセス時のレイテンシ解消）
         this.pipelineManager.preloadLazyGroups();
-        this.computePipelineManager = new ComputePipelineManager(device);
         this.attachmentManager = new AttachmentManager(device);
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
@@ -383,7 +379,6 @@ export class Context
             "frameBufferManager": this.frameBufferManager,
             "pipelineManager": this.pipelineManager,
             "textureManager": this.textureManager,
-            "computePipelineManager": this.computePipelineManager,
             "frameTextures": this.frameTextures
         };
 

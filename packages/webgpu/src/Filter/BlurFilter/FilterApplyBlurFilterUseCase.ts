@@ -2,8 +2,6 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
 import { calculateBlurParams, calculateDirectionalBlurParams } from "../BlurFilterUseCase";
-import { shouldUseComputeShader } from "./service/BlurFilterComputeShaderService";
-import { execute as executeBlurCompute } from "../../Compute/service/ComputeExecuteBlurService";
 
 /**
  * @description プリアロケートされたFloat32Array (サイズ4)
@@ -78,10 +76,6 @@ export const execute = (
     const bufferBlurX = baseBlurX * bufferScaleX;
     const bufferBlurY = baseBlurY * bufferScaleY;
 
-    // Compute Shaderを使用すべきか判定
-    const useCompute = config.computePipelineManager
-        && shouldUseComputeShader(baseBlurX, baseBlurY, bufferWidth, bufferHeight);
-
     // ブラーパスを実行
     const attachments = [attachment0, attachment1];
     let attachmentIndex = 0;
@@ -92,19 +86,11 @@ export const execute = (
             const srcIndex = attachmentIndex;
             attachmentIndex = (attachmentIndex + 1) % 2;
 
-            if (useCompute) {
-                executeBlurCompute(
-                    device, commandEncoder, config.computePipelineManager!,
-                    attachments[srcIndex], attachments[attachmentIndex],
-                    true, bufferBlurX, config.bufferManager
-                );
-            } else {
-                applyDirectionalBlur(
-                    device, commandEncoder, frameBufferManager, pipelineManager,
-                    attachments[srcIndex], attachments[attachmentIndex], sampler,
-                    true, bufferBlurX, config.bufferManager
-                );
-            }
+            applyDirectionalBlur(
+                device, commandEncoder, frameBufferManager, pipelineManager,
+                attachments[srcIndex], attachments[attachmentIndex], sampler,
+                true, bufferBlurX, config.bufferManager
+            );
         }
 
         // 垂直ブラー
@@ -112,19 +98,11 @@ export const execute = (
             const srcIndex = attachmentIndex;
             attachmentIndex = (attachmentIndex + 1) % 2;
 
-            if (useCompute) {
-                executeBlurCompute(
-                    device, commandEncoder, config.computePipelineManager!,
-                    attachments[srcIndex], attachments[attachmentIndex],
-                    false, bufferBlurY, config.bufferManager
-                );
-            } else {
-                applyDirectionalBlur(
-                    device, commandEncoder, frameBufferManager, pipelineManager,
-                    attachments[srcIndex], attachments[attachmentIndex], sampler,
-                    false, bufferBlurY, config.bufferManager
-                );
-            }
+            applyDirectionalBlur(
+                device, commandEncoder, frameBufferManager, pipelineManager,
+                attachments[srcIndex], attachments[attachmentIndex], sampler,
+                false, bufferBlurY, config.bufferManager
+            );
         }
     }
 
@@ -138,7 +116,6 @@ export const execute = (
         upscaleTexture(
             device, commandEncoder, frameBufferManager, pipelineManager,
             resultAttachment, finalAttachment, sampler,
-            1 / bufferScaleX, 1 / bufferScaleY,
             config.bufferManager
         );
 
@@ -325,8 +302,6 @@ const upscaleTexture = (
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
-    _scaleX: number,
-    _scaleY: number,
     bufferManager?: IFilterConfig["bufferManager"]
 ): void => {
     // temp_アタッチメントはrgba8unormフォーマットなので、texture_copy_rgba8パイプラインを使用

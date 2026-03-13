@@ -592,32 +592,66 @@
         container15.addChild(triangleMask);
         videoWrapper3.mask = triangleMask;
 
-        // 全ビデオの読み込みと再生開始を待機
+        // 全ビデオのcompleteイベントを待機
         const allVideos = [video1, video2, video3];
-        const waitForVideos = () => {
+        await Promise.all(allVideos.map(video => {
             return new Promise((resolve) => {
-                const checkLoaded = () => {
-                    // loadedかつ再生中（paused=false）を確認
-                    if (allVideos.every(v => v.loaded && !v.paused)) {
-                        // フレーム描画を待つために複数フレーム待機
-                        let frameCount = 0;
-                        const waitFrames = () => {
-                            frameCount++;
-                            if (frameCount >= 10) {
-                                setTimeout(resolve, 1000);
-                            } else {
-                                requestAnimationFrame(waitFrames);
-                            }
-                        };
-                        requestAnimationFrame(waitFrames);
-                    } else {
-                        requestAnimationFrame(checkLoaded);
-                    }
-                };
-                checkLoaded();
+                if (video.loaded && !video.paused) {
+                    resolve();
+                } else {
+                    video.addEventListener("complete", () => resolve());
+                }
             });
+        }));
+
+        // 固定フレームのためにシークして一時停止
+        const SEEK_TIME = 1.0;
+        await Promise.all(allVideos.map(video => {
+            return new Promise((resolve) => {
+                if (!video.$videoElement) {
+                    resolve();
+                    return;
+                }
+
+                const onSeeked = () => {
+                    video.$videoElement.removeEventListener("seeked", onSeeked);
+                    video.pause();
+                    resolve();
+                };
+
+                video.$videoElement.addEventListener("seeked", onSeeked);
+                video.seek(SEEK_TIME);
+            });
+        }));
+
+        // changedフラグを更新してレンダリングを強制
+        const applyChanges = (displayObject) => {
+            displayObject.changed = true;
+            let parent = displayObject.parent;
+            while (parent && !parent.changed) {
+                parent.changed = true;
+                parent = parent.parent;
+            }
         };
-        await waitForVideos();
+
+        // レンダリング安定化のため数フレーム待機
+        await new Promise((resolve) => {
+            let frameCount = 0;
+            const waitFrames = () => {
+                allVideos.forEach((video) => {
+                    if (video.$videoElement && video.$videoElement.readyState >= 2) {
+                        applyChanges(video);
+                    }
+                });
+                frameCount++;
+                if (frameCount >= 10) {
+                    resolve();
+                } else {
+                    requestAnimationFrame(waitFrames);
+                }
+            };
+            requestAnimationFrame(waitFrames);
+        });
 
         window.__E2E_RENDER_COMPLETE__ = true;
     });

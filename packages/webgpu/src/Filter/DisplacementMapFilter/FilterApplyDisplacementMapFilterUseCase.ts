@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { ShaderSource } from "../../Shader/ShaderSource";
+import { intToPremultipliedRGBA } from "../FilterUtil";
 
 /**
  * @description プリアロケートされたFloat32Array (サイズ12: 最大48バイト)
@@ -16,16 +17,6 @@ const $entries4: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView },
     { "binding": 3, "resource": null as unknown as GPUTextureView }
 ];
-
-/**
- * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ）
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255 * alpha;
-    const g = (color >> 8 & 0xFF) / 255 * alpha;
-    const b = (color & 0xFF) / 255 * alpha;
-    return [r, g, b, alpha];
-};
 
 /**
  * @description パイプラインキャッシュ（キー: componentX,componentY,mode）
@@ -188,7 +179,7 @@ export const execute = (
 
     // substituteColor (mode === 1 の場合)
     if (needsSubstituteColor) {
-        const [r, g, b, a] = intToRGBA(color, alpha);
+        const [r, g, b, a] = intToPremultipliedRGBA(color, alpha);
         $uniform12[8] = r;
         $uniform12[9] = g;
         $uniform12[10] = b;

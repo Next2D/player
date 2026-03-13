@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { ShaderSource } from "../../Shader/ShaderSource";
+import { intToStraightRGBA } from "../FilterUtil";
 
 /**
  * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
@@ -10,16 +11,6 @@ const $entries3: GPUBindGroupEntry[] = [
     { "binding": 1, "resource": null as unknown as GPUSampler },
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
-
-/**
- * @description 32bit整数からRGB値を抽出
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255;
-    const g = (color >> 8 & 0xFF) / 255;
-    const b = (color & 0xFF) / 255;
-    return [r, g, b, alpha];
-};
 
 /**
  * @description パイプラインキャッシュ（キー: matrixX,matrixY,preserveAlpha,clamp）
@@ -130,7 +121,7 @@ export const execute = (
     // ユニフォームバッファを作成
     const matrixSize = matrixX * matrixY;
     const matrixArraySize = Math.ceil(matrixSize / 4);
-    const [r, g, b, a] = intToRGBA(color, alpha);
+    const [r, g, b, a] = intToStraightRGBA(color, alpha);
 
     // マトリクスを4要素ごとにまとめる
     const paddedMatrix = new Float32Array(matrixArraySize * 4);

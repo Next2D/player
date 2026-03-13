@@ -17,6 +17,10 @@ import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/G
 import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase";
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
+import {
+    $isMaskTestEnabled,
+    $getMaskStencilReference
+} from "../../Mask";
 
 const $uniform4 = new Float32Array(4);
 const $uniform6a = new Float32Array(6);
@@ -304,28 +308,38 @@ const drawFilterToMain = (
         // MSAA有効時はMSAA版パイプラインを使用してmsaaTextureに描画→texture.viewにresolve
         const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
 
+        // マスクが有効かチェック
+        const isMasked = $isMaskTestEnabled();
+        const useStencil = isMasked
+            && (mainAttachment.msaaStencil?.view || mainAttachment.stencil?.view);
+
         // ブレンドモードに応じたパイプラインを選択
         let pipelineName: string;
-        switch (blend_mode) {
-            case "add":
-                pipelineName = useMsaa ? "filter_output_add_msaa" : "filter_output_add";
-                break;
-            case "screen":
-                pipelineName = useMsaa ? "filter_output_screen_msaa" : "filter_output_screen";
-                break;
-            case "alpha":
-                pipelineName = useMsaa ? "filter_output_alpha_msaa" : "filter_output_alpha";
-                break;
-            case "erase":
-                pipelineName = useMsaa ? "filter_output_erase_msaa" : "filter_output_erase";
-                break;
-            case "copy":
-                pipelineName = useMsaa ? "texture_copy_bgra_msaa" : "texture_copy_bgra";
-                break;
-            default:
-                // normal, layer
-                pipelineName = useMsaa ? "filter_output_msaa" : "filter_output";
-                break;
+        if (useStencil) {
+            // マスク有効時はステンシルテスト付きパイプラインを使用
+            pipelineName = useMsaa ? "filter_output_masked_msaa" : "filter_output_masked";
+        } else {
+            switch (blend_mode) {
+                case "add":
+                    pipelineName = useMsaa ? "filter_output_add_msaa" : "filter_output_add";
+                    break;
+                case "screen":
+                    pipelineName = useMsaa ? "filter_output_screen_msaa" : "filter_output_screen";
+                    break;
+                case "alpha":
+                    pipelineName = useMsaa ? "filter_output_alpha_msaa" : "filter_output_alpha";
+                    break;
+                case "erase":
+                    pipelineName = useMsaa ? "filter_output_erase_msaa" : "filter_output_erase";
+                    break;
+                case "copy":
+                    pipelineName = useMsaa ? "texture_copy_bgra_msaa" : "texture_copy_bgra";
+                    break;
+                default:
+                    // normal, layer
+                    pipelineName = useMsaa ? "filter_output_msaa" : "filter_output";
+                    break;
+            }
         }
 
         let pipeline = config.pipelineManager.getPipeline(pipelineName);
@@ -365,12 +379,27 @@ const drawFilterToMain = (
         // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
         const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
         const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
-        const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
-            colorView,
-            0, 0, 0, 0,
-            "load",
-            resolveTarget
-        );
+
+        let renderPassDescriptor: GPURenderPassDescriptor;
+        if (useStencil) {
+            // マスク有効時はステンシル付きレンダーパスを使用
+            const stencilView = useMsaa && mainAttachment.msaaStencil?.view
+                ? mainAttachment.msaaStencil.view : mainAttachment.stencil!.view;
+            renderPassDescriptor = config.frameBufferManager.createStencilRenderPassDescriptor(
+                colorView,
+                stencilView,
+                "load",
+                "load",
+                resolveTarget
+            );
+        } else {
+            renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
+                colorView,
+                0, 0, 0, 0,
+                "load",
+                resolveTarget
+            );
+        }
 
         // Viewportはfloat値でサブピクセル精度を維持（WebGLのsetTransform相当）
         // ScissorはGPUIntegerCoordinate必須のため整数化し、viewport領域を包含する
@@ -391,6 +420,10 @@ const drawFilterToMain = (
         const passEncoder = config.commandEncoder.beginRenderPass(renderPassDescriptor);
         passEncoder.setPipeline(pipeline);
         passEncoder.setBindGroup(0, bindGroup);
+        // マスク有効時はステンシル参照値を設定
+        if (useStencil) {
+            passEncoder.setStencilReference($getMaskStencilReference());
+        }
         passEncoder.setViewport(vpX, vpY, vpW, vpH, 0, 1);
         passEncoder.setScissorRect(scissorX, scissorY, scissorW, scissorH);
         passEncoder.draw(6, 1, 0, 0);
