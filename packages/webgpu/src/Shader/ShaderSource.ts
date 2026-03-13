@@ -43,11 +43,6 @@ export class ShaderSource
         return FillVertex;
     }
 
-    static getFillMainVertexShader (): string
-    {
-        return FillVertex;
-    }
-
     static getFillFragmentShader (): string
     {
         return FillFragment;
@@ -58,22 +53,12 @@ export class ShaderSource
         return StencilWriteVertex;
     }
 
-    static getStencilWriteMainVertexShader (): string
-    {
-        return StencilWriteVertex;
-    }
-
     static getStencilWriteFragmentShader (): string
     {
         return StencilWriteFragment;
     }
 
     static getStencilFillVertexShader (): string
-    {
-        return StencilFillVertex;
-    }
-
-    static getStencilFillMainVertexShader (): string
     {
         return StencilFillVertex;
     }
@@ -94,11 +79,6 @@ export class ShaderSource
     }
 
     static getBasicVertexShader (): string
-    {
-        return BasicVertex;
-    }
-
-    static getBasicMainVertexShader (): string
     {
         return BasicVertex;
     }
@@ -128,11 +108,6 @@ export class ShaderSource
         return GradientFillVertex;
     }
 
-    static getGradientFillMainVertexShader (): string
-    {
-        return GradientFillVertex;
-    }
-
     static getGradientFillFragmentShader (): string
     {
         return GradientFillFragment;
@@ -149,11 +124,6 @@ export class ShaderSource
     }
 
     static getBitmapFillVertexShader (): string
-    {
-        return BitmapFillVertex;
-    }
-
-    static getBitmapFillMainVertexShader (): string
     {
         return BitmapFillVertex;
     }

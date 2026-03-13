@@ -4,7 +4,6 @@ import type { IColorBufferObject } from "./interface/IColorBufferObject";
 import type { IStencilBufferObject } from "./interface/IStencilBufferObject";
 import { execute as attachmentManagerGetAttachmentObjectUseCase } from "./AttachmentManager/usecase/AttachmentManagerGetAttachmentObjectUseCase";
 import { execute as attachmentManagerReleaseAttachmentUseCase } from "./AttachmentManager/usecase/AttachmentManagerReleaseAttachmentUseCase";
-import { execute as attachmentManagerCreateRenderPassDescriptorService } from "./AttachmentManager/service/AttachmentManagerCreateRenderPassDescriptorService";
 
 export class AttachmentManager
 {
@@ -51,16 +50,6 @@ export class AttachmentManager
         this.currentAttachment = attachment;
     }
 
-    getCurrentAttachment(): IAttachmentObject | null
-    {
-        return this.currentAttachment;
-    }
-
-    get currentAttachmentObject(): IAttachmentObject | null
-    {
-        return this.currentAttachment;
-    }
-
     unbindAttachment(): void
     {
         this.currentAttachment = null;
@@ -74,25 +63,6 @@ export class AttachmentManager
             this.colorBufferPool,
             this.stencilBufferPool,
             attachment
-        );
-    }
-
-    createRenderPassDescriptor(
-        attachment: IAttachmentObject,
-        r: number,
-        g: number,
-        b: number,
-        a: number,
-        loadOp: GPULoadOp = "clear"
-    ): GPURenderPassDescriptor
-    {
-        return attachmentManagerCreateRenderPassDescriptorService(
-            attachment,
-            r,
-            g,
-            b,
-            a,
-            loadOp
         );
     }
 

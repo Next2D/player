@@ -16,6 +16,26 @@ import { $getAtlasAttachmentObject } from "../../AtlasManager";
 let $cachedBindGroup: GPUBindGroup | null = null;
 let $cachedAtlasView: GPUTextureView | null = null;
 
+/**
+ * @description ブレンドモードに応じたインスタンスパイプライン名を返す
+ */
+const $getPipelineName = (mode: IBlendMode): string => {
+    switch (mode) {
+        case "add":
+            return "instanced_add";
+        case "screen":
+            return "instanced_screen";
+        case "alpha":
+            return "instanced_alpha";
+        case "erase":
+            return "instanced_erase";
+        case "copy":
+            return "instanced_copy";
+        default:
+            return "instanced";
+    }
+};
+
 export const execute = (
     device: GPUDevice,
     command_encoder: GPUCommandEncoder,
@@ -44,27 +64,7 @@ export const execute = (
     // 現在のブレンドモードを取得
     const blendMode: IBlendMode = $currentBlendMode;
 
-    // ブレンドモードに応じたパイプライン名を生成
-    // simpleBlendModes: normal, layer, add, screen, alpha, erase, copy
-    const getPipelineName = (mode: IBlendMode): string => {
-        switch (mode) {
-            case "add":
-                return "instanced_add";
-            case "screen":
-                return "instanced_screen";
-            case "alpha":
-                return "instanced_alpha";
-            case "erase":
-                return "instanced_erase";
-            case "copy":
-                return "instanced_copy";
-            default:
-                // normal, layer
-                return "instanced";
-        }
-    };
-
-    const pipelineName = getPipelineName(blendMode);
+    const pipelineName = $getPipelineName(blendMode);
     const normalPipeline = pipeline_manager.getPipeline(pipelineName);
     const maskedPipeline = pipeline_manager.getPipeline("instanced_masked");
 

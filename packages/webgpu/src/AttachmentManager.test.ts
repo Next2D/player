@@ -27,16 +27,6 @@ vi.mock("./AttachmentManager/usecase/AttachmentManagerReleaseAttachmentUseCase",
     "execute": vi.fn()
 }));
 
-vi.mock("./AttachmentManager/service/AttachmentManagerCreateRenderPassDescriptorService", () => ({
-    "execute": vi.fn((attachment, r, g, b, a, loadOp) => ({
-        "colorAttachments": [{
-            "view": attachment.texture?.view,
-            "clearValue": { r, g, b, a },
-            "loadOp": loadOp,
-            "storeOp": "store"
-        }]
-    }))
-}));
 
 describe("AttachmentManager", () =>
 {
@@ -65,13 +55,6 @@ describe("AttachmentManager", () =>
             expect(manager).toBeDefined();
         });
 
-        it("should initialize with null current attachment", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-
-            expect(manager.getCurrentAttachment()).toBeNull();
-        });
     });
 
     describe("getAttachmentObject", () =>
@@ -119,68 +102,16 @@ describe("AttachmentManager", () =>
         });
     });
 
-    describe("bindAttachment", () =>
+    describe("bindAttachment / unbindAttachment", () =>
     {
-        it("should set current attachment", () =>
+        it("should bind and unbind attachment without error", () =>
         {
             const device = createMockDevice();
             const manager = new AttachmentManager(device);
             const attachment = manager.getAttachmentObject(100, 100);
 
-            manager.bindAttachment(attachment);
-
-            expect(manager.getCurrentAttachment()).toBe(attachment);
-        });
-    });
-
-    describe("getCurrentAttachment", () =>
-    {
-        it("should return null before binding", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-
-            expect(manager.getCurrentAttachment()).toBeNull();
-        });
-
-        it("should return bound attachment", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-            const attachment = manager.getAttachmentObject(100, 100);
-
-            manager.bindAttachment(attachment);
-
-            expect(manager.getCurrentAttachment()).toBe(attachment);
-        });
-    });
-
-    describe("currentAttachmentObject", () =>
-    {
-        it("should return same as getCurrentAttachment", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-            const attachment = manager.getAttachmentObject(100, 100);
-
-            manager.bindAttachment(attachment);
-
-            expect(manager.currentAttachmentObject).toBe(manager.getCurrentAttachment());
-        });
-    });
-
-    describe("unbindAttachment", () =>
-    {
-        it("should set current attachment to null", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-            const attachment = manager.getAttachmentObject(100, 100);
-
-            manager.bindAttachment(attachment);
-            manager.unbindAttachment();
-
-            expect(manager.getCurrentAttachment()).toBeNull();
+            expect(() => manager.bindAttachment(attachment)).not.toThrow();
+            expect(() => manager.unbindAttachment()).not.toThrow();
         });
     });
 
@@ -193,51 +124,6 @@ describe("AttachmentManager", () =>
             const attachment = manager.getAttachmentObject(100, 100);
 
             expect(() => manager.releaseAttachment(attachment)).not.toThrow();
-        });
-    });
-
-    describe("createRenderPassDescriptor", () =>
-    {
-        it("should create descriptor with clear color", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-            const attachment = manager.getAttachmentObject(100, 100);
-
-            const descriptor = manager.createRenderPassDescriptor(
-                attachment, 0.5, 0.5, 0.5, 1.0, "clear"
-            );
-
-            expect(descriptor.colorAttachments).toBeDefined();
-            expect((descriptor.colorAttachments as any)[0].clearValue).toEqual({
-                "r": 0.5, "g": 0.5, "b": 0.5, "a": 1.0
-            });
-        });
-
-        it("should use clear as default loadOp", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-            const attachment = manager.getAttachmentObject(100, 100);
-
-            const descriptor = manager.createRenderPassDescriptor(
-                attachment, 0, 0, 0, 0
-            );
-
-            expect((descriptor.colorAttachments as any)[0].loadOp).toBe("clear");
-        });
-
-        it("should accept load as loadOp", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-            const attachment = manager.getAttachmentObject(100, 100);
-
-            const descriptor = manager.createRenderPassDescriptor(
-                attachment, 0, 0, 0, 0, "load"
-            );
-
-            expect((descriptor.colorAttachments as any)[0].loadOp).toBe("load");
         });
     });
 
