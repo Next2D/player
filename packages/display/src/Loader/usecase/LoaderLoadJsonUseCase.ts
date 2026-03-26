@@ -17,12 +17,21 @@ import { $unzipWorker } from "../worker/UnzipWorker";
 export const execute = async (loader: Loader, object: IAnimationToolData | IAnimationToolDataZlib): Promise<void> =>
 {
     if (object.type === "zlib") {
-        await new Promise<void>((resolve): void =>
+        await new Promise<void>((resolve, reject): void =>
         {
             $unzipWorker.onmessage = (event: MessageEvent): void =>
             {
+                if (event.data && event.data.error) {
+                    reject(new Error(event.data.error));
+                    return;
+                }
                 loaderBuildService(loader, event.data as IAnimationToolData);
                 resolve();
+            };
+
+            $unzipWorker.onerror = (event: ErrorEvent): void =>
+            {
+                reject(new Error(event.message));
             };
 
             const buffer: Uint8Array = new Uint8Array(object.buffer);
