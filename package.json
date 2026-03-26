@@ -47,9 +47,6 @@
     "type": "github",
     "url": "https://github.com/sponsors/Next2D"
   },
-  "dependencies": {
-    "htmlparser2": "^12.0.0"
-  },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",

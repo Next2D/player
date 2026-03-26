@@ -1,7 +1,6 @@
 import { execute } from "./TextParserParseTagUseCase";
 import { TextData } from "../../TextData";
 import { TextFormat } from "../../TextFormat";
-import { parseDocument } from "htmlparser2";
 import { describe, expect, it } from "vitest";
 
 describe("TextParserParseTagUseCase.js test", () =>
@@ -33,7 +32,7 @@ describe("TextParserParseTagUseCase.js test", () =>
 えお順
 </p>`;
 
-        execute(parseDocument(htmlText.trim().replace(/\r?\n/g, "").replace(/\t/g, "")), textFormat, textData, {
+        execute(htmlText.trim().replace(/\r?\n/g, "").replace(/\t/g, ""), textFormat, textData, {
             "width": 200,
             "multiline": true,
             "wordWrap": true,
