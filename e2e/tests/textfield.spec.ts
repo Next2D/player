@@ -57,4 +57,11 @@ test.describe("TextFieldテスト", () => {
 
         await expect(page).toHaveScreenshot("textfield-auto-font-size.png");
     });
+
+    test("htmlText（全タグ: b, i, u, font, span, p, div, br + スタイル属性）", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/html-text.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-html-text.png");
+    });
 });
