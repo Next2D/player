@@ -349,24 +349,6 @@ describe("ShaderSource", () =>
         });
     });
 
-    describe("getGradientFragmentShader", () =>
-    {
-        it("should return a valid WGSL fragment shader string", () =>
-        {
-            const shader = ShaderSource.getGradientFragmentShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @fragment attribute", () =>
-        {
-            const shader = ShaderSource.getGradientFragmentShader();
-
-            expect(shader).toContain("@fragment");
-        });
-    });
-
     describe("getBitmapFillVertexShader", () =>
     {
         it("should return a valid WGSL vertex shader string", () =>
@@ -730,46 +712,6 @@ describe("ShaderSource", () =>
         });
     });
 
-    describe("getComplexBlendFragmentShader", () =>
-    {
-        it("should return a valid WGSL fragment shader (unified)", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @fragment attribute", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("@fragment");
-        });
-
-        it("should include blend function", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("fn blend");
-        });
-
-        it("should support step-based blend modes (lighten/darken)", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("step(srcRgb, dstRgb)");
-            expect(shader).toContain("step(dstRgb, srcRgb)");
-        });
-
-        it("should include blendMode uniform", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("blendMode");
-        });
-    });
-
     describe("getDisplacementMapFilterFragmentShader", () =>
     {
         it("should return a valid WGSL fragment shader string", () =>
@@ -931,7 +873,6 @@ describe("ShaderSource", () =>
             { name: "getTextureFragmentShader", fn: () => ShaderSource.getTextureFragmentShader() },
             { name: "getInstancedFragmentShader", fn: () => ShaderSource.getInstancedFragmentShader() },
             { name: "getGradientFillFragmentShader", fn: () => ShaderSource.getGradientFillFragmentShader() },
-            { name: "getGradientFragmentShader", fn: () => ShaderSource.getGradientFragmentShader() },
             { name: "getBitmapFillFragmentShader", fn: () => ShaderSource.getBitmapFillFragmentShader() },
             { name: "getBlendFragmentShader", fn: () => ShaderSource.getBlendFragmentShader() },
             { name: "getTextureCopyFragmentShader", fn: () => ShaderSource.getTextureCopyFragmentShader() },

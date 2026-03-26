@@ -9,7 +9,6 @@ import { PathCommand } from "./PathCommand";
 import { BufferManager } from "./BufferManager";
 import { TextureManager } from "./TextureManager";
 import { FrameBufferManager } from "./FrameBufferManager";
-import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
 import {
     $rootNodes,
@@ -274,8 +273,6 @@ export class Context
     private frameBufferManager: FrameBufferManager;
     /** @description パイプラインマネージャー / Pipeline manager */
     private pipelineManager: PipelineManager;
-    /** @description アタッチメントマネージャー / Attachment manager */
-    private attachmentManager: AttachmentManager;
 
     /** @description 新しい描画状態フラグ / New draw state flag */
     public newDrawState: boolean = false;
@@ -403,7 +400,6 @@ export class Context
         this.pipelineManager = new PipelineManager(device, preferred_format);
         // 遅延パイプライン群を即座に先行作成（初回アクセス時のレイテンシ解消）
         this.pipelineManager.preloadLazyGroups();
-        this.attachmentManager = new AttachmentManager(device);
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
         $setGradientLUTDevice(device);
@@ -636,23 +632,6 @@ export class Context
 
         // メインアタッチメントをバインド
         this.bind(this.$mainAttachmentObject);
-    }
-
-    /**
-     * @description 指定範囲をクリアする
-     *              Clear the specified rectangle area
-     *
-     * @param  {number} _x - X座標 / X coordinate
-     * @param  {number} _y - Y座標 / Y coordinate
-     * @param  {number} _w - 幅 / Width
-     * @param  {number} _h - 高さ / Height
-     * @return {void}
-     */
-    clearRect (_x: number, _y: number, _w: number, _h: number): void
-    {
-        // WebGPU clear rect implementation
-        // WebGPUではclearはレンダーパス開始時に行うため、ここでは何もしない
-        // 実際のクリアはbeginNodeRenderingやbeginFrameで行われる
     }
 
     /**
@@ -1220,67 +1199,6 @@ export class Context
             use_stencil_pipeline,
             clipLevel
         );
-    }
-
-    /**
-     * @description オフスクリーンアタッチメントにバインド
-     *              Bind to an offscreen attachment
-     *              WebGL: FrameBufferManagerBindAttachmentObjectService
-     *
-     * @param  {IAttachmentObject} attachment - バインドするアタッチメント / Attachment to bind
-     * @return {void}
-     */
-    bindAttachment(attachment: IAttachmentObject): void
-    {
-        this.attachmentManager.bindAttachment(attachment);
-
-        // 現在のレンダーターゲットをオフスクリーンに切り替え
-        // color?.view または texture?.view を使用
-        const view = attachment.color?.view ?? attachment.texture?.view;
-        if (view) {
-            this.currentRenderTarget = view;
-        }
-    }
-
-    /**
-     * @description メインキャンバスにバインド
-     *              Bind to the main canvas
-     *              WebGL: FrameBufferManagerUnBindAttachmentObjectService
-     *
-     * @return {void}
-     */
-    unbindAttachment(): void
-    {
-        this.attachmentManager.unbindAttachment();
-        this.currentRenderTarget = null;
-    }
-
-    /**
-     * @description アタッチメントオブジェクトを取得
-     *              Get an attachment object
-     *              WebGL: FrameBufferManagerGetAttachmentObjectUseCase
-     *
-     * @param  {number}  width  - 幅 / Width
-     * @param  {number}  height - 高さ / Height
-     * @param  {boolean} msaa   - MSAA有効化フラグ / MSAA enable flag
-     * @return {IAttachmentObject} アタッチメントオブジェクト / Attachment object
-     */
-    getAttachmentObject(width: number, height: number, msaa: boolean = false): IAttachmentObject
-    {
-        return this.attachmentManager.getAttachmentObject(width, height, msaa);
-    }
-
-    /**
-     * @description アタッチメントオブジェクトを解放
-     *              Release an attachment object
-     *              WebGL: FrameBufferManagerReleaseAttachmentObjectUseCase
-     *
-     * @param  {IAttachmentObject} attachment - 解放するアタッチメント / Attachment to release
-     * @return {void}
-     */
-    releaseAttachment(attachment: IAttachmentObject): void
-    {
-        this.attachmentManager.releaseAttachment(attachment);
     }
 
     /**
@@ -2033,29 +1951,6 @@ export class Context
 
         // 複雑なブレンドモードの処理
         this.processComplexBlendQueue();
-    }
-
-    /**
-     * @description 最適化インスタンス描画の有効/無効を設定
-     *              Enable or disable optimized instancing
-     *
-     * @param  {boolean} enabled - 有効にするか / Whether to enable
-     * @return {void}
-     */
-    setOptimizedInstancing (enabled: boolean): void
-    {
-        this.useOptimizedInstancing = enabled;
-    }
-
-    /**
-     * @description 最適化インスタンス描画が有効かどうか
-     *              Whether optimized instancing is enabled
-     *
-     * @return {boolean} 有効ならtrue / True if enabled
-     */
-    isOptimizedInstancingEnabled (): boolean
-    {
-        return this.useOptimizedInstancing;
     }
 
     /**

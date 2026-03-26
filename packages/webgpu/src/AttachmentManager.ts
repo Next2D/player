@@ -61,27 +61,6 @@ export class AttachmentManager
     }
 
     /**
-     * @description 現在のアタッチメントをバインドする
-     *              Bind the current attachment
-     * @param  {IAttachmentObject} attachment - バインドするアタッチメント / Attachment to bind
-     * @return {void}
-     */
-    bindAttachment(_attachment: IAttachmentObject): void
-    {
-        // no-op: バインド状態はContext側で管理
-    }
-
-    /**
-     * @description 現在のアタッチメントのバインドを解除する
-     *              Unbind the current attachment
-     * @return {void}
-     */
-    unbindAttachment(): void
-    {
-        // no-op: バインド状態はContext側で管理
-    }
-
-    /**
      * @description アタッチメントをプールに返却する
      *              Release an attachment back to the pool
      * @param  {IAttachmentObject} attachment - 返却するアタッチメント / Attachment to release

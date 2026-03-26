@@ -12,7 +12,7 @@ import { StencilWriteFragment, StencilFillFragment } from "./wgsl/fragment/Stenc
 import { MaskFragment } from "./wgsl/fragment/MaskFragment";
 import { BasicFragment, TextureFragment } from "./wgsl/fragment/BasicFragment";
 import { InstancedFragment } from "./wgsl/fragment/InstancedFragment";
-import { GradientFillFragment, GradientFillStencilFragment, GradientFragment } from "./wgsl/fragment/GradientFragment";
+import { GradientFillFragment, GradientFillStencilFragment } from "./wgsl/fragment/GradientFragment";
 import { BitmapFillFragment } from "./wgsl/fragment/BitmapFragment";
 import {
     TextureCopyFragment,
@@ -216,17 +216,6 @@ export class ShaderSource
     static getGradientFillStencilFragmentShader (): string
     {
         return GradientFillStencilFragment;
-    }
-
-    /**
-     * @description グラデーションフラグメントシェーダーを取得する
-     *              Get gradient fragment shader
-     *
-     * @return {string}
-     */
-    static getGradientFragmentShader (): string
-    {
-        return GradientFragment;
     }
 
     /**
@@ -584,17 +573,6 @@ fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
     return result;
 }
 `;
-    }
-
-    /**
-     * @description 複合ブレンドフラグメントシェーダーを取得する
-     *              Get complex blend fragment shader
-     *
-     * @return {string}
-     */
-    static getComplexBlendFragmentShader (): string
-    {
-        return ShaderSource.getUnifiedComplexBlendFragmentShader();
     }
 
     /**

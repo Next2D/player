@@ -126,33 +126,6 @@ export class TexturePool
     }
 
     /**
-     * @description プール統計を取得する
-     *              Get pool statistics including total, in-use, and available counts
-     * @return {{ total: number, inUse: number, available: number }}
-     */
-    getStats(): { total: number; inUse: number; available: number }
-    {
-        let inUse = 0;
-        let available = 0;
-
-        for (const bucket of this.buckets.values()) {
-            for (const entry of bucket) {
-                if (entry.inUse) {
-                    inUse++;
-                } else {
-                    available++;
-                }
-            }
-        }
-
-        return {
-            "total": this.totalCount[0],
-            inUse,
-            available
-        };
-    }
-
-    /**
      * @description 全テクスチャを破棄しプールを解放する
      *              Destroy all textures and dispose of the pool
      * @return {void}

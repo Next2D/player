@@ -5,7 +5,6 @@ import { execute as bufferManagerAcquireUniformBufferUseCase } from "./BufferMan
 import { execute as bufferManagerReleaseVertexBufferService } from "./BufferManager/service/BufferManagerReleaseVertexBufferService";
 import { execute as bufferManagerReleaseUniformBufferService } from "./BufferManager/service/BufferManagerReleaseUniformBufferService";
 import { execute as bufferManagerAcquireStorageBufferUseCase } from "./BufferManager/usecase/BufferManagerAcquireStorageBufferUseCase";
-import { execute as releaseStorageBufferUseCase } from "./BufferManager/usecase/BufferManagerReleaseStorageBufferUseCase";
 import { execute as cleanupStorageBuffersUseCase } from "./BufferManager/usecase/BufferManagerCleanupStorageBuffersUseCase";
 import { execute as bufferManagerCreateIndirectBufferService } from "./BufferManager/service/BufferManagerCreateIndirectBufferService";
 import { execute as updateIndirectBuffer } from "./BufferManager/service/BufferManagerUpdateIndirectBufferService";
@@ -164,12 +163,9 @@ export class DynamicUniformAllocator
 export class BufferManager
 {
     private device: GPUDevice;
-    private vertexBuffers: Map<string, GPUBuffer>;
-    private uniformBuffers: Map<string, GPUBuffer>;
     private vertexBufferBuckets: Map<number, GPUBuffer[]>;
     private uniformBufferBuckets: Map<number, GPUBuffer[]>;
     private storageBufferPool: IPooledStorageBuffer[];
-    private indirectBuffer: GPUBuffer | null;
     private indirectBufferPool: GPUBuffer[];
     private frameIndirectBuffers: GPUBuffer[];
     private frameNumber: number;
@@ -186,12 +182,9 @@ export class BufferManager
     constructor (device: GPUDevice)
     {
         this.device = device;
-        this.vertexBuffers = new Map();
-        this.uniformBuffers = new Map();
         this.vertexBufferBuckets = new Map();
         this.uniformBufferBuckets = new Map();
         this.storageBufferPool = [];
-        this.indirectBuffer = null;
         this.indirectBufferPool = [];
         this.frameIndirectBuffers = [];
         this.frameNumber = 0;
@@ -199,83 +192,6 @@ export class BufferManager
         this.frameVertexPoolBuffers = [];
         this.frameUniformPoolBuffers = [];
         this.dynamicUniform = new DynamicUniformAllocator(device);
-    }
-
-    /**
-     * @description 名前付き頂点バッファを作成し、初期データを書き込む
-     *              Create a named vertex buffer and write initial data
-     * @param {string} name - バッファ名
-     * @param {Float32Array} data - 頂点データ
-     * @return {GPUBuffer} 作成された頂点バッファ
-     */
-    createVertexBuffer (name: string, data: Float32Array): GPUBuffer
-    {
-        const buffer = this.device.createBuffer({
-            "size": data.byteLength,
-            "usage": GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-            "mappedAtCreation": true
-        });
-
-        new Float32Array(buffer.getMappedRange()).set(data);
-        buffer.unmap();
-
-        this.vertexBuffers.set(name, buffer);
-        return buffer;
-    }
-
-    /**
-     * @description 名前付きユニフォームバッファを作成
-     *              Create a named uniform buffer
-     * @param {string} name - バッファ名
-     * @param {number} size - バッファサイズ（バイト単位）
-     * @return {GPUBuffer} 作成されたユニフォームバッファ
-     */
-    createUniformBuffer (name: string, size: number): GPUBuffer
-    {
-        const buffer = this.device.createBuffer({
-            "size": size,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-
-        this.uniformBuffers.set(name, buffer);
-        return buffer;
-    }
-
-    /**
-     * @description 名前付きユニフォームバッファのデータを更新
-     *              Update data of a named uniform buffer
-     * @param {string} name - バッファ名
-     * @param {Float32Array} data - 書き込むデータ
-     * @return {void}
-     */
-    updateUniformBuffer (name: string, data: Float32Array): void
-    {
-        const buffer = this.uniformBuffers.get(name);
-        if (buffer) {
-            this.device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, data.byteLength);
-        }
-    }
-
-    /**
-     * @description 名前で頂点バッファを取得
-     *              Get vertex buffer by name
-     * @param {string} name - バッファ名
-     * @return {GPUBuffer | undefined} 頂点バッファ、存在しない場合はundefined
-     */
-    getVertexBuffer (name: string): GPUBuffer | undefined
-    {
-        return this.vertexBuffers.get(name);
-    }
-
-    /**
-     * @description 名前でユニフォームバッファを取得
-     *              Get uniform buffer by name
-     * @param {string} name - バッファ名
-     * @return {GPUBuffer | undefined} ユニフォームバッファ、存在しない場合はundefined
-     */
-    getUniformBuffer (name: string): GPUBuffer | undefined
-    {
-        return this.uniformBuffers.get(name);
     }
 
     /**
@@ -312,17 +228,6 @@ export class BufferManager
     }
 
     /**
-     * @description 頂点バッファをプールに返却
-     *              Release vertex buffer back to pool
-     * @param {GPUBuffer} buffer - 返却するバッファ
-     * @return {void}
-     */
-    releaseVertexBuffer (buffer: GPUBuffer): void
-    {
-        bufferManagerReleaseVertexBufferService(this.vertexBufferBuckets, buffer);
-    }
-
-    /**
      * @description プールからユニフォームバッファを取得（または新規作成）
      *              Acquire uniform buffer from pool or create new one
      * @param {number} required_size - 必要なバイトサイズ
@@ -355,54 +260,12 @@ export class BufferManager
     }
 
     /**
-     * @description ユニフォームバッファをプールに返却
-     *              Release uniform buffer back to pool
-     * @param {GPUBuffer} buffer - 返却するバッファ
-     * @return {void}
-     */
-    releaseUniformBuffer (buffer: GPUBuffer): void
-    {
-        bufferManagerReleaseUniformBufferService(this.uniformBufferBuckets, buffer);
-    }
-
-    /**
-     * @description 名前指定でバッファを破棄（頂点・ユニフォーム両方）
-     *              Destroy buffer by name (both vertex and uniform)
-     * @param {string} name - バッファ名
-     * @return {void}
-     */
-    destroyBuffer (name: string): void
-    {
-        const vertexBuffer = this.vertexBuffers.get(name);
-        if (vertexBuffer) {
-            vertexBuffer.destroy();
-            this.vertexBuffers.delete(name);
-        }
-
-        const uniformBuffer = this.uniformBuffers.get(name);
-        if (uniformBuffer) {
-            uniformBuffer.destroy();
-            this.uniformBuffers.delete(name);
-        }
-    }
-
-    /**
      * @description 全バッファを破棄してリソースを解放
      *              Dispose all buffers and release resources
      * @return {void}
      */
     dispose (): void
     {
-        for (const buffer of this.vertexBuffers.values()) {
-            buffer.destroy();
-        }
-        this.vertexBuffers.clear();
-
-        for (const buffer of this.uniformBuffers.values()) {
-            buffer.destroy();
-        }
-        this.uniformBuffers.clear();
-
         for (const bucket of this.vertexBufferBuckets.values()) {
             for (const buffer of bucket) {
                 buffer.destroy();
@@ -421,11 +284,6 @@ export class BufferManager
             entry.buffer.destroy();
         }
         this.storageBufferPool = [];
-
-        if (this.indirectBuffer) {
-            this.indirectBuffer.destroy();
-            this.indirectBuffer = null;
-        }
 
         for (const buffer of this.indirectBufferPool) {
             buffer.destroy();
@@ -455,16 +313,6 @@ export class BufferManager
      */
     clearFrameBuffers (): void
     {
-        for (const buffer of this.vertexBuffers.values()) {
-            buffer.destroy();
-        }
-        this.vertexBuffers.clear();
-
-        for (const buffer of this.uniformBuffers.values()) {
-            buffer.destroy();
-        }
-        this.uniformBuffers.clear();
-
         // フレーム内で取得したプールバッファをプールに返却
         for (const buffer of this.frameVertexPoolBuffers) {
             bufferManagerReleaseVertexBufferService(this.vertexBufferBuckets, buffer);
@@ -522,17 +370,6 @@ export class BufferManager
     }
 
     /**
-     * @description Storage Bufferをプールに返却
-     *              Release storage buffer back to pool
-     * @param {GPUBuffer} buffer - 返却するバッファ
-     * @return {void}
-     */
-    releaseStorageBuffer (buffer: GPUBuffer): void
-    {
-        releaseStorageBufferUseCase(this.storageBufferPool, buffer);
-    }
-
-    /**
      * @description Storage Bufferにデータを書き込む
      *              Write data to storage buffer
      * @param {GPUBuffer} buffer - 書き込み先バッファ
@@ -542,42 +379,6 @@ export class BufferManager
     writeStorageBuffer (buffer: GPUBuffer, data: Float32Array | Uint32Array): void
     {
         this.device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, data.byteLength);
-    }
-
-    /**
-     * @description Indirect Bufferを取得または作成（シングルトン）
-     *              Get or create indirect buffer (singleton)
-     * @param {number} vertex_count - 頂点数
-     * @param {number} instance_count - インスタンス数
-     * @param {number} first_vertex - 開始頂点インデックス
-     * @param {number} first_instance - 開始インスタンスインデックス
-     * @return {GPUBuffer} Indirect Buffer
-     */
-    getOrCreateIndirectBuffer (
-        vertex_count: number,
-        instance_count: number,
-        first_vertex: number = 0,
-        first_instance: number = 0
-    ): GPUBuffer {
-        if (!this.indirectBuffer) {
-            this.indirectBuffer = bufferManagerCreateIndirectBufferService(
-                this.device,
-                vertex_count,
-                instance_count,
-                first_vertex,
-                first_instance
-            );
-        } else {
-            updateIndirectBuffer(
-                this.device,
-                this.indirectBuffer,
-                vertex_count,
-                instance_count,
-                first_vertex,
-                first_instance
-            );
-        }
-        return this.indirectBuffer;
     }
 
     /**
@@ -636,16 +437,6 @@ export class BufferManager
             this.unitRectBuffer.unmap();
         }
         return this.unitRectBuffer;
-    }
-
-    /**
-     * @description 現在のフレーム番号を取得
-     *              Get current frame number
-     * @return {number} フレーム番号
-     */
-    getFrameNumber (): number
-    {
-        return this.frameNumber;
     }
 
 }

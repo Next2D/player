@@ -356,22 +356,6 @@ describe("FrameBufferManager", () =>
         });
     });
 
-    describe("resizeAttachment", () =>
-    {
-        it("should destroy old and create new attachment", () =>
-        {
-            const device = createMockDevice();
-            const manager = new FrameBufferManager(device, "bgra8unorm");
-            const oldAttachment = manager.createAttachment("test", 100, 100);
-
-            const newAttachment = manager.resizeAttachment("test", 200, 200);
-
-            expect(oldAttachment.texture!.resource.destroy).toHaveBeenCalled();
-            expect(newAttachment.width).toBe(200);
-            expect(newAttachment.height).toBe(200);
-        });
-    });
-
     describe("createTemporaryAttachment", () =>
     {
         it("should create temporary attachment", () =>

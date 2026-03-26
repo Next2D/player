@@ -102,19 +102,6 @@ describe("AttachmentManager", () =>
         });
     });
 
-    describe("bindAttachment / unbindAttachment", () =>
-    {
-        it("should bind and unbind attachment without error", () =>
-        {
-            const device = createMockDevice();
-            const manager = new AttachmentManager(device);
-            const attachment = manager.getAttachmentObject(100, 100);
-
-            expect(() => manager.bindAttachment(attachment)).not.toThrow();
-            expect(() => manager.unbindAttachment()).not.toThrow();
-        });
-    });
-
     describe("releaseAttachment", () =>
     {
         it("should release attachment back to pool", () =>

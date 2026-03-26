@@ -1,6 +1,4 @@
 import { execute as textureManagerInitializeSamplersService } from "./TextureManager/service/TextureManagerInitializeSamplersService";
-import { execute as textureManagerCreateTextureFromPixelsUseCase } from "./TextureManager/usecase/TextureManagerCreateTextureFromPixelsUseCase";
-import { execute as textureManagerCreateTextureFromImageBitmapUseCase } from "./TextureManager/usecase/TextureManagerCreateTextureFromImageBitmapUseCase";
 
 /**
  * @description テクスチャとサンプラーの管理クラス
@@ -54,74 +52,6 @@ export class TextureManager
     }
 
     /**
-     * @description ピクセルデータからテクスチャを作成する
-     *              Create a texture from pixel data
-     * @param  {string}     name   - テクスチャ名 / Texture name
-     * @param  {Uint8Array} pixels - ピクセルデータ / Pixel data
-     * @param  {number}     width  - テクスチャの幅 / Texture width
-     * @param  {number}     height - テクスチャの高さ / Texture height
-     * @return {GPUTexture}
-     */
-    createTextureFromPixels (
-        name: string,
-        pixels: Uint8Array,
-        width: number,
-        height: number
-    ): GPUTexture {
-        return textureManagerCreateTextureFromPixelsUseCase(
-            this.device,
-            this.textures,
-            name,
-            pixels,
-            width,
-            height
-        );
-    }
-
-    /**
-     * @description ImageBitmapからテクスチャを作成する
-     *              Create a texture from an ImageBitmap
-     * @param  {string}      name         - テクスチャ名 / Texture name
-     * @param  {ImageBitmap} image_bitmap - 画像ビットマップ / Image bitmap source
-     * @return {GPUTexture}
-     */
-    createTextureFromImageBitmap (name: string, image_bitmap: ImageBitmap): GPUTexture
-    {
-        return textureManagerCreateTextureFromImageBitmapUseCase(
-            this.device,
-            this.textures,
-            name,
-            image_bitmap
-        );
-    }
-
-    /**
-     * @description 既存テクスチャのピクセルデータを更新する
-     *              Update pixel data of an existing texture
-     * @param  {string}     name   - テクスチャ名 / Texture name
-     * @param  {Uint8Array} pixels - ピクセルデータ / Pixel data
-     * @param  {number}     width  - テクスチャの幅 / Texture width
-     * @param  {number}     height - テクスチャの高さ / Texture height
-     * @return {void}
-     */
-    updateTexture (
-        name: string,
-        pixels: Uint8Array,
-        width: number,
-        height: number
-    ): void {
-        const texture = this.textures.get(name);
-        if (texture) {
-            this.device.queue.writeTexture(
-                { texture },
-                pixels.buffer,
-                { "bytesPerRow": width * 4, "offset": pixels.byteOffset },
-                { width, height }
-            );
-        }
-    }
-
-    /**
      * @description 名前でテクスチャを取得する
      *              Get a texture by name
      * @param  {string} name - テクスチャ名 / Texture name
@@ -130,17 +60,6 @@ export class TextureManager
     getTexture (name: string): GPUTexture | undefined
     {
         return this.textures.get(name);
-    }
-
-    /**
-     * @description 名前でサンプラーを取得する
-     *              Get a sampler by name
-     * @param  {string} name - サンプラー名 / Sampler name
-     * @return {GPUSampler | undefined}
-     */
-    getSampler (name: string): GPUSampler | undefined
-    {
-        return this.samplers.get(name);
     }
 
     /**
@@ -167,21 +86,6 @@ export class TextureManager
 
         this.samplers.set(name, sampler);
         return sampler;
-    }
-
-    /**
-     * @description テクスチャを破棄する
-     *              Destroy a texture by name
-     * @param  {string} name - テクスチャ名 / Texture name
-     * @return {void}
-     */
-    destroyTexture (name: string): void
-    {
-        const texture = this.textures.get(name);
-        if (texture) {
-            texture.destroy();
-            this.textures.delete(name);
-        }
     }
 
     /**

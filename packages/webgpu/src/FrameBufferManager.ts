@@ -180,20 +180,6 @@ export class FrameBufferManager
     }
 
     /**
-     * @description アタッチメントをリサイズする
-     *              Resize an attachment
-     * @param  {string} name   - アタッチメント名 / Attachment name
-     * @param  {number} width  - 新しい幅 / New width
-     * @param  {number} height - 新しい高さ / New height
-     * @return {IAttachmentObject}
-     */
-    resizeAttachment(name: string, width: number, height: number): IAttachmentObject
-    {
-        this.destroyAttachment(name);
-        return this.createAttachment(name, width, height);
-    }
-
-    /**
      * @description 一時的なアタッチメントを作成する
      *              Create a temporary attachment
      * @param  {number} width  - テクスチャの幅 / Texture width

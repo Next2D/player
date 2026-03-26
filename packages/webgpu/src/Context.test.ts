@@ -211,15 +211,6 @@ describe("Context", () =>
         });
     });
 
-    describe("clearRect", () =>
-    {
-        it("should be a no-op in WebGPU (clear happens at render pass start)", () =>
-        {
-            // clearRect does nothing in WebGPU - clear is done at render pass start
-            expect(() => context.clearRect(0, 0, 100, 100)).not.toThrow();
-        });
-    });
-
     describe("fillStyle", () =>
     {
         it("should update fill style when set", () =>
@@ -422,7 +413,7 @@ describe("Context", () =>
             vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
 
             // Mock buffer manager
-            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+            vi.spyOn(context["bufferManager"], "acquireVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
 
             const mockNode = { "x": 100, "y": 200, "w": 50, "h": 30 };
 
@@ -464,7 +455,7 @@ describe("Context", () =>
                 "depthStencilAttachment": { "view": {}, "stencilLoadOp": "clear", "stencilStoreOp": "store" }
             } as unknown as GPURenderPassDescriptor);
             vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
-            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+            vi.spyOn(context["bufferManager"], "acquireVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
 
             const mockNode = { "x": 0, "y": 0, "w": 100, "h": 100 };
 
@@ -502,7 +493,7 @@ describe("Context", () =>
                 "depthStencilAttachment": { "view": {}, "stencilLoadOp": "clear", "stencilStoreOp": "store" }
             } as unknown as GPURenderPassDescriptor);
             vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
-            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+            vi.spyOn(context["bufferManager"], "acquireVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
 
             const mockNode = { "x": 0, "y": 0, "w": 10, "h": 10 };
             const mockPixels = new Uint8Array(10 * 10 * 4);
@@ -559,7 +550,7 @@ describe("Context", () =>
                 "depthStencilAttachment": { "view": {}, "stencilLoadOp": "clear", "stencilStoreOp": "store" }
             } as unknown as GPURenderPassDescriptor);
             vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
-            vi.spyOn(context["bufferManager"], "createVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
+            vi.spyOn(context["bufferManager"], "acquireVertexBuffer").mockReturnValue(mockBuffer as unknown as GPUBuffer);
 
             // Mock copyExternalImageToTexture
             mockQueue.copyExternalImageToTexture = vi.fn();
