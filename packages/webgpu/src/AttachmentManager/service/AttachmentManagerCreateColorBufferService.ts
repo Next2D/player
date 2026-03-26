@@ -5,10 +5,10 @@ import type { IStencilBufferObject } from "../../interface/IStencilBufferObject"
  * @description カラーバッファを新規作成
  *              Create a new color buffer
  *
- * @param  {GPUDevice} device
- * @param  {number} width
- * @param  {number} height
- * @param  {IStencilBufferObject} stencil
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {number} width - バッファ幅
+ * @param  {number} height - バッファ高さ
+ * @param  {IStencilBufferObject} stencil - 関連するステンシルバッファ
  * @return {IColorBufferObject}
  * @method
  * @protected

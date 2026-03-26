@@ -21,29 +21,29 @@ const $entries3: GPUBindGroupEntry[] = [
  * @description ブラーフィルターを適用
  *              Apply blur filter
  *
- * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ（アタッチメント）
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ（アタッチメント）
  * @param  {Float32Array} matrix - 変換行列
- * @param  {number} blurX - X方向のブラー量
- * @param  {number} blurY - Y方向のブラー量
+ * @param  {number} blur_x - X方向のブラー量
+ * @param  {number} blur_y - Y方向のブラー量
  * @param  {number} quality - クオリティ (1-15)
- * @param  {number} devicePixelRatio - デバイスピクセル比
+ * @param  {number} device_pixel_ratio - デバイスピクセル比
  * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
+    source_attachment: IAttachmentObject,
     matrix: Float32Array,
-    blurX: number,
-    blurY: number,
+    blur_x: number,
+    blur_y: number,
     quality: number,
-    devicePixelRatio: number,
+    device_pixel_ratio: number,
     config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, pipelineManager, textureManager } = config;
 
     // ブラーパラメータを計算
-    const blurParams = calculateBlurParams(matrix, blurX, blurY, quality, devicePixelRatio);
+    const blurParams = calculateBlurParams(matrix, blur_x, blur_y, quality, device_pixel_ratio);
     const { baseBlurX, baseBlurY, offsetX, offsetY, bufferScaleX, bufferScaleY } = blurParams;
 
     // オフセットを更新
@@ -51,8 +51,8 @@ export const execute = (
     $offset.y += offsetY;
 
     // ブラー用バッファサイズを計算
-    const width = sourceAttachment.width + offsetX * 2;
-    const height = sourceAttachment.height + offsetY * 2;
+    const width = source_attachment.width + offsetX * 2;
+    const height = source_attachment.height + offsetY * 2;
     const bufferWidth = Math.ceil(width * bufferScaleX);
     const bufferHeight = Math.ceil(height * bufferScaleY);
 
@@ -66,7 +66,7 @@ export const execute = (
     // ソーステクスチャをattachment0にコピー（スケーリング付き）
     copyTextureToAttachment(
         device, commandEncoder, frameBufferManager, pipelineManager,
-        sourceAttachment, attachment0, sampler,
+        source_attachment, attachment0, sampler,
         bufferScaleX, bufferScaleY,
         offsetX * bufferScaleX, offsetY * bufferScaleY,
         config.bufferManager
@@ -82,7 +82,7 @@ export const execute = (
 
     for (let q = 0; q < quality; ++q) {
         // 水平ブラー
-        if (blurX > 0) {
+        if (blur_x > 0) {
             const srcIndex = attachmentIndex;
             attachmentIndex = (attachmentIndex + 1) % 2;
 
@@ -94,7 +94,7 @@ export const execute = (
         }
 
         // 垂直ブラー
-        if (blurY > 0) {
+        if (blur_y > 0) {
             const srcIndex = attachmentIndex;
             attachmentIndex = (attachmentIndex + 1) % 2;
 
@@ -135,31 +135,39 @@ export const execute = (
 
 /**
  * @description テクスチャをアタッチメントにコピー（オフセット位置に配置、スケーリング対応）
+ *              Copy texture to attachment with offset placement and scaling support
  *
- * @param source - ソーステクスチャ
- * @param dest - デストテクスチャ（ソースより大きい）
- * @param bufferScaleX - X方向のバッファスケール
- * @param bufferScaleY - Y方向のバッファスケール
- * @param pixelOffsetX - デスト内でのX方向オフセット（ピクセル単位、スケーリング済み）
- * @param pixelOffsetY - デスト内でのY方向オフセット（ピクセル単位、スケーリング済み）
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {GPUCommandEncoder} command_encoder - コマンドエンコーダー
+ * @param  {IFilterConfig["frameBufferManager"]} frame_buffer_manager - フレームバッファマネージャー
+ * @param  {IFilterConfig["pipelineManager"]} pipeline_manager - パイプラインマネージャー
+ * @param  {IAttachmentObject} source - ソーステクスチャ
+ * @param  {IAttachmentObject} dest - デストテクスチャ（ソースより大きい）
+ * @param  {GPUSampler} sampler - サンプラー
+ * @param  {number} buffer_scale_x - X方向のバッファスケール
+ * @param  {number} buffer_scale_y - Y方向のバッファスケール
+ * @param  {number} pixel_offset_x - デスト内でのX方向オフセット（ピクセル単位、スケーリング済み）
+ * @param  {number} pixel_offset_y - デスト内でのY方向オフセット（ピクセル単位、スケーリング済み）
+ * @param  {IFilterConfig["bufferManager"]} [buffer_manager] - バッファマネージャー
+ * @return {void}
  */
 const copyTextureToAttachment = (
     device: GPUDevice,
-    commandEncoder: GPUCommandEncoder,
-    frameBufferManager: IFilterConfig["frameBufferManager"],
-    pipelineManager: IFilterConfig["pipelineManager"],
+    command_encoder: GPUCommandEncoder,
+    frame_buffer_manager: IFilterConfig["frameBufferManager"],
+    pipeline_manager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
-    bufferScaleX: number,
-    bufferScaleY: number,
-    pixelOffsetX: number,
-    pixelOffsetY: number,
-    bufferManager?: IFilterConfig["bufferManager"]
+    buffer_scale_x: number,
+    buffer_scale_y: number,
+    pixel_offset_x: number,
+    pixel_offset_y: number,
+    buffer_manager?: IFilterConfig["bufferManager"]
 ): void => {
     // texture_copy_rgba8を使用し、ビューポートでオフセットを制御
-    const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
+    const pipeline = pipeline_manager.getPipeline("texture_copy_rgba8");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("texture_copy");
 
     if (!pipeline || !bindGroupLayout) {
         console.error("[WebGPU BlurFilter] texture_copy_rgba8 pipeline not found");
@@ -167,8 +175,8 @@ const copyTextureToAttachment = (
     }
 
     // デスト内でのソース描画サイズ（スケーリング後）
-    const scaledSourceWidth = source.width * bufferScaleX;
-    const scaledSourceHeight = source.height * bufferScaleY;
+    const scaledSourceWidth = source.width * buffer_scale_x;
+    const scaledSourceHeight = source.height * buffer_scale_y;
 
     // シェーダー: uv = texCoord * scale + offset
     // ソース全体をサンプリングするので scale = 1, offset = 0
@@ -182,13 +190,13 @@ const copyTextureToAttachment = (
     $uniform4[1] = scaleY;
     $uniform4[2] = offsetX;
     $uniform4[3] = offsetY;
-    const uniformBuffer = bufferManager
-        ? bufferManager.acquireAndWriteUniformBuffer($uniform4)
+    const uniformBuffer = buffer_manager
+        ? buffer_manager.acquireAndWriteUniformBuffer($uniform4)
         : device.createBuffer({
             "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    if (!bufferManager) {
+    if (!buffer_manager) {
         device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
     }
 
@@ -200,22 +208,22 @@ const copyTextureToAttachment = (
         "entries": $entries3
     });
 
-    const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
+    const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
         dest.texture!.view, 0, 0, 0, 0, "clear"
     );
 
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    const passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, bindGroup);
 
     // ビューポートを設定してオフセット位置に描画
     passEncoder.setViewport(
-        pixelOffsetX, pixelOffsetY,
+        pixel_offset_x, pixel_offset_y,
         scaledSourceWidth, scaledSourceHeight,
         0, 1
     );
     passEncoder.setScissorRect(
-        Math.floor(pixelOffsetX), Math.floor(pixelOffsetY),
+        Math.floor(pixel_offset_x), Math.floor(pixel_offset_y),
         Math.ceil(scaledSourceWidth), Math.ceil(scaledSourceHeight)
     );
 
@@ -226,21 +234,34 @@ const copyTextureToAttachment = (
 
 /**
  * @description 方向ブラーを適用
+ *              Apply directional blur pass
+ *
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {GPUCommandEncoder} command_encoder - コマンドエンコーダー
+ * @param  {IFilterConfig["frameBufferManager"]} frame_buffer_manager - フレームバッファマネージャー
+ * @param  {IFilterConfig["pipelineManager"]} pipeline_manager - パイプラインマネージャー
+ * @param  {IAttachmentObject} source - ソーステクスチャ
+ * @param  {IAttachmentObject} dest - デストテクスチャ
+ * @param  {GPUSampler} sampler - サンプラー
+ * @param  {boolean} is_horizontal - 水平方向かどうか
+ * @param  {number} blur - ブラー量
+ * @param  {IFilterConfig["bufferManager"]} [buffer_manager] - バッファマネージャー
+ * @return {void}
  */
 const applyDirectionalBlur = (
     device: GPUDevice,
-    commandEncoder: GPUCommandEncoder,
-    frameBufferManager: IFilterConfig["frameBufferManager"],
-    pipelineManager: IFilterConfig["pipelineManager"],
+    command_encoder: GPUCommandEncoder,
+    frame_buffer_manager: IFilterConfig["frameBufferManager"],
+    pipeline_manager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
-    isHorizontal: boolean,
+    is_horizontal: boolean,
     blur: number,
-    bufferManager?: IFilterConfig["bufferManager"]
+    buffer_manager?: IFilterConfig["bufferManager"]
 ): void => {
     const params = calculateDirectionalBlurParams(
-        isHorizontal, blur,
+        is_horizontal, blur,
         source.width, source.height
     );
 
@@ -248,8 +269,8 @@ const applyDirectionalBlur = (
 
     // halfBlurに対応するパイプラインを取得（1〜16の範囲でクランプ）
     const clampedHalfBlur = Math.max(1, Math.min(16, halfBlur));
-    const pipeline = pipelineManager.getPipeline(`blur_filter_${clampedHalfBlur}`);
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("blur_filter");
+    const pipeline = pipeline_manager.getPipeline(`blur_filter_${clampedHalfBlur}`);
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("blur_filter");
 
     if (!pipeline || !bindGroupLayout) {
         console.error(`[WebGPU BlurFilter] blur_filter_${clampedHalfBlur} pipeline not found`);
@@ -261,13 +282,13 @@ const applyDirectionalBlur = (
     $uniform4[1] = offsetY;
     $uniform4[2] = fraction;
     $uniform4[3] = samples;
-    const uniformBuffer = bufferManager
-        ? bufferManager.acquireAndWriteUniformBuffer($uniform4)
+    const uniformBuffer = buffer_manager
+        ? buffer_manager.acquireAndWriteUniformBuffer($uniform4)
         : device.createBuffer({
             "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    if (!bufferManager) {
+    if (!buffer_manager) {
         device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
     }
 
@@ -279,11 +300,11 @@ const applyDirectionalBlur = (
         "entries": $entries3
     });
 
-    const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
+    const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
         dest.texture!.view, 0, 0, 0, 0, "clear"
     );
 
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    const passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);
@@ -293,20 +314,31 @@ const applyDirectionalBlur = (
 
 /**
  * @description テクスチャをアップスケール（ソース全体をデスト全体にマッピング）
+ *              Upscale texture by mapping entire source to entire destination
+ *
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {GPUCommandEncoder} command_encoder - コマンドエンコーダー
+ * @param  {IFilterConfig["frameBufferManager"]} frame_buffer_manager - フレームバッファマネージャー
+ * @param  {IFilterConfig["pipelineManager"]} pipeline_manager - パイプラインマネージャー
+ * @param  {IAttachmentObject} source - ソーステクスチャ
+ * @param  {IAttachmentObject} dest - デストテクスチャ
+ * @param  {GPUSampler} sampler - サンプラー
+ * @param  {IFilterConfig["bufferManager"]} [buffer_manager] - バッファマネージャー
+ * @return {void}
  */
 const upscaleTexture = (
     device: GPUDevice,
-    commandEncoder: GPUCommandEncoder,
-    frameBufferManager: IFilterConfig["frameBufferManager"],
-    pipelineManager: IFilterConfig["pipelineManager"],
+    command_encoder: GPUCommandEncoder,
+    frame_buffer_manager: IFilterConfig["frameBufferManager"],
+    pipeline_manager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
     sampler: GPUSampler,
-    bufferManager?: IFilterConfig["bufferManager"]
+    buffer_manager?: IFilterConfig["bufferManager"]
 ): void => {
     // temp_アタッチメントはrgba8unormフォーマットなので、texture_copy_rgba8パイプラインを使用
-    const pipeline = pipelineManager.getPipeline("texture_copy_rgba8");
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("texture_copy");
+    const pipeline = pipeline_manager.getPipeline("texture_copy_rgba8");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("texture_copy");
 
     if (!pipeline || !bindGroupLayout) {
         console.error("[WebGPU BlurFilter] texture_copy_rgba8 pipeline not found");
@@ -320,13 +352,13 @@ const upscaleTexture = (
     $uniform4[1] = 1;
     $uniform4[2] = 0;
     $uniform4[3] = 0;
-    const uniformBuffer = bufferManager
-        ? bufferManager.acquireAndWriteUniformBuffer($uniform4)
+    const uniformBuffer = buffer_manager
+        ? buffer_manager.acquireAndWriteUniformBuffer($uniform4)
         : device.createBuffer({
             "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    if (!bufferManager) {
+    if (!buffer_manager) {
         device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
     }
 
@@ -338,11 +370,11 @@ const upscaleTexture = (
         "entries": $entries3
     });
 
-    const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
+    const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
         dest.texture!.view, 0, 0, 0, 0, "clear"
     );
 
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    const passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, 1, 0, 0);

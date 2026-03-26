@@ -9,20 +9,67 @@ import {
     $getMaskStencilReference
 } from "../../Mask";
 
+/**
+ * @description ビットマップサンプラーのキャッシュ
+ *              Cache for bitmap samplers
+ */
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
+/**
+ * @description ユニフォームデータの事前確保配列（32要素）
+ *              Pre-allocated uniform data array (32 elements)
+ */
 const $uniformData32 = new Float32Array(32);
+/**
+ * @description ステンシルデータの事前確保配列（16要素）
+ *              Pre-allocated stencil data array (16 elements)
+ */
 const $stencilData16 = new Float32Array(16);
 
+/**
+ * @description ステンシル用動的バインドグループのキャッシュ
+ *              Cached dynamic bind group for stencil operations
+ */
 let $stencilDynamicBindGroup: GPUBindGroup | null = null;
+/**
+ * @description ステンシル用動的バッファのキャッシュ
+ *              Cached dynamic buffer for stencil operations
+ */
 let $stencilDynamicBuffer: GPUBuffer | null = null;
 
+/**
+ * @description バインドグループエントリの事前確保配列
+ *              Pre-allocated bind group entry array
+ */
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
+/**
+ * @description ビットマップフィル描画を実行する
+ *              Executes bitmap fill rendering
+ * @param {GPUDevice} device GPUデバイス / GPU device
+ * @param {GPURenderPassEncoder} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @param {IPath[]} path_vertices パス頂点配列 / Path vertices array
+ * @param {Float32Array} context_matrix コンテキスト変換行列 / Context transformation matrix
+ * @param {Float32Array} fill_style フィルスタイル（RGBA） / Fill style (RGBA)
+ * @param {Uint8Array} pixels ピクセルデータ / Pixel data
+ * @param {Float32Array} bitmap_matrix ビットマップ変換行列 / Bitmap transformation matrix
+ * @param {number} width テクスチャ幅 / Texture width
+ * @param {number} height テクスチャ高さ / Texture height
+ * @param {boolean} repeat リピート有無 / Whether to repeat
+ * @param {boolean} smooth スムーズフィルタ有無 / Whether to use smooth filtering
+ * @param {number} viewport_width ビューポート幅 / Viewport width
+ * @param {number} viewport_height ビューポート高さ / Viewport height
+ * @param {boolean} use_atlas_target アトラスターゲット使用フラグ / Whether to use atlas target
+ * @param {boolean} use_stencil_pipeline ステンシルパイプライン使用フラグ / Whether to use stencil pipeline
+ * @param {number} _clip_level クリップレベル（未使用） / Clip level (unused)
+ * @return {GPUTexture | null} ビットマップテクスチャまたはnull / Bitmap texture or null
+ */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

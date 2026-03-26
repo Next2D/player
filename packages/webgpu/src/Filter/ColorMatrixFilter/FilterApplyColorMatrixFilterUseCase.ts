@@ -19,13 +19,13 @@ const $entries3: GPUBindGroupEntry[] = [
  * @description カラーマトリックスフィルターを適用
  *              Apply color matrix filter
  *
- * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ（アタッチメント）
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ（アタッチメント）
  * @param  {Float32Array} matrix - 4x5カラーマトリックス (20 floats)
  * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
+    source_attachment: IAttachmentObject,
     matrix: Float32Array,
     config: IFilterConfig
 ): IAttachmentObject => {
@@ -34,8 +34,8 @@ export const execute = (
 
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(
-        sourceAttachment.width,
-        sourceAttachment.height
+        source_attachment.width,
+        source_attachment.height
     );
 
     const pipeline = pipelineManager.getPipeline("color_matrix_filter");
@@ -43,7 +43,7 @@ export const execute = (
 
     if (!pipeline || !bindGroupLayout) {
         console.error("[WebGPU ColorMatrixFilter] Pipeline not found");
-        return sourceAttachment;
+        return source_attachment;
     }
 
     // サンプラーを作成
@@ -93,7 +93,7 @@ export const execute = (
     // バインドグループを作成
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;
-    $entries3[2].resource = sourceAttachment.texture!.view;
+    $entries3[2].resource = source_attachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries3

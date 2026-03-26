@@ -1,3 +1,10 @@
+/**
+ * @description マスク用頂点シェーダー（ベジェ曲線パラメータ付き行列変換）
+ *              Mask vertex shader with matrix transform and bezier parameters
+ *
+ * @type {string}
+ * @constant
+ */
 export const MaskVertex = /* wgsl */`
 struct VertexInput {
     @location(0) position: vec2<f32>,

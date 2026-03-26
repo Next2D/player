@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-    TexturePool,
-    initTexturePool,
-    getTexturePool,
-    clearTexturePool
+    TexturePool
 } from "./TexturePool";
 
 // Mock GPUTextureUsage
@@ -105,7 +102,6 @@ describe("TexturePool", () =>
     beforeEach(() =>
     {
         vi.clearAllMocks();
-        clearTexturePool();
     });
 
     describe("TexturePool class", () =>
@@ -303,52 +299,6 @@ describe("TexturePool", () =>
 
                 const stats = pool.getStats();
                 expect(stats.total).toBe(0);
-            });
-        });
-    });
-
-    describe("global functions", () =>
-    {
-        describe("initTexturePool", () =>
-        {
-            it("should initialize global pool", () =>
-            {
-                const device = createMockDevice();
-
-                initTexturePool(device);
-
-                expect(getTexturePool()).not.toBeNull();
-            });
-        });
-
-        describe("getTexturePool", () =>
-        {
-            it("should return pool after initialization", () =>
-            {
-                const device = createMockDevice();
-                initTexturePool(device);
-
-                expect(getTexturePool()).toBeInstanceOf(TexturePool);
-            });
-        });
-
-        describe("clearTexturePool", () =>
-        {
-            it("should dispose pool", () =>
-            {
-                const device = createMockDevice();
-                initTexturePool(device);
-                const pool = getTexturePool();
-                const tex = pool!.acquire(128, 128);
-
-                clearTexturePool();
-
-                expect(tex.destroy).toHaveBeenCalled();
-            });
-
-            it("should not throw when pool is null", () =>
-            {
-                expect(() => clearTexturePool()).not.toThrow();
             });
         });
     });

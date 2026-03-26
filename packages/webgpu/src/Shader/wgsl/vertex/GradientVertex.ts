@@ -1,3 +1,10 @@
+/**
+ * @description グラデーション塗り用頂点シェーダー（逆行列によるUV座標計算）
+ *              Gradient fill vertex shader with inverse matrix UV coordinate calculation
+ *
+ * @type {string}
+ * @constant
+ */
 export const GradientFillVertex = /* wgsl */`
 override yFlipSign: f32 = 1.0;
 

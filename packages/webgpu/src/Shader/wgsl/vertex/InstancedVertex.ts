@@ -1,3 +1,10 @@
+/**
+ * @description インスタンス描画用頂点シェーダー（インスタンスごとの変換・カラー）
+ *              Instanced rendering vertex shader with per-instance transform and color
+ *
+ * @type {string}
+ * @constant
+ */
 export const InstancedVertex = /* wgsl */`
 struct VertexInput {
     @location(0) position: vec2<f32>,

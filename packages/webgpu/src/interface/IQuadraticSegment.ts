@@ -5,6 +5,14 @@ import type { IPoint } from "./IPoint";
  *              Quadratic bezier segment approximation
  */
 export interface IQuadraticSegment {
+    /**
+     * @description 制御点
+     *              Control point
+     */
     ctrl: IPoint;
+    /**
+     * @description 終点
+     *              End point
+     */
     end: IPoint;
 }

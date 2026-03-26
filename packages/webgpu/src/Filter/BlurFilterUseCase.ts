@@ -6,24 +6,27 @@
 /**
  * @description ブラー計算用のステップ値
  *              Step values for blur calculation
+ * @type {number[]}
  */
-const BLUR_STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5, 3, 3, 3.5, 3.5];
+const $BLUR_STEP: number[] = [0.5, 1.05, 1.4, 1.55, 1.75, 1.9, 2, 2.15, 2.2, 2.3, 2.5, 3, 3, 3.5, 3.5];
 
 /**
  * @description ブラーフィルターパラメータを計算
- * @param {Float32Array} matrix - 変換行列
- * @param {number} blurX - X方向のブラー量
- * @param {number} blurY - Y方向のブラー量
- * @param {number} quality - クオリティ (1-15)
- * @param {number} devicePixelRatio - デバイスピクセル比
+ *              Calculate blur filter parameters
+ *
+ * @param  {Float32Array} matrix - 変換行列
+ * @param  {number} blur_x - X方向のブラー量
+ * @param  {number} blur_y - Y方向のブラー量
+ * @param  {number} quality - クオリティ (1-15)
+ * @param  {number} device_pixel_ratio - デバイスピクセル比
  * @return {object}
  */
 export const calculateBlurParams = (
     matrix: Float32Array,
-    blurX: number,
-    blurY: number,
+    blur_x: number,
+    blur_y: number,
     quality: number,
-    devicePixelRatio: number
+    device_pixel_ratio: number
 ): {
     baseBlurX: number;
     baseBlurY: number;
@@ -35,10 +38,10 @@ export const calculateBlurParams = (
     const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
     const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
 
-    const baseBlurX = blurX * (xScale / devicePixelRatio);
-    const baseBlurY = blurY * (yScale / devicePixelRatio);
+    const baseBlurX = blur_x * (xScale / device_pixel_ratio);
+    const baseBlurY = blur_y * (yScale / device_pixel_ratio);
 
-    const step = BLUR_STEP[Math.min(quality - 1, BLUR_STEP.length - 1)];
+    const step = $BLUR_STEP[Math.min(quality - 1, $BLUR_STEP.length - 1)];
     const offsetX = Math.round(baseBlurX * step);
     const offsetY = Math.round(baseBlurY * step);
 
@@ -78,17 +81,19 @@ export const calculateBlurParams = (
 
 /**
  * @description 方向ブラーのパラメータを計算
- * @param {boolean} isHorizontal - 水平方向かどうか
- * @param {number} blur - ブラー量
- * @param {number} textureWidth - テクスチャ幅
- * @param {number} textureHeight - テクスチャ高さ
+ *              Calculate directional blur parameters
+ *
+ * @param  {boolean} is_horizontal - 水平方向かどうか
+ * @param  {number} blur - ブラー量
+ * @param  {number} texture_width - テクスチャ幅
+ * @param  {number} texture_height - テクスチャ高さ
  * @return {object}
  */
 export const calculateDirectionalBlurParams = (
-    isHorizontal: boolean,
+    is_horizontal: boolean,
     blur: number,
-    textureWidth: number,
-    textureHeight: number
+    texture_width: number,
+    texture_height: number
 ): {
     offsetX: number;
     offsetY: number;
@@ -101,8 +106,8 @@ export const calculateDirectionalBlurParams = (
     const samples = 1 + blur;
 
     // テクセルオフセットを計算
-    const offsetX = isHorizontal ? 1 / textureWidth : 0;
-    const offsetY = isHorizontal ? 0 : 1 / textureHeight;
+    const offsetX = is_horizontal ? 1 / texture_width : 0;
+    const offsetY = is_horizontal ? 0 : 1 / texture_height;
 
     return {
         offsetX,

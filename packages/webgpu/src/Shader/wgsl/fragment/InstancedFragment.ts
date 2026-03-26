@@ -1,3 +1,10 @@
+/**
+ * @description インスタンス描画用フラグメントシェーダー（カラー変換付き）
+ *              Instanced rendering fragment shader with color transform
+ *
+ * @type {string}
+ * @constant
+ */
 export const InstancedFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

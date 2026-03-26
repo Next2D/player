@@ -22,35 +22,85 @@ import {
     $getMaskStencilReference
 } from "../../Mask";
 
+/**
+ * @description ユニフォームデータの事前確保配列（4要素）
+ *              Pre-allocated uniform data array (4 elements)
+ */
 const $uniform4 = new Float32Array(4);
+/**
+ * @description ユニフォームデータの事前確保配列A（6要素）
+ *              Pre-allocated uniform data array A (6 elements)
+ */
 const $uniform6a = new Float32Array(6);
+/**
+ * @description ユニフォームデータの事前確保配列B（6要素）
+ *              Pre-allocated uniform data array B (6 elements)
+ */
 const $uniform6b = new Float32Array(6);
+/**
+ * @description ユニフォームデータの事前確保配列（8要素）
+ *              Pre-allocated uniform data array (8 elements)
+ */
 const $uniform8 = new Float32Array(8);
+/**
+ * @description ユニフォームデータの事前確保配列（12要素）
+ *              Pre-allocated uniform data array (12 elements)
+ */
 const $uniform12 = new Float32Array(12);
+/**
+ * @description ユニフォームデータの事前確保配列（20要素）
+ *              Pre-allocated uniform data array (20 elements)
+ */
 const $uniform20 = new Float32Array(20);
 
 // プリアロケート BindGroup Entry 配列
+/**
+ * @description バインドグループエントリの事前確保配列
+ *              Pre-allocated bind group entry array
+ */
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
-const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
+/**
+ * @description シンプルなブレンドモードのセット
+ *              Set of simple blend modes
+ */
+const $SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
     "normal", "layer", "add", "screen", "alpha", "erase", "copy"
 ] as IBlendMode[]);
 
-const Y_FLIP_UNIFORM = new Float32Array([1, -1, 0, 1]);
+/**
+ * @description Y軸反転用ユニフォームデータ
+ *              Uniform data for Y-axis flip
+ */
+const $Y_FLIP_UNIFORM = new Float32Array([1, -1, 0, 1]);
 
-const isIdentityColorTransform = (ct: Float32Array): boolean => {
+/**
+ * @description カラートランスフォームが恒等変換かどうかを判定する
+ *              Checks whether the color transform is an identity transform
+ * @param {Float32Array} ct カラートランスフォーム配列 / Color transform array
+ * @return {boolean} 恒等変換の場合true / True if identity transform
+ */
+const $isIdentityColorTransform = (ct: Float32Array): boolean => {
     return ct[0] === 1 && ct[1] === 1 && ct[2] === 1 && ct[3] === 1
         && ct[4] === 0 && ct[5] === 0 && ct[6] === 0 && ct[7] === 0;
 };
 
-const applyColorTransform = (
+/**
+ * @description フィルター結果にカラートランスフォームを適用する
+ *              Applies color transform to the filter result
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {IAttachmentObject} attachment ソースアタッチメント / Source attachment
+ * @param {Float32Array} color_transform カラートランスフォーム配列 / Color transform array
+ * @return {IAttachmentObject} カラートランスフォーム適用後のアタッチメント / Attachment with color transform applied
+ */
+const $applyColorTransform = (
     config: ILocalFilterConfig,
     attachment: IAttachmentObject,
-    colorTransform: Float32Array
+    color_transform: Float32Array
 ): IAttachmentObject => {
     const ctAttachment = config.frameBufferManager.createTemporaryAttachment(
         attachment.width, attachment.height
@@ -65,13 +115,13 @@ const applyColorTransform = (
 
     // uniform: mul(vec4) + add(vec4) = 32 bytes
     // add値は0-255スケールの生値をそのまま渡す（WebGLのフィルターCTパスと同じ）
-    $uniform8[0] = colorTransform[0];
-    $uniform8[1] = colorTransform[1];
-    $uniform8[2] = colorTransform[2];
-    $uniform8[3] = colorTransform[3];
-    $uniform8[4] = colorTransform[4];
-    $uniform8[5] = colorTransform[5];
-    $uniform8[6] = colorTransform[6];
+    $uniform8[0] = color_transform[0];
+    $uniform8[1] = color_transform[1];
+    $uniform8[2] = color_transform[2];
+    $uniform8[3] = color_transform[3];
+    $uniform8[4] = color_transform[4];
+    $uniform8[5] = color_transform[5];
+    $uniform8[6] = color_transform[6];
     $uniform8[7] = 0;
     const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($uniform8);
 
@@ -98,7 +148,15 @@ const applyColorTransform = (
     return ctAttachment;
 };
 
-const getTextureFromNode = (
+/**
+ * @description アトラスノードからテクスチャを取得する
+ *              Extracts texture from an atlas node
+ * @param {Node} node テクスチャパッカーノード / Texture packer node
+ * @param {GPUCommandEncoder} command_encoder コマンドエンコーダ / Command encoder
+ * @param {FrameBufferManager} frame_buffer_manager フレームバッファマネージャ / Frame buffer manager
+ * @return {IAttachmentObject} 取得したアタッチメント / Extracted attachment
+ */
+const $getTextureFromNode = (
     node: Node,
     command_encoder: GPUCommandEncoder,
     frame_buffer_manager: FrameBufferManager
@@ -126,19 +184,36 @@ const getTextureFromNode = (
             }
         );
     } else {
-        console.error("[WebGPU Filter] getTextureFromNode: FAILED - missing atlas or textures");
+        console.error("[WebGPU Filter] $getTextureFromNode: FAILED - missing atlas or textures");
     }
 
     return attachment;
 };
 
-const isSimpleBlendMode = (blendMode: IBlendMode): boolean => {
-    return SIMPLE_BLEND_MODES.has(blendMode);
+/**
+ * @description ブレンドモードがシンプルかどうかを判定する
+ *              Checks whether the blend mode is a simple blend mode
+ * @param {IBlendMode} blend_mode ブレンドモード / Blend mode
+ * @return {boolean} シンプルブレンドモードの場合true / True if simple blend mode
+ */
+const $isSimpleBlendMode = (blend_mode: IBlendMode): boolean => {
+    return $SIMPLE_BLEND_MODES.has(blend_mode);
 };
 
-const copyMainAttachmentRegion = (
+/**
+ * @description メインアタッチメントの矩形領域をコピーする
+ *              Copies a rectangular region from the main attachment
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {IAttachmentObject} main_attachment メインアタッチメント / Main attachment
+ * @param {number} x X座標 / X coordinate
+ * @param {number} y Y座標 / Y coordinate
+ * @param {number} width 幅 / Width
+ * @param {number} height 高さ / Height
+ * @return {IAttachmentObject} コピーされたアタッチメント / Copied attachment
+ */
+const $copyMainAttachmentRegion = (
     config: ILocalFilterConfig,
-    mainAttachment: IAttachmentObject,
+    main_attachment: IAttachmentObject,
     x: number,
     y: number,
     width: number,
@@ -151,15 +226,15 @@ const copyMainAttachmentRegion = (
     const pipeline = config.pipelineManager.getPipeline("complex_blend_copy");
     const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
 
-    if (!pipeline || !bindGroupLayout || !mainAttachment.texture || !dstAttachment.texture) {
+    if (!pipeline || !bindGroupLayout || !main_attachment.texture || !dstAttachment.texture) {
         return dstAttachment;
     }
 
     // ユニフォームバッファ: scale (vec2) + offset (vec2)
-    const scaleX = width / mainAttachment.width;
-    const scaleY = height / mainAttachment.height;
-    const offsetX = x / mainAttachment.width;
-    const offsetY = y / mainAttachment.height;
+    const scaleX = width / main_attachment.width;
+    const scaleY = height / main_attachment.height;
+    const offsetX = x / main_attachment.width;
+    const offsetY = y / main_attachment.height;
 
     $uniform4[0] = scaleX;
     $uniform4[1] = scaleY;
@@ -171,7 +246,7 @@ const copyMainAttachmentRegion = (
 
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;
-    $entries3[2].resource = mainAttachment.texture.view;
+    $entries3[2].resource = main_attachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries3
@@ -192,31 +267,41 @@ const copyMainAttachmentRegion = (
     return dstAttachment;
 };
 
-const drawBlendResultToMain = (
+/**
+ * @description ブレンド結果をメインアタッチメントに描画する
+ *              Draws blend result to the main attachment
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {IAttachmentObject} src_attachment ソースアタッチメント / Source attachment
+ * @param {IAttachmentObject} main_attachment メインアタッチメント / Main attachment
+ * @param {number} x X座標 / X coordinate
+ * @param {number} y Y座標 / Y coordinate
+ * @return {void}
+ */
+const $drawBlendResultToMain = (
     config: ILocalFilterConfig,
-    srcAttachment: IAttachmentObject,
-    mainAttachment: IAttachmentObject,
+    src_attachment: IAttachmentObject,
+    main_attachment: IAttachmentObject,
     x: number,
     y: number
 ): void => {
     // フィルター＋複雑なブレンド用のパイプライン（Y軸反転あり）を使用
     // MSAA有効時はMSAA版パイプラインを使用してmsaaTextureに描画→texture.viewにresolve
-    const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+    const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
     const pipelineName = useMsaa ? "filter_complex_blend_output_msaa" : "filter_complex_blend_output";
     const pipeline = config.pipelineManager.getPipeline(pipelineName);
     const bindGroupLayout = config.pipelineManager.getBindGroupLayout("positioned_texture");
 
-    if (!pipeline || !bindGroupLayout || !srcAttachment.texture || !mainAttachment.texture) {
+    if (!pipeline || !bindGroupLayout || !src_attachment.texture || !main_attachment.texture) {
         return;
     }
 
     // ユニフォームデータ: offset, size, viewport, padding
     $uniform8[0] = x;
     $uniform8[1] = y;
-    $uniform8[2] = srcAttachment.width;
-    $uniform8[3] = srcAttachment.height;
-    $uniform8[4] = mainAttachment.width;
-    $uniform8[5] = mainAttachment.height;
+    $uniform8[2] = src_attachment.width;
+    $uniform8[3] = src_attachment.height;
+    $uniform8[4] = main_attachment.width;
+    $uniform8[5] = main_attachment.height;
     $uniform8[6] = 0;
     $uniform8[7] = 0;
     const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($uniform8);
@@ -225,7 +310,7 @@ const drawBlendResultToMain = (
 
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;
-    $entries3[2].resource = srcAttachment.texture.view;
+    $entries3[2].resource = src_attachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries3
@@ -233,8 +318,8 @@ const drawBlendResultToMain = (
 
     // メインアタッチメントへの描画（loadで既存内容を保持）
     // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
-    const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
-    const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
+    const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture.view;
+    const resolveTarget = useMsaa ? main_attachment.texture.view : null;
     const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
         colorView,
         0, 0, 0, 0,
@@ -249,7 +334,20 @@ const drawBlendResultToMain = (
     passEncoder.end();
 };
 
-const drawFilterToMain = (
+/**
+ * @description フィルター適用結果をメインキャンバスに描画する
+ *              Draws filter result to the main canvas
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {IAttachmentObject} filter_attachment フィルターアタッチメント / Filter attachment
+ * @param {Float32Array} color_transform カラートランスフォーム配列 / Color transform array
+ * @param {IBlendMode} blend_mode ブレンドモード / Blend mode
+ * @param {number} x X座標 / X coordinate
+ * @param {number} y Y座標 / Y coordinate
+ * @param {GPUTextureView} _main_texture_view メインテクスチャビュー（未使用） / Main texture view (unused)
+ * @param {BufferManager} _buffer_manager バッファマネージャ（未使用） / Buffer manager (unused)
+ * @return {void}
+ */
+const $drawFilterToMain = (
     config: ILocalFilterConfig,
     filter_attachment: IAttachmentObject,
     color_transform: Float32Array,
@@ -304,7 +402,7 @@ const drawFilterToMain = (
     }
 
     // シンプルなブレンドモードの場合
-    if (isSimpleBlendMode(blend_mode)) {
+    if ($isSimpleBlendMode(blend_mode)) {
         // MSAA有効時はMSAA版パイプラインを使用してmsaaTextureに描画→texture.viewにresolve
         const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
 
@@ -431,7 +529,7 @@ const drawFilterToMain = (
     } else {
         // 複雑なブレンドモード（multiply, overlay, darken, lighten, hardlight等）
         // 1. メインアタッチメントから描画先の矩形をコピー
-        const dstAttachment = copyMainAttachmentRegion(
+        const dstAttachment = $copyMainAttachmentRegion(
             config, mainAttachment,
             drawX, drawY, drawWidth, drawHeight
         );
@@ -464,7 +562,7 @@ const drawFilterToMain = (
         );
 
         // 4. 結果をメインアタッチメントに描画
-        drawBlendResultToMain(
+        $drawBlendResultToMain(
             config,
             blendedAttachment,
             mainAttachment,
@@ -478,6 +576,23 @@ const drawFilterToMain = (
     }
 };
 
+/**
+ * @description フィルターを適用してメインキャンバスに描画する
+ *              Applies filters and draws the result to the main canvas
+ * @param {Node} node テクスチャパッカーノード / Texture packer node
+ * @param {number} width 幅 / Width
+ * @param {number} height 高さ / Height
+ * @param {boolean} is_bitmap ビットマップフラグ / Whether the source is a bitmap
+ * @param {Float32Array} matrix 変換行列 / Transformation matrix
+ * @param {Float32Array} color_transform カラートランスフォーム配列 / Color transform array
+ * @param {IBlendMode} blend_mode ブレンドモード / Blend mode
+ * @param {Float32Array} bounds バウンディングボックス / Bounding box
+ * @param {Float32Array} params フィルターパラメータ配列 / Filter parameters array
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {GPUTextureView} main_texture_view メインテクスチャビュー / Main texture view
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @return {void}
+ */
 export const execute = (
     node: Node,
     width: number,
@@ -497,7 +612,7 @@ export const execute = (
     $offset.y = 0;
 
     // ノードからテクスチャを取得
-    let filterAttachment = getTextureFromNode(node, config.commandEncoder, config.frameBufferManager);
+    let filterAttachment = $getTextureFromNode(node, config.commandEncoder, config.frameBufferManager);
 
     // アトラスのY反転を補正
     // WebGPUではアトラスに描画する際にY軸が反転して格納される:
@@ -513,7 +628,7 @@ export const execute = (
             const sampler = config.textureManager.createSampler("filter_flip_sampler", false);
 
             // scale=(1, -1), offset=(0, 1) で UV.y = texCoord.y * (-1) + 1 = 1 - texCoord.y
-            const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer(Y_FLIP_UNIFORM);
+            const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($Y_FLIP_UNIFORM);
 
             ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
             $entries3[1].resource = sampler;
@@ -939,8 +1054,8 @@ export const execute = (
 
     // ColorTransformが恒等変換でない場合、フィルター結果に適用
     // WebGL版と同じ: フィルターチェーン適用後、メイン描画前にColorTransformを適用
-    if (!isIdentityColorTransform(color_transform)) {
-        const ctAttachment = applyColorTransform(config, filterAttachment, color_transform);
+    if (!$isIdentityColorTransform(color_transform)) {
+        const ctAttachment = $applyColorTransform(config, filterAttachment, color_transform);
         config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
         filterAttachment = ctAttachment;
     }
@@ -954,7 +1069,7 @@ export const execute = (
     const drawX = -offsetX + xMin + matrix[4];
     const drawY = -offsetY + yMin + matrix[5];
 
-    drawFilterToMain(
+    $drawFilterToMain(
         config,
         filterAttachment,
         color_transform,

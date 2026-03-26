@@ -2,12 +2,12 @@
  * @description ピクセルデータからテクスチャを作成
  *              Create texture from pixel data
  *
- * @param  {GPUDevice} device
- * @param  {Map<string, GPUTexture>} textures
- * @param  {string} name
- * @param  {Uint8Array} pixels
- * @param  {number} width
- * @param  {number} height
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {Map<string, GPUTexture>} textures - テクスチャ管理マップ
+ * @param  {string} name - テクスチャ名
+ * @param  {Uint8Array} pixels - ピクセルデータ
+ * @param  {number} width - テクスチャ幅
+ * @param  {number} height - テクスチャ高さ
  * @return {GPUTexture}
  * @method
  * @protected

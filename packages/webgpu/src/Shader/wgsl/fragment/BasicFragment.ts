@@ -1,3 +1,10 @@
+/**
+ * @description 頂点カラーをそのまま出力する基本フラグメントシェーダー
+ *              Basic fragment shader that outputs vertex color directly
+ *
+ * @type {string}
+ * @constant
+ */
 export const BasicFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
@@ -11,6 +18,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description テクスチャサンプリングと頂点カラーを乗算するフラグメントシェーダー
+ *              Fragment shader that multiplies texture sampling with vertex color
+ *
+ * @type {string}
+ * @constant
+ */
 export const TextureFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

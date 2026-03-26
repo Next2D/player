@@ -1,7 +1,11 @@
 import { ShaderSource } from "./ShaderSource";
 import { $samples } from "../WebGPUUtil";
 
-const VERTEX_BUFFER_LAYOUT_4F: GPUVertexBufferLayout = {
+/**
+ * @description 4フロートストライドの頂点バッファレイアウト（position: float32x2, uv: float32x2）
+ *              Vertex buffer layout with 4-float stride (position: float32x2, uv: float32x2)
+ */
+const $VERTEX_BUFFER_LAYOUT_4F: GPUVertexBufferLayout = {
     "arrayStride": 4 * 4,
     "attributes": [
         { "shaderLocation": 0, "offset": 0, "format": "float32x2" },
@@ -9,7 +13,11 @@ const VERTEX_BUFFER_LAYOUT_4F: GPUVertexBufferLayout = {
     ]
 };
 
-const BLEND_PREMULTIPLIED_ALPHA: GPUBlendState = {
+/**
+ * @description プリマルチプライドアルファのブレンドステート
+ *              Premultiplied alpha blend state for standard compositing
+ */
+const $BLEND_PREMULTIPLIED_ALPHA: GPUBlendState = {
     "color": {
         "srcFactor": "one",
         "dstFactor": "one-minus-src-alpha",
@@ -22,16 +30,54 @@ const BLEND_PREMULTIPLIED_ALPHA: GPUBlendState = {
     }
 };
 
+/**
+ * @description WebGPUレンダーパイプラインの管理クラス。パイプラインとバインドグループレイアウトの生成・キャッシュを行う
+ *              Manager class for WebGPU render pipelines. Creates, caches, and manages pipelines and bind group layouts
+ */
 export class PipelineManager
 {
+    /**
+     * @description GPUデバイスの参照
+     *              Reference to the GPU device
+     */
     private device: GPUDevice;
+    /**
+     * @description 出力テクスチャフォーマット
+     *              Output texture format
+     */
     private format: GPUTextureFormat;
+    /**
+     * @description パイプライン名からGPURenderPipelineへのキャッシュマップ
+     *              Cache map from pipeline name to GPURenderPipeline
+     */
     private pipelines: Map<string, GPURenderPipeline>;
+    /**
+     * @description バインドグループレイアウト名からGPUBindGroupLayoutへのキャッシュマップ
+     *              Cache map from layout name to GPUBindGroupLayout
+     */
     private bindGroupLayouts: Map<string, GPUBindGroupLayout>;
+    /**
+     * @description MSAAサンプル数
+     *              MSAA sample count
+     */
     private sampleCount: number;
+    /**
+     * @description シェーダーモジュールのキャッシュ
+     *              Shader module cache by key
+     */
     private shaderModuleCache: Map<string, GPUShaderModule> = new Map();
+    /**
+     * @description フィルター用バインドグループレイアウトキャッシュ（テクスチャ数別）
+     *              Filter bind group layout cache indexed by texture count
+     */
     private filterBindGroupLayouts: Map<number, GPUBindGroupLayout> = new Map();
 
+    /**
+     * @description PipelineManagerのコンストラクタ。GPUデバイスとフォーマットを設定し、パイプラインを初期化する
+     *              Construct PipelineManager. Sets GPU device, format, and initializes pipelines
+     * @param {GPUDevice} device - GPUデバイス / GPU device instance
+     * @param {GPUTextureFormat} format - テクスチャフォーマット / Texture format for output
+     */
     constructor(device: GPUDevice, format: GPUTextureFormat)
     {
         this.device = device;
@@ -43,6 +89,13 @@ export class PipelineManager
         this.initialize();
     }
 
+    /**
+     * @description シェーダーモジュールをキャッシュから取得、または新規作成する
+     *              Get a shader module from cache, or create and cache a new one
+     * @param {string} key - キャッシュキー / Cache key
+     * @param {string} code - WGSLシェーダーコード / WGSL shader source code
+     * @return {GPUShaderModule} シェーダーモジュール / The shader module
+     */
     private getOrCreateShaderModule(key: string, code: string): GPUShaderModule
     {
         let module = this.shaderModuleCache.get(key);
@@ -53,6 +106,10 @@ export class PipelineManager
         return module;
     }
 
+    /**
+     * @description 初期パイプライン群を一括作成する
+     *              Create all initial render pipelines
+     */
     private initialize(): void
     {
         this.createFillPipeline();
@@ -69,7 +126,15 @@ export class PipelineManager
         this.createNodeClearPipeline();
     }
 
+    /**
+     * @description 初期化済みの遅延グループ名セット
+     *              Set of initialized lazy group names
+     */
     private lazyInitGroups: Set<string> = new Set();
+    /**
+     * @description パイプライン名から遅延初期化グループ名への読み取り専用マップ
+     *              Read-only map from pipeline name to lazy initialization group name
+     */
     private readonly lazyGroupMap: ReadonlyMap<string, string> = new Map([
         ...Array.from({ "length": 16 }, (_, i): [string, string] => [`blur_filter_${i + 1}`, "blur_filter"]),
         ["blur_filter", "blur_filter"],
@@ -99,6 +164,11 @@ export class PipelineManager
         ["filter_complex_blend_output_msaa", "complex_blend"]
     ]);
 
+    /**
+     * @description 指定された名前に対応する遅延初期化グループをまだ初期化されていなければ初期化する
+     *              Ensure the lazy initialization group for the given name is initialized
+     * @param {string} name - パイプライン名 / Pipeline name to look up its lazy group
+     */
     private ensureLazyGroup(name: string): void
     {
         const group = this.lazyGroupMap.get(name);
@@ -126,6 +196,10 @@ export class PipelineManager
         }
     }
 
+    /**
+     * @description すべての遅延初期化グループを事前にロードする
+     *              Preload all lazy initialization groups eagerly
+     */
     preloadLazyGroups(): void
     {
         const groups = ["blur_filter", "texture_copy", "bitmap_sync", "filter", "complex_blend"];
@@ -134,6 +208,10 @@ export class PipelineManager
         }
     }
 
+    /**
+     * @description 塗りつぶし描画用パイプラインを作成する（RGBA/BGRA/ステンシル対応）
+     *              Create fill render pipelines (RGBA, BGRA, and stencil variants)
+     */
     private createFillPipeline(): void
     {
         // Dynamic Offset対応のBindGroupLayout（fill + stencil共有）
@@ -157,8 +235,8 @@ export class PipelineManager
 
         const fragmentShaderModule = this.getOrCreateShaderModule("fillFragment", ShaderSource.getFillFragmentShader());
 
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
-        const blendState = BLEND_PREMULTIPLIED_ALPHA;
+        const vertexBufferLayout = $VERTEX_BUFFER_LAYOUT_4F;
+        const blendState = $BLEND_PREMULTIPLIED_ALPHA;
         const pipelineRGBA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
@@ -273,9 +351,13 @@ export class PipelineManager
         this.pipelines.set("fill_bgra_stencil", pipelineBGRAStencil);
     }
 
+    /**
+     * @description ステンシル塗りつぶし用パイプラインを作成する（書き込み・塗りつぶし・アトラス・メイン・マスク対応）
+     *              Create stencil fill pipelines (write, fill, atlas, main, and masked variants)
+     */
     private createStencilFillPipelines(): void
     {
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
+        const vertexBufferLayout = $VERTEX_BUFFER_LAYOUT_4F;
 
         // fill_dynamicレイアウトを共有（hasDynamicOffset: true）
         const dynamicLayout = this.bindGroupLayouts.get("fill_dynamic")!;
@@ -625,9 +707,13 @@ export class PipelineManager
         this.pipelines.set("stencil_fill_masked", stencilFillMaskedPipeline);
     }
 
+    /**
+     * @description クリッピング用パイプラインを作成する（レベル別の書き込み・クリア）
+     *              Create clip pipelines (level-based write and clear variants)
+     */
     private createClipPipeline(): void
     {
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
+        const vertexBufferLayout = $VERTEX_BUFFER_LAYOUT_4F;
         const dynamicLayout = this.bindGroupLayouts.get("fill_dynamic")!;
         const clipPipelineLayout = this.device.createPipelineLayout({
             "bindGroupLayouts": [dynamicLayout]
@@ -770,9 +856,13 @@ export class PipelineManager
         }
     }
 
+    /**
+     * @description マスク合成用パイプラインを作成する（レベル別のマージ・クリア）
+     *              Create mask union pipelines (level-based merge and clear variants)
+     */
     private createMaskUnionPipelines(): void
     {
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
+        const vertexBufferLayout = $VERTEX_BUFFER_LAYOUT_4F;
         const dynamicLayout = this.bindGroupLayouts.get("fill_dynamic")!;
         const maskUnionPipelineLayout = this.device.createPipelineLayout({
             "bindGroupLayouts": [dynamicLayout]
@@ -864,6 +954,10 @@ export class PipelineManager
         }
     }
 
+    /**
+     * @description マスク描画用パイプラインを作成する
+     *              Create mask render pipeline
+     */
     private createMaskPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -935,6 +1029,10 @@ export class PipelineManager
         this.pipelines.set("mask", pipeline);
     }
 
+    /**
+     * @description 基本描画パイプラインを作成する（RGBA/BGRA）
+     *              Create basic render pipelines (RGBA and BGRA variants)
+     */
     private createBasicPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -971,7 +1069,7 @@ export class PipelineManager
             ]
         };
 
-        const blendState = BLEND_PREMULTIPLIED_ALPHA;
+        const blendState = $BLEND_PREMULTIPLIED_ALPHA;
         const pipelineRGBA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
@@ -1021,6 +1119,10 @@ export class PipelineManager
         this.pipelines.set("basic_bgra", pipelineBGRA);
     }
 
+    /**
+     * @description テクスチャ描画用パイプラインを作成する
+     *              Create texture render pipeline
+     */
     private createTexturePipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -1102,6 +1204,10 @@ export class PipelineManager
         this.pipelines.set("texture", pipeline);
     }
 
+    /**
+     * @description インスタンス描画用パイプラインを作成する（ブレンドバリアント・マスク対応）
+     *              Create instanced render pipelines (blend variants and masked)
+     */
     private createInstancedPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -1321,6 +1427,10 @@ export class PipelineManager
         this.pipelines.set("instanced_masked", maskedPipeline);
     }
 
+    /**
+     * @description グラデーション塗りつぶし用パイプラインを作成する（RGBA/BGRA/ステンシル対応）
+     *              Create gradient fill pipelines (RGBA, BGRA, stencil, and stroke variants)
+     */
     private createGradientPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -1358,8 +1468,8 @@ export class PipelineManager
         const stencilFragmentShaderModule = this.getOrCreateShaderModule("gradientFillStencilFragment", ShaderSource.getGradientFillStencilFragmentShader());
         this.gradientStencilFragmentShaderModule = stencilFragmentShaderModule;
 
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
-        const blendState = BLEND_PREMULTIPLIED_ALPHA;
+        const vertexBufferLayout = $VERTEX_BUFFER_LAYOUT_4F;
+        const blendState = $BLEND_PREMULTIPLIED_ALPHA;
         const pipelineRGBA = this.device.createRenderPipeline({
             "label": "gradient_fill_no_stencil_pipeline",
             "layout": pipelineLayout,
@@ -1675,6 +1785,10 @@ export class PipelineManager
         this.pipelines.set("gradient_fill_bgra_stencil", pipelineBGRAStencil);
     }
 
+    /**
+     * @description ビットマップ塗りつぶし用パイプラインを作成する（RGBA/BGRA/ステンシル・ストローク対応）
+     *              Create bitmap fill pipelines (RGBA, BGRA, stencil, and stroke variants)
+     */
     private createBitmapFillPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -1707,8 +1821,8 @@ export class PipelineManager
 
         const fragmentShaderModule = this.getOrCreateShaderModule("bitmapFillFragment", ShaderSource.getBitmapFillFragmentShader());
 
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
-        const blendState = BLEND_PREMULTIPLIED_ALPHA;
+        const vertexBufferLayout = $VERTEX_BUFFER_LAYOUT_4F;
+        const blendState = $BLEND_PREMULTIPLIED_ALPHA;
         const pipelineRGBA = this.device.createRenderPipeline({
             "layout": pipelineLayout,
             "vertex": {
@@ -1908,6 +2022,10 @@ export class PipelineManager
         this.pipelines.set("bitmap_fill_bgra_stencil", pipelineBGRAStencil);
     }
 
+    /**
+     * @description ブレンド描画用パイプラインを作成する（デュアルテクスチャブレンド）
+     *              Create blend render pipeline for dual-texture blending
+     */
     private createBlendPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -2004,6 +2122,10 @@ export class PipelineManager
         this.pipelines.set("blend", pipeline);
     }
 
+    /**
+     * @description ブラーフィルター用パイプラインを作成する（halfBlur 1〜16のバリアント）
+     *              Create blur filter pipelines (halfBlur 1-16 variants)
+     */
     private createBlurFilterPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -2071,6 +2193,10 @@ export class PipelineManager
         }
     }
 
+    /**
+     * @description テクスチャコピー用パイプラインを作成する（各種ブレンド・フィルター出力・MSAA対応）
+     *              Create texture copy pipelines (various blend modes, filter output, MSAA variants)
+     */
     private createTextureCopyPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -2207,6 +2333,10 @@ export class PipelineManager
         this.createTextureScalePipeline();
     }
 
+    /**
+     * @description 位置指定テクスチャ描画用パイプラインを作成する（RGBA/ビットマップレンダー対応）
+     *              Create positioned texture pipelines (RGBA, bitmap render, MSAA variants)
+     */
     private createPositionedTexturePipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -2401,6 +2531,10 @@ export class PipelineManager
         this.pipelines.set("bitmap_render", pipelineNonMsaa);
     }
 
+    /**
+     * @description テクスチャスケーリング用パイプラインを作成する
+     *              Create texture scale pipelines
+     */
     private createTextureScalePipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -2500,6 +2634,10 @@ export class PipelineManager
         this.pipelines.set("texture_scale_blend", blendPipeline);
     }
 
+    /**
+     * @description ビットマップ同期描画用パイプラインを作成する（MSAA 4x）
+     *              Create bitmap sync render pipeline (MSAA 4x)
+     */
     private createBitmapSyncPipeline(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -2565,6 +2703,10 @@ export class PipelineManager
         this.pipelines.set("bitmap_sync", pipeline);
     }
 
+    /**
+     * @description カラーマトリクスフィルター・ベベル・グロー・ドロップシャドウ等のフィルターパイプラインを作成する
+     *              Create filter pipelines (color matrix, bevel, glow, drop shadow, gradient glow/bevel)
+     */
     private createColorMatrixFilterPipeline(): void
     {
         const BLEND_REPLACE: GPUBlendState = {
@@ -2584,6 +2726,10 @@ export class PipelineManager
         this.createFilterPipelineWithLayout("gradient_bevel_filter", ShaderSource.getGradientBevelFilterFragmentShader(), 3, BLEND_ALPHA);
     }
 
+    /**
+     * @description 複合ブレンド用パイプラインを作成する
+     *              Create complex blend pipelines
+     */
     private createComplexBlendPipelines(): void
     {
         const bindGroupLayout = this.device.createBindGroupLayout({
@@ -2656,6 +2802,10 @@ export class PipelineManager
         this.createComplexBlendOutputPipeline();
     }
 
+    /**
+     * @description 複合ブレンドのコピー・スケール用パイプラインを作成する
+     *              Create complex blend copy and scale pipelines
+     */
     private createComplexBlendCopyPipeline(): void
     {
         const BLEND_REPLACE: GPUBlendState = {
@@ -2682,6 +2832,10 @@ export class PipelineManager
         }
     }
 
+    /**
+     * @description 複合ブレンドの出力用パイプラインを作成する（MSAA対応含む）
+     *              Create complex blend output pipelines (including MSAA variants)
+     */
     private createComplexBlendOutputPipeline(): void
     {
         const bindGroupLayout = this.bindGroupLayouts.get("positioned_texture");
@@ -2715,56 +2869,76 @@ export class PipelineManager
         }
     }
 
+    /**
+     * @description 指定されたフラグメントシェーダーとテクスチャ数でフィルターパイプラインを作成する
+     *              Create a filter pipeline with the specified fragment shader and texture count
+     * @param {string} name - パイプライン名 / Pipeline name
+     * @param {string} fragment_shader_code - フラグメントシェーダーコード / Fragment shader WGSL source code
+     * @param {number} texture_count - テクスチャバインディング数 / Number of texture bindings
+     * @param {GPUBlendState} blend - ブレンドステート / Blend state configuration
+     */
     private createFilterPipelineWithLayout(
         name: string,
-        fragmentShaderCode: string,
-        textureCount: number,
+        fragment_shader_code: string,
+        texture_count: number,
         blend: GPUBlendState
     ): void
     {
-        let bindGroupLayout = this.filterBindGroupLayouts.get(textureCount);
+        let bindGroupLayout = this.filterBindGroupLayouts.get(texture_count);
         if (!bindGroupLayout) {
             const entries: GPUBindGroupLayoutEntry[] = [
                 { "binding": 0, "visibility": GPUShaderStage.FRAGMENT, "buffer": { "type": "uniform" } },
                 { "binding": 1, "visibility": GPUShaderStage.FRAGMENT, "sampler": {} }
             ];
-            for (let i = 0; i < textureCount; i++) {
+            for (let i = 0; i < texture_count; i++) {
                 entries.push({ "binding": 2 + i, "visibility": GPUShaderStage.FRAGMENT, "texture": {} });
             }
             bindGroupLayout = this.device.createBindGroupLayout({ "entries": entries });
-            this.filterBindGroupLayouts.set(textureCount, bindGroupLayout);
+            this.filterBindGroupLayouts.set(texture_count, bindGroupLayout);
         }
 
         this.bindGroupLayouts.set(name, bindGroupLayout);
 
         const pipelineLayout = this.device.createPipelineLayout({ "bindGroupLayouts": [bindGroupLayout] });
         const vertexShaderModule = this.getOrCreateShaderModule("blurFilterVertex", ShaderSource.getBlurFilterVertexShader());
-        const fragmentShaderModule = this.getOrCreateShaderModule(`filter_${name}`, fragmentShaderCode);
+        const fragmentShaderModule = this.getOrCreateShaderModule(`filter_${name}`, fragment_shader_code);
 
         this.pipelines.set(name, this.createFullscreenQuadPipeline(
             pipelineLayout, vertexShaderModule, fragmentShaderModule, "rgba8unorm", blend
         ));
     }
 
+    /**
+     * @description フルスクリーンクアッド描画用の汎用パイプラインを作成する
+     *              Create a generic fullscreen quad render pipeline
+     * @param {GPUPipelineLayout} pipeline_layout - パイプラインレイアウト / Pipeline layout
+     * @param {GPUShaderModule} vertex_module - 頂点シェーダーモジュール / Vertex shader module
+     * @param {GPUShaderModule} fragment_module - フラグメントシェーダーモジュール / Fragment shader module
+     * @param {GPUTextureFormat} format - テクスチャフォーマット / Target texture format
+     * @param {GPUBlendState} blend - ブレンドステート / Blend state configuration
+     * @param {number} multisample_count - MSAAサンプル数（任意） / Optional MSAA sample count
+     * @param {GPUDepthStencilState} depth_stencil - 深度ステンシルステート（任意） / Optional depth-stencil state
+     * @return {GPURenderPipeline} レンダーパイプライン / The created render pipeline
+     */
     private createFullscreenQuadPipeline(
-        pipelineLayout: GPUPipelineLayout,
-        vertexModule: GPUShaderModule,
-        fragmentModule: GPUShaderModule,
+        pipeline_layout: GPUPipelineLayout,
+        vertex_module: GPUShaderModule,
+        fragment_module: GPUShaderModule,
         format: GPUTextureFormat,
         blend: GPUBlendState,
-        multisampleCount?: number,
-        depthStencil?: GPUDepthStencilState
+        multisample_count?: number,
+        depth_stencil?: GPUDepthStencilState
     ): GPURenderPipeline
     {
         const descriptor: GPURenderPipelineDescriptor = {
-            "layout": pipelineLayout,
+            "layout": pipeline_layout,
             "vertex": {
-                "module": vertexModule,
+                "module": vertex_module,
                 "entryPoint": "main",
                 "buffers": []
             },
             "fragment": {
-                "module": fragmentModule,
+                "module": fragment_module,
                 "entryPoint": "main",
                 "targets": [{ "format": format, "blend": blend }]
             },
@@ -2774,17 +2948,23 @@ export class PipelineManager
             }
         };
 
-        if (multisampleCount && multisampleCount > 1) {
-            descriptor.multisample = { "count": multisampleCount };
+        if (multisample_count && multisample_count > 1) {
+            descriptor.multisample = { "count": multisample_count };
         }
 
-        if (depthStencil) {
-            descriptor.depthStencil = depthStencil;
+        if (depth_stencil) {
+            descriptor.depthStencil = depth_stencil;
         }
 
         return this.device.createRenderPipeline(descriptor);
     }
 
+    /**
+     * @description 名前からレンダーパイプラインを取得する（遅延初期化を含む）
+     *              Get a render pipeline by name, initializing lazy groups if needed
+     * @param {string} name - パイプライン名 / Pipeline name
+     * @return {GPURenderPipeline | undefined} パイプラインまたはundefined / The pipeline or undefined
+     */
     getPipeline(name: string): GPURenderPipeline | undefined
     {
         let pipeline = this.pipelines.get(name);
@@ -2796,15 +2976,18 @@ export class PipelineManager
     }
 
     /**
-     * @description フィルターパイプラインのoverride定数バリアントを取得
-     *              GPU warp divergenceを排除するコンパイル時分岐特殊化
+     * @description フィルターパイプラインのoverride定数バリアントを取得する。GPU warp divergenceを排除するコンパイル時分岐特殊化
+     *              Get a filter pipeline variant with override constants. Compile-time branch specialization to eliminate GPU warp divergence
+     * @param {string} base_name - ベースパイプライン名 / Base pipeline name
+     * @param {Record<string, number>} constants - オーバーライド定数 / Override constant values
+     * @return {GPURenderPipeline | undefined} パイプラインまたはundefined / The pipeline or undefined
      */
-    getFilterPipeline(baseName: string, constants: Record<string, number>): GPURenderPipeline | undefined
+    getFilterPipeline(base_name: string, constants: Record<string, number>): GPURenderPipeline | undefined
     {
         // キャッシュキーを生成
         const keys = Object.keys(constants).sort();
         const suffix = keys.map((k) => `${k}${constants[k]}`).join("_");
-        const cacheKey = `${baseName}_${suffix}`;
+        const cacheKey = `${base_name}_${suffix}`;
 
         let pipeline = this.pipelines.get(cacheKey);
         if (pipeline) {
@@ -2812,14 +2995,14 @@ export class PipelineManager
         }
 
         // ベースグループのロードを確保
-        this.ensureLazyGroup(baseName);
+        this.ensureLazyGroup(base_name);
 
-        const fragmentModule = this.shaderModuleCache.get(`filter_${baseName}`);
+        const fragmentModule = this.shaderModuleCache.get(`filter_${base_name}`);
         const vertexModule = this.shaderModuleCache.get("blurFilterVertex");
-        const bindGroupLayout = this.bindGroupLayouts.get(baseName);
+        const bindGroupLayout = this.bindGroupLayouts.get(base_name);
 
         if (!fragmentModule || !vertexModule || !bindGroupLayout) {
-            return this.pipelines.get(baseName);
+            return this.pipelines.get(base_name);
         }
 
         const pipelineLayout = this.device.createPipelineLayout({
@@ -2856,57 +3039,85 @@ export class PipelineManager
     }
 
     /**
-     * @description グラデーションタイプとスプレッドモードに応じた特殊化パイプラインを取得
-     *              override定数でGPU warp divergenceを排除
+     * @description グラデーションタイプとスプレッドモードに応じた特殊化パイプラインを取得する。override定数でGPU warp divergenceを排除
+     *              Get a gradient pipeline specialized by gradient type and spread mode. Uses override constants to eliminate GPU warp divergence
+     * @param {string} base_name - ベースパイプライン名 / Base pipeline name
+     * @param {number} gradient_type - グラデーションタイプ / Gradient type identifier
+     * @param {number} spread_mode - スプレッドモード / Spread mode identifier
+     * @return {GPURenderPipeline | undefined} パイプラインまたはundefined / The pipeline or undefined
      */
-    getGradientPipeline(baseName: string, gradientType: number, spreadMode: number): GPURenderPipeline | undefined
+    getGradientPipeline(base_name: string, gradient_type: number, spread_mode: number): GPURenderPipeline | undefined
     {
-        const key = `${baseName}_t${gradientType}s${spreadMode}`;
+        const key = `${base_name}_t${gradient_type}s${spread_mode}`;
         let pipeline = this.pipelines.get(key);
         if (pipeline) {
             return pipeline;
         }
 
         if (!this.gradientPipelineLayout) {
-            return this.getPipeline(baseName);
+            return this.getPipeline(base_name);
         }
 
         // ベースパイプラインと同じ構成でoverride定数を変えて作成
-        pipeline = this.createGradientVariant(baseName, gradientType, spreadMode);
+        pipeline = this.createGradientVariant(base_name, gradient_type, spread_mode);
         if (pipeline) {
             this.pipelines.set(key, pipeline);
             return pipeline;
         }
 
         // フォールバック: デフォルト定数のベースパイプラインを使用
-        return this.getPipeline(baseName);
+        return this.getPipeline(base_name);
     }
 
+    /**
+     * @description グラデーション用パイプラインレイアウト
+     *              Pipeline layout for gradient pipelines
+     */
     private gradientPipelineLayout: GPUPipelineLayout | null = null;
+    /**
+     * @description グラデーション用頂点シェーダーモジュール
+     *              Vertex shader module for gradient pipelines
+     */
     private gradientVertexShaderModule: GPUShaderModule | null = null;
+    /**
+     * @description グラデーション用フラグメントシェーダーモジュール
+     *              Fragment shader module for gradient pipelines
+     */
     private gradientFragmentShaderModule: GPUShaderModule | null = null;
+    /**
+     * @description グラデーション用ステンシルフラグメントシェーダーモジュール
+     *              Stencil fragment shader module for gradient pipelines
+     */
     private gradientStencilFragmentShaderModule: GPUShaderModule | null = null;
 
-    private createGradientVariant(baseName: string, gradientType: number, spreadMode: number): GPURenderPipeline | undefined
+    /**
+     * @description グラデーションバリアントパイプラインを作成する（override定数による特殊化）
+     *              Create a gradient variant pipeline with override constants for specialization
+     * @param {string} base_name - ベースパイプライン名 / Base pipeline name
+     * @param {number} gradient_type - グラデーションタイプ / Gradient type identifier
+     * @param {number} spread_mode - スプレッドモード / Spread mode identifier
+     * @return {GPURenderPipeline | undefined} パイプラインまたはundefined / The pipeline or undefined
+     */
+    private createGradientVariant(base_name: string, gradient_type: number, spread_mode: number): GPURenderPipeline | undefined
     {
         if (!this.gradientPipelineLayout) {
             return undefined;
         }
 
         const constants = {
-            "GRADIENT_TYPE": gradientType,
-            "SPREAD_MODE": spreadMode
+            "GRADIENT_TYPE": gradient_type,
+            "SPREAD_MODE": spread_mode
         };
 
-        const vertexBufferLayout = VERTEX_BUFFER_LAYOUT_4F;
-        const blendState = BLEND_PREMULTIPLIED_ALPHA;
+        const vertexBufferLayout = $VERTEX_BUFFER_LAYOUT_4F;
+        const blendState = $BLEND_PREMULTIPLIED_ALPHA;
 
         // ベース名からパイプライン構成を決定
-        const isStencilFragment = baseName.includes("stencil_atlas") || baseName === "gradient_fill_stencil_main";
+        const isStencilFragment = base_name.includes("stencil_atlas") || base_name === "gradient_fill_stencil_main";
         const fragModule = isStencilFragment ? this.gradientStencilFragmentShaderModule! : this.gradientFragmentShaderModule!;
-        const isBGRA = baseName.includes("bgra") || baseName === "gradient_fill_stencil_main";
+        const isBGRA = base_name.includes("bgra") || base_name === "gradient_fill_stencil_main";
         const format: GPUTextureFormat = isBGRA ? this.format : "rgba8unorm";
-        const needsYFlip = baseName.includes("bgra") || baseName === "gradient_fill_stencil_main";
+        const needsYFlip = base_name.includes("bgra") || base_name === "gradient_fill_stencil_main";
 
         const vertexConstants: Record<string, number> = {};
         if (needsYFlip) {
@@ -2916,7 +3127,7 @@ export class PipelineManager
         let depthStencil: GPUDepthStencilState | undefined;
         let sampleCount = this.sampleCount;
 
-        if (baseName.includes("stroke")) {
+        if (base_name.includes("stroke")) {
             depthStencil = {
                 "format": "stencil8",
                 "stencilFront": { "compare": "always", "failOp": "keep", "depthFailOp": "keep", "passOp": "keep" },
@@ -2924,7 +3135,7 @@ export class PipelineManager
                 "stencilReadMask": 0x00,
                 "stencilWriteMask": 0x00
             };
-        } else if (baseName === "gradient_fill_stencil" || baseName === "gradient_fill_stencil_atlas") {
+        } else if (base_name === "gradient_fill_stencil" || base_name === "gradient_fill_stencil_atlas") {
             depthStencil = {
                 "format": "stencil8",
                 "stencilFront": { "compare": "not-equal", "failOp": "keep", "depthFailOp": "zero", "passOp": "zero" },
@@ -2932,7 +3143,7 @@ export class PipelineManager
                 "stencilReadMask": 0xFF,
                 "stencilWriteMask": 0xFF
             };
-        } else if (baseName === "gradient_fill_stencil_main") {
+        } else if (base_name === "gradient_fill_stencil_main") {
             depthStencil = {
                 "format": "stencil8",
                 "stencilFront": { "compare": "not-equal", "failOp": "keep", "depthFailOp": "zero", "passOp": "zero" },
@@ -2941,7 +3152,7 @@ export class PipelineManager
                 "stencilWriteMask": 0xFF
             };
             sampleCount = 1;
-        } else if (baseName === "gradient_fill_bgra_stencil") {
+        } else if (base_name === "gradient_fill_bgra_stencil") {
             depthStencil = {
                 "format": "stencil8",
                 "stencilFront": { "compare": "equal", "failOp": "keep", "depthFailOp": "keep", "passOp": "keep" },
@@ -2949,7 +3160,7 @@ export class PipelineManager
                 "stencilReadMask": 0xFF,
                 "stencilWriteMask": 0x00
             };
-        } else if (baseName === "gradient_fill_bgra_no_msaa") {
+        } else if (base_name === "gradient_fill_bgra_no_msaa") {
             sampleCount = 1;
         }
 
@@ -2978,6 +3189,12 @@ export class PipelineManager
         return this.device.createRenderPipeline(descriptor);
     }
 
+    /**
+     * @description 名前からバインドグループレイアウトを取得する（遅延初期化を含む）
+     *              Get a bind group layout by name, initializing lazy groups if needed
+     * @param {string} name - バインドグループレイアウト名 / Bind group layout name
+     * @return {GPUBindGroupLayout | undefined} レイアウトまたはundefined / The layout or undefined
+     */
     getBindGroupLayout(name: string): GPUBindGroupLayout | undefined
     {
         let layout = this.bindGroupLayouts.get(name);
@@ -2988,6 +3205,10 @@ export class PipelineManager
         return layout;
     }
 
+    /**
+     * @description ノードクリア用パイプラインを作成する（カラーとステンシルの同時クリア）
+     *              Create node clear pipeline for simultaneous color and stencil clear
+     */
     private createNodeClearPipeline(): void
     {
         const vertexBufferLayout: GPUVertexBufferLayout = {
@@ -3055,6 +3276,10 @@ export class PipelineManager
         this.pipelines.set("node_clear_atlas", nodeClearPipeline);
     }
 
+    /**
+     * @description すべてのパイプライン・レイアウト・シェーダーモジュールを解放する
+     *              Dispose all pipelines, layouts, and shader module caches
+     */
     dispose(): void
     {
         this.pipelines.clear();

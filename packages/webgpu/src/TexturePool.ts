@@ -5,13 +5,17 @@ import { execute as texturePoolCleanupService } from "./TexturePool/service/Text
 
 /**
  * @description プールの最大サイズ
+ *              Maximum pool size for texture reuse
+ * @type {number}
  */
-const MAX_POOL_SIZE = 32;
+const $MAX_POOL_SIZE = 32;
 
 /**
  * @description キャッシュのクリーンアップ閾値（フレーム数）
+ *              Cache cleanup threshold in frames (3 seconds at 60FPS)
+ * @type {number}
  */
-const CACHE_CLEANUP_THRESHOLD = 180; // 3秒（60FPS想定）
+const $CACHE_CLEANUP_THRESHOLD = 180;
 
 /**
  * @description テクスチャプールマネージャー（Power-of-2バケット版）
@@ -23,13 +27,38 @@ const CACHE_CLEANUP_THRESHOLD = 180; // 3秒（60FPS想定）
  */
 export class TexturePool
 {
+    /**
+     * @description WebGPUデバイスの参照
+     *              Reference to the WebGPU device
+     * @type {GPUDevice}
+     */
     private device: GPUDevice;
+
+    /**
+     * @description Power-of-2バケットによるテクスチャプール
+     *              Texture pool organized by power-of-2 buckets
+     * @type {ITexturePoolBuckets}
+     */
     private buckets: ITexturePoolBuckets;
+
+    /**
+     * @description 現在のフレーム番号
+     *              Current frame number for LRU tracking
+     * @type {number}
+     */
     private currentFrame: number;
+
+    /**
+     * @description プール内のテクスチャ総数
+     *              Total count of textures in the pool
+     * @type {number[]}
+     */
     private totalCount: number[];
 
     /**
-     * @param {GPUDevice} device
+     * @description テクスチャプールを生成する
+     *              Create a new texture pool instance
+     * @param {GPUDevice} device - WebGPUデバイス / WebGPU device
      * @constructor
      */
     constructor(device: GPUDevice)
@@ -41,7 +70,8 @@ export class TexturePool
     }
 
     /**
-     * @description フレーム開始時に呼び出し
+     * @description フレーム開始時に呼び出し、定期的にプールをクリーンアップする
+     *              Called at the beginning of each frame; periodically cleans up the pool
      * @return {void}
      */
     beginFrame(): void
@@ -50,16 +80,17 @@ export class TexturePool
 
         // 定期的にプールをクリーンアップ（LRU回収）
         if (this.currentFrame % 60 === 0) {
-            texturePoolCleanupService(this.buckets, this.currentFrame, CACHE_CLEANUP_THRESHOLD, this.totalCount);
+            texturePoolCleanupService(this.buckets, this.currentFrame, $CACHE_CLEANUP_THRESHOLD, this.totalCount);
         }
     }
 
     /**
-     * @description テクスチャを取得または作成
-     * @param {number} width - テクスチャの幅
-     * @param {number} height - テクスチャの高さ
-     * @param {GPUTextureFormat} format - テクスチャフォーマット
-     * @param {GPUTextureUsageFlags} usage - テクスチャ使用フラグ
+     * @description テクスチャを取得または作成する
+     *              Acquire a texture from the pool or create a new one
+     * @param {number} width - テクスチャの幅 / texture width
+     * @param {number} height - テクスチャの高さ / texture height
+     * @param {GPUTextureFormat} format - テクスチャフォーマット / texture format
+     * @param {GPUTextureUsageFlags} usage - テクスチャ使用フラグ / texture usage flags
      * @return {GPUTexture}
      */
     acquire(
@@ -78,14 +109,15 @@ export class TexturePool
             format,
             usage,
             this.currentFrame,
-            MAX_POOL_SIZE,
+            $MAX_POOL_SIZE,
             this.totalCount
         );
     }
 
     /**
-     * @description テクスチャをプールに返却
-     * @param {GPUTexture} texture - 返却するテクスチャ
+     * @description テクスチャをプールに返却する
+     *              Release a texture back to the pool for reuse
+     * @param {GPUTexture} texture - 返却するテクスチャ / texture to release
      * @return {void}
      */
     release(texture: GPUTexture): void
@@ -94,7 +126,8 @@ export class TexturePool
     }
 
     /**
-     * @description プール統計を取得
+     * @description プール統計を取得する
+     *              Get pool statistics including total, in-use, and available counts
      * @return {{ total: number, inUse: number, available: number }}
      */
     getStats(): { total: number; inUse: number; available: number }
@@ -120,7 +153,8 @@ export class TexturePool
     }
 
     /**
-     * @description 解放
+     * @description 全テクスチャを破棄しプールを解放する
+     *              Destroy all textures and dispose of the pool
      * @return {void}
      */
     dispose(): void
@@ -134,38 +168,3 @@ export class TexturePool
         this.totalCount[0] = 0;
     }
 }
-
-/**
- * @description グローバルテクスチャプールインスタンス
- */
-let $texturePool: TexturePool | null = null;
-
-/**
- * @description テクスチャプールを初期化
- * @param {GPUDevice} device
- * @return {void}
- */
-export const initTexturePool = (device: GPUDevice): void =>
-{
-    $texturePool = new TexturePool(device);
-};
-
-/**
- * @description テクスチャプールを取得
- * @return {TexturePool | null}
- */
-export const getTexturePool = (): TexturePool | null =>
-{
-    return $texturePool;
-};
-
-/**
- * @description テクスチャプールをクリア
- * @return {void}
- */
-export const clearTexturePool = (): void =>
-{
-    if ($texturePool) {
-        $texturePool.dispose();
-    }
-};

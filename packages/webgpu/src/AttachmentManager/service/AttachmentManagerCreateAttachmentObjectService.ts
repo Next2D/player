@@ -4,16 +4,16 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
  * @description 新しいアタッチメントオブジェクトを作成
  *              Create a new attachment object
  *
- * @param  {{ attachmentId: number }} idCounter
+ * @param  {{ attachmentId: number }} id_counter - ID管理カウンタ
  * @return {IAttachmentObject}
  * @method
  * @protected
  */
 export const execute = (
-    idCounter: { attachmentId: number }
+    id_counter: { attachmentId: number }
 ): IAttachmentObject => {
     return {
-        "id": idCounter.attachmentId++,
+        "id": id_counter.attachmentId++,
         "width": 0,
         "height": 0,
         "clipLevel": 0,

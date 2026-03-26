@@ -5,6 +5,10 @@ import type { IStencilBufferObject } from "./interface/IStencilBufferObject";
 import { execute as attachmentManagerGetAttachmentObjectUseCase } from "./AttachmentManager/usecase/AttachmentManagerGetAttachmentObjectUseCase";
 import { execute as attachmentManagerReleaseAttachmentUseCase } from "./AttachmentManager/usecase/AttachmentManagerReleaseAttachmentUseCase";
 
+/**
+ * @description アタッチメントリソースのプール管理クラス
+ *              Pool manager class for attachment resources
+ */
 export class AttachmentManager
 {
     private device: GPUDevice;
@@ -13,8 +17,12 @@ export class AttachmentManager
     private colorBufferPool: IColorBufferObject[];
     private stencilBufferPool: IStencilBufferObject[];
     private idCounter: { attachmentId: number; textureId: number; stencilId: number };
-    private currentAttachment: IAttachmentObject | null;
 
+    /**
+     * @description AttachmentManagerのコンストラクタ
+     *              Constructor for AttachmentManager
+     * @param {GPUDevice} device - WebGPUデバイス / WebGPU device
+     */
     constructor(device: GPUDevice)
     {
         this.device = device;
@@ -23,9 +31,16 @@ export class AttachmentManager
         this.colorBufferPool = [];
         this.stencilBufferPool = [];
         this.idCounter = { "attachmentId": 0, "textureId": 0, "stencilId": 0 };
-        this.currentAttachment = null;
     }
 
+    /**
+     * @description プールからアタッチメントオブジェクトを取得する
+     *              Get an attachment object from the pool
+     * @param  {number}  width  - テクスチャの幅 / Texture width
+     * @param  {number}  height - テクスチャの高さ / Texture height
+     * @param  {boolean} [msaa=false] - MSAAを有効にするか / Whether to enable MSAA
+     * @return {IAttachmentObject}
+     */
     getAttachmentObject(
         width: number,
         height: number,
@@ -45,16 +60,33 @@ export class AttachmentManager
         );
     }
 
-    bindAttachment(attachment: IAttachmentObject): void
+    /**
+     * @description 現在のアタッチメントをバインドする
+     *              Bind the current attachment
+     * @param  {IAttachmentObject} attachment - バインドするアタッチメント / Attachment to bind
+     * @return {void}
+     */
+    bindAttachment(_attachment: IAttachmentObject): void
     {
-        this.currentAttachment = attachment;
+        // no-op: バインド状態はContext側で管理
     }
 
+    /**
+     * @description 現在のアタッチメントのバインドを解除する
+     *              Unbind the current attachment
+     * @return {void}
+     */
     unbindAttachment(): void
     {
-        this.currentAttachment = null;
+        // no-op: バインド状態はContext側で管理
     }
 
+    /**
+     * @description アタッチメントをプールに返却する
+     *              Release an attachment back to the pool
+     * @param  {IAttachmentObject} attachment - 返却するアタッチメント / Attachment to release
+     * @return {void}
+     */
     releaseAttachment(attachment: IAttachmentObject): void
     {
         attachmentManagerReleaseAttachmentUseCase(
@@ -66,6 +98,11 @@ export class AttachmentManager
         );
     }
 
+    /**
+     * @description 全リソースを破棄する
+     *              Dispose all resources
+     * @return {void}
+     */
     dispose(): void
     {
         for (const pool of this.texturePool.values()) {

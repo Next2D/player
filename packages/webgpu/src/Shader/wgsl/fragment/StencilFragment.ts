@@ -1,3 +1,10 @@
+/**
+ * @description ステンシル書き込み用フラグメントシェーダー（ベジェ曲線アンチエイリアス）
+ *              Stencil write fragment shader with bezier curve anti-aliasing
+ *
+ * @type {string}
+ * @constant
+ */
 export const StencilWriteFragment = /* wgsl */`
 struct FragmentInput {
     @builtin(position) position: vec4<f32>,
@@ -20,6 +27,13 @@ fn main(input: FragmentInput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description ステンシル塗り用フラグメントシェーダー（プリマルチプライドアルファ出力）
+ *              Stencil fill fragment shader with premultiplied alpha output
+ *
+ * @type {string}
+ * @constant
+ */
 export const StencilFillFragment = /* wgsl */`
 struct FragmentInput {
     @builtin(position) position: vec4<f32>,

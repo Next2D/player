@@ -32,7 +32,7 @@ const MAX_RECURSION_DEPTH = 8;
  * @param {IPoint} p1 - 制御点1
  * @param {IPoint} p2 - 制御点2
  * @param {IPoint} p3 - 終点
- * @param {number} flatnessThreshold - フラットネス閾値（オプション）
+ * @param {number} flatness_threshold - フラットネス閾値（オプション）
  * @return {IQuadraticSegment[]} 二次ベジェ曲線のセグメント配列
  */
 export const execute = (
@@ -40,12 +40,21 @@ export const execute = (
     p1: IPoint,
     p2: IPoint,
     p3: IPoint,
-    flatnessThreshold: number = DEFAULT_FLATNESS_THRESHOLD
+    flatness_threshold: number = DEFAULT_FLATNESS_THRESHOLD
 ): IQuadraticSegment[] => {
 
     const result: IQuadraticSegment[] = [];
 
-    // 再帰的に分割を行う内部関数
+    /**
+     * @description 再帰的に三次ベジェ曲線を分割し、二次ベジェ曲線に近似する内部関数
+     *              Internal recursive function that subdivides cubic bezier and approximates with quadratic bezier
+     * @param {IPoint} start - 始点
+     * @param {IPoint} ctrl1 - 制御点1
+     * @param {IPoint} ctrl2 - 制御点2
+     * @param {IPoint} end - 終点
+     * @param {number} depth - 現在の再帰深度
+     * @return {void}
+     */
     const subdivide = (
         start: IPoint,
         ctrl1: IPoint,
@@ -58,7 +67,7 @@ export const execute = (
         const flatness = calculateFlatness(start, ctrl1, ctrl2, end);
 
         // フラットネスが閾値以下、または最大深度に達した場合は近似
-        if (flatness <= flatnessThreshold || depth >= MAX_RECURSION_DEPTH) {
+        if (flatness <= flatness_threshold || depth >= MAX_RECURSION_DEPTH) {
             // 三次ベジェを二次ベジェに近似
             // WebGL版と同じ: 分割後は単純に2つの制御点の中点を使用
             const ctrl: IPoint = {
@@ -98,28 +107,4 @@ export const execute = (
     subdivide(p0, p1, p2, p3, 0);
 
     return result;
-};
-
-/**
- * @description スケールに応じたフラットネス閾値を計算
- *              Calculate flatness threshold based on scale
- *
- * ズームレベルが高い場合は高品質な近似が必要。
- * スケール = sqrt(matrix[0]^2 + matrix[1]^2) などで計算可能。
- *
- * @param {number} scale - 現在のスケール
- * @return {number} 調整されたフラットネス閾値
- */
-export const calculateAdaptiveThreshold = (scale: number): number => {
-    // スケールが大きい場合は閾値を小さくして高品質に
-    // スケールが小さい場合は閾値を大きくしてパフォーマンス優先
-    const baseThreshold = DEFAULT_FLATNESS_THRESHOLD;
-
-    // スケールの逆数に比例した閾値
-    // 最小値と最大値を設定して極端な値を防ぐ
-    const adjustedThreshold = baseThreshold / (scale * scale);
-
-    // 閾値の範囲を制限（0.0625〜4.0）
-    // 0.0625 = 0.25px squared, 4.0 = 2px squared
-    return Math.max(0.0625, Math.min(4.0, adjustedThreshold));
 };

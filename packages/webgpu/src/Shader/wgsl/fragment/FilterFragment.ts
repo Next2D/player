@@ -1,5 +1,12 @@
 import { WgslVertexOutput } from "../common/SharedWgsl";
 
+/**
+ * @description テクスチャコピー用フラグメントシェーダー（スケール・オフセット付き）
+ *              Texture copy fragment shader with scale and offset
+ *
+ * @type {string}
+ * @constant
+ */
 export const TextureCopyFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -19,6 +26,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description ブラー用テクスチャコピーフラグメントシェーダー（境界クランプ付き）
+ *              Blur texture copy fragment shader with boundary clamping
+ *
+ * @type {string}
+ * @constant
+ */
 export const BlurTextureCopyFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -41,6 +55,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description フィルター出力用フラグメントシェーダー（境界チェック付きコピー）
+ *              Filter output fragment shader with boundary-checked copy
+ *
+ * @type {string}
+ * @constant
+ */
 export const FilterOutputFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -63,6 +84,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description カラー変換フラグメントシェーダー（乗算・加算カラー適用）
+ *              Color transform fragment shader with multiply and add color application
+ *
+ * @type {string}
+ * @constant
+ */
 export const ColorTransformFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -87,6 +115,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description Y軸反転付きカラー変換フラグメントシェーダー
+ *              Y-flip color transform fragment shader
+ *
+ * @type {string}
+ * @constant
+ */
 export const YFlipColorTransformFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -114,6 +149,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description カラーマトリクスフィルター用フラグメントシェーダー
+ *              Color matrix filter fragment shader
+ *
+ * @type {string}
+ * @constant
+ */
 export const ColorMatrixFilterFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -139,6 +181,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description ノードクリア用フラグメントシェーダー（透明色出力）
+ *              Node clear fragment shader that outputs transparent color
+ *
+ * @type {string}
+ * @constant
+ */
 export const NodeClearFragment = /* wgsl */`
 @fragment
 fn main() -> @location(0) vec4<f32> {
@@ -146,6 +195,13 @@ fn main() -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description 位置指定テクスチャサンプリング用フラグメントシェーダー
+ *              Positioned texture sampling fragment shader
+ *
+ * @type {string}
+ * @constant
+ */
 export const PositionedTextureFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -158,6 +214,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description ビットマップ同期用フラグメントシェーダー（テクスチャ直接サンプリング）
+ *              Bitmap sync fragment shader with direct texture sampling
+ *
+ * @type {string}
+ * @constant
+ */
 export const BitmapSyncFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -170,6 +233,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description 汎用ブレンドフラグメントシェーダー（Normal/Multiply/Screen/Add）
+ *              Generic blend fragment shader supporting Normal, Multiply, Screen, and Add modes
+ *
+ * @type {string}
+ * @constant
+ */
 export const BlendGenericFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

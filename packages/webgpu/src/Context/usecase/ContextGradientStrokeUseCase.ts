@@ -7,16 +7,51 @@ import { execute as contextComputeGradientMatrixService } from "../service/Conte
 import { $getLUTFromCache, $putLUTToCache } from "../../Gradient/GradientLUTCache";
 import { $acquireFillTexture } from "../../FillTexturePool";
 
+/**
+ * @description グラデーションサンプラーのキャッシュ
+ *              Cached gradient sampler
+ */
 let $gradientSampler: GPUSampler | null = null;
 
+/**
+ * @description ユニフォームデータの事前確保配列（36要素）
+ *              Pre-allocated uniform data array (36 elements)
+ */
 const $uniformData36 = new Float32Array(36);
 
+/**
+ * @description バインドグループエントリの事前確保配列
+ *              Pre-allocated bind group entry array
+ */
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
+/**
+ * @description グラデーションストローク描画を実行する
+ *              Executes gradient stroke rendering
+ * @param {GPUDevice} device GPUデバイス / GPU device
+ * @param {GPURenderPassEncoder} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @param {IPath[]} vertices パス頂点配列 / Path vertices array
+ * @param {number} thickness ストローク太さ / Stroke thickness
+ * @param {Float32Array} context_matrix コンテキスト変換行列 / Context transformation matrix
+ * @param {Float32Array} stroke_style ストロークスタイル（RGBA） / Stroke style (RGBA)
+ * @param {number} type グラデーションタイプ / Gradient type
+ * @param {number[]} stops グラデーションストップ配列 / Gradient stops array
+ * @param {Float32Array} gradient_matrix グラデーション変換行列 / Gradient transformation matrix
+ * @param {number} spread スプレッドモード / Spread mode
+ * @param {number} interpolation 補間モード / Interpolation mode
+ * @param {number} focal 焦点距離 / Focal point
+ * @param {number} viewport_width ビューポート幅 / Viewport width
+ * @param {number} viewport_height ビューポート高さ / Viewport height
+ * @param {boolean} use_atlas_target アトラスターゲット使用フラグ / Whether to use atlas target
+ * @param {boolean} use_stencil_pipeline ステンシルパイプライン使用フラグ / Whether to use stencil pipeline
+ * @return {GPUTexture | null} LUTテクスチャまたはnull / LUT texture or null
+ */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

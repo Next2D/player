@@ -5,16 +5,16 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
  *              Releases a temporary attachment after filter processing
  *              テクスチャは即座に破棄せず、フレーム終了時に遅延解放します
  *
- * @param  {Map<string, IAttachmentObject>} attachments
- * @param  {IAttachmentObject[]} pendingReleases
- * @param  {IAttachmentObject} attachment
+ * @param  {Map<string, IAttachmentObject>} attachments - アタッチメント管理マップ
+ * @param  {IAttachmentObject[]} pending_releases - 遅延解放キュー
+ * @param  {IAttachmentObject} attachment - 解放するアタッチメント
  * @return {void}
  * @method
  * @protected
  */
 export const execute = (
     attachments: Map<string, IAttachmentObject>,
-    pendingReleases: IAttachmentObject[],
+    pending_releases: IAttachmentObject[],
     attachment: IAttachmentObject
 ): void => {
     // 名前を検索して削除（Map から削除するが、テクスチャは破棄しない）
@@ -22,7 +22,7 @@ export const execute = (
         if (att.id === attachment.id) {
             attachments.delete(name);
             // フレーム終了時に遅延解放するためキューに追加
-            pendingReleases.push(att);
+            pending_releases.push(att);
             break;
         }
     }

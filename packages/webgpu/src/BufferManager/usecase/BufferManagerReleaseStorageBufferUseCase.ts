@@ -6,6 +6,7 @@ import type { IPooledStorageBuffer } from "../../interface/IStorageBufferConfig"
  *
  * @param {IPooledStorageBuffer[]} pool - Storage Bufferプール
  * @param {GPUBuffer} buffer - 返却するバッファ
+ * @return {void}
  */
 export const execute = (
     pool: IPooledStorageBuffer[],

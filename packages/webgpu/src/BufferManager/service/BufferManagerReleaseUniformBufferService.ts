@@ -4,7 +4,7 @@
  * @type {number}
  * @const
  */
-const MAX_BUCKET_SIZE: number = 32;
+const $MAX_BUCKET_SIZE: number = 32;
 
 /**
  * @description ユニフォームバッファをプールに返却
@@ -29,7 +29,7 @@ export const execute = (
         buckets.set(size, bucket);
     }
 
-    if (bucket.length >= MAX_BUCKET_SIZE) {
+    if (bucket.length >= $MAX_BUCKET_SIZE) {
         // バケットが満杯の場合、このバッファを破棄
         buffer.destroy();
         return;

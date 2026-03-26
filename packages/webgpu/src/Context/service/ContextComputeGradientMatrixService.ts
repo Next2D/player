@@ -1,15 +1,23 @@
+/**
+ * @description グラデーション行列からグラデーション描画用の逆行列とリニアポイントを計算する
+ *              Computes inverse matrix and linear points for gradient rendering from gradient matrix
+ * @param {Float32Array} gradient_matrix グラデーション変換行列 / Gradient transformation matrix
+ * @param {Float32Array} _context_matrix コンテキスト変換行列（未使用） / Context transformation matrix (unused)
+ * @param {number} type グラデーションタイプ (0: linear, 1: radial) / Gradient type (0: linear, 1: radial)
+ * @return {{ inverseMatrix: Float32Array; linearPoints: Float32Array | null }} 逆行列とリニアポイント / Inverse matrix and linear points
+ */
 export const execute = (
-    gradientMatrix: Float32Array,
-    _contextMatrix: Float32Array,
+    gradient_matrix: Float32Array,
+    _context_matrix: Float32Array,
     type: number
 ): { inverseMatrix: Float32Array; linearPoints: Float32Array | null } => {
     // グラデーション行列
-    const ga = gradientMatrix[0];
-    const gb = gradientMatrix[1];
-    const gc = gradientMatrix[2];
-    const gd = gradientMatrix[3];
-    const gtx = gradientMatrix[4];
-    const gty = gradientMatrix[5];
+    const ga = gradient_matrix[0];
+    const gb = gradient_matrix[1];
+    const gc = gradient_matrix[2];
+    const gd = gradient_matrix[3];
+    const gtx = gradient_matrix[4];
+    const gty = gradient_matrix[5];
 
     if (type === 0) {
         // === Linear gradient ===

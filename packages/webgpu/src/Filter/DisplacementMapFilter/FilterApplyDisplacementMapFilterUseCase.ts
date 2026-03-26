@@ -28,57 +28,76 @@ const $pipelineCache = new Map<string, {
 
 /**
  * @description ディスプレイスメントマップフィルターを適用
+ *              Apply displacement map filter
+ *
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ（アタッチメント）
+ * @param  {Float32Array} _matrix - 変換行列（未使用）
+ * @param  {Uint8Array} bitmap_buffer - ビットマップバッファ
+ * @param  {number} bitmap_width - ビットマップ幅
+ * @param  {number} bitmap_height - ビットマップ高さ
+ * @param  {number} map_point_x - マップポイントX座標
+ * @param  {number} map_point_y - マップポイントY座標
+ * @param  {number} component_x - X方向コンポーネント
+ * @param  {number} component_y - Y方向コンポーネント
+ * @param  {number} scale_x - X方向スケール
+ * @param  {number} scale_y - Y方向スケール
+ * @param  {number} mode - ディスプレイスメントモード
+ * @param  {number} color - 代替色 (32bit整数)
+ * @param  {number} alpha - アルファ値
+ * @param  {number} _device_pixel_ratio - デバイスピクセル比（未使用）
+ * @param  {IFilterConfig} config - WebGPUリソース設定
+ * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
+    source_attachment: IAttachmentObject,
     _matrix: Float32Array,
-    bitmapBuffer: Uint8Array,
-    bitmapWidth: number,
-    bitmapHeight: number,
-    mapPointX: number,
-    mapPointY: number,
-    componentX: number,
-    componentY: number,
-    scaleX: number,
-    scaleY: number,
+    bitmap_buffer: Uint8Array,
+    bitmap_width: number,
+    bitmap_height: number,
+    map_point_x: number,
+    map_point_y: number,
+    component_x: number,
+    component_y: number,
+    scale_x: number,
+    scale_y: number,
     mode: number,
     color: number,
     alpha: number,
-    _devicePixelRatio: number,
+    _device_pixel_ratio: number,
     config: IFilterConfig
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, textureManager } = config;
 
-    const width = sourceAttachment.width;
-    const height = sourceAttachment.height;
+    const width = source_attachment.width;
+    const height = source_attachment.height;
 
     // WebGL版と同じ: baseWidth/baseHeightはビットマップサイズを使用
-    const baseWidth = bitmapWidth;
-    const baseHeight = bitmapHeight;
+    const baseWidth = bitmap_width;
+    const baseHeight = bitmap_height;
 
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
     // マップテクスチャを作成
     const mapTexture = device.createTexture({
-        "size": { "width": bitmapWidth, "height": bitmapHeight },
+        "size": { "width": bitmap_width, "height": bitmap_height },
         "format": "rgba8unorm",
         "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
     });
     device.queue.writeTexture(
         { "texture": mapTexture },
-        bitmapBuffer.buffer,
-        { "bytesPerRow": bitmapWidth * 4, "offset": bitmapBuffer.byteOffset },
-        { "width": bitmapWidth, "height": bitmapHeight }
+        bitmap_buffer.buffer,
+        { "bytesPerRow": bitmap_width * 4, "offset": bitmap_buffer.byteOffset },
+        { "width": bitmap_width, "height": bitmap_height }
     );
 
     // パイプラインをキャッシュから取得または作成
-    const cacheKey = `${componentX},${componentY},${mode}`;
+    const cacheKey = `${component_x},${component_y},${mode}`;
     let cached = $pipelineCache.get(cacheKey);
     if (!cached) {
         const fragmentShaderCode = ShaderSource.getDisplacementMapFilterFragmentShader(
-            componentX, componentY, mode
+            component_x, component_y, mode
         );
 
         const vertexShaderModule = device.createShaderModule({
@@ -162,16 +181,16 @@ export const execute = (
     const uniformSize = needsSubstituteColor ? 48 : 32;
 
     // uvToStScale
-    $uniform12[0] = baseWidth / bitmapWidth;
-    $uniform12[1] = baseHeight / bitmapHeight;
+    $uniform12[0] = baseWidth / bitmap_width;
+    $uniform12[1] = baseHeight / bitmap_height;
 
     // uvToStOffset
-    $uniform12[2] = mapPointX / bitmapWidth;
-    $uniform12[3] = (baseHeight - bitmapHeight - mapPointY) / bitmapHeight;
+    $uniform12[2] = map_point_x / bitmap_width;
+    $uniform12[3] = (baseHeight - bitmap_height - map_point_y) / bitmap_height;
 
     // scale
-    $uniform12[4] = scaleX / baseWidth;
-    $uniform12[5] = scaleY / baseHeight;
+    $uniform12[4] = scale_x / baseWidth;
+    $uniform12[5] = scale_y / baseHeight;
 
     // padding
     $uniform12[6] = 0;
@@ -199,7 +218,7 @@ export const execute = (
     // バインドグループを作成
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries4[1].resource = sampler;
-    $entries4[2].resource = sourceAttachment.texture!.view;
+    $entries4[2].resource = source_attachment.texture!.view;
     $entries4[3].resource = mapTexture.createView();
     const bindGroup = device.createBindGroup({
         "layout": cached.bindGroupLayout,

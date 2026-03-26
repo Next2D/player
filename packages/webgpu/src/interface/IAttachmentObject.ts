@@ -11,14 +11,50 @@ import type { IStencilBufferObject } from "./IStencilBufferObject";
  */
 export interface IAttachmentObject
 {
+    /**
+     * @description アタッチメントの一意な識別子
+     *              Unique identifier for the attachment
+     */
     id: number;
+    /**
+     * @description アタッチメントの幅（ピクセル）
+     *              Width of the attachment in pixels
+     */
     width: number;
+    /**
+     * @description アタッチメントの高さ（ピクセル）
+     *              Height of the attachment in pixels
+     */
     height: number;
+    /**
+     * @description 現在のクリップ（マスク）ネストレベル
+     *              Current clip (mask) nesting level
+     */
     clipLevel: number;
+    /**
+     * @description MSAAが有効かどうか
+     *              Whether MSAA is enabled
+     */
     msaa: boolean;
+    /**
+     * @description マスクモードが有効かどうか
+     *              Whether mask mode is enabled
+     */
     mask: boolean;
+    /**
+     * @description カラーバッファオブジェクト
+     *              Color buffer object
+     */
     color: IColorBufferObject | null;
+    /**
+     * @description テクスチャオブジェクト
+     *              Texture object
+     */
     texture: ITextureObject | null;
+    /**
+     * @description ステンシルバッファオブジェクト
+     *              Stencil buffer object
+     */
     stencil: IStencilBufferObject | null;
     /**
      * @description MSAAテクスチャ（sampleCount > 1 の場合に使用）

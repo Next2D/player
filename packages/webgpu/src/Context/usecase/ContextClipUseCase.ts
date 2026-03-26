@@ -6,8 +6,27 @@ import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillG
 import { execute as maskUnionMaskService } from "../../Mask/service/MaskUnionMaskService";
 import { $clipLevels } from "../../Mask";
 
+/**
+ * @description クリップ用ユニフォームデータの事前確保配列（16要素）
+ *              Pre-allocated uniform data array for clipping (16 elements)
+ */
 const $clipUniform16 = new Float32Array(16);
 
+/**
+ * @description クリップ（マスク）描画を実行する
+ *              Executes clip (mask) rendering
+ * @param {GPUDevice} device GPUデバイス / GPU device
+ * @param {GPURenderPassEncoder} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @param {IAttachmentObject} current_attachment 現在のアタッチメント / Current attachment
+ * @param {IPath[]} path_vertices パス頂点配列 / Path vertices array
+ * @param {Float32Array} context_matrix コンテキスト変換行列 / Context transformation matrix
+ * @param {Float32Array} fill_style フィルスタイル（RGBA） / Fill style (RGBA)
+ * @param {number} global_alpha グローバルアルファ値 / Global alpha value
+ * @param {boolean} is_main_attachment メインアタッチメントフラグ / Whether this is the main attachment
+ * @return {void}
+ */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

@@ -1,5 +1,12 @@
 import { WgslIsInside, WgslVertexOutput } from "../common/SharedWgsl";
 
+/**
+ * @description グローフィルター用フラグメントシェーダー（内側・外側・ノックアウト対応）
+ *              Glow filter fragment shader with inner, outer, and knockout support
+ *
+ * @type {string}
+ * @constant
+ */
 export const GlowFilterFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -55,6 +62,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description ドロップシャドウフィルター用フラグメントシェーダー（内側・外側・ノックアウト・非表示対応）
+ *              Drop shadow filter fragment shader with inner, outer, knockout, and hide-object support
+ *
+ * @type {string}
+ * @constant
+ */
 export const DropShadowFilterFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -114,6 +128,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description グラデーショングローフィルター用フラグメントシェーダー（LUTベース）
+ *              Gradient glow filter fragment shader using LUT
+ *
+ * @type {string}
+ * @constant
+ */
 export const GradientGlowFilterFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -172,6 +193,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description グラデーションベベルフィルター用フラグメントシェーダー（LUTベース）
+ *              Gradient bevel filter fragment shader using LUT
+ *
+ * @type {string}
+ * @constant
+ */
 export const GradientBevelFilterFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -240,6 +268,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description ベベルフィルター用フラグメントシェーダー（ハイライト・シャドウカラー指定）
+ *              Bevel filter fragment shader with highlight and shadow color specification
+ *
+ * @type {string}
+ * @constant
+ */
 export const BevelFilterFragment = /* wgsl */`
 ${WgslVertexOutput}
 
@@ -307,6 +342,13 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+/**
+ * @description ベベルフィルターのベース処理用フラグメントシェーダー（オフセット差分計算）
+ *              Bevel filter base fragment shader for offset difference calculation
+ *
+ * @type {string}
+ * @constant
+ */
 export const BevelBaseFragment = /* wgsl */`
 ${WgslVertexOutput}
 

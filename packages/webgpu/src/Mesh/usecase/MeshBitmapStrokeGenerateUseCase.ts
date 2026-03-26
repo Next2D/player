@@ -8,6 +8,13 @@ import { execute as meshStrokeFillGenerateService } from "../service/MeshStrokeF
  */
 let $meshTempBuffer: Float32Array = new Float32Array(32);
 
+/**
+ * @description 2のべき乗に切り上げる
+ *              Round up to the next power of two
+ *
+ * @param  {number} v - 切り上げ対象の値 / Value to round up
+ * @return {number} 2のべき乗の値 / Next power of two
+ */
 const $upperPowerOfTwo = (v: number): number =>
 {
     v--;
@@ -24,9 +31,9 @@ const $upperPowerOfTwo = (v: number): number =>
  * @description ビットマップストローク用のメッシュを生成する
  *              Generate a mesh for bitmap stroke
  *
- * @param  {IPath[]} vertices
- * @param  {number} thickness
- * @return {IMeshResult}
+ * @param  {IPath[]} vertices - パス頂点配列 / Array of path vertices
+ * @param  {number} thickness - 線の太さ / Line thickness
+ * @return {IMeshResult} メッシュ結果 / Mesh result
  * @method
  * @protected
  */

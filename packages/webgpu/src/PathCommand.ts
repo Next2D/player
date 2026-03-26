@@ -12,11 +12,40 @@ import { adaptiveCubicToQuad } from "./BezierConverter/BezierConverter";
  */
 export class PathCommand
 {
+    /**
+     * @description 現在のパスデータ
+     *              Current path data array
+     */
     private $currentPath: IPath;
+
+    /**
+     * @description 確定済みパスの配列
+     *              Array of finalized path vertices
+     */
     private $vertices: IPath[];
+
+    /**
+     * @description 現在のX座標
+     *              Current X coordinate
+     */
     private $currentX: number;
+
+    /**
+     * @description 現在のY座標
+     *              Current Y coordinate
+     */
     private $currentY: number;
+
+    /**
+     * @description サブパスの開始X座標
+     *              Start X coordinate of current sub-path
+     */
     private $startX: number;
+
+    /**
+     * @description サブパスの開始Y座標
+     *              Start Y coordinate of current sub-path
+     */
     private $startY: number;
 
     /**
@@ -111,12 +140,6 @@ export class PathCommand
      */
     private $flatnessThreshold: number = 0.25;
 
-    /**
-     * @description フラットネス閾値を設定
-     *              Set flatness threshold for adaptive bezier tessellation
-     * @param {number} scale - 現在のスケール（行列のスケール成分）
-     * @return {void}
-     */
     /**
      * @description 三次ベジェ曲線を二次ベジェ曲線に適応的に近似
      *              Adaptively approximate cubic bezier with quadratic beziers

@@ -2,10 +2,10 @@
  * @description ImageBitmapからテクスチャを作成
  *              Create texture from ImageBitmap
  *
- * @param  {GPUDevice} device
- * @param  {Map<string, GPUTexture>} textures
- * @param  {string} name
- * @param  {ImageBitmap} image_bitmap
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {Map<string, GPUTexture>} textures - テクスチャ管理マップ
+ * @param  {string} name - テクスチャ名
+ * @param  {ImageBitmap} image_bitmap - 画像ビットマップ
  * @return {GPUTexture}
  * @method
  * @protected

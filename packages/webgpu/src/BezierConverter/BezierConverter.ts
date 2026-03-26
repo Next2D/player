@@ -10,7 +10,16 @@
  *
  * これにより品質を維持しながら不要な計算を削減。
  */
+/**
+ * @description 三次ベジェ曲線を適応的に二次ベジェ曲線群に変換する関数
+ *              Function to adaptively convert cubic bezier to quadratic bezier segments
+ */
 export {
     execute as adaptiveCubicToQuad
 } from "./usecase/BezierConverterAdaptiveCubicToQuadUseCase";
+
+/**
+ * @description 二次ベジェ曲線セグメントのインターフェース
+ *              Interface for quadratic bezier curve segment
+ */
 export type { IQuadraticSegment } from "../interface/IQuadraticSegment";

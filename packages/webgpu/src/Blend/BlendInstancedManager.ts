@@ -8,28 +8,37 @@ import { $context } from "../WebGPUUtil";
 
 /**
  * @description シンプルなブレンドモード（インスタンス描画可能）
+ *              Simple blend modes that support instanced rendering
+ * @type {ReadonlySet<string>}
  */
-const SIMPLE_BLEND_MODES: ReadonlySet<string> = new Set([
+const $SIMPLE_BLEND_MODES: ReadonlySet<string> = new Set([
     "normal", "layer", "add", "screen", "alpha", "erase", "copy"
 ]);
 
 /**
  * @description 複雑なブレンドモード描画キュー
+ *              Queue for complex blend mode draw items
+ * @type {IComplexBlendItem[]}
  */
 const $complexBlendQueue: IComplexBlendItem[] = [];
 
 /**
  * @description Float32Array(8) プール（color_transform 用）
+ *              Object pool for Float32Array(8) used by color transforms
+ * @type {Float32Array[]}
  */
 const $ct8Pool: Float32Array[] = [];
 
 /**
  * @description Float32Array(9) プール（matrix 用）
+ *              Object pool for Float32Array(9) used by matrices
+ * @type {Float32Array[]}
  */
 const $m9Pool: Float32Array[] = [];
 
 /**
  * @description 複雑なブレンドモードの描画キューを取得
+ *              Returns the queue of complex blend mode draw items
  * @return {IComplexBlendItem[]}
  */
 export const getComplexBlendQueue = (): IComplexBlendItem[] =>
@@ -38,7 +47,8 @@ export const getComplexBlendQueue = (): IComplexBlendItem[] =>
 };
 
 /**
- * @description 複雑なブレンドモードの描画キューをクリア
+ * @description 複雑なブレンドモードの描画キューをクリアし、プールへ返却する
+ *              Clears the complex blend queue and returns arrays to their pools
  * @return {void}
  */
 export const clearComplexBlendQueue = (): void =>
@@ -54,37 +64,40 @@ export const clearComplexBlendQueue = (): void =>
 
 /**
  * @description インスタンスシェーダーマネージャーのキャッシュ
- * @private
+ *              Cache map for instanced shader managers
+ * @type {Map<string, ShaderInstancedManager>}
  */
-const shaderManagers = new Map<string, ShaderInstancedManager>();
+const $shaderManagers = new Map<string, ShaderInstancedManager>();
 
 /**
- * @description インスタンスシェーダーマネージャーを取得
+ * @description インスタンスシェーダーマネージャーを取得（なければ生成）
+ *              Gets or creates the instanced shader manager
  * @return {ShaderInstancedManager}
  */
 export const getInstancedShaderManager = (): ShaderInstancedManager =>
 {
     const key = "blend_instanced";
-    if (!shaderManagers.has(key)) {
-        shaderManagers.set(key, new ShaderInstancedManager());
+    if (!$shaderManagers.has(key)) {
+        $shaderManagers.set(key, new ShaderInstancedManager());
     }
-    return shaderManagers.get(key)!;
+    return $shaderManagers.get(key)!;
 };
 
 /**
- * @description DisplayObject単体の描画をインスタンス配列に追加
- * @param {Node} node
- * @param {number} x_min
- * @param {number} y_min
- * @param {number} x_max
- * @param {number} y_max
- * @param {Float32Array} color_transform
- * @param {Float32Array} matrix
- * @param {string} blend_mode
- * @param {number} viewport_width
- * @param {number} viewport_height
- * @param {number} render_max_size
- * @param {number} global_alpha
+ * @description DisplayObject単体の描画をインスタンス配列に追加する
+ *              Adds a single DisplayObject's draw data to the instanced array
+ * @param {Node} node - テクスチャアトラスノード / Texture atlas node
+ * @param {number} x_min - バウンディングボックス左端 / Bounding box left edge
+ * @param {number} y_min - バウンディングボックス上端 / Bounding box top edge
+ * @param {number} x_max - バウンディングボックス右端 / Bounding box right edge
+ * @param {number} y_max - バウンディングボックス下端 / Bounding box bottom edge
+ * @param {Float32Array} color_transform - カラートランスフォーム配列 / Color transform array
+ * @param {Float32Array} matrix - 変換行列配列 / Transformation matrix array
+ * @param {string} blend_mode - ブレンドモード名 / Blend mode name
+ * @param {number} viewport_width - ビューポート幅 / Viewport width
+ * @param {number} viewport_height - ビューポート高さ / Viewport height
+ * @param {number} render_max_size - レンダーテクスチャ最大サイズ / Render texture max size
+ * @param {number} global_alpha - グローバルアルファ値 / Global alpha value
  * @return {void}
  */
 export const addDisplayObjectToInstanceArray = (
@@ -112,7 +125,7 @@ export const addDisplayObjectToInstanceArray = (
     const ct6 = color_transform[6] / 255;
     const ct7 = 0;
 
-    if (SIMPLE_BLEND_MODES.has(blend_mode)) {
+    if ($SIMPLE_BLEND_MODES.has(blend_mode)) {
         // ブレンドモードまたはアトラスインデックスが変わった場合
         if ($currentBlendMode !== blend_mode || $getCurrentAtlasIndex() !== node.index) {
             // 異なるブレンドモード/アトラスになるので、切り替え前にバッチを描画

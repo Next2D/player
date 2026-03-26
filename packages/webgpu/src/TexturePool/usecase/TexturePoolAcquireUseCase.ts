@@ -2,10 +2,11 @@ import type { IPooledTexture, ITexturePoolBuckets } from "../../interface/IPoole
 
 /**
  * @description バケットキーを生成（exactサイズ + フォーマット）
+ *              Build bucket key from exact size and format
  *
- * @param  {number} width
- * @param  {number} height
- * @param  {GPUTextureFormat} format
+ * @param  {number} width - テクスチャ幅
+ * @param  {number} height - テクスチャ高さ
+ * @param  {GPUTextureFormat} format - テクスチャフォーマット
  * @return {string}
  */
 const buildKey = (width: number, height: number, format: GPUTextureFormat): string =>
@@ -17,15 +18,15 @@ const buildKey = (width: number, height: number, format: GPUTextureFormat): stri
  * @description テクスチャを取得または作成（バケットMap検索）
  *              Acquire texture from pool or create new one (bucket Map lookup)
  *
- * @param  {GPUDevice} device
- * @param  {ITexturePoolBuckets} buckets
- * @param  {number} width
- * @param  {number} height
- * @param  {GPUTextureFormat} format
- * @param  {GPUTextureUsageFlags} usage
- * @param  {number} currentFrame
- * @param  {number} maxPoolSize
- * @param  {number[]} totalCount - [0]に現在の合計数を格納
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {ITexturePoolBuckets} buckets - テクスチャプールバケット
+ * @param  {number} width - テクスチャ幅
+ * @param  {number} height - テクスチャ高さ
+ * @param  {GPUTextureFormat} format - テクスチャフォーマット
+ * @param  {GPUTextureUsageFlags} usage - テクスチャ使用フラグ
+ * @param  {number} current_frame - 現在のフレーム番号
+ * @param  {number} max_pool_size - プールの最大サイズ
+ * @param  {number[]} total_count - [0]に現在の合計数を格納
  * @return {GPUTexture}
  * @method
  * @protected
@@ -37,9 +38,9 @@ export const execute = (
     height: number,
     format: GPUTextureFormat,
     usage: GPUTextureUsageFlags,
-    currentFrame: number,
-    maxPoolSize: number,
-    totalCount: number[]
+    current_frame: number,
+    max_pool_size: number,
+    total_count: number[]
 ): GPUTexture => {
     const key = buildKey(width, height, format);
 
@@ -50,14 +51,14 @@ export const execute = (
             const entry = bucket[i];
             if (!entry.inUse) {
                 entry.inUse = true;
-                entry.lastUsedFrame = currentFrame;
+                entry.lastUsedFrame = current_frame;
                 return entry.texture;
             }
         }
     }
 
     // プールが満杯なら最も古い未使用エントリを削除（LRU回収）
-    if (totalCount[0] >= maxPoolSize) {
+    if (total_count[0] >= max_pool_size) {
         let oldestFrame = Infinity;
         let oldestKey = "";
         let oldestIdx = -1;
@@ -80,7 +81,7 @@ export const execute = (
             if (bEntries.length === 0) {
                 buckets.delete(oldestKey);
             }
-            totalCount[0]--;
+            total_count[0]--;
         }
     }
 
@@ -96,7 +97,7 @@ export const execute = (
         width,
         height,
         format,
-        "lastUsedFrame": currentFrame,
+        "lastUsedFrame": current_frame,
         "inUse": true
     };
 
@@ -105,7 +106,7 @@ export const execute = (
     } else {
         buckets.set(key, [entry]);
     }
-    totalCount[0]++;
+    total_count[0]++;
 
     return texture;
 };

@@ -1,3 +1,10 @@
+/**
+ * @description 塗り用頂点シェーダー（ベジェ曲線パラメータ付き行列変換）
+ *              Fill vertex shader with matrix transform and bezier parameters
+ *
+ * @type {string}
+ * @constant
+ */
 export const FillVertex = /* wgsl */`
 override yFlipSign: f32 = 1.0;
 

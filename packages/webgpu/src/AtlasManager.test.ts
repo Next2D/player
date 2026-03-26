@@ -5,7 +5,6 @@ import {
     $getAtlasAttachmentObjects,
     $setAtlasAttachmentObject,
     $getAtlasAttachmentObject,
-    $hasAtlasAttachmentObject,
     $rootNodes,
     $getActiveTransferBounds,
     $clearTransferBounds,
@@ -85,31 +84,6 @@ describe("AtlasManager", () =>
 
             $setActiveAtlasIndex(1);
             expect($getAtlasAttachmentObject()).toBe(attachment1);
-        });
-    });
-
-    describe("$hasAtlasAttachmentObject", () =>
-    {
-        it("should return false when no attachment exists", () =>
-        {
-            expect($hasAtlasAttachmentObject()).toBe(false);
-        });
-
-        it("should return true when attachment exists", () =>
-        {
-            const mockAttachment = createMockAttachment(1, 512, 512);
-            $setAtlasAttachmentObject(mockAttachment);
-
-            expect($hasAtlasAttachmentObject()).toBe(true);
-        });
-
-        it("should return false at non-existing index", () =>
-        {
-            const mockAttachment = createMockAttachment(1, 512, 512);
-            $setAtlasAttachmentObject(mockAttachment);
-
-            $setActiveAtlasIndex(5);
-            expect($hasAtlasAttachmentObject()).toBe(false);
         });
     });
 
@@ -282,7 +256,7 @@ describe("AtlasManager", () =>
             $resetAtlas();
 
             // Attachment should be removed
-            expect($hasAtlasAttachmentObject()).toBe(false);
+            expect($getAtlasAttachmentObjects().length).toBe(0);
         });
 
         it("should clear transfer bounds", () =>
