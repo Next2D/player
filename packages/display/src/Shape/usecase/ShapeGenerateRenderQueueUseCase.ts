@@ -156,16 +156,6 @@ export const execute = (
         }
     }
 
-    const xScale = Math.sqrt(
-        tMatrix[0] * tMatrix[0]
-        + tMatrix[1] * tMatrix[1]
-    );
-
-    const yScale = Math.sqrt(
-        tMatrix[2] * tMatrix[2]
-        + tMatrix[3] * tMatrix[3]
-    );
-
     // cacheAsBitmap: 指定Matrix × stageのrendererScaleでキャッシュ品質を決定
     const cacheMatrix = shape.cacheAsBitmap;
     let renderXScale: number;
@@ -175,8 +165,14 @@ export const execute = (
         renderXScale = Math.sqrt(m[0] * m[0] + m[1] * m[1]) * stage.rendererScale;
         renderYScale = Math.sqrt(m[2] * m[2] + m[3] * m[3]) * stage.rendererScale;
     } else {
-        renderXScale = xScale;
-        renderYScale = yScale;
+        renderXScale = Math.sqrt(
+            tMatrix[0] * tMatrix[0]
+            + tMatrix[1] * tMatrix[1]
+        );
+        renderYScale = Math.sqrt(
+            tMatrix[2] * tMatrix[2]
+            + tMatrix[3] * tMatrix[3]
+        );
     }
 
     const xScaleRounded = Math.round(renderXScale * 100) / 100;
