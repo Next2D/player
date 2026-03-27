@@ -166,10 +166,26 @@ export const execute = (
         + tMatrix[3] * tMatrix[3]
     );
 
-    const xScaleRounded = Math.round(xScale * 100) / 100;
-    const yScaleRounded = Math.round(yScale * 100) / 100;
+    // cacheAsBitmap: 指定Matrix × stageのrendererScaleでキャッシュ品質を決定
+    const cacheMatrix = shape.cacheAsBitmap;
+    let renderXScale: number;
+    let renderYScale: number;
+    if (cacheMatrix) {
+        const m = cacheMatrix.rawData;
+        renderXScale = Math.sqrt(m[0] * m[0] + m[1] * m[1]) * stage.rendererScale;
+        renderYScale = Math.sqrt(m[2] * m[2] + m[3] * m[3]) * stage.rendererScale;
+        Matrix.release(m);
+    } else {
+        renderXScale = xScale;
+        renderYScale = yScale;
+    }
 
-    if (!shape.isBitmap
+    const xScaleRounded = Math.round(renderXScale * 100) / 100;
+    const yScaleRounded = Math.round(renderYScale * 100) / 100;
+
+    if (cacheMatrix && shape.cacheKey) {
+        // cacheAsBitmap: キャッシュキーを固定し、スケール変更時も再描画しない
+    } else if (!shape.isBitmap
         && !shape.cacheKey
         || shape.cacheParams[0] !== xScaleRounded
         || shape.cacheParams[1] !== yScaleRounded
@@ -196,7 +212,7 @@ export const execute = (
         graphics.xMax, graphics.yMax,
         +isGridEnabled, +isDrawable, +shape.isBitmap,
         +shape.uniqueKey, cacheKey,
-        xScale, yScale,
+        renderXScale, renderYScale,
         shape.instanceId // フィルターキャッシュ用のユニークキー
     );
 

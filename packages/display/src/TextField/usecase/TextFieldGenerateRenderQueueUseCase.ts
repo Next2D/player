@@ -6,6 +6,7 @@ import { execute as displayObjectBlendToNumberService } from "../../DisplayObjec
 import { execute as displayObjectGenerateHashService } from "../../DisplayObject/service/DisplayObjectGenerateHashService";
 import { $cacheStore } from "@next2d/cache";
 import { renderQueue } from "@next2d/render-queue";
+import { stage } from "../../Stage";
 import {
     $clamp,
     $RENDERER_TEXT_TYPE,
@@ -158,10 +159,26 @@ export const execute = (
         + tMatrix[3] * tMatrix[3]
     );
 
-    const xScaleRounded = Math.round(xScale * 100) / 100;
-    const yScaleRounded = Math.round(yScale * 100) / 100;
+    // cacheAsBitmap: 指定Matrix × stageのrendererScaleでキャッシュ品質を決定
+    const cacheMatrix = (text_field as any).cacheAsBitmap;
+    let renderXScale: number;
+    let renderYScale: number;
+    if (cacheMatrix) {
+        const m = cacheMatrix.rawData;
+        renderXScale = Math.sqrt(m[0] * m[0] + m[1] * m[1]) * stage.rendererScale;
+        renderYScale = Math.sqrt(m[2] * m[2] + m[3] * m[3]) * stage.rendererScale;
+        Matrix.release(m);
+    } else {
+        renderXScale = xScale;
+        renderYScale = yScale;
+    }
 
-    if (text_field.changed
+    const xScaleRounded = Math.round(renderXScale * 100) / 100;
+    const yScaleRounded = Math.round(renderYScale * 100) / 100;
+
+    if (cacheMatrix && text_field.cacheKey) {
+        // cacheAsBitmap: キャッシュキーを固定し、スケール変更時も再描画しない
+    } else if (text_field.changed
         && !text_field.cacheKey
         || text_field.cacheParams[0] !== xScaleRounded
         || text_field.cacheParams[1] !== yScaleRounded
@@ -185,7 +202,7 @@ export const execute = (
         text_field.xMin, text_field.yMin,
         text_field.xMax, text_field.yMax,
         +text_field.uniqueKey, cacheKey, +text_field.changed,
-        xScale, yScale,
+        renderXScale, renderYScale,
         text_field.instanceId // フィルターキャッシュ用のユニークキー
     );
 

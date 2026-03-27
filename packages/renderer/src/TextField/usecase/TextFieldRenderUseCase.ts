@@ -191,8 +191,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const radianY = Math.atan2(-matrix[2], matrix[3]);
     if (radianX || radianY) {
 
-        const tx = xMin * xScale;
-        const ty = yMin * yScale;
+        // tMatrixから直接スクリーン座標を算出（cacheAsBitmapのスケール差に対応）
+        const tx = matrix[0] * xMin + matrix[2] * yMin + matrix[4];
+        const ty = matrix[1] * xMin + matrix[3] * yMin + matrix[5];
 
         const cosX = Math.cos(radianX);
         const sinX = Math.sin(radianX);
@@ -201,8 +202,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
         $context.setTransform(
             cosX, sinX, -sinY, cosY,
-            tx * cosX - ty * sinY + matrix[4],
-            tx * sinX + ty * cosY + matrix[5]
+            tx, ty
         );
 
     } else {
