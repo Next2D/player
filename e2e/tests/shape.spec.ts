@@ -106,4 +106,13 @@ test.describe("Shape描画テスト", () => {
             await expect(page).toHaveScreenshot("graphics-clone.png");
         });
     });
+
+    test.describe("cacheAsBitmap", () => {
+        test("Matrix指定によるビットマップキャッシュ（等倍・2倍・親スケール・回転・ネスト）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/cache-as-bitmap.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("cache-as-bitmap.png");
+        });
+    });
 });

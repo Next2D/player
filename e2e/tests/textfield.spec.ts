@@ -64,4 +64,11 @@ test.describe("TextFieldテスト", () => {
 
         await expect(page).toHaveScreenshot("textfield-html-text.png");
     });
+
+    test("cacheAsBitmap - Matrix指定によるビットマップキャッシュ（等倍・2倍・親スケール・回転・ネスト）", async ({ page }) => {
+        await page.goto("/e2e/pages/textfield/cache-as-bitmap.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("textfield-cache-as-bitmap.png");
+    });
 });
