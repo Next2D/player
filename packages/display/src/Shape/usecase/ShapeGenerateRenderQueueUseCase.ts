@@ -174,7 +174,6 @@ export const execute = (
         const m = cacheMatrix.rawData;
         renderXScale = Math.sqrt(m[0] * m[0] + m[1] * m[1]) * stage.rendererScale;
         renderYScale = Math.sqrt(m[2] * m[2] + m[3] * m[3]) * stage.rendererScale;
-        Matrix.release(m);
     } else {
         renderXScale = xScale;
         renderYScale = yScale;
@@ -183,8 +182,11 @@ export const execute = (
     const xScaleRounded = Math.round(renderXScale * 100) / 100;
     const yScaleRounded = Math.round(renderYScale * 100) / 100;
 
-    if (cacheMatrix && shape.cacheKey) {
-        // cacheAsBitmap: キャッシュキーを固定し、スケール変更時も再描画しない
+    if (cacheMatrix && shape.cacheKey
+        && shape.cacheParams[0] === xScaleRounded
+        && shape.cacheParams[1] === yScaleRounded
+    ) {
+        // cacheAsBitmap: スケール未変更のためキャッシュキーを維持
     } else if (!shape.isBitmap
         && !shape.cacheKey
         || shape.cacheParams[0] !== xScaleRounded
@@ -210,7 +212,7 @@ export const execute = (
         xMin, yMin, xMax, yMax,
         graphics.xMin, graphics.yMin,
         graphics.xMax, graphics.yMax,
-        +isGridEnabled, +isDrawable, +shape.isBitmap,
+        +isGridEnabled, +isDrawable, shape.isBitmap ? 1 : cacheMatrix ? 2 : 0,
         +shape.uniqueKey, cacheKey,
         renderXScale, renderYScale,
         shape.instanceId // フィルターキャッシュ用のユニークキー

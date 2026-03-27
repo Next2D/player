@@ -33,7 +33,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const isGridEnabled = Boolean(render_queue[index++]);
     const isDrawable    = Boolean(render_queue[index++]);
-    const isBitmap      = Boolean(render_queue[index++]);
+    const renderMode    = render_queue[index++]; // 0=vector, 1=bitmap, 2=cacheAsBitmap
+    const isBitmap      = renderMode === 1;
+    const isCacheAsBitmap = renderMode === 2;
 
     // cache uniqueKey
     const uniqueKey = `${render_queue[index++]}`;
@@ -201,15 +203,28 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             bounds[0], bounds[1], bounds[2], bounds[3],
             colorTransform
         );
+    } else if (isCacheAsBitmap) {
+
+        // cacheAsBitmap: Bitmapと同様の描画パスで、cacheScaleを補正
+        $context.setTransform(
+            matrix[0] / xScale, matrix[1] / xScale,
+            matrix[2] / yScale, matrix[3] / yScale,
+            matrix[4], matrix[5]
+        );
+
+        $context.drawDisplayObject(
+            node,
+            bounds[0], bounds[1], bounds[2], bounds[3],
+            colorTransform
+        );
     } else {
 
         const radianX = Math.atan2(matrix[1], matrix[0]);
         const radianY = Math.atan2(-matrix[2], matrix[3]);
         if (radianX || radianY) {
 
-            // tMatrixから直接スクリーン座標を算出（cacheAsBitmapのスケール差に対応）
-            const tx = matrix[0] * xMin + matrix[2] * yMin + matrix[4];
-            const ty = matrix[1] * xMin + matrix[3] * yMin + matrix[5];
+            const tx = xMin * xScale;
+            const ty = yMin * yScale;
 
             const cosX = Math.cos(radianX);
             const sinX = Math.sin(radianX);
@@ -218,7 +233,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             $context.setTransform(
                 cosX, sinX, -sinY, cosY,
-                tx, ty
+                tx * cosX - ty * sinY + matrix[4],
+                tx * sinX + ty * cosY + matrix[5]
             );
 
         } else {

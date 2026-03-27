@@ -44,6 +44,7 @@ DisplayObject is the base class for all display objects in Next2D Player.
 | `scaleX` | number | Horizontal scale value of the object applied from the reference point |
 | `scaleY` | number | Vertical scale value of the object applied from the reference point |
 | `visible` | boolean | Whether the display object is visible (default: true) |
+| `cacheAsBitmap` | Matrix \| null | Matrix for bitmap caching. Caches Shape/TextField at the specified Matrix × stage scale, reusing until stage resize. Independent of ancestor transforms (default: null) |
 | `x` | number | X coordinate relative to the local coordinates of the parent DisplayObjectContainer |
 | `y` | number | Y coordinate relative to the local coordinates of the parent DisplayObjectContainer |
 
@@ -156,6 +157,32 @@ if (displayObject.hasLocalVariable("score")) {
 displayObject.setGlobalVariable("gameState", "playing");
 const state = displayObject.getGlobalVariable("gameState");
 displayObject.clearGlobalVariable(); // Clear all
+```
+
+### cacheAsBitmap Example
+
+```typescript
+const { Shape, Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
+
+// Cache at 1x scale
+const shape = new Shape();
+shape.graphics.beginFill(0xFF0000).drawCircle(50, 50, 40).endFill();
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// Cache at 2x resolution (high quality)
+const hqShape = new Shape();
+hqShape.graphics.beginFill(0x00FF00).drawRect(0, 0, 100, 80).endFill();
+hqShape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
+
+// Not affected by parent scale (cache quality is fixed by the specified Matrix)
+const container = new Sprite();
+container.scaleX = 3;
+container.scaleY = 3;
+container.addChild(shape);
+
+// Disable caching
+shape.cacheAsBitmap = null;
 ```
 
 ## Related

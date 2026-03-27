@@ -44,6 +44,7 @@ DisplayObject 是 Next2D Player 中所有显示对象的基类。
 | `scaleX` | number | 从参考点应用的对象水平缩放值 |
 | `scaleY` | number | 从参考点应用的对象垂直缩放值 |
 | `visible` | boolean | 显示对象是否可见（默认：true） |
+| `cacheAsBitmap` | Matrix \| null | 位图缓存用的 Matrix。以指定 Matrix × 舞台缩放比例缓存 Shape/TextField，在舞台调整大小之前重复使用。不受祖先 Matrix 的影响（默认：null） |
 | `x` | number | 相对于父 DisplayObjectContainer 本地坐标的 X 坐标 |
 | `y` | number | 相对于父 DisplayObjectContainer 本地坐标的 Y 坐标 |
 
@@ -156,6 +157,32 @@ if (displayObject.hasLocalVariable("score")) {
 displayObject.setGlobalVariable("gameState", "playing");
 const state = displayObject.getGlobalVariable("gameState");
 displayObject.clearGlobalVariable(); // 清除全部
+```
+
+### cacheAsBitmap 示例
+
+```typescript
+const { Shape, Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
+
+// 以 1 倍比例缓存
+const shape = new Shape();
+shape.graphics.beginFill(0xFF0000).drawCircle(50, 50, 40).endFill();
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// 以 2 倍分辨率缓存（高质量）
+const hqShape = new Shape();
+hqShape.graphics.beginFill(0x00FF00).drawRect(0, 0, 100, 80).endFill();
+hqShape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
+
+// 不受父级缩放影响（缓存质量由指定的 Matrix 固定）
+const container = new Sprite();
+container.scaleX = 3;
+container.scaleY = 3;
+container.addChild(shape);
+
+// 禁用缓存
+shape.cacheAsBitmap = null;
 ```
 
 ## 相关
