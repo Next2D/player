@@ -752,9 +752,15 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleX (): number
     {
-        return this.$scaleX === null
+        const base = this.$scaleX === null
             ? displayObjectGetScaleXUseCase(this)
             : this.$scaleX;
+
+        if (this._$cacheAsBitmap) {
+            const m = this._$cacheAsBitmap.rawData;
+            return base * Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        }
+        return base;
     }
     set scaleX (scale_x: number)
     {
@@ -771,9 +777,15 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleY (): number
     {
-        return this.$scaleY === null
+        const base = this.$scaleY === null
             ? displayObjectGetScaleYUseCase(this)
             : this.$scaleY;
+
+        if (this._$cacheAsBitmap) {
+            const m = this._$cacheAsBitmap.rawData;
+            return base * Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+        }
+        return base;
     }
     set scaleY (scale_y: number)
     {

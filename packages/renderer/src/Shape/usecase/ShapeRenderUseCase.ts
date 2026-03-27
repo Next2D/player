@@ -206,10 +206,14 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     } else if (isCacheAsBitmap) {
 
         // cacheAsBitmap: Bitmapと同様の描画パスで、cacheScaleを補正
+        // baseBounds原点(xMin,yMin)のスクリーン座標をtranslationに反映
+        const screenX = matrix[0] * xMin + matrix[2] * yMin + matrix[4];
+        const screenY = matrix[1] * xMin + matrix[3] * yMin + matrix[5];
+
         $context.setTransform(
             matrix[0] / xScale, matrix[1] / xScale,
             matrix[2] / yScale, matrix[3] / yScale,
-            matrix[4], matrix[5]
+            screenX, screenY
         );
 
         $context.drawDisplayObject(

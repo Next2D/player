@@ -13,7 +13,9 @@ import {
     $getArray,
     $poolArray,
     $poolBoundsArray,
-    $getBoundsArray
+    $getBoundsArray,
+    $getFloat32Array6,
+    $poolFloat32Array6
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -86,10 +88,10 @@ export const execute = (
         tMatrix
     );
 
-    const xMin = bounds[0];
-    const yMin = bounds[1];
-    const xMax = bounds[2];
-    const yMax = bounds[3];
+    let xMin = bounds[0];
+    let yMin = bounds[1];
+    let xMax = bounds[2];
+    let yMax = bounds[3];
     $poolBoundsArray(bounds);
 
     const width  = Math.ceil(Math.abs(xMax - xMin));
@@ -154,10 +156,12 @@ export const execute = (
     const cacheMatrix = (text_field as any).cacheAsBitmap;
     let renderXScale: number;
     let renderYScale: number;
+    let cacheScaleX = 1;
+    let cacheScaleY = 1;
     if (cacheMatrix) {
         const m = cacheMatrix.rawData;
-        const cacheScaleX = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-        const cacheScaleY = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+        cacheScaleX = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        cacheScaleY = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
 
         const ownScaleX = rawMatrix
             ? Math.sqrt(rawMatrix[0] * rawMatrix[0] + rawMatrix[1] * rawMatrix[1])
@@ -168,6 +172,26 @@ export const execute = (
 
         renderXScale = cacheScaleX * ownScaleX * stage.rendererScale;
         renderYScale = cacheScaleY * ownScaleY * stage.rendererScale;
+
+        // cacheMatrix倍率をスクリーン座標のboundsにも反映
+        if (cacheScaleX !== 1 || cacheScaleY !== 1) {
+            const modMatrix = $getFloat32Array6(
+                tMatrix[0] * cacheScaleX, tMatrix[1] * cacheScaleX,
+                tMatrix[2] * cacheScaleY, tMatrix[3] * cacheScaleY,
+                tMatrix[4], tMatrix[5]
+            );
+            const modBounds = displayObjectCalcBoundsMatrixService(
+                text_field.xMin, text_field.yMin,
+                text_field.xMax, text_field.yMax,
+                modMatrix
+            );
+            xMin = modBounds[0];
+            yMin = modBounds[1];
+            xMax = modBounds[2];
+            yMax = modBounds[3];
+            $poolBoundsArray(modBounds);
+            $poolFloat32Array6(modMatrix);
+        }
     } else {
         renderXScale = Math.sqrt(
             tMatrix[0] * tMatrix[0]
@@ -204,7 +228,9 @@ export const execute = (
     // rennder on
     renderQueue.pushTextFieldBuffer(
         1, $RENDERER_TEXT_TYPE,
-        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], tMatrix[4], tMatrix[5],
+        tMatrix[0] * cacheScaleX, tMatrix[1] * cacheScaleX,
+        tMatrix[2] * cacheScaleY, tMatrix[3] * cacheScaleY,
+        tMatrix[4], tMatrix[5],
         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
         xMin, yMin, xMax, yMax,
