@@ -44,7 +44,7 @@ DisplayObject 是 Next2D Player 中所有显示对象的基类。
 | `scaleX` | number | 从参考点应用的对象水平缩放值 |
 | `scaleY` | number | 从参考点应用的对象垂直缩放值 |
 | `visible` | boolean | 显示对象是否可见（默认：true） |
-| `cacheAsBitmap` | Matrix \| null | 位图缓存用的 Matrix。以指定 Matrix × 舞台缩放比例缓存 Shape/TextField，在舞台调整大小之前重复使用。不受祖先 Matrix 的影响（默认：null） |
+| `cacheAsBitmap` | Matrix \| null | 位图缓存用的 Matrix。以 1.0 为基准，应用于 displayObject 自身的 scaleX/scaleY。缓存质量 = 指定 Matrix × 自身缩放 × 舞台缩放。缓存时不受祖先 Matrix 影响，但绘制时应用祖先 Matrix。命中测试、宽度和高度基于矢量（默认：null） |
 | `x` | number | 相对于父 DisplayObjectContainer 本地坐标的 X 坐标 |
 | `y` | number | 相对于父 DisplayObjectContainer 本地坐标的 Y 坐标 |
 
@@ -165,21 +165,28 @@ displayObject.clearGlobalVariable(); // 清除全部
 const { Shape, Sprite } = next2d.display;
 const { Matrix } = next2d.geom;
 
-// 以 1 倍比例缓存
+// 以 1 倍比例缓存（1.0 基准 = 相对于 displayObject 自身的 scaleX/scaleY）
 const shape = new Shape();
 shape.graphics.beginFill(0xFF0000).drawCircle(50, 50, 40).endFill();
 shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 
-// 以 2 倍分辨率缓存（高质量）
+// 以 2 倍分辨率缓存（自身缩放的 2 倍质量）
 const hqShape = new Shape();
 hqShape.graphics.beginFill(0x00FF00).drawRect(0, 0, 100, 80).endFill();
 hqShape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
 
-// 不受父级缩放影响（缓存质量由指定的 Matrix 固定）
+// scaleX/scaleY 会被反映（缓存质量 = Matrix × 自身缩放 × 舞台缩放）
+shape.scaleX = 2; // 缓存质量: 1 × 2 × stageScale
+shape.scaleY = 2;
+
+// 父级缩放不影响缓存质量（但绘制时会应用）
 const container = new Sprite();
 container.scaleX = 3;
 container.scaleY = 3;
 container.addChild(shape);
+
+// 命中测试、宽度和高度基于矢量
+const bounds = shape.getBounds(shape); // 返回矢量边界
 
 // 禁用缓存
 shape.cacheAsBitmap = null;

@@ -156,14 +156,25 @@ export const execute = (
         }
     }
 
-    // cacheAsBitmap: 指定Matrix × stageのrendererScaleでキャッシュ品質を決定
+    // cacheAsBitmap: 指定Matrix × 自身のスケール × stageのrendererScaleでキャッシュ品質を決定
+    // 1.0基準: Matrix(1,0,0,1)はdisplayObjectの等倍スケールを意味する
     const cacheMatrix = shape.cacheAsBitmap;
     let renderXScale: number;
     let renderYScale: number;
     if (cacheMatrix) {
         const m = cacheMatrix.rawData;
-        renderXScale = Math.sqrt(m[0] * m[0] + m[1] * m[1]) * stage.rendererScale;
-        renderYScale = Math.sqrt(m[2] * m[2] + m[3] * m[3]) * stage.rendererScale;
+        const cacheScaleX = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        const cacheScaleY = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+
+        const ownScaleX = rawMatrix
+            ? Math.sqrt(rawMatrix[0] * rawMatrix[0] + rawMatrix[1] * rawMatrix[1])
+            : 1;
+        const ownScaleY = rawMatrix
+            ? Math.sqrt(rawMatrix[2] * rawMatrix[2] + rawMatrix[3] * rawMatrix[3])
+            : 1;
+
+        renderXScale = cacheScaleX * ownScaleX * stage.rendererScale;
+        renderYScale = cacheScaleY * ownScaleY * stage.rendererScale;
     } else {
         renderXScale = Math.sqrt(
             tMatrix[0] * tMatrix[0]

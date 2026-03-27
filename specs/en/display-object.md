@@ -44,7 +44,7 @@ DisplayObject is the base class for all display objects in Next2D Player.
 | `scaleX` | number | Horizontal scale value of the object applied from the reference point |
 | `scaleY` | number | Vertical scale value of the object applied from the reference point |
 | `visible` | boolean | Whether the display object is visible (default: true) |
-| `cacheAsBitmap` | Matrix \| null | Matrix for bitmap caching. Caches Shape/TextField at the specified Matrix × stage scale, reusing until stage resize. Independent of ancestor transforms (default: null) |
+| `cacheAsBitmap` | Matrix \| null | Matrix for bitmap caching. 1.0-based, applied relative to the displayObject's own scaleX/scaleY. Cache quality = specified Matrix × own scale × stage scale. Independent of ancestor transforms for caching, but ancestor transforms are applied when drawing. Hit tests, width, and height remain vector-based (default: null) |
 | `x` | number | X coordinate relative to the local coordinates of the parent DisplayObjectContainer |
 | `y` | number | Y coordinate relative to the local coordinates of the parent DisplayObjectContainer |
 
@@ -165,21 +165,28 @@ displayObject.clearGlobalVariable(); // Clear all
 const { Shape, Sprite } = next2d.display;
 const { Matrix } = next2d.geom;
 
-// Cache at 1x scale
+// Cache at 1x scale (1.0-based = relative to displayObject's own scaleX/scaleY)
 const shape = new Shape();
 shape.graphics.beginFill(0xFF0000).drawCircle(50, 50, 40).endFill();
 shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 
-// Cache at 2x resolution (high quality)
+// Cache at 2x resolution (2x the object's own scale quality)
 const hqShape = new Shape();
 hqShape.graphics.beginFill(0x00FF00).drawRect(0, 0, 100, 80).endFill();
 hqShape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
 
-// Not affected by parent scale (cache quality is fixed by the specified Matrix)
+// scaleX/scaleY are reflected (cache quality = Matrix × own scale × stage scale)
+shape.scaleX = 2; // Cache quality: 1 × 2 × stageScale
+shape.scaleY = 2;
+
+// Parent scale does not affect cache quality (but is applied when drawing)
 const container = new Sprite();
 container.scaleX = 3;
 container.scaleY = 3;
 container.addChild(shape);
+
+// Hit tests, width, and height remain vector-based
+const bounds = shape.getBounds(shape); // Returns vector bounds
 
 // Disable caching
 shape.cacheAsBitmap = null;

@@ -44,7 +44,7 @@ DisplayObjectは、Next2D Playerにおける全ての表示オブジェクトの
 | `scaleX` | number | 基準点から適用されるオブジェクトの水平スケール値 |
 | `scaleY` | number | 基準点から適用されるオブジェクトの垂直スケール値 |
 | `visible` | boolean | 表示オブジェクトが可視かどうか（デフォルト: true） |
-| `cacheAsBitmap` | Matrix \| null | ビットマップキャッシュ用のMatrix。指定Matrix × stageスケールでShape/TextFieldをキャッシュし、ステージリサイズまで再利用する。先祖のMatrixの影響を受けない（デフォルト: null） |
+| `cacheAsBitmap` | Matrix \| null | ビットマップキャッシュ用のMatrix。1.0基準でdisplayObjectのscaleX/scaleYに適用される。キャッシュ品質 = 指定Matrix × 自身のスケール × stageスケール。先祖のMatrixの影響は受けないが、描画時には先祖のMatrixが適用される。ヒットテスト・幅・高さはベクター基準（デフォルト: null） |
 | `x` | number | 親DisplayObjectContainerのローカル座標を基準にしたX座標 |
 | `y` | number | 親DisplayObjectContainerのローカル座標を基準にしたY座標 |
 
@@ -165,21 +165,28 @@ displayObject.clearGlobalVariable(); // 全てクリア
 const { Shape, Sprite } = next2d.display;
 const { Matrix } = next2d.geom;
 
-// 等倍でキャッシュ
+// 等倍でキャッシュ（1.0基準 = displayObjectのscaleX/scaleYに対する等倍）
 const shape = new Shape();
 shape.graphics.beginFill(0xFF0000).drawCircle(50, 50, 40).endFill();
 shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 
-// 2倍の解像度でキャッシュ（高品質）
+// 2倍の解像度でキャッシュ（自身のスケールの2倍品質）
 const hqShape = new Shape();
 hqShape.graphics.beginFill(0x00FF00).drawRect(0, 0, 100, 80).endFill();
 hqShape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
 
-// 親のスケールに影響されない（キャッシュ品質は指定Matrixで固定）
+// scaleX/scaleYが反映される（キャッシュ品質 = Matrix × 自身のスケール × stageスケール）
+shape.scaleX = 2; // キャッシュ品質: 1 × 2 × stageScale
+shape.scaleY = 2;
+
+// 親のスケールはキャッシュ品質に影響しない（描画位置には反映される）
 const container = new Sprite();
 container.scaleX = 3;
 container.scaleY = 3;
 container.addChild(shape);
+
+// ヒットテスト・幅・高さはベクター基準
+const bounds = shape.getBounds(shape); // ベクターの境界を返す
 
 // キャッシュを解除
 shape.cacheAsBitmap = null;
