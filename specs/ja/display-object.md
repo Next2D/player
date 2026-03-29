@@ -192,6 +192,36 @@ const bounds = shape.getBounds(shape); // ベクターの境界を返す
 shape.cacheAsBitmap = null;
 ```
 
+### DisplayObjectContainerでのcacheAsBitmap
+
+`Sprite`や`MovieClip`などの`DisplayObjectContainer`に対しても`cacheAsBitmap`を設定できます。
+コンテナの全子要素をまとめてテクスチャにキャッシュし、以降のフレームではキャッシュされたテクスチャを再利用します。
+
+```typescript
+const { Shape, Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
+
+// 複数の子要素を持つSprite
+const sprite = new Sprite();
+const rect = new Shape();
+rect.graphics.beginFill(0xFF0000).drawRect(0, 0, 100, 80).endFill();
+sprite.addChild(rect);
+const circle = new Shape();
+circle.graphics.beginFill(0x00FF00).drawCircle(50, 40, 30).endFill();
+sprite.addChild(circle);
+
+// コンテナ全体をビットマップキャッシュ
+sprite.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// キャッシュを解除（次フレームから通常描画に戻る）
+sprite.cacheAsBitmap = null;
+```
+
+**注意事項:**
+- キャッシュ中は子要素の変更（追加・削除・プロパティ変更）が画面に反映されません
+- `stage.rendererScale`が変更されるとキャッシュが自動的に無効化されます
+- `filter`と`cacheAsBitmap`を同時に設定した場合、`cacheAsBitmap`が優先されます
+
 ## 関連項目
 
 - [MovieClip](/ja/reference/player/movie-clip)

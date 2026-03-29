@@ -192,6 +192,36 @@ const bounds = shape.getBounds(shape); // 返回矢量边界
 shape.cacheAsBitmap = null;
 ```
 
+### 在 DisplayObjectContainer 上使用 cacheAsBitmap
+
+您也可以在 `Sprite` 和 `MovieClip` 等 `DisplayObjectContainer` 子类上设置 `cacheAsBitmap`。
+容器的所有子元素将被渲染到单个纹理中并缓存，在后续帧中重复使用。
+
+```typescript
+const { Shape, Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
+
+// 包含多个子元素的 Sprite
+const sprite = new Sprite();
+const rect = new Shape();
+rect.graphics.beginFill(0xFF0000).drawRect(0, 0, 100, 80).endFill();
+sprite.addChild(rect);
+const circle = new Shape();
+circle.graphics.beginFill(0x00FF00).drawCircle(50, 40, 30).endFill();
+sprite.addChild(circle);
+
+// 将整个容器缓存为位图
+sprite.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// 禁用缓存（下一帧恢复正常渲染）
+sprite.cacheAsBitmap = null;
+```
+
+**注意事项：**
+- 缓存期间，子元素的更改（添加/删除/属性更改）不会反映在屏幕上
+- 当 `stage.rendererScale` 更改时，缓存会自动失效
+- 同时设置 `filter` 和 `cacheAsBitmap` 时，`cacheAsBitmap` 优先
+
 ## 相关
 
 - [MovieClip](/cn/reference/player/movie-clip)

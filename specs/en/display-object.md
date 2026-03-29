@@ -192,6 +192,36 @@ const bounds = shape.getBounds(shape); // Returns vector bounds
 shape.cacheAsBitmap = null;
 ```
 
+### cacheAsBitmap on DisplayObjectContainer
+
+You can also set `cacheAsBitmap` on `DisplayObjectContainer` subclasses such as `Sprite` and `MovieClip`.
+All child elements are rendered into a single texture and cached, reused on subsequent frames.
+
+```typescript
+const { Shape, Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
+
+// Sprite with multiple children
+const sprite = new Sprite();
+const rect = new Shape();
+rect.graphics.beginFill(0xFF0000).drawRect(0, 0, 100, 80).endFill();
+sprite.addChild(rect);
+const circle = new Shape();
+circle.graphics.beginFill(0x00FF00).drawCircle(50, 40, 30).endFill();
+sprite.addChild(circle);
+
+// Cache the entire container as a bitmap
+sprite.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// Disable caching (resumes normal rendering next frame)
+sprite.cacheAsBitmap = null;
+```
+
+**Notes:**
+- While cached, changes to children (add/remove/property changes) are not reflected on screen
+- Cache is automatically invalidated when `stage.rendererScale` changes
+- When both `filter` and `cacheAsBitmap` are set, `cacheAsBitmap` takes priority
+
 ## Related
 
 - [MovieClip](/en/reference/player/movie-clip)
