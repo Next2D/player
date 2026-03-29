@@ -7,6 +7,15 @@ import { execute as displayObjectContainerClipRenderUseCase } from "./DisplayObj
 import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 
 /**
+ * @description cacheAsBitmap用の空フィルターパラメータ
+ *              Empty filter params for cacheAsBitmap (no filter processing)
+ *
+ * @type {Float32Array}
+ * @private
+ */
+const $emptyFilterParams: Float32Array = new Float32Array(0);
+
+/**
  * @description DisplayObjectContainerの描画を実行します。
  *              Execute the drawing of DisplayObjectContainer.
  *
@@ -35,6 +44,7 @@ export const execute = (
     let layerHeight = 0;
 
     let useFilter = false;
+    let useCacheAsBitmap = false;
     let uniqueKey = "";
     let filterKey = "";
     let filterBounds: Float32Array | null = null;
@@ -46,9 +56,46 @@ export const execute = (
         layerWidth  = render_queue[index++];
         layerHeight = render_queue[index++];
 
-        useFilter = Boolean(render_queue[index++]);
+        const layerType = render_queue[index++]; // 0=blend, 1=filter, 2=cacheAsBitmap
+        useFilter = layerType === 1;
+        useCacheAsBitmap = layerType === 2;
 
-        if (useFilter) {
+        if (useCacheAsBitmap) {
+
+            // cacheAsBitmapパス
+            const cacheHit = Boolean(render_queue[index++]);
+            uniqueKey = `${render_queue[index++]}`;
+            filterKey = `${render_queue[index++]}`;
+
+            // フィルター境界を読み取り
+            filterBounds = render_queue.subarray(index, index + 4);
+            index += 4;
+
+            matrix = render_queue.subarray(index, index + 6);
+            index += 6;
+
+            colorTransform = render_queue.subarray(index, index + 8);
+            index += 8;
+
+            if (cacheHit) {
+                // キャッシュ済み: テクスチャを描画して子要素の処理をスキップ
+                $context.containerDrawCachedFilter(
+                    blendMode, matrix, colorTransform,
+                    filterBounds, uniqueKey, filterKey
+                );
+                return index;
+            }
+
+            // 初回描画: フィルターパラメータを読み取り
+            const paramsLength = render_queue[index++];
+            filterParams = paramsLength > 0
+                ? render_queue.subarray(index, index + paramsLength)
+                : $emptyFilterParams;
+            index += paramsLength;
+
+            // containerBeginLayer → 子要素描画 → containerEndLayerでキャッシュ
+
+        } else if (useFilter) {
             // フィルターパス: filterCache/uniqueKey/filterKey を読む
             const filterCache = Boolean(render_queue[index++]);
             uniqueKey = `${render_queue[index++]}`;
@@ -245,11 +292,20 @@ export const execute = (
 
     // コンテナのフィルター/ブレンド結果をメインに合成
     if (useLayer) {
-        $context.containerEndLayer(
-            blendMode, matrix!, colorTransform,
-            useFilter, filterBounds, filterParams,
-            uniqueKey, filterKey
-        );
+        if (useCacheAsBitmap) {
+            // cacheAsBitmap: フィルター適用後のテクスチャをキャッシュ・描画
+            $context.containerEndLayer(
+                blendMode, matrix!, colorTransform,
+                true, filterBounds, filterParams,
+                uniqueKey, filterKey
+            );
+        } else {
+            $context.containerEndLayer(
+                blendMode, matrix!, colorTransform,
+                useFilter, filterBounds, filterParams,
+                uniqueKey, filterKey
+            );
+        }
     }
 
     return index;

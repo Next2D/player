@@ -134,4 +134,93 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
         expect($context.containerDrawCachedFilter).toHaveBeenCalledTimes(1);
         expect(result).toBe(data.length);
     });
+
+    it("execute test case4 - cacheAsBitmap cache hit returns early", async () =>
+    {
+        const { $context } = await import("../../RendererUtil");
+        vi.mocked($context.containerDrawCachedFilter).mockClear();
+        vi.mocked($context.containerBeginLayer).mockClear();
+        vi.mocked($context.containerEndLayer).mockClear();
+
+        const data: number[] = [];
+        // blendMode
+        data.push(0);
+        // useLayer = true
+        data.push(1);
+        // layerWidth, layerHeight
+        data.push(100, 80);
+        // layerType = 2 (cacheAsBitmap)
+        data.push(2);
+        // cacheHit = true
+        data.push(1);
+        // uniqueKey (instanceId)
+        data.push(10);
+        // cacheKey
+        data.push(500);
+        // filterBounds (4)
+        data.push(0, 0, 0, 0);
+        // matrix (6)
+        data.push(1, 0, 0, 1, 30, 40);
+        // colorTransform (8)
+        data.push(1, 1, 1, 1, 0, 0, 0, 0);
+
+        const renderQueue = new Float32Array(data);
+        const result = execute(renderQueue, 0, null);
+
+        // cache hit → containerDrawCachedFilter で描画し即return
+        expect($context.containerDrawCachedFilter).toHaveBeenCalledTimes(1);
+        // containerBeginLayer/EndLayerは呼ばれない（子要素の描画不要）
+        expect($context.containerBeginLayer).not.toHaveBeenCalled();
+        expect($context.containerEndLayer).not.toHaveBeenCalled();
+        expect(result).toBe(data.length);
+    });
+
+    it("execute test case5 - cacheAsBitmap cache miss processes children and caches", async () =>
+    {
+        const { $context } = await import("../../RendererUtil");
+        vi.mocked($context.containerBeginLayer).mockClear();
+        vi.mocked($context.containerEndLayer).mockClear();
+        vi.mocked($context.containerDrawCachedFilter).mockClear();
+
+        const data: number[] = [];
+        // blendMode
+        data.push(0);
+        // useLayer = true
+        data.push(1);
+        // layerWidth, layerHeight
+        data.push(100, 80);
+        // layerType = 2 (cacheAsBitmap)
+        data.push(2);
+        // cacheHit = false
+        data.push(0);
+        // uniqueKey (instanceId)
+        data.push(10);
+        // cacheKey
+        data.push(500);
+        // filterBounds (4)
+        data.push(0, 0, 0, 0);
+        // matrix (6)
+        data.push(1, 0, 0, 1, 30, 40);
+        // colorTransform (8)
+        data.push(1, 1, 1, 1, 0, 0, 0, 0);
+        // paramsLength = 0 (no filter params)
+        data.push(0);
+        // useMaskDisplayObject = false
+        data.push(0);
+        // children length = 0
+        data.push(0);
+
+        const renderQueue = new Float32Array(data);
+        const result = execute(renderQueue, 0, null);
+
+        // cache miss → containerBeginLayer → 子要素描画 → containerEndLayer
+        expect($context.containerBeginLayer).toHaveBeenCalledWith(100, 80);
+        expect($context.containerEndLayer).toHaveBeenCalledTimes(1);
+        // containerEndLayer は use_filter=true, 空のfilterBounds/Params でキャッシュ
+        const endLayerCall = vi.mocked($context.containerEndLayer).mock.calls[0];
+        expect(endLayerCall[3]).toBe(true); // use_filter
+        // containerDrawCachedFilterは呼ばれない（初回描画）
+        expect($context.containerDrawCachedFilter).not.toHaveBeenCalled();
+        expect(result).toBe(data.length);
+    });
 });
