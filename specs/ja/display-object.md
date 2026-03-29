@@ -44,7 +44,7 @@ DisplayObjectは、Next2D Playerにおける全ての表示オブジェクトの
 | `scaleX` | number | 基準点から適用されるオブジェクトの水平スケール値 |
 | `scaleY` | number | 基準点から適用されるオブジェクトの垂直スケール値 |
 | `visible` | boolean | 表示オブジェクトが可視かどうか（デフォルト: true） |
-| `cacheAsBitmap` | Matrix \| null | ビットマップキャッシュ用のMatrix。1.0基準でdisplayObjectのscaleX/scaleYに適用される。キャッシュ品質 = 指定Matrix × 自身のスケール × stageスケール。先祖のMatrixの影響は受けないが、描画時には先祖のMatrixが適用される。ヒットテスト・幅・高さはベクター基準（デフォルト: null） |
+| `cacheAsBitmap` | Matrix \| null | ビットマップキャッシュ用のMatrix。**スケール値（a, d）のみ設定可能**（b, c, tx, tyは無視されます）。1.0基準でdisplayObjectのscaleX/scaleYに適用される。キャッシュ品質 = 指定Matrix × 自身のスケール × stageスケール。先祖のMatrixの影響は受けないが、描画時には先祖のMatrixが適用される。ヒットテスト・幅・高さはベクター基準。**適用対象: Shape, TextField, Sprite, MovieClip**（Videoは固定サイズのため適用不可）（デフォルト: null） |
 | `x` | number | 親DisplayObjectContainerのローカル座標を基準にしたX座標 |
 | `y` | number | 親DisplayObjectContainerのローカル座標を基準にしたY座標 |
 
@@ -161,6 +161,34 @@ displayObject.clearGlobalVariable(); // 全てクリア
 
 ### cacheAsBitmapの例
 
+`cacheAsBitmap`はベクター描画やコンテナをビットマップとしてキャッシュし、2回目以降の描画でキャッシュを再利用することでパフォーマンスを向上させるプロパティです。
+
+**適用対象クラス:**
+- `Shape` — ベクター描画のキャッシュ
+- `TextField` — テキスト描画のキャッシュ
+- `Sprite` — コンテナとその子要素をまとめてキャッシュ
+- `MovieClip` — コンテナとその子要素をまとめてキャッシュ
+
+> ⚠️ `Video`には適用できません。Videoは画像サイズが固定されているため、キャッシュの効果がありません。
+
+**Matrixの制限:**
+Matrixにはスケール値（a, d）のみ設定できます。回転（b, c）や移動（tx, ty）は無視されます。
+
+```typescript
+// ✅ 正しい使い方（スケールのみ設定）
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);  // 等倍
+shape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);  // 2倍品質
+
+// ❌ 回転・移動の値は無視される
+shape.cacheAsBitmap = new Matrix(1, 0.5, 0.5, 1, 100, 200);  // b, c, tx, tyは無視
+```
+
+**利用用途の例:**
+
+1. **速度の速いアニメーション** — 高速で動くオブジェクトは視認性が低いため、キャッシュによる画質低下が目立たず、パフォーマンス向上が期待できます
+2. **静的な背景やUI部品** — 変化しないUI要素（パネル、装飾、アイコンなど）をキャッシュすることで毎フレームの再描画コストを削減できます
+3. **複雑なベクター描画** — パスが多い複雑なShapeをキャッシュすることで描画負荷を大幅に軽減できます
+
 ```typescript
 const { Shape, Sprite } = next2d.display;
 const { Matrix } = next2d.geom;
@@ -198,7 +226,7 @@ shape.cacheAsBitmap = null;
 コンテナの全子要素をまとめてテクスチャにキャッシュし、以降のフレームではキャッシュされたテクスチャを再利用します。
 
 ```typescript
-const { Shape, Sprite } = next2d.display;
+const { Shape, Sprite, MovieClip } = next2d.display;
 const { Matrix } = next2d.geom;
 
 // 複数の子要素を持つSprite
@@ -213,11 +241,22 @@ sprite.addChild(circle);
 // コンテナ全体をビットマップキャッシュ
 sprite.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 
+// MovieClipにも同様に適用可能
+const mc = new MovieClip();
+mc.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
 // キャッシュを解除（次フレームから通常描画に戻る）
 sprite.cacheAsBitmap = null;
 ```
 
+**キャッシュの動作:**
+- 先祖や自身のスケールが変更されるとキャッシュが無効化され、次フレームで再生成されます
+- 位置（x, y）の変更ではキャッシュは維持され、描画位置のみ更新されます
+- スケールが頻繁に変化するアニメーション中はキャッシュが毎フレーム再生成されるため、アニメーション完了後の静的な状態で最も効果を発揮します
+
 **注意事項:**
+- **Matrixにはスケール値のみ設定可能**です（回転・移動は無視されます）
+- **Videoには適用できません**（固定サイズの画像データのため）
 - キャッシュ中は子要素の変更（追加・削除・プロパティ変更）が画面に反映されません
 - `stage.rendererScale`が変更されるとキャッシュが自動的に無効化されます
 - `filter`と`cacheAsBitmap`を同時に設定した場合、`cacheAsBitmap`が優先されます

@@ -44,7 +44,7 @@ DisplayObject is the base class for all display objects in Next2D Player.
 | `scaleX` | number | Horizontal scale value of the object applied from the reference point |
 | `scaleY` | number | Vertical scale value of the object applied from the reference point |
 | `visible` | boolean | Whether the display object is visible (default: true) |
-| `cacheAsBitmap` | Matrix \| null | Matrix for bitmap caching. 1.0-based, applied relative to the displayObject's own scaleX/scaleY. Cache quality = specified Matrix × own scale × stage scale. Independent of ancestor transforms for caching, but ancestor transforms are applied when drawing. Hit tests, width, and height remain vector-based (default: null) |
+| `cacheAsBitmap` | Matrix \| null | Matrix for bitmap caching. **Only scale values (a, d) can be set** (b, c, tx, ty are ignored). 1.0-based, applied relative to the displayObject's own scaleX/scaleY. Cache quality = specified Matrix × own scale × stage scale. Independent of ancestor transforms for caching, but ancestor transforms are applied when drawing. Hit tests, width, and height remain vector-based. **Applicable to: Shape, TextField, Sprite, MovieClip** (not applicable to Video as it has fixed image dimensions) (default: null) |
 | `x` | number | X coordinate relative to the local coordinates of the parent DisplayObjectContainer |
 | `y` | number | Y coordinate relative to the local coordinates of the parent DisplayObjectContainer |
 
@@ -161,6 +161,34 @@ displayObject.clearGlobalVariable(); // Clear all
 
 ### cacheAsBitmap Example
 
+`cacheAsBitmap` caches vector drawings or containers as bitmaps, improving performance by reusing the cached texture from the second frame onward.
+
+**Applicable classes:**
+- `Shape` — Cache vector drawings
+- `TextField` — Cache text rendering
+- `Sprite` — Cache containers and all their children together
+- `MovieClip` — Cache containers and all their children together
+
+> ⚠️ Not applicable to `Video`. Since Video has fixed image dimensions, caching provides no benefit.
+
+**Matrix restriction:**
+Only scale values (a, d) can be set in the Matrix. Rotation (b, c) and translation (tx, ty) are ignored.
+
+```typescript
+// ✅ Correct usage (scale only)
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);  // 1x scale
+shape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);  // 2x quality
+
+// ❌ Rotation/translation values are ignored
+shape.cacheAsBitmap = new Matrix(1, 0.5, 0.5, 1, 100, 200);  // b, c, tx, ty ignored
+```
+
+**Use cases:**
+
+1. **Fast-moving animations** — Objects moving at high speed have low visual clarity, so quality loss from caching is barely noticeable while providing significant performance gains
+2. **Static backgrounds and UI elements** — Caching unchanging UI elements (panels, decorations, icons) eliminates per-frame redraw costs
+3. **Complex vector drawings** — Caching Shapes with many paths dramatically reduces drawing overhead
+
 ```typescript
 const { Shape, Sprite } = next2d.display;
 const { Matrix } = next2d.geom;
@@ -198,7 +226,7 @@ You can also set `cacheAsBitmap` on `DisplayObjectContainer` subclasses such as 
 All child elements are rendered into a single texture and cached, reused on subsequent frames.
 
 ```typescript
-const { Shape, Sprite } = next2d.display;
+const { Shape, Sprite, MovieClip } = next2d.display;
 const { Matrix } = next2d.geom;
 
 // Sprite with multiple children
@@ -213,11 +241,22 @@ sprite.addChild(circle);
 // Cache the entire container as a bitmap
 sprite.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 
+// Also applicable to MovieClip
+const mc = new MovieClip();
+mc.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
 // Disable caching (resumes normal rendering next frame)
 sprite.cacheAsBitmap = null;
 ```
 
+**Cache behavior:**
+- When the scale of the object or its ancestors changes, the cache is invalidated and regenerated on the next frame
+- Position changes (x, y) preserve the cache — only the drawing position is updated
+- During animations with frequent scale changes, the cache is regenerated every frame, so caching is most effective after animations complete and the object is static
+
 **Notes:**
+- **Only scale values can be set in the Matrix** (rotation and translation are ignored)
+- **Not applicable to Video** (fixed-size image data)
 - While cached, changes to children (add/remove/property changes) are not reflected on screen
 - Cache is automatically invalidated when `stage.rendererScale` changes
 - When both `filter` and `cacheAsBitmap` are set, `cacheAsBitmap` takes priority
