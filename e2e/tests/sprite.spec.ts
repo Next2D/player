@@ -25,4 +25,18 @@ test.describe("Sprite テスト", () => {
             maxDiffPixels: 15000
         });
     });
+
+    test("Sprite cacheAsBitmap（コンテナビットマップキャッシュ）", async ({ page }) => {
+        await page.goto("/e2e/pages/sprite/cache-as-bitmap.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("sprite-cache-as-bitmap.png");
+    });
+
+    test("Sprite cacheAsBitmap cache hit（キャッシュ再利用テスト）", async ({ page }) => {
+        await page.goto("/e2e/pages/sprite/cache-as-bitmap-hit.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("sprite-cache-as-bitmap-hit.png");
+    });
 });

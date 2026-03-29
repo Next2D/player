@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Sprite cacheAsBitmap cache HIT test</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // Sprite内に複数子要素を配置するヘルパー
+        const createTestSprite = (x, y) => {
+            const sprite = new Sprite();
+            sprite.x = x;
+            sprite.y = y;
+
+            const rect = new Shape();
+            rect.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 100, 80)
+                .endFill();
+            sprite.addChild(rect);
+
+            const circle = new Shape();
+            circle.graphics
+                .beginFill(0x00FF00, 1.0)
+                .drawCircle(50, 40, 30)
+                .endFill();
+            sprite.addChild(circle);
+
+            const small = new Shape();
+            small.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(60, 10, 30, 30)
+                .endFill();
+            sprite.addChild(small);
+
+            return sprite;
+        };
+
+        // ===== cacheAsBitmapなし（参照用）=====
+        const noCache = createTestSprite(30, 30);
+        root.addChild(noCache);
+
+        // ===== cacheAsBitmap（等倍、単位行列）=====
+        const cached1x = createTestSprite(180, 30);
+        cached1x.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(cached1x);
+
+        // ===== cacheAsBitmap + 親スケール =====
+        const cachedScaled = createTestSprite(30, 180);
+        cachedScaled.scaleX = 1.5;
+        cachedScaled.scaleY = 1.5;
+        cachedScaled.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(cachedScaled);
+
+        // ===== cacheAsBitmap + 回転 =====
+        const cachedRotated = createTestSprite(280, 180);
+        cachedRotated.rotation = 30;
+        cachedRotated.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(cachedRotated);
+
+        // ===== ネストされたSprite + cacheAsBitmap =====
+        const outer = new Sprite();
+        outer.x = 480;
+        outer.y = 180;
+        const inner = createTestSprite(0, 0);
+        inner.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        outer.addChild(inner);
+        root.addChild(outer);
+
+        // 最初のフレームが描画されるまで待機（cache miss）
+        // その後、兄弟要素を追加して再描画をトリガー（cache hit を検証）
+        let frameCount = 0;
+        root.addEventListener("enterFrame", () => {
+            frameCount++;
+            if (frameCount === 5) {
+                // cache hit をトリガーするため、兄弟の Shape を追加
+                const trigger = new Shape();
+                trigger.graphics
+                    .beginFill(0xFFFF00, 1.0)
+                    .drawRect(0, 0, 40, 40)
+                    .endFill();
+                trigger.x = 700;
+                trigger.y = 500;
+                root.addChild(trigger);
+            }
+            if (frameCount >= 10) {
+                // 十分なフレーム経過後に完了フラグ
+                window.__E2E_RENDER_COMPLETE__ = true;
+            }
+        });
+    });
+</script>
+</body>
+</html>
