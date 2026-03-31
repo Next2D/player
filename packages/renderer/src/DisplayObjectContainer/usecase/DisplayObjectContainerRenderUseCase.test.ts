@@ -12,10 +12,22 @@ vi.mock("../../RendererUtil", () => ({
         "setMaskBounds": vi.fn(),
         "containerBeginLayer": vi.fn(),
         "containerEndLayer": vi.fn(),
+        "containerBeginAtlasNode": vi.fn(() => ({ "x": 0, "y": 0, "w": 100, "h": 80, "index": 0 })),
+        "containerEndAtlasNode": vi.fn(),
         "containerDrawCachedFilter": vi.fn(),
+        "removeNode": vi.fn(),
+        "setTransform": vi.fn(),
+        "drawDisplayObject": vi.fn(),
         "globalAlpha": 1,
         "imageSmoothingEnabled": true,
         "globalCompositeOperation": "normal"
+    }
+}));
+
+vi.mock("@next2d/cache", () => ({
+    "$cacheStore": {
+        "get": vi.fn(() => null),
+        "set": vi.fn()
     }
 }));
 
@@ -138,9 +150,15 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
     it("execute test case4 - cacheAsBitmap cache hit returns early", async () =>
     {
         const { $context } = await import("../../RendererUtil");
-        vi.mocked($context.containerDrawCachedFilter).mockClear();
+        const { $cacheStore } = await import("@next2d/cache");
         vi.mocked($context.containerBeginLayer).mockClear();
         vi.mocked($context.containerEndLayer).mockClear();
+        vi.mocked($context.drawDisplayObject).mockClear();
+        vi.mocked($context.setTransform).mockClear();
+
+        // キャッシュされたノードを返すようにモック
+        const mockNode = { "x": 0, "y": 0, "w": 100, "h": 80, "index": 0 };
+        vi.mocked($cacheStore.get).mockReturnValueOnce(mockNode as any);
 
         const data: number[] = [];
         // blendMode
@@ -148,7 +166,7 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
         // useLayer = true
         data.push(1);
         // layerWidth, layerHeight
-        data.push(100, 80);
+        data.push(0, 0);
         // layerType = 2 (cacheAsBitmap)
         data.push(2);
         // cacheHit = true
@@ -158,8 +176,10 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
         // cacheKey
         data.push(500);
         // filterBounds (4)
-        data.push(0, 0, 0, 0);
-        // matrix (6)
+        data.push(0, 0, 100, 80);
+        // renderScaleX, renderScaleY
+        data.push(1, 1);
+        // parent matrix a, b, c, d, screenX, screenY
         data.push(1, 0, 0, 1, 30, 40);
         // colorTransform (8)
         data.push(1, 1, 1, 1, 0, 0, 0, 0);
@@ -167,8 +187,10 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
         const renderQueue = new Float32Array(data);
         const result = execute(renderQueue, 0, null);
 
-        // cache hit → containerDrawCachedFilter で描画し即return
-        expect($context.containerDrawCachedFilter).toHaveBeenCalledTimes(1);
+        // cache hit → drawDisplayObject でアトラスから描画して即return
+        expect($context.drawDisplayObject).toHaveBeenCalledTimes(1);
+        // matrix/renderScale = 1/1 → setTransform(1, 0, 0, 1, 30, 40)
+        expect($context.setTransform).toHaveBeenCalledWith(1, 0, 0, 1, 30, 40);
         // containerBeginLayer/EndLayerは呼ばれない（子要素の描画不要）
         expect($context.containerBeginLayer).not.toHaveBeenCalled();
         expect($context.containerEndLayer).not.toHaveBeenCalled();
@@ -178,9 +200,19 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
     it("execute test case5 - cacheAsBitmap cache miss processes children and caches", async () =>
     {
         const { $context } = await import("../../RendererUtil");
+        const { $cacheStore } = await import("@next2d/cache");
         vi.mocked($context.containerBeginLayer).mockClear();
         vi.mocked($context.containerEndLayer).mockClear();
-        vi.mocked($context.containerDrawCachedFilter).mockClear();
+        vi.mocked($context.containerBeginAtlasNode).mockClear();
+        vi.mocked($context.containerEndAtlasNode).mockClear();
+        vi.mocked($context.drawDisplayObject).mockClear();
+        vi.mocked($context.setTransform).mockClear();
+        vi.mocked($context.removeNode).mockClear();
+        vi.mocked($cacheStore.get).mockReturnValue(null as any);
+        vi.mocked($cacheStore.set).mockClear();
+
+        const mockNode = { "x": 0, "y": 0, "w": 100, "h": 80, "index": 0 };
+        vi.mocked($context.containerBeginAtlasNode).mockReturnValueOnce(mockNode as any);
 
         const data: number[] = [];
         // blendMode
@@ -198,8 +230,10 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
         // cacheKey
         data.push(500);
         // filterBounds (4)
-        data.push(0, 0, 0, 0);
-        // matrix (6)
+        data.push(0, 0, 100, 80);
+        // renderScaleX, renderScaleY
+        data.push(1, 1);
+        // parent matrix a, b, c, d, screenX, screenY
         data.push(1, 0, 0, 1, 30, 40);
         // colorTransform (8)
         data.push(1, 1, 1, 1, 0, 0, 0, 0);
@@ -213,14 +247,19 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
         const renderQueue = new Float32Array(data);
         const result = execute(renderQueue, 0, null);
 
-        // cache miss → containerBeginLayer → 子要素描画 → containerEndLayer
-        expect($context.containerBeginLayer).toHaveBeenCalledWith(100, 80);
-        expect($context.containerEndLayer).toHaveBeenCalledTimes(1);
-        // containerEndLayer は use_filter=true, 空のfilterBounds/Params でキャッシュ
-        const endLayerCall = vi.mocked($context.containerEndLayer).mock.calls[0];
-        expect(endLayerCall[3]).toBe(true); // use_filter
-        // containerDrawCachedFilterは呼ばれない（初回描画）
-        expect($context.containerDrawCachedFilter).not.toHaveBeenCalled();
+        // cache miss → containerBeginAtlasNode → 子要素描画 → containerEndAtlasNode
+        expect($context.containerBeginAtlasNode).toHaveBeenCalledWith(100, 80);
+        expect($context.containerEndAtlasNode).toHaveBeenCalledTimes(1);
+        // containerBeginLayer/containerEndLayer は呼ばれない（直接アトラス描画）
+        expect($context.containerBeginLayer).not.toHaveBeenCalled();
+        expect($context.containerEndLayer).not.toHaveBeenCalled();
+        // ノードをキャッシュに保存
+        expect($cacheStore.set).toHaveBeenCalledWith("10", "bNode", mockNode);
+        expect($cacheStore.set).toHaveBeenCalledWith("10", "bKey", "500");
+        // アトラスからインスタンス描画
+        expect($context.drawDisplayObject).toHaveBeenCalledTimes(1);
+        // matrix/renderScale = 1/1 → setTransform(1, 0, 0, 1, 30, 40)
+        expect($context.setTransform).toHaveBeenCalledWith(1, 0, 0, 1, 30, 40);
         expect(result).toBe(data.length);
     });
 });

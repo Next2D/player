@@ -119,6 +119,12 @@ const $QUAD_VERTICES = new Float32Array([
 const $ctUniform8 = new Float32Array(8);
 
 /**
+ * @description copyTempToAtlasNode() 用 uniform プリアロケート (scale=1,-1, offset=0,1)
+ *              Pre-allocated uniform for atlas node copy with Y-flip
+ */
+const $atlasNodeCopyUniform = new Float32Array([1, -1, 0, 1]);
+
+/**
  * @description fill() 用 uniform プリアロケート (color + matrix = 16 floats = 64 bytes)
  *              Pre-allocated uniform for fill() (color + matrix = 16 floats = 64 bytes)
  */
@@ -276,6 +282,9 @@ export class Context
 
     /** @description 新しい描画状態フラグ / New draw state flag */
     public newDrawState: boolean = false;
+
+    /** @description cacheAsBitmap用の保留中アトラスノードスタック / Pending atlas nodes stack for cacheAsBitmap */
+    private readonly _pendingAtlasNodes: Node[] = [];
 
     /** @description コンテナレイヤースタック（フィルター/ブレンド用） / Container layer stack (for filter/blend) */
     private readonly $containerLayerStack: IAttachmentObject[] = [];
@@ -1195,7 +1204,7 @@ export class Context
             vertex_count,
             bind_group,
             uniform_offset,
-            !!this.currentRenderTarget,
+            this.currentRenderTarget,
             use_stencil_pipeline,
             clipLevel
         );
@@ -1290,7 +1299,7 @@ export class Context
         const useStencilPipeline = useMainStencil;
 
         // アトラスへの描画かどうか
-        const useAtlasTarget = !!this.currentRenderTarget;
+        const useAtlasTarget = this.currentRenderTarget;
 
         const lutTexture = contextGradientFillUseCase(
             this.device,
@@ -1375,7 +1384,7 @@ export class Context
             smooth,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget,
+            this.currentRenderTarget,
             !!useStencilPipeline,
             clipLevel
         );
@@ -1442,7 +1451,7 @@ export class Context
             focal,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget,
+            this.currentRenderTarget,
             useStencilPipeline
         );
 
@@ -1508,7 +1517,7 @@ export class Context
             smooth,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget,
+            this.currentRenderTarget,
             useStencilPipeline
         );
 
@@ -2554,6 +2563,146 @@ export class Context
 
         // メインのアタッチメントをバインド
         this.bind(this.$mainAttachmentObject);
+    }
+
+    /**
+     * @description cacheAsBitmap: temp FBO作成→子要素描画開始
+     *              Begin container cacheAsBitmap: create temp bgra8unorm FBO for children,
+     *              allocate atlas node for later copy
+     *
+     * @param  {number} width  - ノード幅 / Node width
+     * @param  {number} height - ノード高さ / Node height
+     * @return {Node}
+     */
+    containerBeginAtlasNode (width: number, height: number): Node
+    {
+        this.drawArraysInstanced();
+
+        // アトラスノードを確保（後でコピー先として使用）
+        const node = this.createNode(width, height);
+        this._pendingAtlasNodes.push(node);
+
+        // mainをスタックに保存
+        const mainAttachment = this.$mainAttachmentObject as IAttachmentObject;
+        this.$containerLayerStack.push(mainAttachment);
+
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        // bgra8unormのtemp FBOを作成（全パイプラインが互換）
+        const tempAttachment = this.frameBufferManager.createAttachment(
+            "container_layer", width, height, mainAttachment.msaa, true
+        );
+
+        this.$mainAttachmentObject = tempAttachment;
+        this.bind(tempAttachment);
+
+        return node;
+    }
+
+    /**
+     * @description cacheAsBitmap: temp FBO→アトラスノードへコピー
+     *              End container cacheAsBitmap: copy temp FBO content to atlas node,
+     *              release temp FBO
+     *
+     * @return {void}
+     */
+    containerEndAtlasNode (): void
+    {
+        this.drawArraysInstanced();
+
+        // 既存のレンダーパスを終了（temp FBOのMSAAリゾルブが実行される）
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        this.ensureCommandEncoder();
+
+        const tempAttachment = this.$mainAttachmentObject as IAttachmentObject;
+        const node = this._pendingAtlasNodes.pop()!;
+
+        // mainを復元
+        this.$mainAttachmentObject = this.$containerLayerStack.pop() as IAttachmentObject;
+
+        // temp FBO → アトラスノードへコピー
+        this.copyTempToAtlasNode(tempAttachment, node);
+
+        // temp FBOをリリース
+        this.frameBufferManager.releaseTemporaryAttachment(tempAttachment);
+
+        // メインをバインド
+        this.bind(this.$mainAttachmentObject);
+    }
+
+    /**
+     * @description temp FBOの内容をアトラスノード領域にコピー
+     *              Copy temp FBO content to the atlas node region using texture_copy pipeline
+     *
+     * @param  {IAttachmentObject} temp_attachment - コピー元のtemp FBO / Source temp FBO
+     * @param  {Node}              node            - コピー先のアトラスノード / Destination atlas node
+     * @return {void}
+     */
+    private copyTempToAtlasNode (temp_attachment: IAttachmentObject, node: Node): void
+    {
+        const atlas = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
+        if (!atlas || !atlas.texture || !temp_attachment.texture) {
+            return;
+        }
+
+        // アトラスはrgba8unormフォーマット（FrameBufferManagerCreateAttachmentUseCase参照）
+        // atlas_*テクスチャはcopyExternalImageToTextureとの互換性のためrgba8unormで作成される
+        const useMsaa = atlas.msaa && atlas.msaaTexture?.view;
+        const pipelineName = useMsaa ? "texture_copy_rgba8_msaa" : "texture_copy_rgba8";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
+        if (!pipeline || !bindGroupLayout) {
+            return;
+        }
+
+        // uniform: temp FBO全体をサンプリング（Y軸反転してアトラスに格納）
+        // アトラスのShape描画はFillVertexのyFlipSign=1.0によりY反転で格納されるため、
+        // cacheAsBitmapのコピーも同じ規則に合わせてY反転する
+        // UV.y = texCoord.y * scaleY + offsetY = texCoord.y * (-1) + 1 = 1 - texCoord.y
+        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer($atlasNodeCopyUniform);
+
+        // サンプラーとソーステクスチャ（MSAAリゾルブ済みのテクスチャ）
+        const sampler = this.textureManager.createSampler("container_atlas_copy", false);
+        const srcView = temp_attachment.texture.view;
+
+        const bindGroup = this.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": srcView }
+            ]
+        });
+
+        // アトラスのノード領域にレンダーパスを作成
+        const colorView = useMsaa ? atlas.msaaTexture!.view : atlas.texture.view;
+        const resolveTarget = useMsaa ? atlas.texture.view : null;
+
+        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+            colorView, 0, 0, 0, 0, "load", resolveTarget
+        );
+
+        const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+
+        // ビューポートとシザーでノード領域に制限
+        passEncoder.setViewport(node.x, node.y, node.w, node.h, 0, 1);
+        passEncoder.setScissorRect(node.x, node.y, node.w, node.h);
+
+        passEncoder.setPipeline(pipeline);
+        passEncoder.setBindGroup(0, bindGroup);
+        passEncoder.draw(6, 1, 0, 0);
+        passEncoder.end();
+
+        // アトラスレンダーパスインデックスをリセット（次のbeginNodeRenderingで新規作成させる）
+        this.nodeRenderPassAtlasIndex = -1;
     }
 
     /**

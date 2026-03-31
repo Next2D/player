@@ -108,11 +108,14 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
         expect(renderQueue.buffer[12]).toBe(0);
         expect(renderQueue.buffer[13]).toBe(0);
 
-        // tMatrix (a,b,c,d) — filterBoundsの後
-        expect(renderQueue.buffer[14]).toBe(1);
-        expect(renderQueue.buffer[15]).toBe(0);
-        expect(renderQueue.buffer[16]).toBe(0);
-        expect(renderQueue.buffer[17]).toBe(1);
+        // renderScaleX, renderScaleY
+        expect(renderQueue.buffer[14]).toBe(1); // renderScaleX
+        expect(renderQueue.buffer[15]).toBe(1); // renderScaleY
+        // parent matrix a, b, c, d
+        expect(renderQueue.buffer[16]).toBe(1); // matrix[0]
+        expect(renderQueue.buffer[17]).toBe(0); // matrix[1]
+        expect(renderQueue.buffer[18]).toBe(0); // matrix[2]
+        expect(renderQueue.buffer[19]).toBe(1); // matrix[3]
 
         // メインスレッドのキャッシュストアにキャッシュキーが設定される
         const cacheKey = $cacheStore.generateKeys(1, 1, colorTransform[7]);
@@ -141,12 +144,10 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
         const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
         const colorTransform = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
-        // キャッシュストアにキャッシュキーを事前設定（cache hitを模擬）
+        // キャッシュストアにキャッシュキーとローカルバウンズを事前設定（cache hitを模擬）
         const cacheKey = $cacheStore.generateKeys(1, 1, colorTransform[7]);
-        $cacheStore.set(
-            `${movieClip.instanceId}`,
-            "bitmapKey", cacheKey
-        );
+        $cacheStore.set(`${movieClip.instanceId}`, "bitmapKey", cacheKey);
+        $cacheStore.set(`${movieClip.instanceId}`, "bLocalBounds", new Float32Array([0, 0, 100, 80]));
 
         renderQueue.offset = 0;
         renderQueue.buffer.fill(0);
@@ -171,8 +172,7 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
         expect(renderQueue.buffer[8]).toBe(movieClip.instanceId);
 
         // cache hit の場合、子要素のデータは含まれない（offsetが小さい）
-        // cache miss時よりもoffsetが小さいことを確認
-        expect(offsetAfter - offsetBefore).toBeLessThan(30);
+        expect(offsetAfter - offsetBefore).toBeLessThan(35);
 
         // cleanup
         $cacheStore.removeById(`${movieClip.instanceId}`);
@@ -196,10 +196,8 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
         const cacheKey = $cacheStore.generateKeys(1, 1, colorTransform[7]);
 
         // キャッシュヒット状態を作る
-        $cacheStore.set(
-            `${movieClip.instanceId}`,
-            "bitmapKey", cacheKey
-        );
+        $cacheStore.set(`${movieClip.instanceId}`, "bitmapKey", cacheKey);
+        $cacheStore.set(`${movieClip.instanceId}`, "bLocalBounds", new Float32Array([0, 0, 100, 80]));
 
         // 子要素を変更
         movieClip.addChild(new Shape());
@@ -220,16 +218,16 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
         renderQueue.offset = 0;
     });
 
-    it("cacheAsBitmap: cache miss時にmatrix a/b/c/dがrenderScaleを使用（parentScaleを含む）", () =>
+    it("cacheAsBitmap: cache miss時にmatrix a/b/c/dがrenderScaleを使用（rendererScaleを含む）", () =>
     {
         const movieClip = new MovieClip();
         const childShape = new Shape();
         movieClip.addChild(childShape);
 
         movieClip.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
-        stage.rendererScale = 1;
+        // rendererScale=2でテスト（parentScaleではなくrendererScaleを使用）
+        stage.rendererScale = 2;
 
-        // 親matrixにscale=2を設定
         const matrix = new Float32Array([2, 0, 0, 2, 100, 50]);
         const colorTransform = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
@@ -240,19 +238,18 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
 
         execute(movieClip, [], matrix, colorTransform, 800, 600);
 
-        // matrix a/b/c/d はrenderScale = cacheScale * ownScale * parentScale
-        // ※ parentScaleにrendererScaleが含まれている（$renderMatrix起点）
-        // cacheScale=1, ownScale=1, parentScale=2(rs=1含む) → renderScale=2
-        expect(renderQueue.buffer[14]).toBe(2); // renderScaleX（parentScale=2を含む）
-        expect(renderQueue.buffer[15]).toBe(0);
-        expect(renderQueue.buffer[16]).toBe(0);
-        expect(renderQueue.buffer[17]).toBe(2); // renderScaleY（parentScale=2を含む）
+        // renderScaleX, renderScaleY = 2, parent matrix a,b,c,d
+        expect(renderQueue.buffer[14]).toBe(2); // renderScaleX
+        expect(renderQueue.buffer[15]).toBe(2); // renderScaleY
+        expect(renderQueue.buffer[16]).toBe(2); // matrix[0]
+        expect(renderQueue.buffer[17]).toBe(0); // matrix[1]
 
         // cleanup
         $cacheStore.removeById(`${movieClip.instanceId}`);
         movieClip.cacheAsBitmap = null;
         renderQueue.buffer.fill(0);
         renderQueue.offset = 0;
+        stage.rendererScale = 1;
     });
 
     it("cacheAsBitmap: cache hit時にもrenderScaleを使用", () =>
@@ -262,17 +259,23 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
         movieClip.addChild(childShape);
 
         movieClip.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
-        stage.rendererScale = 1;
+        // rendererScale=2でテスト
+        stage.rendererScale = 2;
 
-        // 親matrixにscale=2を設定
         const matrix = new Float32Array([2, 0, 0, 2, 100, 50]);
         const colorTransform = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
-        // renderScale = cacheScale(1) * ownScale(1) * parentScale(2) * stageScale(1) = 2
+        // renderScale = cacheScale(1) * ownScale(1) * rendererScale(2) = 2
         const cacheKey = $cacheStore.generateKeys(2, 2, colorTransform[7]);
         $cacheStore.set(
             `${movieClip.instanceId}`,
             "bitmapKey", cacheKey
+        );
+        // HIT高速パスに必要なローカルバウンズ
+        $cacheStore.set(
+            `${movieClip.instanceId}`,
+            "bLocalBounds",
+            new Float32Array([0, 0, 100, 80])
         );
 
         renderQueue.offset = 0;
@@ -283,15 +286,19 @@ describe("DisplayObjectContainerGenerateRenderQueueUseCase.js test", () =>
         // cache hit
         expect(renderQueue.buffer[7]).toBe(1);
 
-        // matrix a/b/c/d はrenderScale=2（parentScale=2を含む）
-        expect(renderQueue.buffer[14]).toBe(2);
-        expect(renderQueue.buffer[15]).toBe(0);
-        expect(renderQueue.buffer[16]).toBe(0);
-        expect(renderQueue.buffer[17]).toBe(2);
+        // renderScaleX, renderScaleY = cacheScale(1) * ownScale(1) * rendererScale(2) = 2
+        expect(renderQueue.buffer[14]).toBe(2); // renderScaleX
+        expect(renderQueue.buffer[15]).toBe(2); // renderScaleY
+        // parent matrix a, b, c, d
+        expect(renderQueue.buffer[16]).toBe(2); // matrix[0] = parentScale
+        expect(renderQueue.buffer[17]).toBe(0); // matrix[1]
+        expect(renderQueue.buffer[18]).toBe(0); // matrix[2]
+        expect(renderQueue.buffer[19]).toBe(2); // matrix[3] = parentScale
 
         // cleanup
         $cacheStore.removeById(`${movieClip.instanceId}`);
         movieClip.cacheAsBitmap = null;
+        stage.rendererScale = 1;
         renderQueue.buffer.fill(0);
         renderQueue.offset = 0;
     });

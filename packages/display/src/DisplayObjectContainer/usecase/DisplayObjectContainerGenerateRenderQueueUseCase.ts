@@ -14,6 +14,7 @@ import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../..
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { execute as displayObjectContainerGetLayerBoundsUseCase } from "./DisplayObjectContainerGetLayerBoundsUseCase";
 import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerCalcBoundsMatrixUseCase";
+import { stage } from "../../Stage";
 import { renderQueue } from "@next2d/render-queue";
 import { $cacheStore } from "@next2d/cache";
 import {
@@ -133,22 +134,14 @@ export const execute = <P extends DisplayObjectContainer>(
             ? Math.sqrt(rawMatrix[2] * rawMatrix[2] + rawMatrix[3] * rawMatrix[3])
             : 1;
 
-        // 親matrixからスケール成分を抽出
-        // matrixは$renderMatrix(rendererScale含む)を起点とした蓄積行列なので
-        // parentScaleXには既にrendererScaleが含まれている
-        // 親の移動(tx,ty)はキャッシュに影響しないが、スケール変更はテクスチャ再生成が必要
-        const parentScaleX = matrix
-            ? Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1])
-            : 1;
-        const parentScaleY = matrix
-            ? Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3])
-            : 1;
+        // Shape/TextFieldと同様にstage.rendererScaleを使用
+        // matrixから抽出すると親のアニメーション（スケール変動）でキーが揺れて
+        // 毎フレームcache MISSが発生する原因になる
+        const rendererScale = stage.rendererScale;
 
-        // コンポジットスケール = cacheScale × ownScale × parentScale
-        // ※ parentScaleに既にrendererScaleが含まれるため追加乗算不要
-        // ※ フィルターパスのtMatrix[0..3]と同等の座標系（キャンバスピクセル座標）
-        const renderScaleX = cacheScaleX * ownScaleX * parentScaleX;
-        const renderScaleY = cacheScaleY * ownScaleY * parentScaleY;
+        // コンポジットスケール = cacheScale × ownScale × rendererScale
+        const renderScaleX = cacheScaleX * ownScaleX * rendererScale;
+        const renderScaleY = cacheScaleY * ownScaleY * rendererScale;
         const xRounded = Math.round(renderScaleX * 100) / 100;
         const yRounded = Math.round(renderScaleY * 100) / 100;
 
@@ -176,35 +169,46 @@ export const execute = <P extends DisplayObjectContainer>(
             }
         }
 
-        // スクリーン座標でのレイヤー位置（描画位置として使用）
-        const screenLayerBounds = displayObjectContainerGetLayerBoundsUseCase(
-            display_object_container, matrix
-        );
-
         if (bitmapCache) {
 
-            // cacheAsBitmap cache hit: キャッシュされたテクスチャを描画して早期return
-            // 子要素データは不要（レンダラーがキャッシュテクスチャを再利用）
-            renderQueue.push(1,
-                Math.ceil(Math.abs(screenLayerBounds[2] - screenLayerBounds[0])),
-                Math.ceil(Math.abs(screenLayerBounds[3] - screenLayerBounds[1])),
-                2, 1, display_object_container.instanceId, bitmapCacheKey,
-                cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
-                renderScaleX, 0, 0, renderScaleY, screenLayerBounds[0], screenLayerBounds[1],
-                tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
-                tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
-            );
+            // cacheAsBitmap cache hit: 子要素走査をスキップして高速パス
+            // Shapeと同様に親matrixをレンダラーに渡し、描画時にcacheScaleで補正
+            const cachedLocalBounds = $cacheStore.get(
+                `${display_object_container.instanceId}`, "bLocalBounds"
+            ) as Float32Array | null;
 
-            $poolBoundsArray(screenLayerBounds);
-            $poolBoundsArray(cacheFilterBounds);
+            if (cachedLocalBounds) {
+                // ローカルバウンズ原点のスクリーン座標を計算（Shapeと同じ方式）
+                const localOriginX = cachedLocalBounds[0] / (cacheScaleX * rendererScale);
+                const localOriginY = cachedLocalBounds[1] / (cacheScaleY * rendererScale);
+                const screenX = matrix[0] * localOriginX + matrix[2] * localOriginY + matrix[4];
+                const screenY = matrix[1] * localOriginX + matrix[3] * localOriginY + matrix[5];
 
-            if (tColorTransform !== color_transform) {
-                ColorTransform.release(tColorTransform);
+                // Shapeと同様にmatrixにcacheScaleを乗算して送る
+                // レンダラーで matrix/renderScale → cacheScale成分が反映される
+                renderQueue.push(1,
+                    0, 0, // layerWidth/Height: HIT時は未使用
+                    2, 1, display_object_container.instanceId, bitmapCacheKey,
+                    cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
+                    renderScaleX, renderScaleY,
+                    matrix[0] * cacheScaleX, matrix[1] * cacheScaleX,
+                    matrix[2] * cacheScaleY, matrix[3] * cacheScaleY,
+                    screenX, screenY,
+                    tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+                    tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
+                );
+
+                $poolBoundsArray(cacheFilterBounds);
+
+                if (tColorTransform !== color_transform) {
+                    ColorTransform.release(tColorTransform);
+                }
+                if (tMatrix !== matrix) {
+                    Matrix.release(tMatrix);
+                }
+                return ;
             }
-            if (tMatrix !== matrix) {
-                Matrix.release(tMatrix);
-            }
-            return ;
+            // cachedLocalBoundsがない場合はMISSにフォールスルー
         }
 
         // cacheAsBitmap cache miss: 初回描画
@@ -226,12 +230,10 @@ export const execute = <P extends DisplayObjectContainer>(
             }
         }
 
-        // キャッシュ描画用の親matrix: cacheScale × parentScale（対角行列）
-        // parentScaleに既にrendererScaleが含まれるため追加乗算不要
-        // フィルターパスのlayerBoundsと同じキャンバスピクセル座標系
+        // キャッシュ描画用の親matrix: cacheScale × rendererScale（対角行列）
         const cacheParentMatrix = $getFloat32Array6(
-            cacheScaleX * parentScaleX, 0,
-            0, cacheScaleY * parentScaleY,
+            cacheScaleX * rendererScale, 0,
+            0, cacheScaleY * rendererScale,
             0, 0
         );
         const localLayerBounds = displayObjectContainerGetLayerBoundsUseCase(
@@ -241,12 +243,21 @@ export const execute = <P extends DisplayObjectContainer>(
         const localLayerWidth = Math.ceil(Math.abs(localLayerBounds[2] - localLayerBounds[0]));
         const localLayerHeight = Math.ceil(Math.abs(localLayerBounds[3] - localLayerBounds[1]));
 
+        // Shapeと同じ方式でスクリーン座標を計算
+        const localOriginX = localLayerBounds[0] / (cacheScaleX * rendererScale);
+        const localOriginY = localLayerBounds[1] / (cacheScaleY * rendererScale);
+        const missScreenX = matrix[0] * localOriginX + matrix[2] * localOriginY + matrix[4];
+        const missScreenY = matrix[1] * localOriginX + matrix[3] * localOriginY + matrix[5];
+
         renderQueue.push(
             1,
             localLayerWidth, localLayerHeight,
             2, 0, display_object_container.instanceId, bitmapCacheKey,
             cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
-            renderScaleX, 0, 0, renderScaleY, screenLayerBounds[0], screenLayerBounds[1],
+            renderScaleX, renderScaleY,
+            matrix[0] * cacheScaleX, matrix[1] * cacheScaleX,
+            matrix[2] * cacheScaleY, matrix[3] * cacheScaleY,
+            missScreenX, missScreenY,
             tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
             tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
             cacheFilterParams.length
@@ -292,8 +303,14 @@ export const execute = <P extends DisplayObjectContainer>(
         }
         tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
 
+        // HIT時の高速パス用にローカルバウンズをキャッシュ（poolする前に保存）
+        $cacheStore.set(
+            `${display_object_container.instanceId}`,
+            "bLocalBounds",
+            new Float32Array([localLayerBounds[0], localLayerBounds[1], localLayerBounds[2], localLayerBounds[3]])
+        );
+
         $poolBoundsArray(localLayerBounds);
-        $poolBoundsArray(screenLayerBounds);
         $poolBoundsArray(cacheFilterBounds);
 
         $cacheStore.set(
