@@ -101,8 +101,6 @@ export const execute = (
             // 初回描画: フィルターパラメータをスキップ（アトラスパスでは不使用）
             index += render_queue[index] + 1;
 
-            // containerBeginLayer → 子要素描画 → containerEndLayerでキャッシュ
-
         } else if (useFilter) {
             // フィルターパス: filterCache/uniqueKey/filterKey を読む
             const filterCache = Boolean(render_queue[index++]);
@@ -152,7 +150,7 @@ export const execute = (
     // コンテナのフィルター/ブレンド用にレイヤーを開始
     let cacheNode: Node | null = null;
     if (useCacheAsBitmap) {
-        // cacheAsBitmap: アトラスに直接描画（temp FBO不要）
+        // cacheAsBitmap: temp FBO作成→子要素描画→アトラスノードへコピー
         cacheNode = $context.containerBeginAtlasNode(layerWidth, layerHeight);
     } else if (useLayer) {
         $context.containerBeginLayer(layerWidth, layerHeight);
