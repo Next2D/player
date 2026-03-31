@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Sprite cacheAsBitmap Y-flip test</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // Y軸反転を検出するための非対称コンテンツ
+        // 上部: 赤 (0,0,100,30)
+        // 下部: 青 (0,50,100,30)
+        // 反転すると赤と青の位置が入れ替わる
+        const createAsymmetricSprite = (x, y) => {
+            const sprite = new Sprite();
+            sprite.x = x;
+            sprite.y = y;
+
+            // 上部に赤い矩形
+            const top = new Shape();
+            top.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 100, 30)
+                .endFill();
+            sprite.addChild(top);
+
+            // 下部に青い矩形
+            const bottom = new Shape();
+            bottom.graphics
+                .beginFill(0x0000FF, 1.0)
+                .drawRect(0, 50, 100, 30)
+                .endFill();
+            sprite.addChild(bottom);
+
+            // 中央に緑の小さい丸（位置の目印）
+            const center = new Shape();
+            center.graphics
+                .beginFill(0x00FF00, 1.0)
+                .drawCircle(50, 15, 10)
+                .endFill();
+            sprite.addChild(center);
+
+            return sprite;
+        };
+
+        // ===== 参照: cacheAsBitmapなし =====
+        const noCache = createAsymmetricSprite(50, 50);
+        root.addChild(noCache);
+
+        // ===== cacheAsBitmap等倍 =====
+        const cached = createAsymmetricSprite(200, 50);
+        cached.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(cached);
+
+        // ===== cacheAsBitmap + スケール =====
+        const cachedScaled = createAsymmetricSprite(350, 50);
+        cachedScaled.scaleX = 1.5;
+        cachedScaled.scaleY = 1.5;
+        cachedScaled.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(cachedScaled);
+
+        // ===== cacheAsBitmap + 位置オフセット =====
+        const cachedOffset = createAsymmetricSprite(50, 200);
+        cachedOffset.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(cachedOffset);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

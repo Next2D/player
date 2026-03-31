@@ -39,4 +39,11 @@ test.describe("Sprite テスト", () => {
 
         await expect(page).toHaveScreenshot("sprite-cache-as-bitmap-hit.png");
     });
+
+    test("Sprite cacheAsBitmap Y-flip（Y軸反転検出テスト）", async ({ page }) => {
+        await page.goto("/e2e/pages/sprite/cache-as-bitmap-yflip.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("sprite-cache-as-bitmap-yflip.png");
+    });
 });
