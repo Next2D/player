@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField htmlText</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 900, 60);
+        const { TextField, TextFormat } = next2d.text;
+
+        let yPos = 10;
+        const LEFT = 10;
+        const RIGHT = 410;
+
+        // ===== 1. <b> 太字タグ =====
+        const bold = new TextField();
+        bold.htmlText = "<font color='#FFFFFF' size='18'><b>Bold Text 太字</b></font>";
+        bold.x = LEFT;
+        bold.y = yPos;
+        bold.width = 380;
+        bold.height = 35;
+        bold.multiline = true;
+        root.addChild(bold);
+
+        // ===== 2. <i> 斜体タグ =====
+        const italic = new TextField();
+        italic.htmlText = "<font color='#FFFFFF' size='18'><i>Italic Text 斜体</i></font>";
+        italic.x = RIGHT;
+        italic.y = yPos;
+        italic.width = 380;
+        italic.height = 35;
+        italic.multiline = true;
+        root.addChild(italic);
+
+        yPos += 45;
+
+        // ===== 3. <u> 下線タグ =====
+        const underline = new TextField();
+        underline.htmlText = "<font color='#FFFFFF' size='18'><u>Underline Text 下線</u></font>";
+        underline.x = LEFT;
+        underline.y = yPos;
+        underline.width = 380;
+        underline.height = 35;
+        underline.multiline = true;
+        root.addChild(underline);
+
+        // ===== 4. <b><i><u> 装飾組み合わせ =====
+        const combined = new TextField();
+        combined.htmlText = "<font color='#FFFFFF' size='18'><b><i><u>Bold+Italic+Underline</u></i></b></font>";
+        combined.x = RIGHT;
+        combined.y = yPos;
+        combined.width = 380;
+        combined.height = 35;
+        combined.multiline = true;
+        root.addChild(combined);
+
+        yPos += 45;
+
+        // ===== 5. <font color> 色指定 =====
+        const fontColor = new TextField();
+        fontColor.htmlText = "<font color='#FF0000' size='16'>Red</font> <font color='#00FF00' size='16'>Green</font> <font color='#0000FF' size='16'>Blue</font> <font color='#FFFF00' size='16'>Yellow</font>";
+        fontColor.x = LEFT;
+        fontColor.y = yPos;
+        fontColor.width = 380;
+        fontColor.height = 35;
+        fontColor.multiline = true;
+        root.addChild(fontColor);
+
+        // ===== 6. <font size> サイズバリエーション =====
+        const fontSize = new TextField();
+        fontSize.htmlText = "<font color='#FFFFFF' size='10'>10px</font> <font color='#FFFFFF' size='16'>16px</font> <font color='#FFFFFF' size='24'>24px</font> <font color='#FFFFFF' size='36'>36px</font>";
+        fontSize.x = RIGHT;
+        fontSize.y = yPos;
+        fontSize.width = 380;
+        fontSize.height = 50;
+        fontSize.multiline = true;
+        root.addChild(fontSize);
+
+        yPos += 55;
+
+        // ===== 7. <font face> フォント指定 =====
+        const fontFace = new TextField();
+        fontFace.htmlText = "<font face='serif' color='#FFFFFF' size='18'>Serif Font</font>";
+        fontFace.x = LEFT;
+        fontFace.y = yPos;
+        fontFace.width = 380;
+        fontFace.height = 35;
+        fontFace.multiline = true;
+        root.addChild(fontFace);
+
+        // ===== 8. <font> 複数属性同時指定 =====
+        const fontMulti = new TextField();
+        fontMulti.htmlText = "<font face='monospace' color='#00FFFF' size='20'>Mono Cyan 20</font>";
+        fontMulti.x = RIGHT;
+        fontMulti.y = yPos;
+        fontMulti.width = 380;
+        fontMulti.height = 35;
+        fontMulti.multiline = true;
+        root.addChild(fontMulti);
+
+        yPos += 45;
+
+        // ===== 9. <br> 改行タグ =====
+        const brTag = new TextField();
+        brTag.htmlText = "<font color='#FFFFFF' size='14'>Line1<br>Line2<br>Line3</font>";
+        brTag.x = LEFT;
+        brTag.y = yPos;
+        brTag.width = 380;
+        brTag.height = 65;
+        brTag.multiline = true;
+        root.addChild(brTag);
+
+        // ===== 10. <br/> 自己閉じ改行 =====
+        const brSelfClose = new TextField();
+        brSelfClose.htmlText = "<font color='#FFCC00' size='14'>First<br/>Second<br/>Third</font>";
+        brSelfClose.x = RIGHT;
+        brSelfClose.y = yPos;
+        brSelfClose.width = 380;
+        brSelfClose.height = 65;
+        brSelfClose.multiline = true;
+        root.addChild(brSelfClose);
+
+        yPos += 75;
+
+        // ===== 11. <p> 段落タグ =====
+        const pTag = new TextField();
+        pTag.htmlText = "<p><font color='#FF8800' size='16'>Paragraph 1</font></p><p><font color='#88FF00' size='16'>Paragraph 2</font></p>";
+        pTag.x = LEFT;
+        pTag.y = yPos;
+        pTag.width = 380;
+        pTag.height = 55;
+        pTag.multiline = true;
+        root.addChild(pTag);
+
+        // ===== 12. <p align> 段落アライメント =====
+        const pAlign = new TextField();
+        pAlign.htmlText = "<p align='left'><font color='#FFFFFF' size='14'>Left</font></p><p align='center'><font color='#FFFFFF' size='14'>Center</font></p><p align='right'><font color='#FFFFFF' size='14'>Right</font></p>";
+        pAlign.x = RIGHT;
+        pAlign.y = yPos;
+        pAlign.width = 380;
+        pAlign.height = 70;
+        pAlign.multiline = true;
+        pAlign.border = true;
+        pAlign.borderColor = 0x666666;
+        root.addChild(pAlign);
+
+        yPos += 80;
+
+        // ===== 13. <div> タグ =====
+        const divTag = new TextField();
+        divTag.htmlText = "<div><font color='#FF44FF' size='16'>Inside DIV</font></div><div><font color='#44FFFF' size='16'>Another DIV</font></div>";
+        divTag.x = LEFT;
+        divTag.y = yPos;
+        divTag.width = 380;
+        divTag.height = 55;
+        divTag.multiline = true;
+        root.addChild(divTag);
+
+        // ===== 14. <span style> インラインスタイル =====
+        const spanStyle = new TextField();
+        spanStyle.htmlText = "<span style='font-size: 20px; color: #FF6600;'>Styled Span</span>";
+        spanStyle.x = RIGHT;
+        spanStyle.y = yPos;
+        spanStyle.width = 380;
+        spanStyle.height = 35;
+        spanStyle.multiline = true;
+        root.addChild(spanStyle);
+
+        yPos += 60;
+
+        // ===== 15. style 複数プロパティ =====
+        const styleMulti = new TextField();
+        styleMulti.htmlText = "<span style='font-size: 18px; color: #00FF88; letter-spacing: 3px;'>Letter Spacing 3</span>";
+        styleMulti.x = LEFT;
+        styleMulti.y = yPos;
+        styleMulti.width = 380;
+        styleMulti.height = 35;
+        styleMulti.multiline = true;
+        root.addChild(styleMulti);
+
+        // ===== 16. style font-weight/font-style/text-decoration =====
+        const styleDecoration = new TextField();
+        styleDecoration.htmlText = "<span style='font-size: 16px; color: #FFFFFF; font-weight: bold; font-style: italic; text-decoration: underline;'>CSS Styled</span>";
+        styleDecoration.x = RIGHT;
+        styleDecoration.y = yPos;
+        styleDecoration.width = 380;
+        styleDecoration.height = 35;
+        styleDecoration.multiline = true;
+        root.addChild(styleDecoration);
+
+        yPos += 45;
+
+        // ===== 17. ネストしたタグ =====
+        const nested = new TextField();
+        nested.htmlText = "<font color='#FFFFFF' size='16'><b>Bold <i>and Italic <u>and Underline</u></i></b></font>";
+        nested.x = LEFT;
+        nested.y = yPos;
+        nested.width = 380;
+        nested.height = 35;
+        nested.multiline = true;
+        root.addChild(nested);
+
+        // ===== 18. 異なるサイズの混在テキスト =====
+        const mixedSize = new TextField();
+        mixedSize.htmlText = "<font color='#FFFFFF' size='12'>small</font><font color='#FFFFFF' size='28'>BIG</font><font color='#FFFFFF' size='12'>small</font>";
+        mixedSize.x = RIGHT;
+        mixedSize.y = yPos;
+        mixedSize.width = 380;
+        mixedSize.height = 45;
+        mixedSize.multiline = true;
+        root.addChild(mixedSize);
+
+        yPos += 50;
+
+        // ===== 19. 色のグラデーション風テキスト =====
+        const gradient = new TextField();
+        gradient.htmlText = "<font size='18'><font color='#FF0000'>R</font><font color='#FF4400'>a</font><font color='#FF8800'>i</font><font color='#FFCC00'>n</font><font color='#FFFF00'>b</font><font color='#88FF00'>o</font><font color='#00FF00'>w</font></font>";
+        gradient.x = LEFT;
+        gradient.y = yPos;
+        gradient.width = 380;
+        gradient.height = 35;
+        gradient.multiline = true;
+        root.addChild(gradient);
+
+        // ===== 20. 日本語htmlText =====
+        const jpHtml = new TextField();
+        jpHtml.htmlText = "<font color='#FFFFFF' size='18'><b>太字</b>と<i>斜体</i>と<u>下線</u>の混在</font>";
+        jpHtml.x = RIGHT;
+        jpHtml.y = yPos;
+        jpHtml.width = 380;
+        jpHtml.height = 35;
+        jpHtml.multiline = true;
+        root.addChild(jpHtml);
+
+        yPos += 45;
+
+        // ===== 21. 大きいフォントサイズ =====
+        const bigFont = new TextField();
+        bigFont.htmlText = "<font color='#FF3366' size='48'>Big!</font>";
+        bigFont.x = LEFT;
+        bigFont.y = yPos;
+        bigFont.width = 380;
+        bigFont.height = 65;
+        bigFont.multiline = true;
+        root.addChild(bigFont);
+
+        // ===== 22. 小さいフォントサイズ =====
+        const smallFont = new TextField();
+        smallFont.htmlText = "<font color='#AAAAAA' size='8'>Tiny text 8px</font> <font color='#CCCCCC' size='10'>Small 10px</font> <font color='#FFFFFF' size='12'>Normal 12px</font>";
+        smallFont.x = RIGHT;
+        smallFont.y = yPos;
+        smallFont.width = 380;
+        smallFont.height = 35;
+        smallFont.multiline = true;
+        root.addChild(smallFont);
+
+        yPos += 70;
+
+        // ===== 23. <p> + <font> + 装飾の複合 =====
+        const complexHtml = new TextField();
+        complexHtml.htmlText = "<p><font face='serif' color='#FF9900' size='16'><b>Title</b></font></p><p><font color='#CCCCCC' size='12'>Description text with <u>underline</u> and <i>italic</i></font></p>";
+        complexHtml.x = LEFT;
+        complexHtml.y = yPos;
+        complexHtml.width = 380;
+        complexHtml.height = 55;
+        complexHtml.multiline = true;
+        root.addChild(complexHtml);
+
+        // ===== 24. style margin-left / margin-right =====
+        const styleMargin = new TextField();
+        styleMargin.htmlText = "<p><span style='font-size: 14px; color: #FFFFFF; margin-left: 20px;'>Left Margin 20</span></p><p><span style='font-size: 14px; color: #FFFFFF; margin-right: 20px;'>Right Margin 20</span></p>";
+        styleMargin.x = RIGHT;
+        styleMargin.y = yPos;
+        styleMargin.width = 380;
+        styleMargin.height = 55;
+        styleMargin.multiline = true;
+        styleMargin.border = true;
+        styleMargin.borderColor = 0x666666;
+        root.addChild(styleMargin);
+
+        yPos += 65;
+
+        // ===== 25. 背景・枠線 + htmlText =====
+        const htmlWithBg = new TextField();
+        htmlWithBg.htmlText = "<font color='#FFFFFF' size='16'><b>With</b> <font color='#00FF00'>Background</font></font>";
+        htmlWithBg.x = LEFT;
+        htmlWithBg.y = yPos;
+        htmlWithBg.width = 380;
+        htmlWithBg.height = 35;
+        htmlWithBg.multiline = true;
+        htmlWithBg.background = true;
+        htmlWithBg.backgroundColor = 0x003366;
+        htmlWithBg.border = true;
+        htmlWithBg.borderColor = 0x0066CC;
+        root.addChild(htmlWithBg);
+
+        // ===== 26. wordWrap + htmlText =====
+        const htmlWordWrap = new TextField();
+        htmlWordWrap.htmlText = "<font color='#FFFFFF' size='14'>This is a <b>long htmlText</b> that should <font color='#FF0000'>wrap</font> to multiple lines when <i>wordWrap</i> is enabled.</font>";
+        htmlWordWrap.x = RIGHT;
+        htmlWordWrap.y = yPos;
+        htmlWordWrap.width = 250;
+        htmlWordWrap.height = 65;
+        htmlWordWrap.multiline = true;
+        htmlWordWrap.wordWrap = true;
+        htmlWordWrap.border = true;
+        htmlWordWrap.borderColor = 0x666666;
+        root.addChild(htmlWordWrap);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

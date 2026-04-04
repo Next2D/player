@@ -8,6 +8,7 @@
  * @param {number} instance_count - インスタンス数
  * @param {number} first_vertex - 開始頂点インデックス
  * @param {number} first_instance - 開始インスタンスインデックス
+ * @return {void}
  */
 export const execute = (
     device: GPUDevice,

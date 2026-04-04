@@ -13,31 +13,54 @@ import {
 } from "../../Mask";
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
+/**
+ * @description キャッシュ済みバインドグループ
+ *              Cached bind group
+ */
 let $cachedBindGroup: GPUBindGroup | null = null;
+/**
+ * @description キャッシュ済みアトラステクスチャビュー
+ *              Cached atlas texture view
+ */
 let $cachedAtlasView: GPUTextureView | null = null;
 
+/**
+ * @description Indirect描画を使用したインスタンス描画を実行する
+ *              Executes instanced drawing with indirect draw support
+ * @param {GPUDevice} device GPUデバイス / GPU device
+ * @param {GPUCommandEncoder} command_encoder コマンドエンコーダ / Command encoder
+ * @param {GPURenderPassEncoder | null} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {IAttachmentObject} main_attachment メインアタッチメント / Main attachment
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @param {FrameBufferManager} frame_buffer_manager フレームバッファマネージャ / Frame buffer manager
+ * @param {TextureManager} texture_manager テクスチャマネージャ / Texture manager
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @param {boolean} use_indirect Indirect描画使用フラグ / Whether to use indirect drawing
+ * @param {boolean} use_storage_buffer StorageBuffer使用フラグ / Whether to use storage buffer
+ * @return {GPURenderPassEncoder | null} レンダーパスエンコーダまたはnull / Render pass encoder or null
+ */
 export const execute = (
     device: GPUDevice,
-    commandEncoder: GPUCommandEncoder,
-    renderPassEncoder: GPURenderPassEncoder | null,
-    mainAttachment: IAttachmentObject,
-    bufferManager: BufferManager,
-    frameBufferManager: FrameBufferManager,
-    textureManager: TextureManager,
-    pipelineManager: PipelineManager,
-    useIndirect: boolean = true,
-    useStorageBuffer: boolean = true
+    command_encoder: GPUCommandEncoder,
+    render_pass_encoder: GPURenderPassEncoder | null,
+    main_attachment: IAttachmentObject,
+    buffer_manager: BufferManager,
+    frame_buffer_manager: FrameBufferManager,
+    texture_manager: TextureManager,
+    pipeline_manager: PipelineManager,
+    use_indirect: boolean = true,
+    use_storage_buffer: boolean = true
 ): GPURenderPassEncoder | null => {
     const shaderManager = getInstancedShaderManager();
 
     if (shaderManager.count === 0) {
-        return renderPassEncoder;
+        return render_pass_encoder;
     }
 
     // 既存のレンダーパスを終了
-    if (renderPassEncoder) {
-        renderPassEncoder.end();
-        renderPassEncoder = null;
+    if (render_pass_encoder) {
+        render_pass_encoder.end();
+        render_pass_encoder = null;
     }
 
     const isMasked = $isMaskTestEnabled();
@@ -66,11 +89,11 @@ export const execute = (
     };
 
     const pipelineName = getPipelineName(blendMode);
-    const normalPipeline = pipelineManager.getPipeline(pipelineName);
-    const maskedPipeline = pipelineManager.getPipeline("instanced_masked");
+    const normalPipeline = pipeline_manager.getPipeline(pipelineName);
+    const maskedPipeline = pipeline_manager.getPipeline("instanced_masked");
 
     const useStencil = isMasked && maskedPipeline
-        && (mainAttachment.msaaStencil?.view || mainAttachment.stencil?.view);
+        && (main_attachment.msaaStencil?.view || main_attachment.stencil?.view);
 
     const pipeline = useStencil ? maskedPipeline : normalPipeline;
 
@@ -84,32 +107,32 @@ export const execute = (
 
     if (useStencil) {
         // MSAA対応
-        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
-        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
-        const stencilView = useMsaa && mainAttachment.msaaStencil?.view
-            ? mainAttachment.msaaStencil.view : mainAttachment.stencil!.view;
-        const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
+        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
+        const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
+        const stencilView = useMsaa && main_attachment.msaaStencil?.view
+            ? main_attachment.msaaStencil.view : main_attachment.stencil!.view;
+        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
 
-        const renderPassDescriptor = frameBufferManager.createStencilRenderPassDescriptor(
+        const renderPassDescriptor = frame_buffer_manager.createStencilRenderPassDescriptor(
             colorView,
             stencilView,
             "load",
             "load",
             resolveTarget
         );
-        passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+        passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     } else {
         // 通常のレンダーパス（MSAA対応）
-        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
-        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture!.view;
-        const resolveTarget = useMsaa ? mainAttachment.texture!.view : null;
-        const renderPassDescriptor = frameBufferManager.createRenderPassDescriptor(
+        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
+        const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
+        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
+        const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
             colorView,
             0, 0, 0, 0,
             "load",
             resolveTarget
         );
-        passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+        passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
     }
 
     passEncoder.setPipeline(pipeline);
@@ -127,22 +150,22 @@ export const execute = (
 
     // インスタンスバッファを作成または取得
     let instanceBuffer: GPUBuffer;
-    if (useStorageBuffer) {
+    if (use_storage_buffer) {
         // Storage Buffer最適化: プールから再利用してメモリアロケーション削減
         // Storage BufferはVERTEXフラグ付きで作成されているため、setVertexBufferで使用可能
-        instanceBuffer = bufferManager.acquireStorageBuffer(instanceData.byteLength);
-        bufferManager.writeStorageBuffer(instanceBuffer, instanceData);
+        instanceBuffer = buffer_manager.acquireStorageBuffer(instanceData.byteLength);
+        buffer_manager.writeStorageBuffer(instanceBuffer, instanceData);
     } else {
         // 従来方式: プールから再利用
-        instanceBuffer = bufferManager.acquireVertexBuffer(instanceData.byteLength, instanceData);
+        instanceBuffer = buffer_manager.acquireVertexBuffer(instanceData.byteLength, instanceData);
     }
 
     // 頂点バッファ（矩形）を取得（キャッシュ済み）
-    const vertexBuffer = bufferManager.getUnitRectBuffer();
+    const vertexBuffer = buffer_manager.getUnitRectBuffer();
 
     // アトラステクスチャをバインド（複数アトラス対応）
     // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
-    const atlasAttachment = $getAtlasAttachmentObject() || frameBufferManager.getAttachment("atlas");
+    const atlasAttachment = $getAtlasAttachmentObject() || frame_buffer_manager.getAttachment("atlas");
     if (!atlasAttachment) {
         console.error("[WebGPU] Atlas attachment not found");
         passEncoder.end();
@@ -150,9 +173,9 @@ export const execute = (
     }
 
     // アトラス用サンプラーを取得（キャッシュ済み）
-    const sampler = textureManager.createSampler("atlas_instanced_sampler", false);
+    const sampler = texture_manager.createSampler("atlas_instanced_sampler", false);
 
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("instanced");
+    const bindGroupLayout = pipeline_manager.getBindGroupLayout("instanced");
     if (!bindGroupLayout) {
         console.error("[WebGPU] Instanced bind group layout not found");
         passEncoder.end();
@@ -183,13 +206,13 @@ export const execute = (
     passEncoder.setVertexBuffer(1, instanceBuffer);
     passEncoder.setBindGroup(0, $cachedBindGroup);
 
-    if (useIndirect) {
+    if (use_indirect) {
         // Indirect Drawing: CPU-GPU間のオーバーヘッドを削減
         // 注意: 1フレーム内で複数回呼び出される場合があるため、
         // 毎回新しいIndirect Bufferを作成する必要がある
         // （共有バッファを使うとqueue.writeBufferの更新が全てGPU実行前に行われ、
         // 全てのdrawIndirectが最後の更新値を使用してしまう）
-        const indirectBuffer = bufferManager.createIndirectBuffer(
+        const indirectBuffer = buffer_manager.createIndirectBuffer(
             6,                    // vertexCount (2 triangles = 6 vertices)
             shaderManager.count,  // instanceCount
             0,                    // firstVertex

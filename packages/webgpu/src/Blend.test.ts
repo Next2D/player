@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach } from "vitest";
 import {
     $setCurrentBlendMode,
     $currentBlendMode,
-    $setFuncCode,
-    $funcCode,
     $getBlendState
 } from "./Blend";
 
@@ -12,7 +10,6 @@ describe("Blend", () =>
     beforeEach(() =>
     {
         $setCurrentBlendMode("normal");
-        $setFuncCode(0);
     });
 
     describe("blend mode", () =>
@@ -39,24 +36,6 @@ describe("Blend", () =>
 
             $setCurrentBlendMode("copy");
             expect($currentBlendMode).toBe("copy");
-        });
-    });
-
-    describe("func code", () =>
-    {
-        it("should default to 0", () =>
-        {
-            $setFuncCode(0);
-            expect($funcCode).toBe(0);
-        });
-
-        it("should set and get func code", () =>
-        {
-            $setFuncCode(123);
-            expect($funcCode).toBe(123);
-
-            $setFuncCode(456);
-            expect($funcCode).toBe(456);
         });
     });
 

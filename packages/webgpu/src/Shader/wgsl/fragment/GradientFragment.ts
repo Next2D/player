@@ -1,4 +1,11 @@
-const GradientUniformsAndSpread = `
+/**
+ * @description グラデーションのUniform定義とスプレッドモード処理のWGSLコード
+ *              WGSL code for gradient uniform definitions and spread mode handling
+ *
+ * @type {string}
+ * @constant
+ */
+const $GradientUniformsAndSpread = `
 struct GradientUniforms {
     inverseMatrix: mat3x3<f32>,
     gradientType: f32,
@@ -26,7 +33,14 @@ fn applySpread(t: f32) -> f32 {
 }
 `;
 
-const GradientCalculation = `
+/**
+ * @description 線形・放射グラデーションのt値計算WGSLコード
+ *              WGSL code for calculating t value in linear and radial gradients
+ *
+ * @type {string}
+ * @constant
+ */
+const $GradientCalculation = `
     var t: f32;
     if (GRADIENT_TYPE == 0u) {
         let a = gradient.linearPoints.xy;
@@ -69,6 +83,13 @@ const GradientCalculation = `
     let gradientColor = textureSampleLevel(gradientTexture, gradientSampler, vec2<f32>(t, 0.5), 0);
 `;
 
+/**
+ * @description グラデーション塗りフラグメントシェーダー（頂点カラー乗算付き）
+ *              Gradient fill fragment shader with vertex color multiplication
+ *
+ * @type {string}
+ * @constant
+ */
 export const GradientFillFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
@@ -76,17 +97,24 @@ struct VertexOutput {
     @location(1) bezier: vec2<f32>,
     @location(2) color: vec4<f32>,
 }
-${GradientUniformsAndSpread}
+${$GradientUniformsAndSpread}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let p = input.v_uv;
-${GradientCalculation}
+${$GradientCalculation}
     let result = gradientColor * input.color;
     return vec4<f32>(result.rgb * result.a, result.a);
 }
 `;
 
+/**
+ * @description ステンシル用グラデーション塗りフラグメントシェーダー
+ *              Gradient fill fragment shader for stencil rendering
+ *
+ * @type {string}
+ * @constant
+ */
 export const GradientFillStencilFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
@@ -94,28 +122,35 @@ struct VertexOutput {
     @location(1) bezier: vec2<f32>,
     @location(2) color: vec4<f32>,
 }
-${GradientUniformsAndSpread}
+${$GradientUniformsAndSpread}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let p = input.v_uv;
-${GradientCalculation}
+${$GradientCalculation}
     return vec4<f32>(gradientColor.rgb * gradientColor.a, gradientColor.a);
 }
 `;
 
+/**
+ * @description テクスチャ座標ベースのグラデーションフラグメントシェーダー
+ *              Texture coordinate-based gradient fragment shader
+ *
+ * @type {string}
+ * @constant
+ */
 export const GradientFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) texCoord: vec2<f32>,
     @location(1) color: vec4<f32>,
 }
-${GradientUniformsAndSpread}
+${$GradientUniformsAndSpread}
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     let p = input.texCoord;
-${GradientCalculation}
+${$GradientCalculation}
     let result = gradientColor * input.color;
     return vec4<f32>(result.rgb * result.a, result.a);
 }

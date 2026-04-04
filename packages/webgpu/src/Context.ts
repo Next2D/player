@@ -9,9 +9,7 @@ import { PathCommand } from "./PathCommand";
 import { BufferManager } from "./BufferManager";
 import { TextureManager } from "./TextureManager";
 import { FrameBufferManager } from "./FrameBufferManager";
-import { AttachmentManager } from "./AttachmentManager";
 import { PipelineManager } from "./Shader/PipelineManager";
-import { ComputePipelineManager } from "./Compute/ComputePipelineManager";
 import {
     $rootNodes,
     $resetAtlas,
@@ -76,16 +74,19 @@ import { execute as contextContainerEndLayerUseCase } from "./Context/usecase/Co
 
 /**
  * @description スワップチェーン転送用のIdentity UV定数: scale=(1,1), offset=(0,0)
+ *              Identity UV constant for swap-chain transfer: scale=(1,1), offset=(0,0)
  */
 const $IDENTITY_UV = new Float32Array([1.0, 1.0, 0.0, 0.0]);
 
 /**
  * @description save()/restore()用の Float32Array プール
+ *              Float32Array pool for save()/restore() operations
  */
 const $matrixPool: Float32Array[] = [];
 
 /**
  * @description leaveMask() 用フルスクリーンメッシュ定数
+ *              Full-screen mesh constant for leaveMask()
  */
 const $FULLSCREEN_MESH = new Float32Array([
     // Triangle 1: (0,0), (1,0), (0,1)
@@ -100,6 +101,7 @@ const $FULLSCREEN_MESH = new Float32Array([
 
 /**
  * @description clearNodeArea() 用クワッド頂点定数
+ *              Quad vertex constant for clearNodeArea()
  */
 const $QUAD_VERTICES = new Float32Array([
     0, 0,  // 左上
@@ -112,11 +114,19 @@ const $QUAD_VERTICES = new Float32Array([
 
 /**
  * @description containerDrawCachedFilter() 用 CT uniform プリアロケート
+ *              Pre-allocated CT uniform for containerDrawCachedFilter()
  */
 const $ctUniform8 = new Float32Array(8);
 
 /**
+ * @description copyTempToAtlasNode() 用 uniform プリアロケート (scale=1,-1, offset=0,1)
+ *              Pre-allocated uniform for atlas node copy with Y-flip
+ */
+const $atlasNodeCopyUniform = new Float32Array([1, -1, 0, 1]);
+
+/**
  * @description fill() 用 uniform プリアロケート (color + matrix = 16 floats = 64 bytes)
+ *              Pre-allocated uniform for fill() (color + matrix = 16 floats = 64 bytes)
  */
 const $fillUniform16 = new Float32Array(16);
 
@@ -187,97 +197,132 @@ const $msaaDescriptor: GPURenderPassDescriptor = {
  */
 export class Context
 {
+    /** @description 変換行列スタック / Transform matrix stack */
     public readonly $stack: Float32Array[];
+    /** @description 現在の2D変換行列 / Current 2D transform matrix */
     public readonly $matrix: Float32Array;
+    /** @description 背景クリア色R / Background clear color R */
     public $clearColorR: number;
+    /** @description 背景クリア色G / Background clear color G */
     public $clearColorG: number;
+    /** @description 背景クリア色B / Background clear color B */
     public $clearColorB: number;
+    /** @description 背景クリア色A / Background clear color A */
     public $clearColorA: number;
+    /** @description メインアタッチメントオブジェクト / Main attachment object */
     public $mainAttachmentObject: IAttachmentObject | null;
+    /** @description アタッチメントオブジェクトのスタック / Attachment object stack */
     public readonly $stackAttachmentObject: IAttachmentObject[];
+    /** @description グローバルアルファ値 / Global alpha value */
     public globalAlpha: number;
+    /** @description グローバル合成操作 / Global composite operation */
     public globalCompositeOperation: IBlendMode;
+    /** @description 画像スムージングの有効/無効 / Whether image smoothing is enabled */
     public imageSmoothingEnabled: boolean;
+    /** @description 塗りつぶしスタイル / Fill style color */
     public $fillStyle: Float32Array;
+    /** @description 線スタイル / Stroke style color */
     public $strokeStyle: Float32Array;
+    /** @description マスク描画範囲 / Mask drawing bounds */
     public readonly maskBounds: IBounds;
+    /** @description 線の太さ / Line thickness */
     public thickness: number;
+    /** @description 線端の形状 / Line cap style */
     public caps: number;
+    /** @description 線の結合スタイル / Line joint style */
     public joints: number;
+    /** @description マイターリミット / Miter limit */
     public miterLimit: number;
 
+    /** @description GPUデバイス / GPU device instance */
     private device: GPUDevice;
+    /** @description GPUキャンバスコンテキスト / GPU canvas context */
     private canvasContext: GPUCanvasContext;
+    /** @description 優先テクスチャフォーマット / Preferred texture format */
     private preferredFormat: GPUTextureFormat;
+    /** @description コマンドエンコーダー / Command encoder */
     private commandEncoder: GPUCommandEncoder | null = null;
+    /** @description レンダーパスエンコーダー / Render pass encoder */
     private renderPassEncoder: GPURenderPassEncoder | null = null;
 
-    // Main canvas texture (for final display) - acquired once per frame
+    /** @description メインキャンバステクスチャ（最終表示用、フレームごとに1回取得） / Main canvas texture (for final display, acquired once per frame) */
     private mainTexture: GPUTexture | null = null;
+    /** @description メインキャンバステクスチャビュー / Main canvas texture view */
     private mainTextureView: GPUTextureView | null = null;
+    /** @description フレーム開始済みフラグ / Whether the frame has been started */
     private frameStarted: boolean = false;
 
-    // フレームごとの一時テクスチャ（endFrame()でdestroy）
+    /** @description フレームごとの一時テクスチャ（endFrame()でdestroy） / Per-frame temporary textures (destroyed in endFrame()) */
     private frameTextures: GPUTexture[] = [];
 
-    // フレームごとのプール管理テクスチャ（endFrame()でプールに返却）
+    /** @description フレームごとのプール管理テクスチャ（endFrame()でプールに返却） / Per-frame pooled textures (returned to pool in endFrame()) */
     private pooledTextures: GPUTexture[] = [];
 
-    // フレームごとのレンダーテクスチャプール管理（endFrame()でプールに返却）
+    /** @description フレームごとのレンダーテクスチャプール管理（endFrame()でプールに返却） / Per-frame render texture pool (returned to pool in endFrame()) */
     private pooledRenderTextures: GPUTexture[] = [];
 
-    // Current rendering target (could be main or atlas)
+    /** @description 現在のレンダーターゲット（メインまたはアトラス） / Current render target (could be main or atlas) */
     private currentRenderTarget: GPUTextureView | null = null;
 
-    // Current viewport size (WebGL版と同じ: アトラス描画時はアトラスサイズを使用)
+    /** @description 現在のビューポート幅（アトラス描画時はアトラスサイズ） / Current viewport width (atlas size during atlas rendering) */
     private viewportWidth: number = 0;
+    /** @description 現在のビューポート高さ（アトラス描画時はアトラスサイズ） / Current viewport height (atlas size during atlas rendering) */
     private viewportHeight: number = 0;
 
+    /** @description パスコマンド / Path command handler */
     private pathCommand: PathCommand;
+    /** @description バッファマネージャー / Buffer manager */
     private bufferManager: BufferManager;
+    /** @description テクスチャマネージャー / Texture manager */
     private textureManager: TextureManager;
+    /** @description フレームバッファマネージャー / Frame buffer manager */
     private frameBufferManager: FrameBufferManager;
+    /** @description パイプラインマネージャー / Pipeline manager */
     private pipelineManager: PipelineManager;
-    private computePipelineManager: ComputePipelineManager;
-    private attachmentManager: AttachmentManager;
 
+    /** @description 新しい描画状態フラグ / New draw state flag */
     public newDrawState: boolean = false;
 
-    // コンテナレイヤースタック（フィルター/ブレンド用）
+    /** @description cacheAsBitmap用の保留中アトラスノードスタック / Pending atlas nodes stack for cacheAsBitmap */
+    private readonly _pendingAtlasNodes: Node[] = [];
+
+    /** @description コンテナレイヤースタック（フィルター/ブレンド用） / Container layer stack (for filter/blend) */
     private readonly $containerLayerStack: IAttachmentObject[] = [];
+    /** @description コンテナレイヤーのコンテンツサイズ / Container layer content sizes */
     private containerLayerContentSizes: { width: number; height: number }[] = [];
 
-    // マスク描画モードフラグ（beginMask〜endMask間でtrue）
+    /** @description マスク描画モードフラグ（beginMask〜endMask間でtrue） / Mask drawing mode flag (true between beginMask and endMask) */
     private inMaskMode: boolean = false;
 
-    // ノード領域クリア済みフラグ（beginNodeRendering〜endNodeRendering間で使用）
+    /** @description ノード領域クリア済みフラグ（beginNodeRendering〜endNodeRendering間で使用） / Node area cleared flag (used between beginNodeRendering and endNodeRendering) */
     private nodeAreaCleared: boolean = false;
 
-    // 現在のノードのシザー範囲（クリア後に戻すため）
+    /** @description 現在のノードのシザー範囲（クリア後に戻すため） / Current node scissor rect (to restore after clearing) */
     private currentNodeScissor: { x: number; y: number; w: number; h: number } | null = null;
 
-    // アトラスレンダーパス統合: 同一アトラスへの連続描画でパスを再利用
+    /** @description アトラスレンダーパス統合: 同一アトラスへの連続描画でパスを再利用 / Atlas render pass integration: reuse pass for consecutive draws to the same atlas */
     private nodeRenderPassAtlasIndex: number = -1;
 
-    // Dynamic Uniform BindGroup（fill/stencilパイプライン共有、フレームごとに1回作成）
+    /** @description Dynamic Uniform BindGroup（fill/stencilパイプライン共有、フレームごとに1回作成） / Dynamic Uniform BindGroup (shared by fill/stencil pipelines, created once per frame) */
     private fillDynamicBindGroup: GPUBindGroup | null = null;
+    /** @description Dynamic Uniform BindGroupのバッファ / Dynamic Uniform BindGroup buffer */
     private fillDynamicBindGroupBuffer: GPUBuffer | null = null;
 
-    // clearNodeArea() 用頂点バッファキャッシュ
+    /** @description clearNodeArea() 用頂点バッファキャッシュ / Vertex buffer cache for clearNodeArea() */
     private nodeClearQuadBuffer: GPUBuffer | null = null;
 
-    // Storage Buffer + Indirect Drawing を使用するかどうか
+    /** @description Storage Buffer + Indirect Drawing を使用するかどうか / Whether to use Storage Buffer + Indirect Drawing */
     private useOptimizedInstancing: boolean = true;
 
-    // リサイズ後にcanvasContextの再設定が必要かどうか
-    // ($resizeComplete()でcanvas.width/heightが設定された後、ensureMainTexture()でconfigure()を呼ぶ)
+    /** @description リサイズ後にcanvasContextの再設定が必要かどうか / Whether canvasContext reconfiguration is needed after resize */
     private $needsReconfigure: boolean = false;
 
-    // Hot Path 用の事前割り当てバッファ
+    /** @description Hot Path 用の事前割り当てバッファ / Pre-allocated buffer for hot path */
     private readonly $uniformData8 = new Float32Array(8);
+    /** @description Hot Path 用の事前割り当てシザーレクト / Pre-allocated scissor rect for hot path */
     private readonly $scissorRect: { "x": number; "y": number; "w": number; "h": number } = { "x": 0, "y": 0, "w": 0, "h": 0 };
 
-    // フィルター/コンテナレイヤー用のプリアロケートされた設定オブジェクト
+    /** @description フィルター/コンテナレイヤー用のプリアロケートされた設定オブジェクト / Pre-allocated config object for filter/container layers */
     private readonly $filterConfig: {
         device: GPUDevice;
         commandEncoder: GPUCommandEncoder;
@@ -286,10 +331,18 @@ export class Context
         pipelineManager: PipelineManager;
         textureManager: TextureManager;
         mainAttachment?: IAttachmentObject;
-        computePipelineManager: ComputePipelineManager;
         frameTextures: GPUTexture[];
     };
 
+    /**
+     * @description WebGPUコンテキストを初期化する
+     *              Initialize the WebGPU context
+     *
+     * @param  {GPUDevice} device - GPUデバイス / GPU device instance
+     * @param  {GPUCanvasContext} canvas_context - GPUキャンバスコンテキスト / GPU canvas context
+     * @param  {GPUTextureFormat} preferred_format - 優先テクスチャフォーマット / Preferred texture format
+     * @param  {number} device_pixel_ratio - デバイスピクセル比 / Device pixel ratio
+     */
     constructor (
         device: GPUDevice,
         canvas_context: GPUCanvasContext,
@@ -356,8 +409,6 @@ export class Context
         this.pipelineManager = new PipelineManager(device, preferred_format);
         // 遅延パイプライン群を即座に先行作成（初回アクセス時のレイテンシ解消）
         this.pipelineManager.preloadLazyGroups();
-        this.computePipelineManager = new ComputePipelineManager(device);
-        this.attachmentManager = new AttachmentManager(device);
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
         $setGradientLUTDevice(device);
@@ -383,7 +434,6 @@ export class Context
             "frameBufferManager": this.frameBufferManager,
             "pipelineManager": this.pipelineManager,
             "textureManager": this.textureManager,
-            "computePipelineManager": this.computePipelineManager,
             "frameTextures": this.frameTextures
         };
 
@@ -393,6 +443,9 @@ export class Context
 
     /**
      * @description 転送範囲をリセット（フレーム開始）
+     *              Reset transfer bounds (frame start)
+     *
+     * @return {void}
      */
     clearTransferBounds (): void
     {
@@ -403,6 +456,13 @@ export class Context
 
     /**
      * @description 背景色を更新
+     *              Update the background color
+     *
+     * @param  {number} red   - 赤色成分 / Red component
+     * @param  {number} green - 緑色成分 / Green component
+     * @param  {number} blue  - 青色成分 / Blue component
+     * @param  {number} alpha - アルファ成分 / Alpha component
+     * @return {void}
      */
     updateBackgroundColor (red: number, green: number, blue: number, alpha: number): void
     {
@@ -414,6 +474,9 @@ export class Context
 
     /**
      * @description 背景色で塗りつぶす（メインアタッチメント）
+     *              Fill with background color (main attachment)
+     *
+     * @return {void}
      */
     fillBackgroundColor (): void
     {
@@ -469,6 +532,12 @@ export class Context
 
     /**
      * @description メインcanvasのサイズを変更
+     *              Resize the main canvas
+     *
+     * @param  {number}  width       - 新しい幅 / New width
+     * @param  {number}  height      - 新しい高さ / New height
+     * @param  {boolean} cache_clear - キャッシュをクリアするか / Whether to clear cache
+     * @return {void}
      */
     resize (width: number, height: number, cache_clear: boolean = true): void
     {
@@ -575,17 +644,10 @@ export class Context
     }
 
     /**
-     * @description 指定範囲をクリアする
-     */
-    clearRect (_x: number, _y: number, _w: number, _h: number): void
-    {
-        // WebGPU clear rect implementation
-        // WebGPUではclearはレンダーパス開始時に行うため、ここでは何もしない
-        // 実際のクリアはbeginNodeRenderingやbeginFrameで行われる
-    }
-
-    /**
      * @description 現在の2D変換行列を保存
+     *              Save the current 2D transform matrix
+     *
+     * @return {void}
      */
     save (): void
     {
@@ -596,6 +658,9 @@ export class Context
 
     /**
      * @description 2D変換行列を復元
+     *              Restore the 2D transform matrix
+     *
+     * @return {void}
      */
     restore (): void
     {
@@ -608,6 +673,15 @@ export class Context
 
     /**
      * @description 2D変換行列を設定
+     *              Set the 2D transform matrix
+     *
+     * @param  {number} a - 水平スケール / Horizontal scale
+     * @param  {number} b - 垂直スキュー / Vertical skew
+     * @param  {number} c - 水平スキュー / Horizontal skew
+     * @param  {number} d - 垂直スケール / Vertical scale
+     * @param  {number} e - 水平移動 / Horizontal translation
+     * @param  {number} f - 垂直移動 / Vertical translation
+     * @return {void}
      */
     setTransform (
         a: number, b: number, c: number,
@@ -623,6 +697,15 @@ export class Context
 
     /**
      * @description 現在の2D変換行列に対して乗算を行います
+     *              Multiply the current 2D transform matrix
+     *
+     * @param  {number} a - 水平スケール / Horizontal scale
+     * @param  {number} b - 垂直スキュー / Vertical skew
+     * @param  {number} c - 水平スキュー / Horizontal skew
+     * @param  {number} d - 垂直スケール / Vertical scale
+     * @param  {number} e - 水平移動 / Horizontal translation
+     * @param  {number} f - 垂直移動 / Vertical translation
+     * @return {void}
      */
     transform (
         a: number, b: number, c: number,
@@ -641,6 +724,9 @@ export class Context
 
     /**
      * @description コンテキストの値を初期化する
+     *              Reset all context values to their initial state
+     *
+     * @return {void}
      */
     reset (): void
     {
@@ -654,6 +740,9 @@ export class Context
 
     /**
      * @description パスを開始
+     *              Begin a new path
+     *
+     * @return {void}
      */
     beginPath (): void
     {
@@ -662,6 +751,11 @@ export class Context
 
     /**
      * @description パスを移動
+     *              Move the path to the specified point
+     *
+     * @param  {number} x - X座標 / X coordinate
+     * @param  {number} y - Y座標 / Y coordinate
+     * @return {void}
      */
     moveTo (x: number, y: number): void
     {
@@ -670,6 +764,11 @@ export class Context
 
     /**
      * @description パスを線で結ぶ
+     *              Draw a line to the specified point
+     *
+     * @param  {number} x - X座標 / X coordinate
+     * @param  {number} y - Y座標 / Y coordinate
+     * @return {void}
      */
     lineTo (x: number, y: number): void
     {
@@ -678,6 +777,13 @@ export class Context
 
     /**
      * @description 二次ベジェ曲線を描画
+     *              Draw a quadratic Bézier curve
+     *
+     * @param  {number} cx - 制御点X / Control point X
+     * @param  {number} cy - 制御点Y / Control point Y
+     * @param  {number} x  - 終点X / End point X
+     * @param  {number} y  - 終点Y / End point Y
+     * @return {void}
      */
     quadraticCurveTo (cx: number, cy: number, x: number, y: number): void
     {
@@ -686,6 +792,13 @@ export class Context
 
     /**
      * @description 塗りつぶしスタイルを設定
+     *              Set the fill style color
+     *
+     * @param  {number} red   - 赤色成分 / Red component
+     * @param  {number} green - 緑色成分 / Green component
+     * @param  {number} blue  - 青色成分 / Blue component
+     * @param  {number} alpha - アルファ成分 / Alpha component
+     * @return {void}
      */
     fillStyle (red: number, green: number, blue: number, alpha: number): void
     {
@@ -697,6 +810,13 @@ export class Context
 
     /**
      * @description 線のスタイルを設定
+     *              Set the stroke style color
+     *
+     * @param  {number} red   - 赤色成分 / Red component
+     * @param  {number} green - 緑色成分 / Green component
+     * @param  {number} blue  - 青色成分 / Blue component
+     * @param  {number} alpha - アルファ成分 / Alpha component
+     * @return {void}
      */
     strokeStyle (red: number, green: number, blue: number, alpha: number): void
     {
@@ -708,6 +828,9 @@ export class Context
 
     /**
      * @description パスを閉じる
+     *              Close the current path
+     *
+     * @return {void}
      */
     closePath (): void
     {
@@ -716,6 +839,12 @@ export class Context
 
     /**
      * @description 円弧を描画
+     *              Draw an arc
+     *
+     * @param  {number} x      - 中心X / Center X
+     * @param  {number} y      - 中心Y / Center Y
+     * @param  {number} radius - 半径 / Radius
+     * @return {void}
      */
     arc (x: number, y: number, radius: number): void
     {
@@ -724,6 +853,15 @@ export class Context
 
     /**
      * @description 3次ベジェ曲線を描画
+     *              Draw a cubic Bézier curve
+     *
+     * @param  {number} cx1 - 第1制御点X / First control point X
+     * @param  {number} cy1 - 第1制御点Y / First control point Y
+     * @param  {number} cx2 - 第2制御点X / Second control point X
+     * @param  {number} cy2 - 第2制御点Y / Second control point Y
+     * @param  {number} x   - 終点X / End point X
+     * @param  {number} y   - 終点Y / End point Y
+     * @return {void}
      */
     bezierCurveTo (cx1: number, cy1: number, cx2: number, cy2: number, x: number, y: number): void
     {
@@ -732,7 +870,10 @@ export class Context
 
     /**
      * @description 描画メソッド共通: レンダーパスの確保とノード領域クリア
+     *              Common drawing method: ensure render pass and clear node area
      *              fill(), stroke(), gradientFill(), bitmapFill(), gradientStroke(), bitmapStroke() で使用
+     *
+     * @return {void}
      */
     private ensureFillRenderPass (): void
     {
@@ -854,6 +995,9 @@ export class Context
 
     /**
      * @description 塗りつぶしを実行（Loop-Blinn方式対応）
+     *              Execute fill operation (with Loop-Blinn support)
+     *
+     * @return {void}
      */
     fill (): void
     {
@@ -901,6 +1045,9 @@ export class Context
 
     /**
      * @description Dynamic Uniform BindGroupを取得（フレーム内で初回呼び出し時に作成）
+     *              Get or create the Dynamic Uniform BindGroup (created on first call within a frame)
+     *
+     * @return {GPUBindGroup} Dynamic Uniform BindGroup
      */
     private getOrCreateFillDynamicBindGroup(): GPUBindGroup
     {
@@ -927,14 +1074,28 @@ export class Context
 
     /**
      * @description fill/stroke用のcolor/matrix uniformを書き込む
-     * FillUniforms構造体: color(vec4) + matrix0(vec4) + matrix1(vec4) + matrix2(vec4) = 64 bytes
-     * @return Dynamic Uniform Buffer内のアライメント済みオフセット
+     *              Write color/matrix uniform for fill/stroke operations
+     *              FillUniforms構造体: color(vec4) + matrix0(vec4) + matrix1(vec4) + matrix2(vec4) = 64 bytes
+     *
+     * @param  {number} red              - 赤色成分 / Red component
+     * @param  {number} green            - 緑色成分 / Green component
+     * @param  {number} blue             - 青色成分 / Blue component
+     * @param  {number} alpha            - アルファ成分 / Alpha component
+     * @param  {number} a                - 変換行列a / Transform matrix a
+     * @param  {number} b                - 変換行列b / Transform matrix b
+     * @param  {number} c                - 変換行列c / Transform matrix c
+     * @param  {number} d                - 変換行列d / Transform matrix d
+     * @param  {number} tx               - 変換行列tx / Transform matrix tx
+     * @param  {number} ty               - 変換行列ty / Transform matrix ty
+     * @param  {number} viewport_width   - ビューポート幅 / Viewport width
+     * @param  {number} viewport_height  - ビューポート高さ / Viewport height
+     * @return {number} Dynamic Uniform Buffer内のアライメント済みオフセット / Aligned offset in the Dynamic Uniform Buffer
      */
     private writeFillUniform(
         red: number, green: number, blue: number, alpha: number,
         a: number, b: number, c: number, d: number,
         tx: number, ty: number,
-        viewportWidth: number, viewportHeight: number
+        viewport_width: number, viewport_height: number
     ): number
     {
         // color
@@ -943,18 +1104,18 @@ export class Context
         $fillUniform16[2] = blue;
         $fillUniform16[3] = alpha;
         // matrix0 (a, b, 0, pad) — ビューポート正規化
-        $fillUniform16[4] = a / viewportWidth;
-        $fillUniform16[5] = b / viewportHeight;
+        $fillUniform16[4] = a / viewport_width;
+        $fillUniform16[5] = b / viewport_height;
         $fillUniform16[6] = 0;
         $fillUniform16[7] = 0;
         // matrix1 (c, d, 0, pad)
-        $fillUniform16[8] = c / viewportWidth;
-        $fillUniform16[9] = d / viewportHeight;
+        $fillUniform16[8] = c / viewport_width;
+        $fillUniform16[9] = d / viewport_height;
         $fillUniform16[10] = 0;
         $fillUniform16[11] = 0;
         // matrix2 (tx, ty, 1, pad)
-        $fillUniform16[12] = tx / viewportWidth;
-        $fillUniform16[13] = ty / viewportHeight;
+        $fillUniform16[12] = tx / viewport_width;
+        $fillUniform16[13] = ty / viewport_height;
         $fillUniform16[14] = 1;
         $fillUniform16[15] = 0;
 
@@ -963,53 +1124,75 @@ export class Context
 
     /**
      * @description 2パスステンシルフィル（アトラス用）
+     *              Two-pass stencil fill (for atlas)
+     *
+     * @param  {GPUBuffer}   vertex_buffer  - 頂点バッファ / Vertex buffer
+     * @param  {number}      vertex_count   - 頂点数 / Vertex count
+     * @param  {GPUBindGroup} bind_group    - バインドグループ / Bind group
+     * @param  {number}      uniform_offset - ユニフォームオフセット / Uniform offset
+     * @return {void}
      */
     private fillWithStencil(
-        vertexBuffer: GPUBuffer,
-        vertexCount: number,
-        bindGroup: GPUBindGroup,
-        uniformOffset: number
+        vertex_buffer: GPUBuffer,
+        vertex_count: number,
+        bind_group: GPUBindGroup,
+        uniform_offset: number
     ): void
     {
         contextFillWithStencilService(
             this.renderPassEncoder!,
             this.pipelineManager,
-            vertexBuffer,
-            vertexCount,
-            bindGroup,
-            uniformOffset
+            vertex_buffer,
+            vertex_count,
+            bind_group,
+            uniform_offset
         );
     }
 
     /**
      * @description 2パスステンシルフィル（メインキャンバス用）
+     *              Two-pass stencil fill (for main canvas)
+     *
+     * @param  {GPUBuffer}   vertex_buffer  - 頂点バッファ / Vertex buffer
+     * @param  {number}      vertex_count   - 頂点数 / Vertex count
+     * @param  {GPUBindGroup} bind_group    - バインドグループ / Bind group
+     * @param  {number}      uniform_offset - ユニフォームオフセット / Uniform offset
+     * @return {void}
      */
     private fillWithStencilMain(
-        vertexBuffer: GPUBuffer,
-        vertexCount: number,
-        bindGroup: GPUBindGroup,
-        uniformOffset: number
+        vertex_buffer: GPUBuffer,
+        vertex_count: number,
+        bind_group: GPUBindGroup,
+        uniform_offset: number
     ): void
     {
         contextFillWithStencilMainService(
             this.renderPassEncoder!,
             this.pipelineManager,
-            vertexBuffer,
-            vertexCount,
-            bindGroup,
-            uniformOffset
+            vertex_buffer,
+            vertex_count,
+            bind_group,
+            uniform_offset
         );
     }
 
     /**
      * @description 単純なフィル（ステンシルなし、キャンバス描画用）
+     *              Simple fill (no stencil, for canvas rendering)
+     *
+     * @param  {GPUBuffer}    vertex_buffer        - 頂点バッファ / Vertex buffer
+     * @param  {number}       vertex_count         - 頂点数 / Vertex count
+     * @param  {boolean}      use_stencil_pipeline - ステンシルパイプラインを使用するか / Whether to use stencil pipeline
+     * @param  {GPUBindGroup} bind_group           - バインドグループ / Bind group
+     * @param  {number}       uniform_offset       - ユニフォームオフセット / Uniform offset
+     * @return {void}
      */
     private fillSimple(
-        vertexBuffer: GPUBuffer,
-        vertexCount: number,
-        useStencilPipeline: boolean,
-        bindGroup: GPUBindGroup,
-        uniformOffset: number
+        vertex_buffer: GPUBuffer,
+        vertex_count: number,
+        use_stencil_pipeline: boolean,
+        bind_group: GPUBindGroup,
+        uniform_offset: number
     ): void
     {
         const clipLevel = this.$mainAttachmentObject?.clipLevel ?? 1;
@@ -1017,63 +1200,22 @@ export class Context
         contextFillSimpleService(
             this.renderPassEncoder!,
             this.pipelineManager,
-            vertexBuffer,
-            vertexCount,
-            bindGroup,
-            uniformOffset,
-            !!this.currentRenderTarget,
-            useStencilPipeline,
+            vertex_buffer,
+            vertex_count,
+            bind_group,
+            uniform_offset,
+            this.currentRenderTarget,
+            use_stencil_pipeline,
             clipLevel
         );
     }
 
     /**
-     * @description オフスクリーンアタッチメントにバインド
-     * WebGL: FrameBufferManagerBindAttachmentObjectService
-     */
-    bindAttachment(attachment: IAttachmentObject): void
-    {
-        this.attachmentManager.bindAttachment(attachment);
-
-        // 現在のレンダーターゲットをオフスクリーンに切り替え
-        // color?.view または texture?.view を使用
-        const view = attachment.color?.view ?? attachment.texture?.view;
-        if (view) {
-            this.currentRenderTarget = view;
-        }
-    }
-
-    /**
-     * @description メインキャンバスにバインド
-     * WebGL: FrameBufferManagerUnBindAttachmentObjectService
-     */
-    unbindAttachment(): void
-    {
-        this.attachmentManager.unbindAttachment();
-        this.currentRenderTarget = null;
-    }
-
-    /**
-     * @description アタッチメントオブジェクトを取得
-     * WebGL: FrameBufferManagerGetAttachmentObjectUseCase
-     */
-    getAttachmentObject(width: number, height: number, msaa: boolean = false): IAttachmentObject
-    {
-        return this.attachmentManager.getAttachmentObject(width, height, msaa);
-    }
-
-    /**
-     * @description アタッチメントオブジェクトを解放
-     * WebGL: FrameBufferManagerReleaseAttachmentObjectUseCase
-     */
-    releaseAttachment(attachment: IAttachmentObject): void
-    {
-        this.attachmentManager.releaseAttachment(attachment);
-    }
-
-    /**
      * @description 線の描画を実行（WebGL版と同じ仕様）
+     *              Execute stroke drawing (same specification as WebGL version)
      *              WebGL版と同様に、ストロークを塗りとして描画する
+     *
+     * @return {void}
      */
     stroke (): void
     {
@@ -1124,6 +1266,15 @@ export class Context
 
     /**
      * @description グラデーションの塗りつぶしを実行
+     *              Execute gradient fill
+     *
+     * @param  {number}       type          - グラデーションタイプ / Gradient type
+     * @param  {number[]}     stops         - カラーストップ配列 / Color stop array
+     * @param  {Float32Array} matrix        - グラデーション変換行列 / Gradient transform matrix
+     * @param  {number}       spread        - スプレッドメソッド / Spread method
+     * @param  {number}       interpolation - 補間方法 / Interpolation method
+     * @param  {number}       focal         - 焦点距離 / Focal point ratio
+     * @return {void}
      */
     gradientFill (
         type: number,
@@ -1148,7 +1299,7 @@ export class Context
         const useStencilPipeline = useMainStencil;
 
         // アトラスへの描画かどうか
-        const useAtlasTarget = !!this.currentRenderTarget;
+        const useAtlasTarget = this.currentRenderTarget;
 
         const lutTexture = contextGradientFillUseCase(
             this.device,
@@ -1181,6 +1332,15 @@ export class Context
 
     /**
      * @description ビットマップの塗りつぶしを実行
+     *              Execute bitmap fill
+     *
+     * @param  {Uint8Array}   pixels - ピクセルデータ / Pixel data
+     * @param  {Float32Array} matrix - ビットマップ変換行列 / Bitmap transform matrix
+     * @param  {number}       width  - ビットマップ幅 / Bitmap width
+     * @param  {number}       height - ビットマップ高さ / Bitmap height
+     * @param  {boolean}      repeat - 繰り返しフラグ / Repeat flag
+     * @param  {boolean}      smooth - スムージングフラグ / Smoothing flag
+     * @return {void}
      */
     bitmapFill (
         pixels: Uint8Array,
@@ -1224,7 +1384,7 @@ export class Context
             smooth,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget,
+            this.currentRenderTarget,
             !!useStencilPipeline,
             clipLevel
         );
@@ -1241,6 +1401,15 @@ export class Context
 
     /**
      * @description グラデーション線の描画を実行
+     *              Execute gradient stroke drawing
+     *
+     * @param  {number}       type          - グラデーションタイプ / Gradient type
+     * @param  {number[]}     stops         - カラーストップ配列 / Color stop array
+     * @param  {Float32Array} matrix        - グラデーション変換行列 / Gradient transform matrix
+     * @param  {number}       spread        - スプレッドメソッド / Spread method
+     * @param  {number}       interpolation - 補間方法 / Interpolation method
+     * @param  {number}       focal         - 焦点距離 / Focal point ratio
+     * @return {void}
      */
     gradientStroke (
         type: number,
@@ -1282,7 +1451,7 @@ export class Context
             focal,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget,
+            this.currentRenderTarget,
             useStencilPipeline
         );
 
@@ -1298,6 +1467,15 @@ export class Context
 
     /**
      * @description ビットマップ線の描画を実行
+     *              Execute bitmap stroke drawing
+     *
+     * @param  {Uint8Array}   pixels - ピクセルデータ / Pixel data
+     * @param  {Float32Array} matrix - ビットマップ変換行列 / Bitmap transform matrix
+     * @param  {number}       width  - ビットマップ幅 / Bitmap width
+     * @param  {number}       height - ビットマップ高さ / Bitmap height
+     * @param  {boolean}      repeat - 繰り返しフラグ / Repeat flag
+     * @param  {boolean}      smooth - スムージングフラグ / Smoothing flag
+     * @return {void}
      */
     bitmapStroke (
         pixels: Uint8Array,
@@ -1339,7 +1517,7 @@ export class Context
             smooth,
             this.viewportWidth,
             this.viewportHeight,
-            !!this.currentRenderTarget,
+            this.currentRenderTarget,
             useStencilPipeline
         );
 
@@ -1355,8 +1533,11 @@ export class Context
 
     /**
      * @description マスク処理を実行
+     *              Execute mask clipping operation
      *              WebGL版と同様にステンシルバッファを使用したクリッピング
      *              メインアタッチメントとアトラス両方でマスク処理をサポート
+     *
+     * @return {void}
      */
     clip (): void
     {
@@ -1425,6 +1606,10 @@ export class Context
 
     /**
      * @description アタッチメントオブジェクトをバインド
+     *              Bind an attachment object
+     *
+     * @param  {IAttachmentObject} attachment_object - バインドするアタッチメント / Attachment to bind
+     * @return {void}
      */
     bind (attachment_object: IAttachmentObject): void
     {
@@ -1437,8 +1622,11 @@ export class Context
 
     /**
      * @description 現在のアタッチメントオブジェクトを取得
+     *              Get the current attachment object
      *              アトラスがバインドされていない場合はメインアタッチメントを返す
      *              When no atlas is bound, returns the main attachment
+     *
+     * @return {IAttachmentObject | null} 現在のアタッチメント / Current attachment
      */
     get currentAttachmentObject (): IAttachmentObject | null
     {
@@ -1450,6 +1638,9 @@ export class Context
 
     /**
      * @description アトラス専用のアタッチメントオブジェクトを取得
+     *              Get the atlas-specific attachment object
+     *
+     * @return {IAttachmentObject | null} アトラスアタッチメント / Atlas attachment
      */
     get atlasAttachmentObject (): IAttachmentObject | null
     {
@@ -1458,6 +1649,10 @@ export class Context
 
     /**
      * @description グリッドの描画データをセット
+     *              Set grid drawing data
+     *
+     * @param  {Float32Array | null} grid_data - グリッドデータ / Grid data
+     * @return {void}
      */
     useGrid (grid_data: Float32Array | null): void
     {
@@ -1466,7 +1661,11 @@ export class Context
 
     /**
      * @description 指定のノード範囲で描画を開始（アトラステクスチャへの描画）
+     *              Begin rendering for the specified node region (drawing to atlas texture)
      *              2パスステンシルフィル対応: ステンシルバッファ付きレンダーパスを使用
+     *
+     * @param  {Node} node - 描画対象ノード / Target node for rendering
+     * @return {void}
      */
     beginNodeRendering (node: Node): void
     {
@@ -1558,7 +1757,10 @@ export class Context
 
     /**
      * @description ノード領域がまだクリアされていない場合にクリアを実行
+     *              Clear the node area if it has not been cleared yet
      *              最初の描画操作（fill, gradientFill, gradientStroke等）で呼び出される
+     *
+     * @return {void}
      */
     private ensureNodeAreaCleared (): void
     {
@@ -1569,7 +1771,10 @@ export class Context
 
     /**
      * @description ノード領域をクリア（透明色 + ステンシル=0）
+     *              Clear the node area (transparent color + stencil=0)
      *              WebGL版の gl.clear(COLOR_BUFFER_BIT | STENCIL_BUFFER_BIT) と同等
+     *
+     * @return {void}
      */
     private clearNodeArea (): void
     {
@@ -1615,7 +1820,10 @@ export class Context
 
     /**
      * @description 指定のノード範囲で描画を終了
+     *              End rendering for the current node region
      *              レンダーパスは終了しない（次のbeginNodeRenderingで再利用するため）
+     *
+     * @return {void}
      */
     endNodeRendering (): void
     {
@@ -1634,6 +1842,9 @@ export class Context
 
     /**
      * @description 塗りの描画を実行
+     *              Execute fill drawing
+     *
+     * @return {void}
      */
     drawFill (): void
     {
@@ -1650,6 +1861,15 @@ export class Context
 
     /**
      * @description インスタンスを描画
+     *              Draw a display object instance
+     *
+     * @param  {Node}         node            - 描画対象ノード / Target node
+     * @param  {number}       x_min           - バウンディングボックス左端 / Bounding box left
+     * @param  {number}       y_min           - バウンディングボックス上端 / Bounding box top
+     * @param  {number}       x_max           - バウンディングボックス右端 / Bounding box right
+     * @param  {number}       y_max           - バウンディングボックス下端 / Bounding box bottom
+     * @param  {Float32Array} color_transform - カラー変換パラメータ / Color transform parameters
+     * @return {void}
      */
     drawDisplayObject (
         node: Node,
@@ -1681,10 +1901,11 @@ export class Context
      * @description インスタンス配列を描画
      *              Draw instanced arrays
      *
-     * useOptimizedInstancingがtrueの場合、Storage BufferとIndirect Drawingを使用。
-     * - Storage Buffer: メモリアロケーション削減、CPU負荷15-25%軽減
-     * - Indirect Drawing: CPU-GPUオーバーヘッド5-15%削減
+     *              useOptimizedInstancingがtrueの場合、Storage BufferとIndirect Drawingを使用。
+     *              - Storage Buffer: メモリアロケーション削減、CPU負荷15-25%軽減
+     *              - Indirect Drawing: CPU-GPUオーバーヘッド5-15%削減
      *
+     * @return {void}
      */
     drawArraysInstanced (): void
     {
@@ -1742,27 +1963,10 @@ export class Context
     }
 
     /**
-     * @description 最適化インスタンス描画の有効/無効を設定
-     *              Enable or disable optimized instancing
-     *
-     */
-    setOptimizedInstancing (enabled: boolean): void
-    {
-        this.useOptimizedInstancing = enabled;
-    }
-
-    /**
-     * @description 最適化インスタンス描画が有効かどうか
-     *              Whether optimized instancing is enabled
-     *
-     */
-    isOptimizedInstancingEnabled (): boolean
-    {
-        return this.useOptimizedInstancing;
-    }
-
-    /**
      * @description 複雑なブレンドモードのキューを処理
+     *              Process the complex blend mode queue
+     *
+     * @return {void}
      */
     private processComplexBlendQueue (): void
     {
@@ -1783,6 +1987,9 @@ export class Context
 
     /**
      * @description インスタンス配列をクリア
+     *              Clear instanced arrays
+     *
+     * @return {void}
      */
     clearArraysInstanced (): void
     {
@@ -1793,8 +2000,13 @@ export class Context
 
     /**
      * @description ピクセルバッファをNodeの指定箇所に転送
+     *              Transfer pixel buffer to the specified position of the Node
      *              WebGPUでは、Shapeのシェーダーが-ndc.yでY軸反転しているため、
      *              Bitmapも同じ方向になるよう画像を上下反転して書き込む
+     *
+     * @param  {Node}       node   - 描画対象ノード / Target node
+     * @param  {Uint8Array} pixels - ピクセルデータ / Pixel data
+     * @return {void}
      */
     drawPixels (node: Node, pixels: Uint8Array): void
     {
@@ -1845,6 +2057,14 @@ export class Context
 
     /**
      * @description 一時テクスチャ経由でピクセルデータをMSAAテクスチャに描画
+     *              Draw pixel data to MSAA texture via a temporary texture
+     *
+     * @param  {IAttachmentObject} attachment - アタッチメントオブジェクト / Attachment object
+     * @param  {Node}              node       - 描画対象ノード / Target node
+     * @param  {Uint8Array}        pixels     - ピクセルデータ / Pixel data
+     * @param  {number}            width      - 幅 / Width
+     * @param  {number}            height     - 高さ / Height
+     * @return {void}
      */
     private drawPixelsToMsaa (
         attachment: IAttachmentObject,
@@ -1933,10 +2153,16 @@ export class Context
 
     /**
      * @description OffscreenCanvasをNodeの指定箇所に転送
+     *              Transfer OffscreenCanvas to the specified position of the Node
      *              WebGPUでは、Shapeのシェーダーが-ndc.yでY軸反転しているため、
      *              Bitmapも同じ方向になるよう画像を上下反転して書き込む
+     *
+     * @param  {Node}                              node    - 描画対象ノード / Target node
+     * @param  {OffscreenCanvas | ImageBitmap}     element - 描画要素 / Element to draw
+     * @param  {boolean}                           flip_y  - Y軸反転フラグ / Y-axis flip flag
+     * @return {void}
      */
-    drawElement (node: Node, element: OffscreenCanvas | ImageBitmap, flipY: boolean = false): void
+    drawElement (node: Node, element: OffscreenCanvas | ImageBitmap, flip_y: boolean = false): void
     {
         // WebGPU draw element
         // OffscreenCanvasまたはImageBitmapをアトラステクスチャに描画
@@ -1960,14 +2186,23 @@ export class Context
         // MSAAが有効な場合は一時テクスチャ経由でMSAAテクスチャに直接描画
         // MSAAが無効な場合もシェーダー経由で描画（WebGLと同じ処理フロー）
         if (attachment.msaa && attachment.msaaTexture?.view) {
-            this.drawElementToMsaa(attachment, node, element, width, height, flipY);
+            this.drawElementToMsaa(attachment, node, element, width, height, flip_y);
         } else {
-            this.drawElementToTexture(attachment, node, element, width, height, flipY);
+            this.drawElementToTexture(attachment, node, element, width, height, flip_y);
         }
     }
 
     /**
      * @description 一時テクスチャ経由でMSAAテクスチャに直接描画
+     *              Draw to MSAA texture directly via a temporary texture
+     *
+     * @param  {IAttachmentObject}             attachment - アタッチメントオブジェクト / Attachment object
+     * @param  {Node}                          node       - 描画対象ノード / Target node
+     * @param  {OffscreenCanvas | ImageBitmap} element    - 描画要素 / Element to draw
+     * @param  {number}                        width      - 幅 / Width
+     * @param  {number}                        height     - 高さ / Height
+     * @param  {boolean}                       flip_y     - Y軸反転フラグ / Y-axis flip flag
+     * @return {void}
      */
     private drawElementToMsaa (
         attachment: IAttachmentObject,
@@ -1975,7 +2210,7 @@ export class Context
         element: OffscreenCanvas | ImageBitmap,
         width: number,
         height: number,
-        flipY: boolean
+        flip_y: boolean
     ): void
     {
         // 一時テクスチャをプールから取得
@@ -1984,7 +2219,7 @@ export class Context
         this.device.queue.copyExternalImageToTexture(
             {
                 "source": element as ImageBitmap,
-                "flipY": flipY
+                "flipY": flip_y
             },
             {
                 "texture": tempTexture,
@@ -2057,6 +2292,15 @@ export class Context
 
     /**
      * @description 一時テクスチャ経由で通常テクスチャに描画（非MSAA版）
+     *              Draw to a regular texture via a temporary texture (non-MSAA version)
+     *
+     * @param  {IAttachmentObject}             attachment - アタッチメントオブジェクト / Attachment object
+     * @param  {Node}                          node       - 描画対象ノード / Target node
+     * @param  {OffscreenCanvas | ImageBitmap} element    - 描画要素 / Element to draw
+     * @param  {number}                        width      - 幅 / Width
+     * @param  {number}                        height     - 高さ / Height
+     * @param  {boolean}                       flip_y     - Y軸反転フラグ / Y-axis flip flag
+     * @return {void}
      */
     private drawElementToTexture (
         attachment: IAttachmentObject,
@@ -2064,7 +2308,7 @@ export class Context
         element: OffscreenCanvas | ImageBitmap,
         width: number,
         height: number,
-        flipY: boolean
+        flip_y: boolean
     ): void
     {
         // 一時テクスチャをプールから取得
@@ -2075,7 +2319,7 @@ export class Context
         this.device.queue.copyExternalImageToTexture(
             {
                 "source": element as ImageBitmap,
-                "flipY": flipY
+                "flipY": flip_y
             },
             {
                 "texture": tempTexture,
@@ -2148,6 +2392,20 @@ export class Context
 
     /**
      * @description フィルターを適用
+     *              Apply filter effects
+     *
+     * @param  {Node}         node            - 描画対象ノード / Target node
+     * @param  {string}       _unique_key     - ユニークキー / Unique key
+     * @param  {boolean}      _updated        - 更新フラグ / Updated flag
+     * @param  {number}       width           - 幅 / Width
+     * @param  {number}       height          - 高さ / Height
+     * @param  {boolean}      _is_bitmap      - ビットマップかどうか / Whether it is a bitmap
+     * @param  {Float32Array} matrix          - 変換行列 / Transform matrix
+     * @param  {Float32Array} color_transform - カラー変換パラメータ / Color transform parameters
+     * @param  {IBlendMode}   blend_mode      - ブレンドモード / Blend mode
+     * @param  {Float32Array} bounds          - バウンディングボックス / Bounding box
+     * @param  {Float32Array} params          - フィルターパラメータ / Filter parameters
+     * @return {void}
      */
     applyFilter (
         node: Node,
@@ -2203,6 +2461,9 @@ export class Context
      * @description コンテナのフィルター/ブレンド用のレイヤーを開始
      *              Begin a container layer for filter/blend processing
      *
+     * @param  {number} width  - レイヤー幅 / Layer width
+     * @param  {number} height - レイヤー高さ / Layer height
+     * @return {void}
      */
     containerBeginLayer (width: number, height: number): void
     {
@@ -2243,14 +2504,15 @@ export class Context
      * @description コンテナのフィルター/ブレンド用レイヤーを終了し、結果を元のメインに合成
      *              End the container layer and composite the result back to the original main
      *
-     * @param  {IBlendMode} blend_mode
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array | null} color_transform
-     * @param  {boolean} use_filter
-     * @param  {Float32Array | null} filter_bounds
-     * @param  {Float32Array | null} filter_params
-     * @param  {string} unique_key
-     * @param  {string} filter_key
+     * @param  {IBlendMode}          blend_mode      - ブレンドモード / Blend mode
+     * @param  {Float32Array}        matrix          - 変換行列 / Transform matrix
+     * @param  {Float32Array | null} color_transform - カラー変換パラメータ / Color transform parameters
+     * @param  {boolean}             use_filter      - フィルター使用フラグ / Whether to use filter
+     * @param  {Float32Array | null} filter_bounds   - フィルターバウンド / Filter bounds
+     * @param  {Float32Array | null} filter_params   - フィルターパラメータ / Filter parameters
+     * @param  {string}              unique_key      - ユニークキー / Unique key
+     * @param  {string}              filter_key      - フィルターキー / Filter key
+     * @return {void}
      */
     containerEndLayer (
         blend_mode: IBlendMode,
@@ -2304,15 +2566,156 @@ export class Context
     }
 
     /**
+     * @description cacheAsBitmap: temp FBO作成→子要素描画開始
+     *              Begin container cacheAsBitmap: create temp bgra8unorm FBO for children,
+     *              allocate atlas node for later copy
+     *
+     * @param  {number} width  - ノード幅 / Node width
+     * @param  {number} height - ノード高さ / Node height
+     * @return {Node}
+     */
+    containerBeginAtlasNode (width: number, height: number): Node
+    {
+        this.drawArraysInstanced();
+
+        // アトラスノードを確保（後でコピー先として使用）
+        const node = this.createNode(width, height);
+        this._pendingAtlasNodes.push(node);
+
+        // mainをスタックに保存
+        const mainAttachment = this.$mainAttachmentObject as IAttachmentObject;
+        this.$containerLayerStack.push(mainAttachment);
+
+        // 既存のレンダーパスを終了
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        // bgra8unormのtemp FBOを作成（全パイプラインが互換）
+        const tempAttachment = this.frameBufferManager.createAttachment(
+            "container_layer", width, height, mainAttachment.msaa, true
+        );
+
+        this.$mainAttachmentObject = tempAttachment;
+        this.bind(tempAttachment);
+
+        return node;
+    }
+
+    /**
+     * @description cacheAsBitmap: temp FBO→アトラスノードへコピー
+     *              End container cacheAsBitmap: copy temp FBO content to atlas node,
+     *              release temp FBO
+     *
+     * @return {void}
+     */
+    containerEndAtlasNode (): void
+    {
+        this.drawArraysInstanced();
+
+        // 既存のレンダーパスを終了（temp FBOのMSAAリゾルブが実行される）
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+
+        this.ensureCommandEncoder();
+
+        const tempAttachment = this.$mainAttachmentObject as IAttachmentObject;
+        const node = this._pendingAtlasNodes.pop()!;
+
+        // mainを復元
+        this.$mainAttachmentObject = this.$containerLayerStack.pop() as IAttachmentObject;
+
+        // temp FBO → アトラスノードへコピー
+        this.copyTempToAtlasNode(tempAttachment, node);
+
+        // temp FBOをリリース
+        this.frameBufferManager.releaseTemporaryAttachment(tempAttachment);
+
+        // メインをバインド
+        this.bind(this.$mainAttachmentObject);
+    }
+
+    /**
+     * @description temp FBOの内容をアトラスノード領域にコピー
+     *              Copy temp FBO content to the atlas node region using texture_copy pipeline
+     *
+     * @param  {IAttachmentObject} temp_attachment - コピー元のtemp FBO / Source temp FBO
+     * @param  {Node}              node            - コピー先のアトラスノード / Destination atlas node
+     * @return {void}
+     */
+    private copyTempToAtlasNode (temp_attachment: IAttachmentObject, node: Node): void
+    {
+        const atlas = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
+        if (!atlas || !atlas.texture || !temp_attachment.texture) {
+            return;
+        }
+
+        // アトラスはrgba8unormフォーマット（FrameBufferManagerCreateAttachmentUseCase参照）
+        // atlas_*テクスチャはcopyExternalImageToTextureとの互換性のためrgba8unormで作成される
+        const useMsaa = atlas.msaa && atlas.msaaTexture?.view;
+        const pipelineName = useMsaa ? "texture_copy_rgba8_msaa" : "texture_copy_rgba8";
+        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        const bindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
+        if (!pipeline || !bindGroupLayout) {
+            return;
+        }
+
+        // uniform: temp FBO全体をサンプリング（Y軸反転してアトラスに格納）
+        // アトラスのShape描画はFillVertexのyFlipSign=1.0によりY反転で格納されるため、
+        // cacheAsBitmapのコピーも同じ規則に合わせてY反転する
+        // UV.y = texCoord.y * scaleY + offsetY = texCoord.y * (-1) + 1 = 1 - texCoord.y
+        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer($atlasNodeCopyUniform);
+
+        // サンプラーとソーステクスチャ（MSAAリゾルブ済みのテクスチャ）
+        const sampler = this.textureManager.createSampler("container_atlas_copy", false);
+        const srcView = temp_attachment.texture.view;
+
+        const bindGroup = this.device.createBindGroup({
+            "layout": bindGroupLayout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": uniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": srcView }
+            ]
+        });
+
+        // アトラスのノード領域にレンダーパスを作成
+        const colorView = useMsaa ? atlas.msaaTexture!.view : atlas.texture.view;
+        const resolveTarget = useMsaa ? atlas.texture.view : null;
+
+        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+            colorView, 0, 0, 0, 0, "load", resolveTarget
+        );
+
+        const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+
+        // ビューポートとシザーでノード領域に制限
+        passEncoder.setViewport(node.x, node.y, node.w, node.h, 0, 1);
+        passEncoder.setScissorRect(node.x, node.y, node.w, node.h);
+
+        passEncoder.setPipeline(pipeline);
+        passEncoder.setBindGroup(0, bindGroup);
+        passEncoder.draw(6, 1, 0, 0);
+        passEncoder.end();
+
+        // アトラスレンダーパスインデックスをリセット（次のbeginNodeRenderingで新規作成させる）
+        this.nodeRenderPassAtlasIndex = -1;
+    }
+
+    /**
      * @description キャッシュされたコンテナフィルターテクスチャをメインに描画
      *              Draw a cached container filter texture to the main attachment
      *
-     * @param  {IBlendMode} blend_mode
-     * @param  {Float32Array} matrix
-     * @param  {Float32Array} color_transform
-     * @param  {Float32Array} filter_bounds
-     * @param  {string} unique_key
-     * @param  {string} filter_key
+     * @param  {IBlendMode}   blend_mode      - ブレンドモード / Blend mode
+     * @param  {Float32Array} matrix          - 変換行列 / Transform matrix
+     * @param  {Float32Array} color_transform - カラー変換パラメータ / Color transform parameters
+     * @param  {Float32Array} filter_bounds   - フィルターバウンド / Filter bounds
+     * @param  {string}       unique_key      - ユニークキー / Unique key
+     * @param  {string}       filter_key      - フィルターキー / Filter key
+     * @return {void}
      */
     containerDrawCachedFilter (
         blend_mode: IBlendMode,
@@ -2482,6 +2885,9 @@ export class Context
 
     /**
      * @description メインテクスチャを確保（フレーム開始時に一度だけgetCurrentTexture呼び出し）
+     *              Ensure the main texture is acquired (calls getCurrentTexture once per frame)
+     *
+     * @return {void}
      */
     private ensureMainTexture(): void
     {
@@ -2503,6 +2909,9 @@ export class Context
 
     /**
      * @description 現在の描画ターゲットのテクスチャビューを取得
+     *              Get the texture view of the current render target
+     *
+     * @return {GPUTextureView} 現在のテクスチャビュー / Current texture view
      */
     private getCurrentTextureView(): GPUTextureView
     {
@@ -2518,6 +2927,9 @@ export class Context
 
     /**
      * @description コマンドエンコーダーが存在することを保証
+     *              Ensure the command encoder exists
+     *
+     * @return {void}
      */
     private ensureCommandEncoder(): void
     {
@@ -2531,6 +2943,9 @@ export class Context
 
     /**
      * @description フレーム開始（レンダリング開始前に呼ぶ）
+     *              Begin a new frame (call before rendering starts)
+     *
+     * @return {void}
      */
     beginFrame(): void
     {
@@ -2547,6 +2962,10 @@ export class Context
 
     /**
      * @description フレームごとのプール管理テクスチャを追加（endFrame()でプールに返却）
+     *              Add a pooled texture for the current frame (returned to pool in endFrame())
+     *
+     * @param  {GPUTexture} texture - プール管理テクスチャ / Pooled texture
+     * @return {void}
      */
     addFrameTexture (texture: GPUTexture): void
     {
@@ -2555,6 +2974,9 @@ export class Context
 
     /**
      * @description フレーム終了とコマンド送信（レンダリング完了後に呼ぶ）
+     *              End the frame and submit commands (call after rendering is complete)
+     *
+     * @return {void}
      */
     endFrame(): void
     {
@@ -2626,6 +3048,9 @@ export class Context
 
     /**
      * @description コマンドを送信（後方互換性のため残す）
+     *              Submit commands (kept for backward compatibility)
+     *
+     * @return {void}
      */
     submit (): void
     {
@@ -2634,7 +3059,12 @@ export class Context
 
     /**
      * @description ノードを作成
+     *              Create a node in the texture atlas
      *              アトラスがいっぱいの場合は新しいアトラスを作成して再試行
+     *
+     * @param  {number} width  - ノード幅 / Node width
+     * @param  {number} height - ノード高さ / Node height
+     * @return {Node} 作成されたノード / Created node
      */
     createNode (width: number, height: number): Node
     {
@@ -2660,6 +3090,10 @@ export class Context
 
     /**
      * @description ノードを削除
+     *              Remove a node from the texture atlas
+     *
+     * @param  {Node} node - 削除対象ノード / Node to remove
+     * @return {void}
      */
     removeNode (node: Node): void
     {
@@ -2674,7 +3108,10 @@ export class Context
 
     /**
      * @description フレームバッファの描画情報をキャンバスに転送
+     *              Transfer frame buffer contents to the canvas
      *              スワップチェーンはCopyDstをサポートしないため、レンダーパスでブリット
+     *
+     * @return {void}
      */
     transferMainCanvas (): void
     {
@@ -2743,6 +3180,11 @@ export class Context
 
     /**
      * @description ImageBitmapを生成
+     *              Create an ImageBitmap from the current rendering result
+     *
+     * @param  {number} width  - 画像幅 / Image width
+     * @param  {number} height - 画像高さ / Image height
+     * @return {Promise<ImageBitmap>} 生成されたImageBitmap / Created ImageBitmap
      */
     async createImageBitmap (width: number, height: number): Promise<ImageBitmap>
     {
@@ -2865,6 +3307,7 @@ export class Context
      * @description マスク描画の開始準備
      *              Prepare to start drawing the mask
      *
+     * @return {void}
      */
     beginMask(): void
     {
@@ -2932,10 +3375,11 @@ export class Context
      * @description マスクの描画範囲を設定
      *              Set the mask drawing bounds
      *
-     * @param  {number} x_min
-     * @param  {number} y_min
-     * @param  {number} x_max
-     * @param  {number} y_max
+     * @param  {number} x_min - 最小X座標 / Minimum X coordinate
+     * @param  {number} y_min - 最小Y座標 / Minimum Y coordinate
+     * @param  {number} x_max - 最大X座標 / Maximum X coordinate
+     * @param  {number} y_max - 最大Y座標 / Maximum Y coordinate
+     * @return {void}
      */
     setMaskBounds(
         x_min: number,
@@ -2950,6 +3394,7 @@ export class Context
      * @description マスクの描画を終了
      *              End mask drawing
      *
+     * @return {void}
      */
     endMask(): void
     {
@@ -2967,8 +3412,9 @@ export class Context
 
     /**
      * @description マスクの終了処理
-     *              Mask end processing
+     *              Mask end processing (leave the mask)
      *
+     * @return {void}
      */
     leaveMask(): void
     {

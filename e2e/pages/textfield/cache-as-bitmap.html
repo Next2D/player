@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - TextField cacheAsBitmap</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { TextField } = next2d.text;
+        const { Sprite } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // ===== 1. 基本: cacheAsBitmap=Matrix(1,0,0,1) で等倍キャッシュ =====
+        const tf1 = new TextField();
+        tf1.text = "CacheAsBitmap 1x";
+        tf1.x = 20;
+        tf1.y = 20;
+        tf1.width = 200;
+        tf1.height = 30;
+        tf1.textColor = 0xFFFFFF;
+        tf1.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(tf1);
+
+        // ===== 2. cacheAsBitmap=Matrix(2,0,0,2) で2倍キャッシュ =====
+        const tf2 = new TextField();
+        tf2.text = "CacheAsBitmap 2x";
+        tf2.x = 20;
+        tf2.y = 60;
+        tf2.width = 200;
+        tf2.height = 30;
+        tf2.textColor = 0x00FF00;
+        tf2.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
+        root.addChild(tf2);
+
+        // ===== 3. 先祖スケールの影響を受けない =====
+        const container1 = new Sprite();
+        container1.scaleX = 2;
+        container1.scaleY = 2;
+        container1.x = 20;
+        container1.y = 100;
+        root.addChild(container1);
+
+        const tf3 = new TextField();
+        tf3.text = "Cached in 2x parent";
+        tf3.width = 150;
+        tf3.height = 25;
+        tf3.textColor = 0xFF0000;
+        tf3.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        container1.addChild(tf3);
+
+        // ===== 4. 比較用: cacheAsBitmapなし（親スケール2倍） =====
+        const container2 = new Sprite();
+        container2.scaleX = 2;
+        container2.scaleY = 2;
+        container2.x = 340;
+        container2.y = 100;
+        root.addChild(container2);
+
+        const tf4 = new TextField();
+        tf4.text = "No cache in 2x parent";
+        tf4.width = 150;
+        tf4.height = 25;
+        tf4.textColor = 0xFF0000;
+        // cacheAsBitmapなし
+        container2.addChild(tf4);
+
+        // ===== 5. 回転した親の中でcacheAsBitmap =====
+        const container3 = new Sprite();
+        container3.x = 120;
+        container3.y = 220;
+        container3.rotation = 20;
+        root.addChild(container3);
+
+        const tf5 = new TextField();
+        tf5.text = "Rotated parent cached";
+        tf5.width = 180;
+        tf5.height = 25;
+        tf5.textColor = 0x00FFFF;
+        tf5.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        container3.addChild(tf5);
+
+        // ===== 6. 比較用: cacheAsBitmapなし（回転親） =====
+        const container4 = new Sprite();
+        container4.x = 400;
+        container4.y = 220;
+        container4.rotation = 20;
+        root.addChild(container4);
+
+        const tf6 = new TextField();
+        tf6.text = "Rotated parent no cache";
+        tf6.width = 180;
+        tf6.height = 25;
+        tf6.textColor = 0x00FFFF;
+        // cacheAsBitmapなし
+        container4.addChild(tf6);
+
+        // ===== 7. 背景・枠線付きテキストのcacheAsBitmap =====
+        const tf7 = new TextField();
+        tf7.text = "Border + Background";
+        tf7.x = 20;
+        tf7.y = 300;
+        tf7.width = 200;
+        tf7.height = 30;
+        tf7.border = true;
+        tf7.borderColor = 0xFF0000;
+        tf7.background = true;
+        tf7.backgroundColor = 0x000066;
+        tf7.textColor = 0xFFFFFF;
+        tf7.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(tf7);
+
+        // ===== 8. htmlTextのcacheAsBitmap =====
+        const tf8 = new TextField();
+        tf8.htmlText = "<b>Bold</b> <i>Italic</i> <font color='#FF0000'>Red</font>";
+        tf8.x = 20;
+        tf8.y = 340;
+        tf8.width = 250;
+        tf8.height = 30;
+        tf8.textColor = 0xFFFFFF;
+        tf8.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
+        root.addChild(tf8);
+
+        // ===== 9. 深いネスト: 祖父母→親→子すべてにスケール =====
+        const grandParent = new Sprite();
+        grandParent.scaleX = 1.5;
+        grandParent.scaleY = 1.5;
+        grandParent.x = 20;
+        grandParent.y = 380;
+        root.addChild(grandParent);
+
+        const parent9 = new Sprite();
+        parent9.scaleX = 1.5;
+        parent9.scaleY = 1.5;
+        grandParent.addChild(parent9);
+
+        const tf9 = new TextField();
+        tf9.text = "Deep nested";
+        tf9.width = 100;
+        tf9.height = 25;
+        tf9.textColor = 0xFFFF00;
+        tf9.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        parent9.addChild(tf9);
+
+        // ===== 10. cacheAsBitmap=null（デフォルト動作確認） =====
+        const tf10 = new TextField();
+        tf10.text = "No cacheAsBitmap";
+        tf10.x = 350;
+        tf10.y = 300;
+        tf10.width = 200;
+        tf10.height = 30;
+        tf10.textColor = 0xFFFFFF;
+        tf10.cacheAsBitmap = null;
+        root.addChild(tf10);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

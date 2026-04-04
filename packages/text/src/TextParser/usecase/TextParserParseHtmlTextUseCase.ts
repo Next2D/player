@@ -1,7 +1,6 @@
 import type { TextFormat } from "../../TextFormat";
 import type { IOptions } from "../../interface/IOptions";
 import { TextData } from "../../TextData";
-import { parseDocument } from "htmlparser2";
 import { execute as textParserCreateNewLineUseCase } from "./TextParserCreateNewLineUseCase";
 import { execute as textParserAdjustmentHeightService } from "../service/TextParserAdjustmentHeightService";
 import { execute as textParserParseTagUseCase } from "./TextParserParseTagUseCase";
@@ -44,7 +43,7 @@ export const execute = (
     textParserCreateNewLineUseCase(textData, textFormat);
 
     textParserParseTagUseCase(
-        parseDocument(htmlText), textFormat, textData, options
+        htmlText, textFormat, textData, options
     );
 
     textParserAdjustmentHeightService(textData);

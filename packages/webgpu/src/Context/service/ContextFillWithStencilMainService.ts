@@ -1,5 +1,16 @@
 import type { PipelineManager } from "../../Shader/PipelineManager";
 
+/**
+ * @description メインキャンバス向けのステンシル書き込みとフィル描画を2パスで実行する
+ *              Executes two-pass stencil write and fill rendering for the main canvas
+ * @param {GPURenderPassEncoder} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @param {GPUBuffer} vertex_buffer 頂点バッファ / Vertex buffer
+ * @param {number} vertex_count 頂点数 / Vertex count
+ * @param {GPUBindGroup} bind_group バインドグループ / Bind group
+ * @param {number} uniform_offset ユニフォームオフセット / Uniform offset
+ * @return {void}
+ */
 export const execute = (
     render_pass_encoder: GPURenderPassEncoder,
     pipeline_manager: PipelineManager,

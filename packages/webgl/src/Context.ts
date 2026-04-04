@@ -47,6 +47,7 @@ import { execute as contextStrokeUseCase } from "./Context/usecase/ContextStroke
 import { execute as contextApplyFilterUseCase } from "./Context/usecase/ContextApplyFilterUseCase";
 import { execute as contextContainerBeginLayerUseCase } from "./Context/usecase/ContextContainerBeginLayerUseCase";
 import { execute as contextContainerEndLayerUseCase } from "./Context/usecase/ContextContainerEndLayerUseCase";
+import { execute as contextContainerEndAtlasNodeUseCase } from "./Context/usecase/ContextContainerEndAtlasNodeUseCase";
 import { execute as contextContainerDrawCachedFilterUseCase } from "./Context/usecase/ContextContainerDrawCachedFilterUseCase";
 import { execute as contextUpdateTransferBoundsService } from "./Context/service/ContextUpdateTransferBoundsService";
 import { execute as contextDrawFillUseCase } from "./Context/usecase/ContextDrawFillUseCase";
@@ -95,6 +96,7 @@ export class Context
     public joints: number;
     public miterLimit: number;
     public newDrawState: boolean = false;
+    private readonly _pendingAtlasNodes: Node[] = [];
 
     constructor (
         gl: WebGL2RenderingContext,
@@ -507,6 +509,26 @@ export class Context
             use_filter, filter_bounds, filter_params,
             unique_key, filter_key
         );
+    }
+
+    containerBeginAtlasNode (width: number, height: number): Node
+    {
+        this.drawArraysInstanced();
+
+        // アトラスノードを確保（後でコピー先として使用）
+        const node = atlasManagerCreateNodeService(width, height);
+        this._pendingAtlasNodes.push(node);
+
+        // temp FBOを作成して子要素の描画先として設定
+        contextContainerBeginLayerUseCase(width, height);
+
+        return node;
+    }
+
+    containerEndAtlasNode (): void
+    {
+        const node = this._pendingAtlasNodes.pop()!;
+        contextContainerEndAtlasNodeUseCase(node);
     }
 
     containerDrawCachedFilter (

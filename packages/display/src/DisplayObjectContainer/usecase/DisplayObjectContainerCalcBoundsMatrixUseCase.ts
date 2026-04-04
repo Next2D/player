@@ -10,7 +10,9 @@ import { execute as videoCalcBoundsMatrixUseCase } from "../../Video/usecase/Vid
 import { execute as textFieldCalcBoundsMatrixUseCase } from "../../TextField/usecase/TextFieldCalcBoundsMatrixUseCase";
 import {
     $getBoundsArray,
-    $poolBoundsArray
+    $poolBoundsArray,
+    $getFloat32Array6,
+    $poolFloat32Array6
 } from "../../DisplayObjectUtil";
 
 /**
@@ -32,7 +34,27 @@ export const execute = <C extends DisplayObjectContainer>(
         return $getBoundsArray(0, 0, 0, 0);
     }
 
-    const rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
+    let rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
+
+    // cacheAsBitmap倍率をrawMatrixに適用（ShapeCalcBoundsMatrixUseCaseと同様）
+    const cacheMatrix = display_object_container.cacheAsBitmap;
+    let scaledMatrix: Float32Array | null = null;
+    if (cacheMatrix) {
+        const m = cacheMatrix.rawData;
+        const csx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        const csy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+        if (rawMatrix) {
+            scaledMatrix = $getFloat32Array6(
+                rawMatrix[0] * csx, rawMatrix[1] * csx,
+                rawMatrix[2] * csy, rawMatrix[3] * csy,
+                rawMatrix[4], rawMatrix[5]
+            );
+        } else {
+            scaledMatrix = $getFloat32Array6(csx, 0, 0, csy, 0, 0);
+        }
+        rawMatrix = scaledMatrix;
+    }
+
     const tMatrix = rawMatrix
         ? matrix
             ? Matrix.multiply(matrix, rawMatrix)
@@ -82,6 +104,10 @@ export const execute = <C extends DisplayObjectContainer>(
         yMax = Math.max(yMax, bounds[3]);
 
         $poolBoundsArray(bounds);
+    }
+
+    if (scaledMatrix) {
+        $poolFloat32Array6(scaledMatrix);
     }
 
     return $getBoundsArray(xMin, yMin, xMax, yMax);

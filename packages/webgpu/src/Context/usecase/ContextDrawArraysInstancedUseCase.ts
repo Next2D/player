@@ -13,9 +13,50 @@ import {
 } from "../../Mask";
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
+/**
+ * @description キャッシュ済みバインドグループ
+ *              Cached bind group
+ */
 let $cachedBindGroup: GPUBindGroup | null = null;
+/**
+ * @description キャッシュ済みアトラステクスチャビュー
+ *              Cached atlas texture view
+ */
 let $cachedAtlasView: GPUTextureView | null = null;
 
+/**
+ * @description ブレンドモードに応じたインスタンスパイプライン名を返す
+ */
+const $getPipelineName = (mode: IBlendMode): string => {
+    switch (mode) {
+        case "add":
+            return "instanced_add";
+        case "screen":
+            return "instanced_screen";
+        case "alpha":
+            return "instanced_alpha";
+        case "erase":
+            return "instanced_erase";
+        case "copy":
+            return "instanced_copy";
+        default:
+            return "instanced";
+    }
+};
+
+/**
+ * @description インスタンス描画を実行する
+ *              Executes instanced array drawing
+ * @param {GPUDevice} device GPUデバイス / GPU device
+ * @param {GPUCommandEncoder} command_encoder コマンドエンコーダ / Command encoder
+ * @param {GPURenderPassEncoder | null} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {IAttachmentObject} main_attachment メインアタッチメント / Main attachment
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @param {FrameBufferManager} frame_buffer_manager フレームバッファマネージャ / Frame buffer manager
+ * @param {TextureManager} texture_manager テクスチャマネージャ / Texture manager
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @return {GPURenderPassEncoder | null} レンダーパスエンコーダまたはnull / Render pass encoder or null
+ */
 export const execute = (
     device: GPUDevice,
     command_encoder: GPUCommandEncoder,
@@ -44,27 +85,7 @@ export const execute = (
     // 現在のブレンドモードを取得
     const blendMode: IBlendMode = $currentBlendMode;
 
-    // ブレンドモードに応じたパイプライン名を生成
-    // simpleBlendModes: normal, layer, add, screen, alpha, erase, copy
-    const getPipelineName = (mode: IBlendMode): string => {
-        switch (mode) {
-            case "add":
-                return "instanced_add";
-            case "screen":
-                return "instanced_screen";
-            case "alpha":
-                return "instanced_alpha";
-            case "erase":
-                return "instanced_erase";
-            case "copy":
-                return "instanced_copy";
-            default:
-                // normal, layer
-                return "instanced";
-        }
-    };
-
-    const pipelineName = getPipelineName(blendMode);
+    const pipelineName = $getPipelineName(blendMode);
     const normalPipeline = pipeline_manager.getPipeline(pipelineName);
     const maskedPipeline = pipeline_manager.getPipeline("instanced_masked");
 

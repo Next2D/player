@@ -1,3 +1,10 @@
+/**
+ * @description ベジェ曲線ベースのアンチエイリアス付き塗りフラグメントシェーダー
+ *              Bezier curve-based fill fragment shader with anti-aliasing
+ *
+ * @type {string}
+ * @constant
+ */
 export const FillFragment = /* wgsl */`
 struct FragmentInput {
     @builtin(position) position: vec4<f32>,

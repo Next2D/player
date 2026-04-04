@@ -4,8 +4,11 @@ import type { IColorBufferObject } from "./interface/IColorBufferObject";
 import type { IStencilBufferObject } from "./interface/IStencilBufferObject";
 import { execute as attachmentManagerGetAttachmentObjectUseCase } from "./AttachmentManager/usecase/AttachmentManagerGetAttachmentObjectUseCase";
 import { execute as attachmentManagerReleaseAttachmentUseCase } from "./AttachmentManager/usecase/AttachmentManagerReleaseAttachmentUseCase";
-import { execute as attachmentManagerCreateRenderPassDescriptorService } from "./AttachmentManager/service/AttachmentManagerCreateRenderPassDescriptorService";
 
+/**
+ * @description アタッチメントリソースのプール管理クラス
+ *              Pool manager class for attachment resources
+ */
 export class AttachmentManager
 {
     private device: GPUDevice;
@@ -14,8 +17,12 @@ export class AttachmentManager
     private colorBufferPool: IColorBufferObject[];
     private stencilBufferPool: IStencilBufferObject[];
     private idCounter: { attachmentId: number; textureId: number; stencilId: number };
-    private currentAttachment: IAttachmentObject | null;
 
+    /**
+     * @description AttachmentManagerのコンストラクタ
+     *              Constructor for AttachmentManager
+     * @param {GPUDevice} device - WebGPUデバイス / WebGPU device
+     */
     constructor(device: GPUDevice)
     {
         this.device = device;
@@ -24,9 +31,16 @@ export class AttachmentManager
         this.colorBufferPool = [];
         this.stencilBufferPool = [];
         this.idCounter = { "attachmentId": 0, "textureId": 0, "stencilId": 0 };
-        this.currentAttachment = null;
     }
 
+    /**
+     * @description プールからアタッチメントオブジェクトを取得する
+     *              Get an attachment object from the pool
+     * @param  {number}  width  - テクスチャの幅 / Texture width
+     * @param  {number}  height - テクスチャの高さ / Texture height
+     * @param  {boolean} [msaa=false] - MSAAを有効にするか / Whether to enable MSAA
+     * @return {IAttachmentObject}
+     */
     getAttachmentObject(
         width: number,
         height: number,
@@ -46,26 +60,12 @@ export class AttachmentManager
         );
     }
 
-    bindAttachment(attachment: IAttachmentObject): void
-    {
-        this.currentAttachment = attachment;
-    }
-
-    getCurrentAttachment(): IAttachmentObject | null
-    {
-        return this.currentAttachment;
-    }
-
-    get currentAttachmentObject(): IAttachmentObject | null
-    {
-        return this.currentAttachment;
-    }
-
-    unbindAttachment(): void
-    {
-        this.currentAttachment = null;
-    }
-
+    /**
+     * @description アタッチメントをプールに返却する
+     *              Release an attachment back to the pool
+     * @param  {IAttachmentObject} attachment - 返却するアタッチメント / Attachment to release
+     * @return {void}
+     */
     releaseAttachment(attachment: IAttachmentObject): void
     {
         attachmentManagerReleaseAttachmentUseCase(
@@ -77,25 +77,11 @@ export class AttachmentManager
         );
     }
 
-    createRenderPassDescriptor(
-        attachment: IAttachmentObject,
-        r: number,
-        g: number,
-        b: number,
-        a: number,
-        loadOp: GPULoadOp = "clear"
-    ): GPURenderPassDescriptor
-    {
-        return attachmentManagerCreateRenderPassDescriptorService(
-            attachment,
-            r,
-            g,
-            b,
-            a,
-            loadOp
-        );
-    }
-
+    /**
+     * @description 全リソースを破棄する
+     *              Dispose all resources
+     * @return {void}
+     */
     dispose(): void
     {
         for (const pool of this.texturePool.values()) {

@@ -8,10 +8,10 @@ import type { MovieClip } from "./MovieClip";
 import type { ISprite } from "./interface/ISprite";
 import type {
     ColorTransform,
-    Matrix,
     Rectangle,
     Point
 } from "@next2d/geom";
+import { Matrix } from "@next2d/geom";
 import { EventDispatcher } from "@next2d/events";
 import { execute as displayObjectApplyChangesService } from "./DisplayObject/service/DisplayObjectApplyChangesService";
 import { execute as displayObjectConcatenatedMatrixUseCase } from "./DisplayObject/usecase/DisplayObjectConcatenatedMatrixUseCase";
@@ -398,6 +398,21 @@ export class DisplayObject extends EventDispatcher
     private _$visible: boolean;
 
     /**
+     * @description ビットマップキャッシュ用のMatrix。nullでない場合、指定Matrix × stageのrendererScaleで
+     *              Shape/TextFieldのベクター描画をキャッシュし、ステージのリサイズがあるまで再利用します。
+     *              先祖のMatrixの影響を受けず、キャッシュの品質は指定Matrixとstageスケールのみで決定されます。
+     *              Matrix for bitmap caching. When not null, caches Shape/TextField vector rendering
+     *              at the specified Matrix × stage rendererScale, reusing until stage resize.
+     *              Cache quality is determined only by the specified Matrix and stage scale,
+     *              independent of ancestor transforms.
+     *
+     * @type {Matrix | null}
+     * @default null
+     * @private
+     */
+    private _$cacheAsBitmap: Matrix | null;
+
+    /**
      * @description 表示オブジェクト単位の変数を保持するマップ
      *              Map that holds variables for display objects
      *
@@ -427,6 +442,16 @@ export class DisplayObject extends EventDispatcher
      * @public
      */
     public parent: ISprite<any> | null;
+
+    /**
+     * @description キャッシュする際の指定Matrix、nullの場合は通常のMatrixで描画
+     *              Specified Matrix for caching, if null, draw with the normal Matrix
+     *
+     * @member {Matrix | null}
+     * @default null
+     * @public
+     */
+    public cacheTransform: Matrix | null = null;
 
     /**
      * @constructor
@@ -474,6 +499,7 @@ export class DisplayObject extends EventDispatcher
         this.$blendMode      = null;
 
         this._$visible    = true;
+        this._$cacheAsBitmap = null;
         this._$scale9Grid = null;
         this._$variables  = null;
 
@@ -726,9 +752,15 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleX (): number
     {
-        return this.$scaleX === null
+        const base = this.$scaleX === null
             ? displayObjectGetScaleXUseCase(this)
             : this.$scaleX;
+
+        if (this._$cacheAsBitmap) {
+            const m = this._$cacheAsBitmap.rawData;
+            return base * Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        }
+        return base;
     }
     set scaleX (scale_x: number)
     {
@@ -745,9 +777,15 @@ export class DisplayObject extends EventDispatcher
      */
     get scaleY (): number
     {
-        return this.$scaleY === null
+        const base = this.$scaleY === null
             ? displayObjectGetScaleYUseCase(this)
             : this.$scaleY;
+
+        if (this._$cacheAsBitmap) {
+            const m = this._$cacheAsBitmap.rawData;
+            return base * Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+        }
+        return base;
     }
     set scaleY (scale_y: number)
     {
@@ -772,6 +810,35 @@ export class DisplayObject extends EventDispatcher
             return ;
         }
         this._$visible = visible;
+        displayObjectApplyChangesService(this);
+    }
+
+    /**
+     * @description ビットマップキャッシュ用のMatrix。nullでない場合、指定Matrix × stageのrendererScaleで
+     *              Shape/TextFieldのベクター描画をキャッシュし、ステージのリサイズがあるまで再利用します。
+     *              先祖のMatrixの影響を受けず、キャッシュの品質は指定Matrixとstageスケールのみで決定されます。
+     *              Matrix for bitmap caching. When not null, caches Shape/TextField vector rendering
+     *              at the specified Matrix × stage rendererScale, reusing until stage resize.
+     *              Cache quality is determined only by the specified Matrix and stage scale,
+     *              independent of ancestor transforms.
+     *
+     * @member {Matrix | null}
+     * @default null
+     * @public
+     */
+    get cacheAsBitmap (): Matrix | null
+    {
+        return this._$cacheAsBitmap;
+    }
+    set cacheAsBitmap (cache_as_bitmap: Matrix | null)
+    {
+        if (cache_as_bitmap !== null && !(cache_as_bitmap instanceof Matrix)) {
+            return ;
+        }
+        if (this._$cacheAsBitmap === cache_as_bitmap) {
+            return ;
+        }
+        this._$cacheAsBitmap = cache_as_bitmap;
         displayObjectApplyChangesService(this);
     }
 

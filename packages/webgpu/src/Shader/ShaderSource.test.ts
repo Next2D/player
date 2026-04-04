@@ -46,32 +46,6 @@ describe("ShaderSource", () =>
         });
     });
 
-    describe("getFillMainVertexShader", () =>
-    {
-        it("should return a valid WGSL vertex shader string", () =>
-        {
-            const shader = ShaderSource.getFillMainVertexShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @vertex attribute", () =>
-        {
-            const shader = ShaderSource.getFillMainVertexShader();
-
-            expect(shader).toContain("@vertex");
-        });
-
-        it("should return same shader as non-Main variant (uses @override yFlipSign)", () =>
-        {
-            const mainShader = ShaderSource.getFillMainVertexShader();
-            const atlasShader = ShaderSource.getFillVertexShader();
-
-            expect(mainShader).toBe(atlasShader);
-        });
-    });
-
     describe("getFillFragmentShader", () =>
     {
         it("should return a valid WGSL fragment shader string", () =>
@@ -119,32 +93,6 @@ describe("ShaderSource", () =>
             const shader = ShaderSource.getStencilWriteVertexShader();
 
             expect(shader).toContain("@vertex");
-        });
-    });
-
-    describe("getStencilWriteMainVertexShader", () =>
-    {
-        it("should return a valid WGSL vertex shader string", () =>
-        {
-            const shader = ShaderSource.getStencilWriteMainVertexShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @vertex attribute", () =>
-        {
-            const shader = ShaderSource.getStencilWriteMainVertexShader();
-
-            expect(shader).toContain("@vertex");
-        });
-
-        it("should return same shader as non-Main variant (uses @override yFlipSign)", () =>
-        {
-            const mainShader = ShaderSource.getStencilWriteMainVertexShader();
-            const atlasShader = ShaderSource.getStencilWriteVertexShader();
-
-            expect(mainShader).toBe(atlasShader);
         });
     });
 
@@ -264,32 +212,6 @@ describe("ShaderSource", () =>
         });
     });
 
-    describe("getBasicMainVertexShader", () =>
-    {
-        it("should return a valid WGSL vertex shader string", () =>
-        {
-            const shader = ShaderSource.getBasicMainVertexShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @vertex attribute", () =>
-        {
-            const shader = ShaderSource.getBasicMainVertexShader();
-
-            expect(shader).toContain("@vertex");
-        });
-
-        it("should return same shader as non-Main variant (uses @override yFlipSign)", () =>
-        {
-            const mainShader = ShaderSource.getBasicMainVertexShader();
-            const atlasShader = ShaderSource.getBasicVertexShader();
-
-            expect(mainShader).toBe(atlasShader);
-        });
-    });
-
     describe("getBasicFragmentShader", () =>
     {
         it("should return a valid WGSL fragment shader string", () =>
@@ -402,24 +324,6 @@ describe("ShaderSource", () =>
         });
     });
 
-    describe("getGradientFillMainVertexShader", () =>
-    {
-        it("should return a valid WGSL vertex shader string", () =>
-        {
-            const shader = ShaderSource.getGradientFillMainVertexShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @vertex attribute", () =>
-        {
-            const shader = ShaderSource.getGradientFillMainVertexShader();
-
-            expect(shader).toContain("@vertex");
-        });
-    });
-
     describe("getGradientFillFragmentShader", () =>
     {
         it("should return a valid WGSL fragment shader string", () =>
@@ -445,24 +349,6 @@ describe("ShaderSource", () =>
         });
     });
 
-    describe("getGradientFragmentShader", () =>
-    {
-        it("should return a valid WGSL fragment shader string", () =>
-        {
-            const shader = ShaderSource.getGradientFragmentShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @fragment attribute", () =>
-        {
-            const shader = ShaderSource.getGradientFragmentShader();
-
-            expect(shader).toContain("@fragment");
-        });
-    });
-
     describe("getBitmapFillVertexShader", () =>
     {
         it("should return a valid WGSL vertex shader string", () =>
@@ -476,24 +362,6 @@ describe("ShaderSource", () =>
         it("should contain @vertex attribute", () =>
         {
             const shader = ShaderSource.getBitmapFillVertexShader();
-
-            expect(shader).toContain("@vertex");
-        });
-    });
-
-    describe("getBitmapFillMainVertexShader", () =>
-    {
-        it("should return a valid WGSL vertex shader string", () =>
-        {
-            const shader = ShaderSource.getBitmapFillMainVertexShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @vertex attribute", () =>
-        {
-            const shader = ShaderSource.getBitmapFillMainVertexShader();
 
             expect(shader).toContain("@vertex");
         });
@@ -844,46 +712,6 @@ describe("ShaderSource", () =>
         });
     });
 
-    describe("getComplexBlendFragmentShader", () =>
-    {
-        it("should return a valid WGSL fragment shader (unified)", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(typeof shader).toBe("string");
-            expect(shader.length).toBeGreaterThan(0);
-        });
-
-        it("should contain @fragment attribute", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("@fragment");
-        });
-
-        it("should include blend function", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("fn blend");
-        });
-
-        it("should support step-based blend modes (lighten/darken)", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("step(srcRgb, dstRgb)");
-            expect(shader).toContain("step(dstRgb, srcRgb)");
-        });
-
-        it("should include blendMode uniform", () =>
-        {
-            const shader = ShaderSource.getComplexBlendFragmentShader();
-
-            expect(shader).toContain("blendMode");
-        });
-    });
-
     describe("getDisplacementMapFilterFragmentShader", () =>
     {
         it("should return a valid WGSL fragment shader string", () =>
@@ -1024,18 +852,13 @@ describe("ShaderSource", () =>
     {
         const vertexShaders = [
             { name: "getFillVertexShader", fn: () => ShaderSource.getFillVertexShader() },
-            { name: "getFillMainVertexShader", fn: () => ShaderSource.getFillMainVertexShader() },
             { name: "getStencilWriteVertexShader", fn: () => ShaderSource.getStencilWriteVertexShader() },
-            { name: "getStencilWriteMainVertexShader", fn: () => ShaderSource.getStencilWriteMainVertexShader() },
             { name: "getStencilFillVertexShader", fn: () => ShaderSource.getStencilFillVertexShader() },
             { name: "getMaskVertexShader", fn: () => ShaderSource.getMaskVertexShader() },
             { name: "getBasicVertexShader", fn: () => ShaderSource.getBasicVertexShader() },
-            { name: "getBasicMainVertexShader", fn: () => ShaderSource.getBasicMainVertexShader() },
             { name: "getInstancedVertexShader", fn: () => ShaderSource.getInstancedVertexShader() },
             { name: "getGradientFillVertexShader", fn: () => ShaderSource.getGradientFillVertexShader() },
-            { name: "getGradientFillMainVertexShader", fn: () => ShaderSource.getGradientFillMainVertexShader() },
             { name: "getBitmapFillVertexShader", fn: () => ShaderSource.getBitmapFillVertexShader() },
-            { name: "getBitmapFillMainVertexShader", fn: () => ShaderSource.getBitmapFillMainVertexShader() },
             { name: "getBlurFilterVertexShader", fn: () => ShaderSource.getBlurFilterVertexShader() },
             { name: "getNodeClearVertexShader", fn: () => ShaderSource.getNodeClearVertexShader() },
             { name: "getPositionedTextureVertexShader", fn: () => ShaderSource.getPositionedTextureVertexShader() }
@@ -1050,7 +873,6 @@ describe("ShaderSource", () =>
             { name: "getTextureFragmentShader", fn: () => ShaderSource.getTextureFragmentShader() },
             { name: "getInstancedFragmentShader", fn: () => ShaderSource.getInstancedFragmentShader() },
             { name: "getGradientFillFragmentShader", fn: () => ShaderSource.getGradientFillFragmentShader() },
-            { name: "getGradientFragmentShader", fn: () => ShaderSource.getGradientFragmentShader() },
             { name: "getBitmapFillFragmentShader", fn: () => ShaderSource.getBitmapFillFragmentShader() },
             { name: "getBlendFragmentShader", fn: () => ShaderSource.getBlendFragmentShader() },
             { name: "getTextureCopyFragmentShader", fn: () => ShaderSource.getTextureCopyFragmentShader() },

@@ -3,6 +3,10 @@ import type { Shape } from "../../Shape";
 import { Matrix } from "@next2d/geom";
 import { execute as displayObjectGetRawMatrixUseCase } from "../../DisplayObject/usecase/DisplayObjectGetRawMatrixUseCase";
 import { execute as graphicsHitTestService } from "../../Graphics/service/GraphicsHitTestService";
+import {
+    $getFloat32Array6,
+    $poolFloat32Array6
+} from "../../DisplayObjectUtil";
 
 /**
  * @description Shape のヒット判定
@@ -31,10 +35,34 @@ export const execute = (
         return false;
     }
 
-    const rawMatrix = displayObjectGetRawMatrixUseCase(shape);
+    let rawMatrix = displayObjectGetRawMatrixUseCase(shape);
+
+    // cacheAsBitmap倍率をrawMatrixに適用
+    const cacheMatrix = shape.cacheAsBitmap;
+    let scaledMatrix: Float32Array | null = null;
+    if (cacheMatrix) {
+        const m = cacheMatrix.rawData;
+        const csx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        const csy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+        if (rawMatrix) {
+            scaledMatrix = $getFloat32Array6(
+                rawMatrix[0] * csx, rawMatrix[1] * csx,
+                rawMatrix[2] * csy, rawMatrix[3] * csy,
+                rawMatrix[4], rawMatrix[5]
+            );
+        } else {
+            scaledMatrix = $getFloat32Array6(csx, 0, 0, csy, 0, 0);
+        }
+        rawMatrix = scaledMatrix;
+    }
+
     const tMatrix = rawMatrix
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
+
+    if (scaledMatrix) {
+        $poolFloat32Array6(scaledMatrix);
+    }
 
     hit_context.beginPath();
     hit_context.setTransform(

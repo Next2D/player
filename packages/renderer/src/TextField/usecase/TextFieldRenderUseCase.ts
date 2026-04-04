@@ -43,8 +43,10 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const uniqueKey = `${render_queue[index++]}`;
     const cacheKey  = render_queue[index++];
 
-    // text state
-    const changed = Boolean(render_queue[index++]);
+    // text state (bit 0 = changed, bit 1 = cacheAsBitmap)
+    const changedFlag = render_queue[index++];
+    const changed = Boolean(changedFlag & 1);
+    const isCacheAsBitmap = Boolean(changedFlag & 2);
 
     const xScale = render_queue[index++];
     const yScale = render_queue[index++];
@@ -187,29 +189,46 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
 
-    const radianX = Math.atan2(matrix[1], matrix[0]);
-    const radianY = Math.atan2(-matrix[2], matrix[3]);
-    if (radianX || radianY) {
+    if (isCacheAsBitmap) {
 
-        const tx = xMin * xScale;
-        const ty = yMin * yScale;
-
-        const cosX = Math.cos(radianX);
-        const sinX = Math.sin(radianX);
-        const cosY = Math.cos(radianY);
-        const sinY = Math.sin(radianY);
+        // cacheAsBitmap: Bitmapと同様の描画パスで、cacheScaleを補正
+        // baseBounds原点(xMin,yMin)のスクリーン座標をtranslationに反映
+        const screenX = matrix[0] * xMin + matrix[2] * yMin + matrix[4];
+        const screenY = matrix[1] * xMin + matrix[3] * yMin + matrix[5];
 
         $context.setTransform(
-            cosX, sinX, -sinY, cosY,
-            tx * cosX - ty * sinY + matrix[4],
-            tx * sinX + ty * cosY + matrix[5]
+            matrix[0] / xScale, matrix[1] / xScale,
+            matrix[2] / yScale, matrix[3] / yScale,
+            screenX, screenY
         );
 
     } else {
 
-        $context.setTransform(1, 0, 0, 1,
-            bounds[0], bounds[1]
-        );
+        const radianX = Math.atan2(matrix[1], matrix[0]);
+        const radianY = Math.atan2(-matrix[2], matrix[3]);
+        if (radianX || radianY) {
+
+            const tx = xMin * xScale;
+            const ty = yMin * yScale;
+
+            const cosX = Math.cos(radianX);
+            const sinX = Math.sin(radianX);
+            const cosY = Math.cos(radianY);
+            const sinY = Math.sin(radianY);
+
+            $context.setTransform(
+                cosX, sinX, -sinY, cosY,
+                tx * cosX - ty * sinY + matrix[4],
+                tx * sinX + ty * cosY + matrix[5]
+            );
+
+        } else {
+
+            $context.setTransform(1, 0, 0, 1,
+                bounds[0], bounds[1]
+            );
+
+        }
 
     }
 

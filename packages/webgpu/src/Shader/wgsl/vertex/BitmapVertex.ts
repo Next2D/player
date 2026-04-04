@@ -1,3 +1,10 @@
+/**
+ * @description ビットマップ塗り用頂点シェーダー（ワールド座標出力付き）
+ *              Bitmap fill vertex shader with world position output
+ *
+ * @type {string}
+ * @constant
+ */
 export const BitmapFillVertex = /* wgsl */`
 override yFlipSign: f32 = 1.0;
 

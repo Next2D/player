@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { ShaderSource } from "../../Shader/ShaderSource";
+import { intToStraightRGBA } from "../FilterUtil";
 
 /**
  * @description プリアロケートされたBindGroupEntry配列 (バインディング3つ)
@@ -12,16 +13,6 @@ const $entries3: GPUBindGroupEntry[] = [
 ];
 
 /**
- * @description 32bit整数からRGB値を抽出
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255;
-    const g = (color >> 8 & 0xFF) / 255;
-    const b = (color & 0xFF) / 255;
-    return [r, g, b, alpha];
-};
-
-/**
  * @description パイプラインキャッシュ（キー: matrixX,matrixY,preserveAlpha,clamp）
  */
 const $pipelineCache = new Map<string, {
@@ -31,15 +22,29 @@ const $pipelineCache = new Map<string, {
 
 /**
  * @description コンボリューションフィルターを適用
+ *              Apply convolution filter
+ *
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ（アタッチメント）
+ * @param  {number} matrix_x - マトリックスのX方向サイズ
+ * @param  {number} matrix_y - マトリックスのY方向サイズ
+ * @param  {Float32Array} matrix - コンボリューションマトリックス
+ * @param  {number} divisor - 除算値
+ * @param  {number} bias - バイアス値
+ * @param  {boolean} preserve_alpha - アルファ値を保持するか
+ * @param  {boolean} clamp - クランプするか
+ * @param  {number} color - 代替色 (32bit整数)
+ * @param  {number} alpha - アルファ値
+ * @param  {IFilterConfig} config - WebGPUリソース設定
+ * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
-    matrixX: number,
-    matrixY: number,
+    source_attachment: IAttachmentObject,
+    matrix_x: number,
+    matrix_y: number,
     matrix: Float32Array,
     divisor: number,
     bias: number,
-    preserveAlpha: boolean,
+    preserve_alpha: boolean,
     clamp: boolean,
     color: number,
     alpha: number,
@@ -48,18 +53,18 @@ export const execute = (
 
     const { device, commandEncoder, frameBufferManager, textureManager } = config;
 
-    const width = sourceAttachment.width;
-    const height = sourceAttachment.height;
+    const width = source_attachment.width;
+    const height = source_attachment.height;
 
     // 出力アタッチメントを作成
     const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
 
     // パイプラインをキャッシュから取得または作成
-    const cacheKey = `${matrixX},${matrixY},${preserveAlpha},${clamp}`;
+    const cacheKey = `${matrix_x},${matrix_y},${preserve_alpha},${clamp}`;
     let cached = $pipelineCache.get(cacheKey);
     if (!cached) {
         const shaderCode = ShaderSource.getConvolutionFilterFragmentShader(
-            matrixX, matrixY, preserveAlpha, clamp
+            matrix_x, matrix_y, preserve_alpha, clamp
         );
 
         const shaderModule = device.createShaderModule({ "code": shaderCode });
@@ -128,9 +133,9 @@ export const execute = (
     const sampler = textureManager.createSampler("convolution_sampler", true);
 
     // ユニフォームバッファを作成
-    const matrixSize = matrixX * matrixY;
+    const matrixSize = matrix_x * matrix_y;
     const matrixArraySize = Math.ceil(matrixSize / 4);
-    const [r, g, b, a] = intToRGBA(color, alpha);
+    const [r, g, b, a] = intToStraightRGBA(color, alpha);
 
     // マトリクスを4要素ごとにまとめる
     const paddedMatrix = new Float32Array(matrixArraySize * 4);
@@ -166,7 +171,7 @@ export const execute = (
     // バインドグループを作成
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;
-    $entries3[2].resource = sourceAttachment.texture!.view;
+    $entries3[2].resource = source_attachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": cached.bindGroupLayout,
         "entries": $entries3

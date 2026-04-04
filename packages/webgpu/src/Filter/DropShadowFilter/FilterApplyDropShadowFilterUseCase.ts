@@ -1,12 +1,8 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
+import { DEG_TO_RAD, intToPremultipliedRGBA } from "../FilterUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
-
-/**
- * @description 度からラジアンへの変換係数
- */
-const DEG_TO_RAD: number = Math.PI / 180;
 
 /**
  * @description プリアロケートされたFloat32Array (サイズ16)
@@ -24,51 +20,41 @@ const $entries4: GPUBindGroupEntry[] = [
 ];
 
 /**
- * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255 * alpha;
-    const g = (color >> 8 & 0xFF) / 255 * alpha;
-    const b = (color & 0xFF) / 255 * alpha;
-    return [r, g, b, alpha];
-};
-
-/**
  * @description ドロップシャドウフィルターを適用
  *              Apply drop shadow filter
  *
- * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ
  * @param  {Float32Array} matrix - 変換行列
  * @param  {number} distance - シャドウの距離
  * @param  {number} angle - シャドウの角度（度）
  * @param  {number} color - シャドウ色 (32bit整数)
  * @param  {number} alpha - アルファ
- * @param  {number} blurX - X方向ブラー量
- * @param  {number} blurY - Y方向ブラー量
+ * @param  {number} blur_x - X方向ブラー量
+ * @param  {number} blur_y - Y方向ブラー量
  * @param  {number} strength - シャドウ強度
  * @param  {number} quality - クオリティ
  * @param  {boolean} inner - インナーシャドウ
  * @param  {boolean} knockout - ノックアウトモード
- * @param  {boolean} hideObject - 元オブジェクトを隠す
- * @param  {number} devicePixelRatio - デバイスピクセル比
- * @param  {IDropShadowConfig} config - WebGPUリソース設定
+ * @param  {boolean} hide_object - 元オブジェクトを隠す
+ * @param  {number} device_pixel_ratio - デバイスピクセル比
+ * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
+    source_attachment: IAttachmentObject,
     matrix: Float32Array,
     distance: number,
     angle: number,
     color: number,
     alpha: number,
-    blurX: number,
-    blurY: number,
+    blur_x: number,
+    blur_y: number,
     strength: number,
     quality: number,
     inner: boolean,
     knockout: boolean,
-    hideObject: boolean,
-    devicePixelRatio: number,
+    hide_object: boolean,
+    device_pixel_ratio: number,
     config: IFilterConfig
 ): IAttachmentObject => {
 
@@ -77,14 +63,14 @@ export const execute = (
     // 元のオフセットを保存
     const baseOffsetX = $offset.x;
     const baseOffsetY = $offset.y;
-    const baseWidth = sourceAttachment.width;
-    const baseHeight = sourceAttachment.height;
+    const baseWidth = source_attachment.width;
+    const baseHeight = source_attachment.height;
 
     // ブラーフィルターを適用
     const blurAttachment = filterApplyBlurFilterUseCase(
-        sourceAttachment, matrix,
-        blurX, blurY, quality,
-        devicePixelRatio, config
+        source_attachment, matrix,
+        blur_x, blur_y, quality,
+        device_pixel_ratio, config
     );
 
     const blurWidth = blurAttachment.width;
@@ -101,8 +87,8 @@ export const execute = (
 
     // シャドウのオフセットを計算
     const radian = angle * DEG_TO_RAD;
-    const shadowX = Math.cos(radian) * distance * (xScale / devicePixelRatio);
-    const shadowY = Math.sin(radian) * distance * (yScale / devicePixelRatio);
+    const shadowX = Math.cos(radian) * distance * (xScale / device_pixel_ratio);
+    const shadowY = Math.sin(radian) * distance * (yScale / device_pixel_ratio);
 
     // 出力キャンバスのサイズを計算
     const w = inner ? baseWidth : blurWidth + Math.max(0, Math.abs(shadowX) - offsetDiffX);
@@ -124,11 +110,11 @@ export const execute = (
     // タイプとノックアウト状態を決定
     const isInner = inner;
     let isKnockout = knockout;
-    let isHideObject = hideObject;
+    let isHideObject = hide_object;
 
     if (inner) {
-        isKnockout = knockout || hideObject;
-    } else if (!knockout && hideObject) {
+        isKnockout = knockout || hide_object;
+    } else if (!knockout && hide_object) {
         // フルモード（シャドウのみ表示）
         isKnockout = true;
         isHideObject = true;
@@ -144,7 +130,7 @@ export const execute = (
     if (!pipeline || !bindGroupLayout) {
         console.error("[WebGPU DropShadowFilter] Pipeline not found");
         frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-        return sourceAttachment;
+        return source_attachment;
     }
 
     // サンプラーを作成
@@ -161,7 +147,7 @@ export const execute = (
     // knockout: f32 (4 bytes)
     // hideObject: f32 (4 bytes)
     // Total: 64 bytes
-    const [r, g, b, a] = intToRGBA(color, alpha);
+    const [r, g, b, a] = intToPremultipliedRGBA(color, alpha);
 
     // WebGL版と同じUV変換方式:
     // uv = texCoord * scale - offset
@@ -208,7 +194,7 @@ export const execute = (
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries4[1].resource = sampler;
     $entries4[2].resource = blurAttachment.texture!.view;
-    $entries4[3].resource = sourceAttachment.texture!.view;
+    $entries4[3].resource = source_attachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries4

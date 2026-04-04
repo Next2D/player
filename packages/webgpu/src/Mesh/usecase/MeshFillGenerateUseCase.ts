@@ -7,6 +7,13 @@ import { execute as meshFillGenerateService } from "../service/MeshFillGenerateS
  */
 let $meshTempBuffer: Float32Array = new Float32Array(32);
 
+/**
+ * @description 2のべき乗に切り上げる
+ *              Round up to the next power of two
+ *
+ * @param  {number} v - 切り上げ対象の値 / Value to round up
+ * @return {number} 2のべき乗の値 / Next power of two
+ */
 const $upperPowerOfTwo = (v: number): number =>
 {
     v--;
@@ -23,8 +30,8 @@ const $upperPowerOfTwo = (v: number): number =>
  * @description 塗りのメッシュを生成する
  *              Generate a fill mesh
  *
- * @param  {IPath[]} vertices
- * @return {IMeshResult}
+ * @param  {IPath[]} vertices - パス頂点配列 / Array of path vertices
+ * @return {IMeshResult} メッシュ結果 / Mesh result
  * @method
  * @protected
  */

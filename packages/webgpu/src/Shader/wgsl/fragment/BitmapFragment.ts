@@ -1,3 +1,10 @@
+/**
+ * @description ビットマップ塗りフラグメントシェーダー（ベジェクリッピング・リピート対応）
+ *              Bitmap fill fragment shader with bezier clipping and repeat support
+ *
+ * @type {string}
+ * @constant
+ */
 export const BitmapFillFragment = /* wgsl */`
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,

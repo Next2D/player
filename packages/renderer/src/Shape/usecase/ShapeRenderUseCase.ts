@@ -33,7 +33,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     const isGridEnabled = Boolean(render_queue[index++]);
     const isDrawable    = Boolean(render_queue[index++]);
-    const isBitmap      = Boolean(render_queue[index++]);
+    const renderMode    = render_queue[index++]; // 0=vector, 1=bitmap, 2=cacheAsBitmap
+    const isBitmap      = renderMode === 1;
+    const isCacheAsBitmap = renderMode === 2;
 
     // cache uniqueKey
     const uniqueKey = `${render_queue[index++]}`;
@@ -194,6 +196,24 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             matrix[0], matrix[1],
             matrix[2], matrix[3],
             matrix[4], matrix[5]
+        );
+
+        $context.drawDisplayObject(
+            node,
+            bounds[0], bounds[1], bounds[2], bounds[3],
+            colorTransform
+        );
+    } else if (isCacheAsBitmap) {
+
+        // cacheAsBitmap: Bitmapと同様の描画パスで、cacheScaleを補正
+        // baseBounds原点(xMin,yMin)のスクリーン座標をtranslationに反映
+        const screenX = matrix[0] * xMin + matrix[2] * yMin + matrix[4];
+        const screenY = matrix[1] * xMin + matrix[3] * yMin + matrix[5];
+
+        $context.setTransform(
+            matrix[0] / xScale, matrix[1] / xScale,
+            matrix[2] / yScale, matrix[3] / yScale,
+            screenX, screenY
         );
 
         $context.drawDisplayObject(

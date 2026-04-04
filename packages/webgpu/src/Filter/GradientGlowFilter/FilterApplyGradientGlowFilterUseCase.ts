@@ -3,11 +3,7 @@ import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
-
-/**
- * @description 度からラジアンへの変換係数
- */
-const DEG_TO_RAD: number = Math.PI / 180;
+import { DEG_TO_RAD } from "../FilterUtil";
 
 /**
  * @description プリアロケートされたFloat32Array (サイズ12)
@@ -34,38 +30,38 @@ const $entries5: GPUBindGroupEntry[] = [
  *              2. グラデーションLUT生成（専用テクスチャ）
  *              3. UV変換方式で最終合成（isInsideでハード境界クリッピング）
  *
- * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ
  * @param  {Float32Array} matrix - 変換行列
  * @param  {number} distance - グローの距離
  * @param  {number} angle - グローの角度（度）
  * @param  {Float32Array} colors - 色配列
  * @param  {Float32Array} alphas - アルファ配列
  * @param  {Float32Array} ratios - 比率配列
- * @param  {number} blurX - X方向ブラー量
- * @param  {number} blurY - Y方向ブラー量
+ * @param  {number} blur_x - X方向ブラー量
+ * @param  {number} blur_y - Y方向ブラー量
  * @param  {number} strength - グロー強度
  * @param  {number} quality - クオリティ
  * @param  {number} type - タイプ (0: full, 1: inner, 2: outer)
  * @param  {boolean} knockout - ノックアウトモード
- * @param  {number} devicePixelRatio - デバイスピクセル比
+ * @param  {number} device_pixel_ratio - デバイスピクセル比
  * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
+    source_attachment: IAttachmentObject,
     matrix: Float32Array,
     distance: number,
     angle: number,
     colors: Float32Array,
     alphas: Float32Array,
     ratios: Float32Array,
-    blurX: number,
-    blurY: number,
+    blur_x: number,
+    blur_y: number,
     strength: number,
     quality: number,
     type: number,
     knockout: boolean,
-    devicePixelRatio: number,
+    device_pixel_ratio: number,
     config: IFilterConfig
 ): IAttachmentObject => {
 
@@ -74,14 +70,14 @@ export const execute = (
     // 元のオフセットを保存
     const baseOffsetX = $offset.x;
     const baseOffsetY = $offset.y;
-    const baseWidth = sourceAttachment.width;
-    const baseHeight = sourceAttachment.height;
+    const baseWidth = source_attachment.width;
+    const baseHeight = source_attachment.height;
 
     // ブラーフィルターを適用
     const blurAttachment = filterApplyBlurFilterUseCase(
-        sourceAttachment, matrix,
-        blurX, blurY, quality,
-        devicePixelRatio, config
+        source_attachment, matrix,
+        blur_x, blur_y, quality,
+        device_pixel_ratio, config
     );
 
     const blurWidth = blurAttachment.width;
@@ -98,8 +94,8 @@ export const execute = (
 
     // グローのオフセットを計算
     const radian = angle * DEG_TO_RAD;
-    const x = Math.cos(radian) * distance * (xScale / devicePixelRatio);
-    const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);
+    const x = Math.cos(radian) * distance * (xScale / device_pixel_ratio);
+    const y = Math.sin(radian) * distance * (yScale / device_pixel_ratio);
 
     // ===== WebGL版と同じサイズ・位置計算 =====
     const isInner = type === 1;
@@ -158,7 +154,7 @@ export const execute = (
     if (!pipeline || !bindGroupLayout) {
         console.error("[WebGPU GradientGlowFilter] Pipeline not found");
         frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-        return sourceAttachment;
+        return source_attachment;
     }
 
     const sampler = textureManager.createSampler("gradient_glow_sampler", true);
@@ -191,7 +187,7 @@ export const execute = (
     ($entries5[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries5[1].resource = sampler;
     $entries5[2].resource = blurAttachment.texture!.view;
-    $entries5[3].resource = sourceAttachment.texture!.view;
+    $entries5[3].resource = source_attachment.texture!.view;
     $entries5[4].resource = lutView;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,

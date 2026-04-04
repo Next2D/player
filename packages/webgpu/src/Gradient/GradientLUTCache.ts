@@ -16,6 +16,8 @@ const $gradientAttachmentObjects: Map<number, IAttachmentObject> = new Map();
 
 /**
  * @description GPUDeviceの参照
+ *              Reference to the GPUDevice
+ * @type {GPUDevice | null}
  * @private
  */
 let $device: GPUDevice | null = null;
@@ -114,18 +116,50 @@ export const $clearGradientAttachmentObjects = (): void =>
 
 // === Gradient LUT テクスチャキャッシュ ===
 
+/**
+ * @description グラデーションLUTキャッシュエントリのインターフェース
+ *              Interface for gradient LUT cache entry
+ */
 interface IGradientLUTEntry {
     texture: GPUTexture;
     view: GPUTextureView;
     lastUsedFrame: number;
 }
 
+/**
+ * @description キー文字列からLUTエントリへのキャッシュマップ
+ *              Cache map from key string to LUT entry
+ * @type {Map<string, IGradientLUTEntry>}
+ * @private
+ */
 const $lutCache: Map<string, IGradientLUTEntry> = new Map();
+
+/**
+ * @description 現在のフレーム番号（TTL計算に使用）
+ *              Current frame number used for TTL calculation
+ * @type {number}
+ * @private
+ */
 let $currentFrame: number = 0;
+
+/**
+ * @description LUTキャッシュのTTL（フレーム数）
+ *              TTL for LUT cache in number of frames
+ * @type {number}
+ * @constant
+ * @private
+ */
 const $LUT_TTL: number = 60;
 
 /**
- * @description グラデーションLUTのキャッシュキーを生成
+ * @description グラデーションLUTのキャッシュキーを生成する
+ *              Build a cache key string for a gradient LUT
+ *
+ * @param  {number[]} stops - グラデーションストップ配列 / Gradient stop array
+ * @param  {number} spread - スプレッドメソッド / Spread method
+ * @param  {number} interpolation - 補間方法 / Interpolation method
+ * @return {string} キャッシュキー文字列 / Cache key string
+ * @private
  */
 const $buildLUTKey = (
     stops: number[],
@@ -137,7 +171,15 @@ const $buildLUTKey = (
 };
 
 /**
- * @description キャッシュからLUTテクスチャを取得。ヒットしなければnullを返す。
+ * @description キャッシュからLUTテクスチャを取得する。ヒットしなければnullを返す。
+ *              Retrieve a LUT texture from the cache. Returns null on cache miss.
+ *
+ * @param  {number[]} stops - グラデーションストップ配列 / Gradient stop array
+ * @param  {number} spread - スプレッドメソッド / Spread method
+ * @param  {number} interpolation - 補間方法 / Interpolation method
+ * @return {IGradientLUTEntry | null} キャッシュエントリまたはnull / Cache entry or null
+ * @method
+ * @protected
  */
 export const $getLUTFromCache = (
     stops: number[],
@@ -155,7 +197,17 @@ export const $getLUTFromCache = (
 };
 
 /**
- * @description LUTテクスチャをキャッシュに格納
+ * @description LUTテクスチャをキャッシュに格納する
+ *              Store a LUT texture into the cache
+ *
+ * @param  {number[]} stops - グラデーションストップ配列 / Gradient stop array
+ * @param  {number} spread - スプレッドメソッド / Spread method
+ * @param  {number} interpolation - 補間方法 / Interpolation method
+ * @param  {GPUTexture} texture - GPUテクスチャ / GPU texture
+ * @param  {GPUTextureView} view - GPUテクスチャビュー / GPU texture view
+ * @return {void}
+ * @method
+ * @protected
  */
 export const $putLUTToCache = (
     stops: number[],
@@ -174,7 +226,12 @@ export const $putLUTToCache = (
 };
 
 /**
- * @description フレーム終了時にTTL超過エントリを解放
+ * @description フレーム終了時にTTL超過エントリを解放する
+ *              Release entries that exceed TTL at the end of each frame
+ *
+ * @return {void}
+ * @method
+ * @protected
  */
 export const $cleanupLUTCache = (): void =>
 {
@@ -188,7 +245,12 @@ export const $cleanupLUTCache = (): void =>
 };
 
 /**
- * @description 全LUTキャッシュを破棄
+ * @description 全LUTキャッシュを破棄する
+ *              Destroy and clear the entire LUT cache
+ *
+ * @return {void}
+ * @method
+ * @protected
  */
 export const $clearLUTCache = (): void =>
 {

@@ -24,8 +24,20 @@ vi.mock("../service/BufferManagerCreateStorageBufferService", () => ({
 }));
 
 import { execute } from "./BufferManagerAcquireStorageBufferUseCase";
-import { execute as releaseStorageBuffer } from "./BufferManagerReleaseStorageBufferUseCase";
 import { execute as cleanupStorageBuffers } from "./BufferManagerCleanupStorageBuffersUseCase";
+
+/**
+ * @description テスト用ヘルパー: Storage Bufferをプールに返却
+ *              Test helper: Release storage buffer back to pool
+ */
+const releaseStorageBuffer = (pool: IPooledStorageBuffer[], buffer: GPUBuffer): void => {
+    for (const entry of pool) {
+        if (entry.buffer === buffer) {
+            entry.inUse = false;
+            return;
+        }
+    }
+};
 
 describe("BufferManagerAcquireStorageBufferUseCase", () =>
 {
@@ -92,26 +104,6 @@ describe("BufferManagerAcquireStorageBufferUseCase", () =>
             execute(mockDevice, pool, 1024, frameNumber);
 
             expect(pool[0].lastUsedFrame).toBe(frameNumber);
-        });
-    });
-
-    describe("releaseStorageBuffer", () =>
-    {
-        it("should mark buffer as not in use", () =>
-        {
-            const buffer = execute(mockDevice, pool, 1024, 0);
-            expect(pool[0].inUse).toBe(true);
-
-            releaseStorageBuffer(pool, buffer);
-            expect(pool[0].inUse).toBe(false);
-        });
-
-        it("should handle buffer not in pool", () =>
-        {
-            const fakeBuffer = {} as GPUBuffer;
-
-            // Should not throw
-            expect(() => releaseStorageBuffer(pool, fakeBuffer)).not.toThrow();
         });
     });
 

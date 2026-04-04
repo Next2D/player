@@ -7,15 +7,15 @@ import { $samples } from "../../WebGPUUtil";
  * @description アタッチメントオブジェクトを作成
  *              Create attachment object
  *
- * @param  {GPUDevice} device
- * @param  {GPUTextureFormat} format
- * @param  {Map<string, IAttachmentObject>} attachments
- * @param  {string} name
- * @param  {number} width
- * @param  {number} height
- * @param  {boolean} msaa
- * @param  {boolean} mask
- * @param  {{ nextId: number, textureId: number, stencilId: number }} idCounter
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {GPUTextureFormat} format - テクスチャフォーマット
+ * @param  {Map<string, IAttachmentObject>} attachments - アタッチメント管理マップ
+ * @param  {string} name - アタッチメント名
+ * @param  {number} width - テクスチャ幅
+ * @param  {number} height - テクスチャ高さ
+ * @param  {boolean} msaa - MSAA有効フラグ
+ * @param  {boolean} mask - マスク有効フラグ
+ * @param  {{ nextId: number, textureId: number, stencilId: number }} id_counter - ID管理カウンタ
  * @return {IAttachmentObject}
  * @method
  * @protected
@@ -29,7 +29,7 @@ export const execute = (
     height: number,
     msaa: boolean,
     mask: boolean,
-    idCounter: { nextId: number; textureId: number; stencilId: number }
+    id_counter: { nextId: number; textureId: number; stencilId: number }
 ): IAttachmentObject => {
     // アトラスかどうか判定（atlas, atlas_0, atlas_1, ...）
     const isAtlas = name === "atlas" || name.startsWith("atlas_");
@@ -57,7 +57,7 @@ export const execute = (
 
     // ITextureObject形式で格納（解決先テクスチャ）
     const texture: ITextureObject = {
-        "id": idCounter.textureId++,
+        "id": id_counter.textureId++,
         "resource": gpuTexture,
         "view": textureView,
         width,
@@ -78,7 +78,7 @@ export const execute = (
         const msaaTextureView = msaaGpuTexture.createView();
 
         msaaTexture = {
-            "id": idCounter.textureId++,
+            "id": id_counter.textureId++,
             "resource": msaaGpuTexture,
             "view": msaaTextureView,
             width,
@@ -103,7 +103,7 @@ export const execute = (
         const stencilView = stencilTexture.createView();
 
         stencil = {
-            "id": idCounter.stencilId++,
+            "id": id_counter.stencilId++,
             "resource": stencilTexture,
             "view": stencilView,
             width,
@@ -123,7 +123,7 @@ export const execute = (
             const msaaStencilView = msaaStencilTexture.createView();
 
             msaaStencil = {
-                "id": idCounter.stencilId++,
+                "id": id_counter.stencilId++,
                 "resource": msaaStencilTexture,
                 "view": msaaStencilView,
                 width,
@@ -135,7 +135,7 @@ export const execute = (
     }
 
     const attachment: IAttachmentObject = {
-        "id": idCounter.nextId++,
+        "id": id_counter.nextId++,
         width,
         height,
         "clipLevel": 0,

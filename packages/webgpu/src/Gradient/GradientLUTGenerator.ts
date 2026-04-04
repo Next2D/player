@@ -4,30 +4,38 @@
  */
 
 /**
- * @description ストップ数に応じた適応解像度を取得
- * @param {number} stopsLength
- * @return {number}
+ * @description ストップ数に応じた適応解像度を取得する
+ *              Get adaptive resolution based on the number of gradient stops
+ *
+ * @param  {number} stops_length - ストップ数 / Number of gradient stops
+ * @return {number} 解像度 (256, 512, or 1024) / Resolution
+ * @method
+ * @protected
  */
-export const getAdaptiveResolution = (stopsLength: number): number =>
+export const getAdaptiveResolution = (stops_length: number): number =>
 {
-    if (stopsLength <= 4) {
+    if (stops_length <= 4) {
         return 256;
     }
-    if (stopsLength <= 8) {
+    if (stops_length <= 8) {
         return 512;
     }
     return 1024;
 };
 
 /**
- * @description グラデーションLUTテクスチャデータを生成
+ * @description グラデーションLUTテクスチャデータを生成する
+ *              Generate gradient LUT texture data.
  *              stops配列: [offset, R, G, B, A, offset, R, G, B, A, ...]
  *              注意: R, G, B, A は 0-255 範囲
  *              LUTは0-1の範囲の色を生成し、spread処理はシェーダー側で行う
- * @param {number[]} stops - グラデーションストップ配列
- * @param {number} _spread - スプレッドメソッド（未使用、シェーダー側で処理）
- * @param {number} interpolation - 補間方法 (0: linearRGB, 1: RGB) ※WebGL互換
- * @return {Uint8Array}
+ *
+ * @param  {number[]} stops - グラデーションストップ配列 / Gradient stop array
+ * @param  {number} _spread - スプレッドメソッド（未使用、シェーダー側で処理）/ Spread method (unused, handled by shader)
+ * @param  {number} interpolation - 補間方法 (0: linearRGB, 1: RGB) / Interpolation method (WebGL compatible)
+ * @return {Uint8Array} LUTテクスチャデータ / LUT texture data
+ * @method
+ * @protected
  */
 export const generateGradientLUT = (
     stops: number[],
@@ -48,7 +56,7 @@ export const generateGradientLUT = (
         const t = i / (resolution - 1);
 
         // 色を補間（色は0-255範囲で返される）
-        const color = interpolateColor(stops, t, interpolation);
+        const color = $interpolateColor(stops, t, interpolation);
 
         // WebGL版と同じ: プリマルチプライドアルファは適用しない
         // LUTにはストレート（非プリマルチプライド）の色を格納
@@ -67,14 +75,18 @@ export const generateGradientLUT = (
 };
 
 /**
- * @description 色を補間
+ * @description 色を補間する
+ *              Interpolate color between gradient stops.
  *              色は0-255範囲で入力され、0-255範囲で出力される
- * @param {number[]} stops
- * @param {number} t
- * @param {number} interpolation - 0: linearRGB, 1: RGB（WebGL互換）
- * @return {{ r: number, g: number, b: number, a: number }}
+ *              Colors are input in 0-255 range and output in 0-255 range.
+ *
+ * @param  {number[]} stops - グラデーションストップ配列 / Gradient stop array
+ * @param  {number} t - 補間位置 (0-1) / Interpolation position (0-1)
+ * @param  {number} interpolation - 補間方法 (0: linearRGB, 1: RGB) / Interpolation method (WebGL compatible)
+ * @return {{ r: number, g: number, b: number, a: number }} 補間された色 / Interpolated color
+ * @private
  */
-const interpolateColor = (
+const $interpolateColor = (
     stops: number[],
     t: number,
     interpolation: number
@@ -135,57 +147,76 @@ const interpolateColor = (
         // linearRGB補間（ガンマ補正）
         // 0-255 → 0-1に正規化してからリニア変換
         return {
-            "r": linearToSRGB(lerp(sRGBToLinear(startR / 255), sRGBToLinear(endR / 255), localT)) * 255,
-            "g": linearToSRGB(lerp(sRGBToLinear(startG / 255), sRGBToLinear(endG / 255), localT)) * 255,
-            "b": linearToSRGB(lerp(sRGBToLinear(startB / 255), sRGBToLinear(endB / 255), localT)) * 255,
-            "a": lerp(startA, endA, localT)
+            "r": $linearToSRGB($lerp($sRGBToLinear(startR / 255), $sRGBToLinear(endR / 255), localT)) * 255,
+            "g": $linearToSRGB($lerp($sRGBToLinear(startG / 255), $sRGBToLinear(endG / 255), localT)) * 255,
+            "b": $linearToSRGB($lerp($sRGBToLinear(startB / 255), $sRGBToLinear(endB / 255), localT)) * 255,
+            "a": $lerp(startA, endA, localT)
         };
     }
 
     // RGB補間（リニア、デフォルト）- 0-255範囲でそのまま補間
     return {
-        "r": lerp(startR, endR, localT),
-        "g": lerp(startG, endG, localT),
-        "b": lerp(startB, endB, localT),
-        "a": lerp(startA, endA, localT)
+        "r": $lerp(startR, endR, localT),
+        "g": $lerp(startG, endG, localT),
+        "b": $lerp(startB, endB, localT),
+        "a": $lerp(startA, endA, localT)
     };
 };
 
 /**
- * @description 線形補間
+ * @description 線形補間を行う
+ *              Perform linear interpolation between two values
+ *
+ * @param  {number} a - 開始値 / Start value
+ * @param  {number} b - 終了値 / End value
+ * @param  {number} t - 補間係数 (0-1) / Interpolation factor (0-1)
+ * @return {number} 補間結果 / Interpolated result
+ * @private
  */
-const lerp = (a: number, b: number, t: number): number =>
+const $lerp = (a: number, b: number, t: number): number =>
 {
     return a + (b - a) * t;
 };
 
 /**
- * @description sRGBからリニアへ変換（入力: 0-1正規化値）
+ * @description sRGBからリニア色空間へ変換する（入力: 0-1正規化値）
+ *              Convert from sRGB to linear color space (input: 0-1 normalized value).
  *              WebGL版と同じガンマ値 2.23333333 を使用
+ *
+ * @param  {number} value - sRGB色空間の正規化値 (0-1) / Normalized value in sRGB color space
+ * @return {number} リニア色空間の値 / Value in linear color space
+ * @private
  */
-const sRGBToLinear = (value: number): number =>
+const $sRGBToLinear = (value: number): number =>
 {
-    // WebGL版と同じ簡易ガンマ補正
     return Math.pow(value, 2.23333333);
 };
 
 /**
- * @description リニアからsRGBへ変換（出力: 0-1正規化値）
+ * @description リニア色空間からsRGBへ変換する（出力: 0-1正規化値）
+ *              Convert from linear color space to sRGB (output: 0-1 normalized value).
  *              WebGL版と同じガンマ値 0.45454545 (= 1/2.2) を使用
+ *
+ * @param  {number} value - リニア色空間の値 / Value in linear color space
+ * @return {number} sRGB色空間の正規化値 / Normalized value in sRGB color space
+ * @private
  */
-const linearToSRGB = (value: number): number =>
+const $linearToSRGB = (value: number): number =>
 {
-    // WebGL版と同じ簡易ガンマ補正
     return Math.pow(value, 0.45454545);
 };
 
 /**
- * @description フィルター用グラデーションLUTテクスチャデータを生成
+ * @description フィルター用グラデーションLUTテクスチャデータを生成する
+ *              Generate gradient LUT texture data for filters.
  *              ratios, colors, alphas配列から1D LUTを生成
- * @param {Float32Array} ratios - 比率配列 (0-255)
- * @param {Float32Array} colors - 色配列 (32bit整数)
- * @param {Float32Array} alphas - アルファ配列 (0-1)
- * @return {Uint8Array}
+ *
+ * @param  {Float32Array} ratios - 比率配列 (0-255) / Ratio array (0-255)
+ * @param  {Float32Array} colors - 色配列 (32bit整数) / Color array (32-bit integers)
+ * @param  {Float32Array} alphas - アルファ配列 (0-1) / Alpha array (0-1)
+ * @return {Uint8Array} LUTテクスチャデータ / LUT texture data
+ * @method
+ * @protected
  */
 export const generateFilterGradientLUT = (
     ratios: Float32Array,
@@ -234,10 +265,10 @@ export const generateFilterGradientLUT = (
             localT = (t - start.offset) / (end.offset - start.offset);
         }
 
-        const r = lerp(start.r, end.r, localT);
-        const g = lerp(start.g, end.g, localT);
-        const b = lerp(start.b, end.b, localT);
-        const a = lerp(start.a, end.a, localT);
+        const r = $lerp(start.r, end.r, localT);
+        const g = $lerp(start.g, end.g, localT);
+        const b = $lerp(start.b, end.b, localT);
+        const a = $lerp(start.a, end.a, localT);
 
         // プリマルチプライドアルファで書き込み
         const offset = i * 4;

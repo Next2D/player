@@ -1,6 +1,20 @@
 import type { PipelineManager } from "../../Shader/PipelineManager";
 import { $isMaskDrawing, $getMaskStencilReference } from "../../Mask";
 
+/**
+ * @description シンプルなフィル描画を実行する
+ *              Executes simple fill rendering
+ * @param {GPURenderPassEncoder} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @param {GPUBuffer} vertex_buffer 頂点バッファ / Vertex buffer
+ * @param {number} vertex_count 頂点数 / Vertex count
+ * @param {GPUBindGroup} bind_group バインドグループ / Bind group
+ * @param {number} uniform_offset ユニフォームオフセット / Uniform offset
+ * @param {boolean} use_atlas_target アトラスターゲット使用フラグ / Whether to use atlas target
+ * @param {boolean} use_stencil_pipeline ステンシルパイプライン使用フラグ / Whether to use stencil pipeline
+ * @param {number} _clip_level クリップレベル（未使用） / Clip level (unused)
+ * @return {void}
+ */
 export const execute = (
     render_pass_encoder: GPURenderPassEncoder,
     pipeline_manager: PipelineManager,

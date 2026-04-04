@@ -231,7 +231,8 @@ stage.addChild(frontShape);
 
 ```javascript
 // Cache complex shapes as bitmap
-shape.cacheAsBitmap = true;
+const { Matrix } = next2d.geom;
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 ```
 
 ## Graphics Class

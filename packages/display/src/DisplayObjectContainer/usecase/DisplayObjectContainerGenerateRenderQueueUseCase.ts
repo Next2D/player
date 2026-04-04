@@ -14,6 +14,7 @@ import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../..
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { execute as displayObjectContainerGetLayerBoundsUseCase } from "./DisplayObjectContainerGetLayerBoundsUseCase";
 import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerCalcBoundsMatrixUseCase";
+import { stage } from "../../Stage";
 import { renderQueue } from "@next2d/render-queue";
 import { $cacheStore } from "@next2d/cache";
 import {
@@ -22,7 +23,8 @@ import {
     $poolBoundsArray,
     $RENDERER_CONTAINER_TYPE,
     $getFloat32Array8,
-    $getFloat32Array6
+    $getFloat32Array6,
+    $poolFloat32Array6
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -114,157 +116,404 @@ export const execute = <P extends DisplayObjectContainer>(
     const blendMode = display_object_container.blendMode;
     renderQueue.push(displayObjectBlendToNumberService(blendMode));
 
-    // filters
-    const filters = display_object_container.filters;
-    if (filters) {
-        const filterKey = $cacheStore.generateFilterKeys(
-            tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3]
+    // cacheAsBitmap: フィルターキャッシュ形式でコンテナ全体をビットマップキャッシュ
+    // キャッシュテクスチャは親のスケールを含むサイズで描画し、
+    // コンポジットは setTransform(1,0,0,1,x,y) で1:1描画されるため正しい画面サイズになる
+    // 親の移動はキャッシュヒット（位置だけ更新）、スケール変更はキャッシュミス（再描画）
+    const cacheMatrix = display_object_container.cacheAsBitmap;
+    if (cacheMatrix) {
+
+        const m = cacheMatrix.rawData;
+        const cacheScaleX = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        const cacheScaleY = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+
+        const ownScaleX = rawMatrix
+            ? Math.sqrt(rawMatrix[0] * rawMatrix[0] + rawMatrix[1] * rawMatrix[1])
+            : 1;
+        const ownScaleY = rawMatrix
+            ? Math.sqrt(rawMatrix[2] * rawMatrix[2] + rawMatrix[3] * rawMatrix[3])
+            : 1;
+
+        // Shape/TextFieldと同様にstage.rendererScaleを使用
+        // matrixから抽出すると親のアニメーション（スケール変動）でキーが揺れて
+        // 毎フレームcache MISSが発生する原因になる
+        const rendererScale = stage.rendererScale;
+
+        // コンポジットスケール = cacheScale × ownScale × rendererScale
+        const renderScaleX = cacheScaleX * ownScaleX * rendererScale;
+        const renderScaleY = cacheScaleY * ownScaleY * rendererScale;
+        const xRounded = Math.round(renderScaleX * 100) / 100;
+        const yRounded = Math.round(renderScaleY * 100) / 100;
+
+        const bitmapCacheKey = $cacheStore.generateKeys(
+            xRounded, yRounded, tColorTransform[7]
         );
-        const filterCache = $cacheStore.get(
+
+        // 固定プロパティ名で最新のキーのみ保存（古いキーが蓄積されないようにする）
+        // レンダラーも最新のfKeyのみ保持するため、キーの一致を保証
+        const bitmapCache = $cacheStore.get(
             `${display_object_container.instanceId}`,
-            `${filterKey}`
-        );
+            "bitmapKey"
+        ) === bitmapCacheKey;
 
-        let updated = false;
-        const params = [];
-        const bounds = $getBoundsArray(0, 0, 0, 0);
-        for (let idx = 0; idx < filters.length; idx++) {
-
-            const filter = filters[idx];
-            if (!filter || !filter.canApplyFilter()) {
-                continue;
-            }
-
-            // フィルターが更新されたかをチェック
-            if (filter.$updated) {
-                updated = true;
-            }
-            filter.$updated = false;
-
-            filter.getBounds(bounds);
-
-            const buffer = filter.toNumberArray();
-
-            for (let idx = 0; idx < buffer.length; idx += 4096) {
-                params.push(...buffer.subarray(idx, idx + 4096));
+        // コンテナ自身のフィルター境界を収集
+        const cacheFilters = display_object_container.filters;
+        const cacheFilterBounds = $getBoundsArray(0, 0, 0, 0);
+        if (cacheFilters) {
+            for (let idx = 0; idx < cacheFilters.length; idx++) {
+                const filter = cacheFilters[idx];
+                if (!filter || !filter.canApplyFilter()) {
+                    continue;
+                }
+                filter.getBounds(cacheFilterBounds);
             }
         }
 
-        const useFilfer = params.length > 0;
-        if (useFilfer) {
+        if (bitmapCache) {
 
-            // 子の変更があった場合は親のフラグが立っているので更新
-            if (!updated) {
-                updated = display_object_container.changed;
+            // cacheAsBitmap cache hit: 子要素走査をスキップして高速パス
+            // Shapeと同様に親matrixをレンダラーに渡し、描画時にcacheScaleで補正
+            const cachedLocalBounds = $cacheStore.get(
+                `${display_object_container.instanceId}`, "bLocalBounds"
+            ) as Float32Array | null;
+
+            if (cachedLocalBounds) {
+                // ローカルバウンズ原点のスクリーン座標を計算（Shapeと同じ方式）
+                const localOriginX = cachedLocalBounds[0] / (cacheScaleX * rendererScale);
+                const localOriginY = cachedLocalBounds[1] / (cacheScaleY * rendererScale);
+                const screenX = matrix[0] * localOriginX + matrix[2] * localOriginY + matrix[4];
+                const screenY = matrix[1] * localOriginX + matrix[3] * localOriginY + matrix[5];
+
+                // Shapeと同様にmatrixにcacheScaleを乗算して送る
+                // レンダラーで matrix/renderScale → cacheScale成分が反映される
+                renderQueue.push(1,
+                    0, 0, // layerWidth/Height: HIT時は未使用
+                    2, 1, display_object_container.instanceId, bitmapCacheKey,
+                    cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
+                    renderScaleX, renderScaleY,
+                    matrix[0] * cacheScaleX, matrix[1] * cacheScaleX,
+                    matrix[2] * cacheScaleY, matrix[3] * cacheScaleY,
+                    screenX, screenY,
+                    tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+                    tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
+                );
+
+                $poolBoundsArray(cacheFilterBounds);
+
+                if (tColorTransform !== color_transform) {
+                    ColorTransform.release(tColorTransform);
+                }
+                if (tMatrix !== matrix) {
+                    Matrix.release(tMatrix);
+                }
+                return ;
             }
+            // cachedLocalBoundsがない場合はMISSにフォールスルー
+        }
 
-            const layerBounds = displayObjectContainerGetLayerBoundsUseCase(
-                display_object_container, matrix
+        // cacheAsBitmap cache miss: 初回描画
+        // 親matrixのスケール成分のみを含むローカル空間でキャッシュを生成する
+        // （親の位置・回転は含まず、スケールのみ反映してテクスチャサイズを画面と一致させる）
+
+        // フィルターパラメータを収集
+        const cacheFilterParams: number[] = [];
+        if (cacheFilters) {
+            for (let idx = 0; idx < cacheFilters.length; idx++) {
+                const filter = cacheFilters[idx];
+                if (!filter || !filter.canApplyFilter()) {
+                    continue;
+                }
+                const buffer = filter.toNumberArray();
+                for (let idx = 0; idx < buffer.length; idx += 4096) {
+                    cacheFilterParams.push(...buffer.subarray(idx, idx + 4096));
+                }
+            }
+        }
+
+        // キャッシュ描画用の親matrix: cacheScale × rendererScale（対角行列）
+        const cacheParentMatrix = $getFloat32Array6(
+            cacheScaleX * rendererScale, 0,
+            0, cacheScaleY * rendererScale,
+            0, 0
+        );
+        const localLayerBounds = displayObjectContainerGetLayerBoundsUseCase(
+            display_object_container, cacheParentMatrix
+        );
+
+        const localLayerWidth = Math.ceil(Math.abs(localLayerBounds[2] - localLayerBounds[0]));
+        const localLayerHeight = Math.ceil(Math.abs(localLayerBounds[3] - localLayerBounds[1]));
+
+        // Shapeと同じ方式でスクリーン座標を計算
+        const localOriginX = localLayerBounds[0] / (cacheScaleX * rendererScale);
+        const localOriginY = localLayerBounds[1] / (cacheScaleY * rendererScale);
+        const missScreenX = matrix[0] * localOriginX + matrix[2] * localOriginY + matrix[4];
+        const missScreenY = matrix[1] * localOriginX + matrix[3] * localOriginY + matrix[5];
+
+        renderQueue.push(
+            1,
+            localLayerWidth, localLayerHeight,
+            2, 0, display_object_container.instanceId, bitmapCacheKey,
+            cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
+            renderScaleX, renderScaleY,
+            matrix[0] * cacheScaleX, matrix[1] * cacheScaleX,
+            matrix[2] * cacheScaleY, matrix[3] * cacheScaleY,
+            missScreenX, missScreenY,
+            tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+            tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
+            cacheFilterParams.length
+        );
+        if (cacheFilterParams.length > 0) {
+            renderQueue.set(new Float32Array(cacheFilterParams));
+        }
+
+        // 子要素の描画マトリクスをローカル空間に切り替え（親matrixの位置・回転を除外）
+        // cacheParentMatrixにrawMatrixを乗算し、layerBoundsオフセットで原点を調整
+        let localMatrix: Float32Array;
+        if (rawMatrix) {
+            localMatrix = Matrix.multiply(cacheParentMatrix, rawMatrix);
+        } else {
+            localMatrix = $getFloat32Array6(
+                cacheParentMatrix[0], 0,
+                0, cacheParentMatrix[3],
+                0, 0
+            );
+        }
+
+        const localTx = localMatrix[4] - localLayerBounds[0];
+        const localTy = localMatrix[5] - localLayerBounds[1];
+
+        if (tMatrix !== matrix) {
+            Matrix.release(tMatrix);
+        }
+        tMatrix = $getFloat32Array6(
+            localMatrix[0], localMatrix[1],
+            localMatrix[2], localMatrix[3],
+            localTx, localTy
+        );
+
+        if (rawMatrix) {
+            Matrix.release(localMatrix);
+        } else {
+            $poolFloat32Array6(localMatrix);
+        }
+        Matrix.release(cacheParentMatrix);
+
+        if (tColorTransform !== color_transform) {
+            ColorTransform.release(tColorTransform);
+        }
+        tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
+
+        // HIT時の高速パス用にローカルバウンズをキャッシュ（poolする前に保存）
+        $cacheStore.set(
+            `${display_object_container.instanceId}`,
+            "bLocalBounds",
+            new Float32Array([localLayerBounds[0], localLayerBounds[1], localLayerBounds[2], localLayerBounds[3]])
+        );
+
+        $poolBoundsArray(localLayerBounds);
+        $poolBoundsArray(cacheFilterBounds);
+
+        $cacheStore.set(
+            `${display_object_container.instanceId}`,
+            "bitmapKey", bitmapCacheKey
+        );
+
+    } else {
+
+        // filters
+        const filters = display_object_container.filters;
+        if (filters) {
+            const filterKey = $cacheStore.generateFilterKeys(
+                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3]
+            );
+            const filterCache = $cacheStore.get(
+                `${display_object_container.instanceId}`,
+                `${filterKey}`
             );
 
-            if (filterCache) {
+            let updated = false;
+            const params = [];
+            const bounds = $getBoundsArray(0, 0, 0, 0);
+            for (let idx = 0; idx < filters.length; idx++) {
 
-                // キャッシュがあって、変更がなければキャッシュを使用
+                const filter = filters[idx];
+                if (!filter || !filter.canApplyFilter()) {
+                    continue;
+                }
+
+                // フィルターが更新されたかをチェック
+                if (filter.$updated) {
+                    updated = true;
+                }
+                filter.$updated = false;
+
+                filter.getBounds(bounds);
+
+                const buffer = filter.toNumberArray();
+
+                for (let idx = 0; idx < buffer.length; idx += 4096) {
+                    params.push(...buffer.subarray(idx, idx + 4096));
+                }
+            }
+
+            const useFilfer = params.length > 0;
+            if (useFilfer) {
+
+                // 子の変更があった場合は親のフラグが立っているので更新
                 if (!updated) {
-                    renderQueue.push(1,
-                        Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
-                        Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
-                        1, 1, display_object_container.instanceId, filterKey,
-                        bounds[0], bounds[1], bounds[2], bounds[3],
-                        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
+                    updated = display_object_container.changed;
+                }
+
+                const layerBounds = displayObjectContainerGetLayerBoundsUseCase(
+                    display_object_container, matrix
+                );
+
+                if (filterCache) {
+
+                    // キャッシュがあって、変更がなければキャッシュを使用
+                    if (!updated) {
+                        renderQueue.push(1,
+                            Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
+                            Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
+                            1, 1, display_object_container.instanceId, filterKey,
+                            bounds[0], bounds[1], bounds[2], bounds[3],
+                            tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
+                            tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+                            tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
+                        );
+
+                        $poolBoundsArray(layerBounds);
+                        $poolBoundsArray(bounds);
+
+                        if (tColorTransform !== color_transform) {
+                            ColorTransform.release(tColorTransform);
+                        }
+                        if (tMatrix !== matrix) {
+                            Matrix.release(tMatrix);
+                        }
+                        return ;
+                    }
+
+                    // どこかで変更があったので、キャッシュを削除
+                    $cacheStore.removeById(`${display_object_container.instanceId}`);
+                }
+
+                renderQueue.push(
+                    1,
+                    Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
+                    Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
+                    1, 0, display_object_container.instanceId, filterKey,
+                    bounds[0], bounds[1], bounds[2], bounds[3],
+                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
+                    tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+                    tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
+                    params.length
+                );
+                renderQueue.set(new Float32Array(params));
+
+                const fa0 = tMatrix[0];
+                const fa1 = tMatrix[1];
+                const fa2 = tMatrix[2];
+                const fa3 = tMatrix[3];
+                const faTx = tMatrix[4] - layerBounds[0];
+                const faTy = tMatrix[5] - layerBounds[1];
+
+                if (tMatrix !== matrix) {
+                    Matrix.release(tMatrix);
+                }
+                tMatrix = $getFloat32Array6(fa0, fa1, fa2, fa3, faTx, faTy);
+
+                if (tColorTransform !== color_transform) {
+                    ColorTransform.release(tColorTransform);
+                }
+
+                tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
+
+                $poolBoundsArray(layerBounds);
+
+                $cacheStore.set(
+                    `${display_object_container.instanceId}`,
+                    `${filterKey}`, true
+                );
+
+            } else {
+                if (blendMode === "normal") {
+                    renderQueue.push(0);
+                } else {
+
+                    // ブレンドモードのみのLayerモード
+                    const layerBounds = displayObjectContainerCalcBoundsMatrixUseCase(
+                        display_object_container,
+                        matrix
+                    );
+
+                    const layerXMin = layerBounds[0];
+                    const layerYMin = layerBounds[1];
+
+                    renderQueue.push(
+                        1,
+                        Math.ceil(Math.abs(layerBounds[2] - layerXMin)),
+                        Math.ceil(Math.abs(layerBounds[3] - layerYMin)),
+                        0, // not use filter,
+                        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerXMin, layerYMin,
                         tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                         tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
                     );
 
+                    const a0 = tMatrix[0];
+                    const a1 = tMatrix[1];
+                    const a2 = tMatrix[2];
+                    const a3 = tMatrix[3];
+                    const adjustedTx1 = tMatrix[4] - layerXMin;
+                    const adjustedTy1 = tMatrix[5] - layerYMin;
+
+                    if (tMatrix !== matrix) {
+                        Matrix.release(tMatrix);
+                    }
+                    tMatrix = $getFloat32Array6(a0, a1, a2, a3, adjustedTx1, adjustedTy1);
                     $poolBoundsArray(layerBounds);
-                    $poolBoundsArray(bounds);
 
                     if (tColorTransform !== color_transform) {
                         ColorTransform.release(tColorTransform);
                     }
-                    if (tMatrix !== matrix) {
-                        Matrix.release(tMatrix);
-                    }
-                    return ;
+                    tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
                 }
-
-                // どこかで変更があったので、キャッシュを削除
-                $cacheStore.removeById(`${display_object_container.instanceId}`);
             }
 
-            renderQueue.push(
-                1,
-                Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
-                Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
-                1, 0, display_object_container.instanceId, filterKey,
-                bounds[0], bounds[1], bounds[2], bounds[3],
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
-                tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
-                tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
-                params.length
-            );
-            renderQueue.set(new Float32Array(params));
-
-            const fa0 = tMatrix[0];
-            const fa1 = tMatrix[1];
-            const fa2 = tMatrix[2];
-            const fa3 = tMatrix[3];
-            const faTx = tMatrix[4] - layerBounds[0];
-            const faTy = tMatrix[5] - layerBounds[1];
-
-            if (tMatrix !== matrix) {
-                Matrix.release(tMatrix);
-            }
-            tMatrix = $getFloat32Array6(fa0, fa1, fa2, fa3, faTx, faTy);
-
-            if (tColorTransform !== color_transform) {
-                ColorTransform.release(tColorTransform);
-            }
-
-            tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
-
-            $poolBoundsArray(layerBounds);
-
-            $cacheStore.set(
-                `${display_object_container.instanceId}`,
-                `${filterKey}`, true
-            );
-
+            $poolBoundsArray(bounds);
         } else {
             if (blendMode === "normal") {
                 renderQueue.push(0);
             } else {
-
-                // ブレンドモードのみのLayerモード
                 const layerBounds = displayObjectContainerCalcBoundsMatrixUseCase(
                     display_object_container,
                     matrix
                 );
 
-                const layerXMin = layerBounds[0];
-                const layerYMin = layerBounds[1];
+                const layerXMin2 = layerBounds[0];
+                const layerYMin2 = layerBounds[1];
 
                 renderQueue.push(
                     1,
-                    Math.ceil(Math.abs(layerBounds[2] - layerXMin)),
-                    Math.ceil(Math.abs(layerBounds[3] - layerYMin)),
+                    Math.ceil(Math.abs(layerBounds[2] - layerXMin2)),
+                    Math.ceil(Math.abs(layerBounds[3] - layerYMin2)),
                     0, // not use filter,
-                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerXMin, layerYMin,
+                    tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerXMin2, layerYMin2,
                     tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                     tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
                 );
 
-                const a0 = tMatrix[0];
-                const a1 = tMatrix[1];
-                const a2 = tMatrix[2];
-                const a3 = tMatrix[3];
-                const adjustedTx1 = tMatrix[4] - layerXMin;
-                const adjustedTy1 = tMatrix[5] - layerYMin;
+                const b0 = tMatrix[0];
+                const b1 = tMatrix[1];
+                const b2 = tMatrix[2];
+                const b3 = tMatrix[3];
+                const adjustedTx2 = tMatrix[4] - layerXMin2;
+                const adjustedTy2 = tMatrix[5] - layerYMin2;
 
                 if (tMatrix !== matrix) {
                     Matrix.release(tMatrix);
                 }
-                tMatrix = $getFloat32Array6(a0, a1, a2, a3, adjustedTx1, adjustedTy1);
+                tMatrix = $getFloat32Array6(b0, b1, b2, b3, adjustedTx2, adjustedTy2);
                 $poolBoundsArray(layerBounds);
 
                 if (tColorTransform !== color_transform) {
@@ -274,48 +523,7 @@ export const execute = <P extends DisplayObjectContainer>(
             }
         }
 
-        $poolBoundsArray(bounds);
-    } else {
-        if (blendMode === "normal") {
-            renderQueue.push(0);
-        } else {
-            const layerBounds = displayObjectContainerCalcBoundsMatrixUseCase(
-                display_object_container,
-                matrix
-            );
-
-            const layerXMin2 = layerBounds[0];
-            const layerYMin2 = layerBounds[1];
-
-            renderQueue.push(
-                1,
-                Math.ceil(Math.abs(layerBounds[2] - layerXMin2)),
-                Math.ceil(Math.abs(layerBounds[3] - layerYMin2)),
-                0, // not use filter,
-                tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerXMin2, layerYMin2,
-                tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
-                tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
-            );
-
-            const b0 = tMatrix[0];
-            const b1 = tMatrix[1];
-            const b2 = tMatrix[2];
-            const b3 = tMatrix[3];
-            const adjustedTx2 = tMatrix[4] - layerXMin2;
-            const adjustedTy2 = tMatrix[5] - layerYMin2;
-
-            if (tMatrix !== matrix) {
-                Matrix.release(tMatrix);
-            }
-            tMatrix = $getFloat32Array6(b0, b1, b2, b3, adjustedTx2, adjustedTy2);
-            $poolBoundsArray(layerBounds);
-
-            if (tColorTransform !== color_transform) {
-                ColorTransform.release(tColorTransform);
-            }
-            tColorTransform = $getFloat32Array8(1, 1, 1, 1, 0, 0, 0, 0);
-        }
-    }
+    } // end cacheAsBitmap else
 
     // mask
     const maskDisplayObject = display_object_container.mask;

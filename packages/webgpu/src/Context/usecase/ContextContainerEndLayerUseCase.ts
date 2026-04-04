@@ -16,24 +16,54 @@ import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/Gr
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 
+/**
+ * @description ユニフォームデータの事前確保配列（4要素）
+ *              Pre-allocated uniform data array (4 elements)
+ */
 const $uniform4 = new Float32Array(4);
+/**
+ * @description ユニフォームデータの事前確保配列（8要素）
+ *              Pre-allocated uniform data array (8 elements)
+ */
 const $uniform8 = new Float32Array(8);
+/**
+ * @description ユニフォームデータの事前確保配列（20要素）
+ *              Pre-allocated uniform data array (20 elements)
+ */
 const $uniform20 = new Float32Array(20);
 
 // プリアロケート BindGroup Entry 配列
+/**
+ * @description バインドグループエントリの事前確保配列
+ *              Pre-allocated bind group entry array
+ */
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
-const SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
+/**
+ * @description シンプルなブレンドモードのセット
+ *              Set of simple blend modes
+ */
+const $SIMPLE_BLEND_MODES: ReadonlySet<IBlendMode> = new Set([
     "normal", "layer", "add", "screen", "alpha", "erase", "copy"
 ] as IBlendMode[]);
 
+/**
+ * @description 恒等カラートランスフォーム
+ *              Identity color transform
+ */
 const $identityColorTransform = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
 
-const isIdentityColorTransform = (ct: Float32Array | null): boolean => {
+/**
+ * @description カラートランスフォームが恒等変換かどうかを判定する
+ *              Checks whether the color transform is an identity transform
+ * @param {Float32Array | null} ct カラートランスフォーム配列 / Color transform array
+ * @return {boolean} 恒等変換の場合true / True if identity transform
+ */
+const $isIdentityColorTransform = (ct: Float32Array | null): boolean => {
     if (!ct) {
         return true;
     }
@@ -41,10 +71,18 @@ const isIdentityColorTransform = (ct: Float32Array | null): boolean => {
         && ct[4] === 0 && ct[5] === 0 && ct[6] === 0 && ct[7] === 0;
 };
 
-const applyColorTransform = (
+/**
+ * @description アタッチメントにカラートランスフォームを適用する
+ *              Applies color transform to an attachment
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {IAttachmentObject} attachment ソースアタッチメント / Source attachment
+ * @param {Float32Array} color_transform カラートランスフォーム配列 / Color transform array
+ * @return {IAttachmentObject} カラートランスフォーム適用後のアタッチメント / Attachment with color transform applied
+ */
+const $applyColorTransform = (
     config: ILocalFilterConfig,
     attachment: IAttachmentObject,
-    colorTransform: Float32Array
+    color_transform: Float32Array
 ): IAttachmentObject => {
     const ctAttachment = config.frameBufferManager.createTemporaryAttachment(
         attachment.width, attachment.height
@@ -57,13 +95,13 @@ const applyColorTransform = (
         return attachment;
     }
 
-    $uniform8[0] = colorTransform[0];
-    $uniform8[1] = colorTransform[1];
-    $uniform8[2] = colorTransform[2];
-    $uniform8[3] = colorTransform[3];
-    $uniform8[4] = colorTransform[4];
-    $uniform8[5] = colorTransform[5];
-    $uniform8[6] = colorTransform[6];
+    $uniform8[0] = color_transform[0];
+    $uniform8[1] = color_transform[1];
+    $uniform8[2] = color_transform[2];
+    $uniform8[3] = color_transform[3];
+    $uniform8[4] = color_transform[4];
+    $uniform8[5] = color_transform[5];
+    $uniform8[6] = color_transform[6];
     $uniform8[7] = 0;
     const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($uniform8);
 
@@ -90,9 +128,20 @@ const applyColorTransform = (
     return ctAttachment;
 };
 
-const copyRegionToFilterAttachment = (
+/**
+ * @description ソースアタッチメントの領域をフィルター用アタッチメントにコピーする
+ *              Copies a region from source attachment to a filter attachment
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {IAttachmentObject} src_attachment ソースアタッチメント / Source attachment
+ * @param {number} x X座標 / X coordinate
+ * @param {number} y Y座標 / Y coordinate
+ * @param {number} width 幅 / Width
+ * @param {number} height 高さ / Height
+ * @return {IAttachmentObject} コピーされたアタッチメント / Copied attachment
+ */
+const $copyRegionToFilterAttachment = (
     config: ILocalFilterConfig,
-    srcAttachment: IAttachmentObject,
+    src_attachment: IAttachmentObject,
     x: number,
     y: number,
     width: number,
@@ -101,21 +150,20 @@ const copyRegionToFilterAttachment = (
 
     const dstAttachment = config.frameBufferManager.createTemporaryAttachment(width, height);
 
-    const pipeline = config.pipelineManager.getPipeline("complex_blend_copy");
+    // texture_copy_rgba8 (BlurFilterVertex, yFlipTexCoord=true) を使用
+    const pipeline = config.pipelineManager.getPipeline("texture_copy_rgba8");
     const bindGroupLayout = config.pipelineManager.getBindGroupLayout("texture_copy");
 
-    if (!pipeline || !bindGroupLayout || !srcAttachment.texture || !dstAttachment.texture) {
+    if (!pipeline || !bindGroupLayout || !src_attachment.texture || !dstAttachment.texture) {
         return dstAttachment;
     }
 
-    const scaleX = width / srcAttachment.width;
-    const offsetX = x / srcAttachment.width;
-
-    // ComplexBlendCopyVertexはOpenGL座標系のtexCoord（Y軸反転）を使用するため、
-    // UV uniformでY反転を補正して正しい向きの出力を得る
-    // texCoord.y=1(fb上端) → uv.y=y/H(ソース上端), texCoord.y=0(fb下端) → uv.y=(y+h)/H(ソース下端)
-    const scaleY = -(height / srcAttachment.height);
-    const offsetY = (y + height) / srcAttachment.height;
+    // BlurFilterVertex (yFlipTexCoord=true):
+    // texCoord.y=0(fb上端) → uv.y=y/H, texCoord.y=1(fb下端) → uv.y=(y+h)/H
+    const scaleX = width / src_attachment.width;
+    const scaleY = height / src_attachment.height;
+    const offsetX = x / src_attachment.width;
+    const offsetY = y / src_attachment.height;
 
     $uniform4[0] = scaleX;
     $uniform4[1] = scaleY;
@@ -126,7 +174,7 @@ const copyRegionToFilterAttachment = (
     const sampler = config.textureManager.createSampler("container_copy_sampler", false);
     ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries3[1].resource = sampler;
-    $entries3[2].resource = srcAttachment.texture.view;
+    $entries3[2].resource = src_attachment.texture.view;
     const bindGroup = config.device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries3
@@ -145,35 +193,47 @@ const copyRegionToFilterAttachment = (
     return dstAttachment;
 };
 
-const drawFilterResultToMain = (
+/**
+ * @description フィルター結果をメインアタッチメントに描画する
+ *              Draws filter result to the main attachment
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {IAttachmentObject} filter_attachment フィルターアタッチメント / Filter attachment
+ * @param {IAttachmentObject} main_attachment メインアタッチメント / Main attachment
+ * @param {IBlendMode} blend_mode ブレンドモード / Blend mode
+ * @param {number} x X座標 / X coordinate
+ * @param {number} y Y座標 / Y coordinate
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @return {void}
+ */
+const $drawFilterResultToMain = (
     config: ILocalFilterConfig,
-    filterAttachment: IAttachmentObject,
-    mainAttachment: IAttachmentObject,
-    blendMode: IBlendMode,
+    filter_attachment: IAttachmentObject,
+    main_attachment: IAttachmentObject,
+    blend_mode: IBlendMode,
     x: number,
     y: number,
-    bufferManager: BufferManager
+    buffer_manager: BufferManager
 ): void => {
 
-    if (!mainAttachment.texture || !filterAttachment.texture) {
+    if (!main_attachment.texture || !filter_attachment.texture) {
         return;
     }
 
     // WebGLと同じサブピクセル精度を維持するため、Math.floorを使用しない
     let drawX = x;
     let drawY = y;
-    let drawWidth = filterAttachment.width;
-    let drawHeight = filterAttachment.height;
+    let drawWidth = filter_attachment.width;
+    let drawHeight = filter_attachment.height;
 
     let uvOffsetX = 0;
     let uvOffsetY = 0;
     if (drawX < 0) {
-        uvOffsetX = -drawX / filterAttachment.width;
+        uvOffsetX = -drawX / filter_attachment.width;
         drawWidth += drawX;
         drawX = 0;
     }
     if (drawY < 0) {
-        uvOffsetY = -drawY / filterAttachment.height;
+        uvOffsetY = -drawY / filter_attachment.height;
         drawHeight += drawY;
         drawY = 0;
     }
@@ -182,8 +242,8 @@ const drawFilterResultToMain = (
         return;
     }
 
-    const mainWidth = mainAttachment.width;
-    const mainHeight = mainAttachment.height;
+    const mainWidth = main_attachment.width;
+    const mainHeight = main_attachment.height;
     if (drawX + drawWidth > mainWidth) {
         drawWidth = mainWidth - drawX;
     }
@@ -191,12 +251,12 @@ const drawFilterResultToMain = (
         drawHeight = mainHeight - drawY;
     }
 
-    if (SIMPLE_BLEND_MODES.has(blendMode)) {
+    if ($SIMPLE_BLEND_MODES.has(blend_mode)) {
 
-        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
 
         let pipelineName: string;
-        switch (blendMode) {
+        switch (blend_mode) {
             case "add":
                 pipelineName = useMsaa ? "filter_output_add_msaa" : "filter_output_add";
                 break;
@@ -226,24 +286,24 @@ const drawFilterResultToMain = (
 
         const sampler = config.textureManager.createSampler("container_output_sampler", true);
 
-        const uvScaleX = drawWidth / filterAttachment.width;
-        const uvScaleY = drawHeight / filterAttachment.height;
+        const uvScaleX = drawWidth / filter_attachment.width;
+        const uvScaleY = drawHeight / filter_attachment.height;
         $uniform4[0] = uvScaleX;
         $uniform4[1] = uvScaleY;
         $uniform4[2] = uvOffsetX;
         $uniform4[3] = uvOffsetY;
-        const uniformBuffer = bufferManager.acquireAndWriteUniformBuffer($uniform4);
+        const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniform4);
 
         ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
         $entries3[1].resource = sampler;
-        $entries3[2].resource = filterAttachment.texture.view;
+        $entries3[2].resource = filter_attachment.texture.view;
         const bindGroup = config.device.createBindGroup({
             "layout": bindGroupLayout,
             "entries": $entries3
         });
 
-        const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
-        const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
+        const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture.view;
+        const resolveTarget = useMsaa ? main_attachment.texture.view : null;
         const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
             colorView, 0, 0, 0, 0, "load", resolveTarget
         );
@@ -273,8 +333,8 @@ const drawFilterResultToMain = (
     } else {
 
         // 複雑なブレンドモード
-        const dstAttachment = copyRegionToFilterAttachment(
-            config, mainAttachment, drawX, drawY, drawWidth, drawHeight
+        const dstAttachment = $copyRegionToFilterAttachment(
+            config, main_attachment, drawX, drawY, drawWidth, drawHeight
         );
 
         $uniform8[0] = $identityColorTransform[0];
@@ -287,7 +347,7 @@ const drawFilterResultToMain = (
         $uniform8[7] = 0;
 
         const blendedAttachment = blendApplyComplexBlendUseCase(
-            filterAttachment, dstAttachment, blendMode, $uniform8, {
+            filter_attachment, dstAttachment, blend_mode, $uniform8, {
                 "device": config.device,
                 "commandEncoder": config.commandEncoder,
                 "bufferManager": config.bufferManager,
@@ -299,22 +359,22 @@ const drawFilterResultToMain = (
         );
 
         // 結果をメインに描画
-        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
         const resultPipelineName = useMsaa ? "filter_complex_blend_output_msaa" : "filter_complex_blend_output";
         const resultPipeline = config.pipelineManager.getPipeline(resultPipelineName);
         const resultLayout = config.pipelineManager.getBindGroupLayout("positioned_texture");
 
-        if (resultPipeline && resultLayout && blendedAttachment.texture && mainAttachment.texture) {
+        if (resultPipeline && resultLayout && blendedAttachment.texture && main_attachment.texture) {
 
             $uniform8[0] = drawX;
             $uniform8[1] = drawY;
             $uniform8[2] = blendedAttachment.width;
             $uniform8[3] = blendedAttachment.height;
-            $uniform8[4] = mainAttachment.width;
-            $uniform8[5] = mainAttachment.height;
+            $uniform8[4] = main_attachment.width;
+            $uniform8[5] = main_attachment.height;
             $uniform8[6] = 0;
             $uniform8[7] = 0;
-            const uniformBuffer = bufferManager.acquireAndWriteUniformBuffer($uniform8);
+            const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniform8);
 
             const sampler = config.textureManager.createSampler("container_blend_output_sampler", false);
 
@@ -326,8 +386,8 @@ const drawFilterResultToMain = (
                 "entries": $entries3
             });
 
-            const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
-            const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
+            const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture.view;
+            const resolveTarget = useMsaa ? main_attachment.texture.view : null;
             const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
                 colorView, 0, 0, 0, 0, "load", resolveTarget
             );
@@ -344,11 +404,21 @@ const drawFilterResultToMain = (
     }
 };
 
-const applyFilterChain = (
-    filterAttachment: IAttachmentObject,
+/**
+ * @description フィルターチェーンをアタッチメントに適用する
+ *              Applies a chain of filters to an attachment
+ * @param {IAttachmentObject} filter_attachment フィルターアタッチメント / Filter attachment
+ * @param {Float32Array} matrix 変換行列 / Transformation matrix
+ * @param {Float32Array} params フィルターパラメータ配列 / Filter parameters array
+ * @param {number} device_pixel_ratio デバイスピクセル比 / Device pixel ratio
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @return {IAttachmentObject} フィルター適用後のアタッチメント / Attachment with filters applied
+ */
+const $applyFilterChain = (
+    filter_attachment: IAttachmentObject,
     matrix: Float32Array,
     params: Float32Array,
-    devicePixelRatio: number,
+    device_pixel_ratio: number,
     config: ILocalFilterConfig
 ): IAttachmentObject => {
 
@@ -363,30 +433,30 @@ const applyFilterChain = (
             case 0: // BevelFilter
                 {
                     const newAtt = filterApplyBevelFilterUseCase(
-                        filterAttachment, matrix,
+                        filter_attachment, matrix,
                         params[idx++], params[idx++], params[idx++], params[idx++],
                         params[idx++], params[idx++], params[idx++], params[idx++],
                         params[idx++], params[idx++], params[idx++], Boolean(params[idx++]),
-                        devicePixelRatio, config
+                        device_pixel_ratio, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
             case 1: // BlurFilter
                 {
                     const newAtt = filterApplyBlurFilterUseCase(
-                        filterAttachment, matrix,
+                        filter_attachment, matrix,
                         params[idx++], params[idx++], params[idx++],
-                        devicePixelRatio, config
+                        device_pixel_ratio, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
@@ -413,12 +483,12 @@ const applyFilterChain = (
                     $uniform20[18] = params[idx++];
                     $uniform20[19] = params[idx++];
                     const newAtt = filterApplyColorMatrixFilterUseCase(
-                        filterAttachment, $uniform20, config
+                        filter_attachment, $uniform20, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
@@ -433,17 +503,17 @@ const applyFilterChain = (
                     }
 
                     const newAtt = filterApplyConvolutionFilterUseCase(
-                        filterAttachment,
+                        filter_attachment,
                         matrixX, matrixY, convMatrix,
                         params[idx++], params[idx++],
                         Boolean(params[idx++]), Boolean(params[idx++]),
                         params[idx++], params[idx++],
                         config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
@@ -456,50 +526,49 @@ const applyFilterChain = (
                     }
 
                     const newAtt = filterApplyDisplacementMapFilterUseCase(
-                        filterAttachment, matrix,
+                        filter_attachment, matrix,
                         dmBuffer, params[idx++], params[idx++],
                         params[idx++], params[idx++],
                         params[idx++], params[idx++],
                         params[idx++], params[idx++],
                         params[idx++], params[idx++], params[idx++],
-                        devicePixelRatio, config
+                        device_pixel_ratio, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
             case 5: // DropShadowFilter
                 {
                     const newAtt = filterApplyDropShadowFilterUseCase(
-                        filterAttachment, matrix,
+                        filter_attachment, matrix,
                         params[idx++], params[idx++], params[idx++], params[idx++],
                         params[idx++], params[idx++], params[idx++], params[idx++],
                         Boolean(params[idx++]), Boolean(params[idx++]), Boolean(params[idx++]),
-                        devicePixelRatio, config
+                        device_pixel_ratio, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
             case 6: // GlowFilter
                 {
                     const newAtt = filterApplyGlowFilterUseCase(
-                        filterAttachment, matrix,
+                        filter_attachment, matrix,
                         params[idx++], params[idx++], params[idx++], params[idx++],
-                        params[idx++], params[idx++],
-                        Boolean(params[idx++]), Boolean(params[idx++]),
-                        devicePixelRatio, config
+                        params[idx++], params[idx++], Boolean(params[idx++]), Boolean(params[idx++]),
+                        device_pixel_ratio, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
@@ -521,16 +590,16 @@ const applyFilterChain = (
                     for (let i = 0; i < gbRatiosLen; i++) { gbRatios[i] = params[idx++] }
 
                     const newAtt = filterApplyGradientBevelFilterUseCase(
-                        filterAttachment, matrix,
+                        filter_attachment, matrix,
                         gbDist, gbAngle, gbColors, gbAlphas, gbRatios,
                         params[idx++], params[idx++], params[idx++],
                         params[idx++], params[idx++], Boolean(params[idx++]),
-                        devicePixelRatio, config
+                        device_pixel_ratio, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
 
@@ -552,43 +621,63 @@ const applyFilterChain = (
                     for (let i = 0; i < ggRatiosLen; i++) { ggRatios[i] = params[idx++] }
 
                     const newAtt = filterApplyGradientGlowFilterUseCase(
-                        filterAttachment, matrix,
+                        filter_attachment, matrix,
                         ggDist, ggAngle, ggColors, ggAlphas, ggRatios,
                         params[idx++], params[idx++], params[idx++],
                         params[idx++], params[idx++], Boolean(params[idx++]),
-                        devicePixelRatio, config
+                        device_pixel_ratio, config
                     );
-                    if (filterAttachment !== newAtt) {
-                        config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
+                    if (filter_attachment !== newAtt) {
+                        config.frameBufferManager.releaseTemporaryAttachment(filter_attachment);
                     }
-                    filterAttachment = newAtt;
+                    filter_attachment = newAtt;
                 }
                 break;
         }
     }
 
-    return filterAttachment;
+    return filter_attachment;
 };
 
+/**
+ * @description コンテナレイヤーの終了処理を実行する（フィルター適用＋ブレンド＋メインへの描画）
+ *              Executes container layer end processing (filter application + blending + drawing to main)
+ * @param {IAttachmentObject} temp_attachment 一時アタッチメント / Temporary attachment
+ * @param {IAttachmentObject} main_attachment メインアタッチメント / Main attachment
+ * @param {string} _temp_name 一時名（未使用） / Temporary name (unused)
+ * @param {IBlendMode} blend_mode ブレンドモード / Blend mode
+ * @param {Float32Array} matrix 変換行列 / Transformation matrix
+ * @param {Float32Array | null} color_transform カラートランスフォーム配列 / Color transform array
+ * @param {boolean} use_filter フィルター使用フラグ / Whether to use filter
+ * @param {Float32Array | null} filter_bounds フィルターバウンディングボックス / Filter bounding box
+ * @param {Float32Array | null} params フィルターパラメータ配列 / Filter parameters array
+ * @param {string} unique_key ユニークキー / Unique key
+ * @param {string} filter_key フィルターキー / Filter key
+ * @param {number} _content_width コンテンツ幅（未使用） / Content width (unused)
+ * @param {number} _content_height コンテンツ高さ（未使用） / Content height (unused)
+ * @param {ILocalFilterConfig} config フィルター設定 / Filter configuration
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @return {void}
+ */
 export const execute = (
-    tempAttachment: IAttachmentObject,
-    mainAttachment: IAttachmentObject,
-    _tempName: string,
-    blendMode: IBlendMode,
+    temp_attachment: IAttachmentObject,
+    main_attachment: IAttachmentObject,
+    _temp_name: string,
+    blend_mode: IBlendMode,
     matrix: Float32Array,
-    colorTransform: Float32Array | null,
-    useFilter: boolean,
-    filterBounds: Float32Array | null,
+    color_transform: Float32Array | null,
+    use_filter: boolean,
+    filter_bounds: Float32Array | null,
     params: Float32Array | null,
-    uniqueKey: string,
-    filterKey: string,
-    _contentWidth: number,
-    _contentHeight: number,
+    unique_key: string,
+    filter_key: string,
+    _content_width: number,
+    _content_height: number,
     config: ILocalFilterConfig,
-    bufferManager: BufferManager
+    buffer_manager: BufferManager
 ): void => {
 
-    if (useFilter && matrix && filterBounds && params) {
+    if (use_filter && matrix && filter_bounds && params) {
 
         // containerEndLayerが呼ばれる＝ディスプレイレイヤーがコンテンツ変更を検出して再レンダリングを要求
         // 常に新鮮なテクスチャを抽出してフィルターを適用する
@@ -597,26 +686,26 @@ export const execute = (
         // WebGL版と同じ: レイヤー全体をフィルター用にコピー
         // レイヤーはコンテンツサイズで作成され、childrenは相対座標で描画されているため
         // (0, 0, layerWidth, layerHeight) = コンテンツ全体
-        let filterAttachment = copyRegionToFilterAttachment(
-            config, tempAttachment,
-            0, 0, tempAttachment.width, tempAttachment.height
+        let filterAttachment = $copyRegionToFilterAttachment(
+            config, temp_attachment,
+            0, 0, temp_attachment.width, temp_attachment.height
         );
 
         // 一時アタッチメントを遅延解放（コマンドバッファsubmit後に解放）
         // destroyAttachmentは即座にGPUテクスチャを破棄するため、
         // コマンドエンコーダに記録済みのレンダーパスが参照するテクスチャが無効になる
-        config.frameBufferManager.releaseTemporaryAttachment(tempAttachment);
+        config.frameBufferManager.releaseTemporaryAttachment(temp_attachment);
 
         // フィルターチェーンを適用
         const devicePixelRatio = WebGPUUtil.getDevicePixelRatio();
-        filterAttachment = applyFilterChain(
+        filterAttachment = $applyFilterChain(
             filterAttachment, matrix, params, devicePixelRatio, config
         );
 
         // キャッシュに保存
-        if (uniqueKey) {
-            $cacheStore.set(uniqueKey, "fKey", filterKey);
-            $cacheStore.set(uniqueKey, "fTexture", filterAttachment);
+        if (unique_key) {
+            $cacheStore.set(unique_key, "fKey", filter_key);
+            $cacheStore.set(unique_key, "fTexture", filterAttachment);
         }
 
         // フィルター結果をメインに描画
@@ -625,23 +714,23 @@ export const execute = (
             // キャッシュにはフィルター結果のみ保存（CTは毎フレーム適用する）
             let drawAttachment = filterAttachment;
             let ctAttachment: IAttachmentObject | null = null;
-            if (!isIdentityColorTransform(colorTransform)) {
-                ctAttachment = applyColorTransform(config, filterAttachment, colorTransform!);
+            if (!$isIdentityColorTransform(color_transform)) {
+                ctAttachment = $applyColorTransform(config, filterAttachment, color_transform!);
                 drawAttachment = ctAttachment;
             }
 
             const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
             const scaleY = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
-            const boundsXMin = filterBounds[0] * (scaleX / devicePixelRatio);
-            const boundsYMin = filterBounds[1] * (scaleY / devicePixelRatio);
+            const boundsXMin = filter_bounds[0] * (scaleX / devicePixelRatio);
+            const boundsYMin = filter_bounds[1] * (scaleY / devicePixelRatio);
 
             // WebGL版と同じ: boundsXMin + matrix[4] で絶対位置
             const drawX = boundsXMin + matrix[4];
             const drawY = boundsYMin + matrix[5];
 
-            drawFilterResultToMain(
-                config, drawAttachment, mainAttachment,
-                blendMode, drawX, drawY, bufferManager
+            $drawFilterResultToMain(
+                config, drawAttachment, main_attachment,
+                blend_mode, drawX, drawY, buffer_manager
             );
 
             // CT一時アタッチメントを解放
@@ -649,7 +738,7 @@ export const execute = (
                 config.frameBufferManager.releaseTemporaryAttachment(ctAttachment);
             }
             // キャッシュされていないフィルター結果のみ解放
-            if (!uniqueKey) {
+            if (!unique_key) {
                 config.frameBufferManager.releaseTemporaryAttachment(filterAttachment);
             }
         }
@@ -657,25 +746,25 @@ export const execute = (
     } else {
 
         // ブレンドのみ：レイヤー全体をフィルター用にコピーしてメインに描画
-        let fullAttachment = copyRegionToFilterAttachment(
-            config, tempAttachment,
-            0, 0, tempAttachment.width, tempAttachment.height
+        let fullAttachment = $copyRegionToFilterAttachment(
+            config, temp_attachment,
+            0, 0, temp_attachment.width, temp_attachment.height
         );
 
         // 一時アタッチメントを遅延解放（コマンドバッファsubmit後に解放）
-        config.frameBufferManager.releaseTemporaryAttachment(tempAttachment);
+        config.frameBufferManager.releaseTemporaryAttachment(temp_attachment);
 
         // ColorTransformが恒等変換でない場合、適用
-        if (!isIdentityColorTransform(colorTransform)) {
-            const ctAttachment = applyColorTransform(config, fullAttachment, colorTransform!);
+        if (!$isIdentityColorTransform(color_transform)) {
+            const ctAttachment = $applyColorTransform(config, fullAttachment, color_transform!);
             config.frameBufferManager.releaseTemporaryAttachment(fullAttachment);
             fullAttachment = ctAttachment;
         }
 
         // WebGL版と同じ: matrix[4], matrix[5] = layerBounds の絶対位置に描画
-        drawFilterResultToMain(
-            config, fullAttachment, mainAttachment,
-            blendMode, matrix[4], matrix[5], bufferManager
+        $drawFilterResultToMain(
+            config, fullAttachment, main_attachment,
+            blend_mode, matrix[4], matrix[5], buffer_manager
         );
 
         config.frameBufferManager.releaseTemporaryAttachment(fullAttachment);

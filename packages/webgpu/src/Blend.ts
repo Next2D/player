@@ -3,20 +3,33 @@ import type { IBlendState } from "./interface/IBlendState";
 
 export type { IBlendState };
 
+/**
+ * @description 現在のブレンドモード
+ *              The current blend mode used for rendering
+ *
+ * @type {IBlendMode}
+ */
 export let $currentBlendMode: IBlendMode = "normal";
 
-export let $funcCode: number = 0;
-
+/**
+ * @description 現在のブレンドモードを設定する
+ *              Set the current blend mode
+ *
+ * @param {IBlendMode} blend_mode - ブレンドモード / blend mode to apply
+ * @return {void}
+ */
 export const $setCurrentBlendMode = (blend_mode: IBlendMode): void =>
 {
     $currentBlendMode = blend_mode;
 };
 
-export const $setFuncCode = (code: number): void =>
-{
-    $funcCode = code;
-};
-
+/**
+ * @description 指定されたブレンドモードに対応するWebGPUブレンドステートを返す
+ *              Returns the WebGPU blend state configuration for the given blend mode
+ *
+ * @param {IBlendMode} mode - ブレンドモード / blend mode
+ * @return {IBlendState}
+ */
 export const $getBlendState = (mode: IBlendMode): IBlendState =>
 {
     switch (mode) {

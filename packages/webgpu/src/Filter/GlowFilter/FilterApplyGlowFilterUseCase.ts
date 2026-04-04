@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
+import { intToPremultipliedRGBA } from "../FilterUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 
 /**
@@ -19,48 +20,38 @@ const $entries4: GPUBindGroupEntry[] = [
 ];
 
 /**
- * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255 * alpha;
-    const g = (color >> 8 & 0xFF) / 255 * alpha;
-    const b = (color & 0xFF) / 255 * alpha;
-    return [r, g, b, alpha];
-};
-
-/**
  * @description グローフィルターを適用
  *              Apply glow filter
  *
  * UV変換方式で元テクスチャとブラーテクスチャを直接サンプリング。
  * copyTextureToTextureと一時テクスチャを使用しない最適化版。
  *
- * @param  {IAttachmentObject} sourceAttachment - 入力テクスチャ
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ
  * @param  {Float32Array} matrix - 変換行列
  * @param  {number} color - グロー色 (32bit整数)
  * @param  {number} alpha - アルファ
- * @param  {number} blurX - X方向ブラー量
- * @param  {number} blurY - Y方向ブラー量
+ * @param  {number} blur_x - X方向ブラー量
+ * @param  {number} blur_y - Y方向ブラー量
  * @param  {number} strength - グロー強度
  * @param  {number} quality - クオリティ
  * @param  {boolean} inner - インナーグロー
  * @param  {boolean} knockout - ノックアウトモード
- * @param  {number} devicePixelRatio - デバイスピクセル比
+ * @param  {number} device_pixel_ratio - デバイスピクセル比
  * @param  {IFilterConfig} config - WebGPUリソース設定
  * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
+    source_attachment: IAttachmentObject,
     matrix: Float32Array,
     color: number,
     alpha: number,
-    blurX: number,
-    blurY: number,
+    blur_x: number,
+    blur_y: number,
     strength: number,
     quality: number,
     inner: boolean,
     knockout: boolean,
-    devicePixelRatio: number,
+    device_pixel_ratio: number,
     config: IFilterConfig
 ): IAttachmentObject => {
 
@@ -69,14 +60,13 @@ export const execute = (
     // 元のオフセットを保存
     const baseOffsetX = $offset.x;
     const baseOffsetY = $offset.y;
-    const baseWidth = sourceAttachment.width;
-    const baseHeight = sourceAttachment.height;
+    const baseWidth = source_attachment.width;
+    const baseHeight = source_attachment.height;
 
-    // ブラーフィルターを適用（元テクスチャを保持）
     const blurAttachment = filterApplyBlurFilterUseCase(
-        sourceAttachment, matrix,
-        blurX, blurY, quality,
-        devicePixelRatio, config
+        source_attachment, matrix,
+        blur_x, blur_y, quality,
+        device_pixel_ratio, config
     );
 
     const blurWidth = blurAttachment.width;
@@ -120,7 +110,7 @@ export const execute = (
     if (!pipeline || !bindGroupLayout) {
         console.error("[WebGPU GlowFilter] Pipeline not found");
         frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-        return sourceAttachment;
+        return source_attachment;
     }
 
     // サンプラーを作成
@@ -132,7 +122,7 @@ export const execute = (
     // blurScale: vec2<f32>, blurOffset: vec2<f32> (16 bytes)
     // strength: f32, inner: f32, knockout: f32, _padding: f32 (16 bytes)
     // Total: 64 bytes
-    const [r, g, b, a] = intToRGBA(color, alpha);
+    const [r, g, b, a] = intToPremultipliedRGBA(color, alpha);
     $uniform16[0] = r;
     $uniform16[1] = g;
     $uniform16[2] = b;
@@ -164,7 +154,7 @@ export const execute = (
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries4[1].resource = sampler;
     $entries4[2].resource = blurAttachment.texture!.view;
-    $entries4[3].resource = sourceAttachment.texture!.view;
+    $entries4[3].resource = source_attachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries4

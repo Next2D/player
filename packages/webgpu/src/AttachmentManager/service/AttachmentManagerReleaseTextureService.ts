@@ -4,21 +4,21 @@ import type { ITextureObject } from "../../interface/ITextureObject";
  * @description テクスチャをプールに返却
  *              Release texture back to pool
  *
- * @param  {Map<string, ITextureObject[]>} texturePool
- * @param  {ITextureObject} textureObject
+ * @param  {Map<string, ITextureObject[]>} texture_pool - テクスチャプール
+ * @param  {ITextureObject} texture_object - 返却するテクスチャオブジェクト
  * @return {void}
  * @method
  * @protected
  */
 export const execute = (
-    texturePool: Map<string, ITextureObject[]>,
-    textureObject: ITextureObject
+    texture_pool: Map<string, ITextureObject[]>,
+    texture_object: ITextureObject
 ): void => {
-    const key = `${textureObject.width}x${textureObject.height}_${textureObject.smooth ? "smooth" : "nearest"}`;
+    const key = `${texture_object.width}x${texture_object.height}_${texture_object.smooth ? "smooth" : "nearest"}`;
 
-    if (!texturePool.has(key)) {
-        texturePool.set(key, []);
+    if (!texture_pool.has(key)) {
+        texture_pool.set(key, []);
     }
 
-    texturePool.get(key)!.push(textureObject);
+    texture_pool.get(key)!.push(texture_object);
 };

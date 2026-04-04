@@ -1,4 +1,6 @@
 import { $context } from "../../RendererUtil";
+import { $cacheStore } from "@next2d/cache";
+import type { Node } from "@next2d/texture-packer";
 import { execute as shapeRenderUseCase } from "../../Shape/usecase/ShapeRenderUseCase";
 import { execute as shapeClipRenderUseCase } from "../../Shape/usecase/ShapeClipRenderUseCase";
 import { execute as textFieldRenderUseCase } from "../../TextField/usecase/TextFieldRenderUseCase";
@@ -35,8 +37,11 @@ export const execute = (
     let layerHeight = 0;
 
     let useFilter = false;
+    let useCacheAsBitmap = false;
     let uniqueKey = "";
     let filterKey = "";
+    let cacheRenderScaleX = 1;
+    let cacheRenderScaleY = 1;
     let filterBounds: Float32Array | null = null;
     let filterParams: Float32Array | null = null;
     let matrix: Float32Array | null = null;
@@ -46,9 +51,57 @@ export const execute = (
         layerWidth  = render_queue[index++];
         layerHeight = render_queue[index++];
 
-        useFilter = Boolean(render_queue[index++]);
+        const layerType = render_queue[index++]; // 0=blend, 1=filter, 2=cacheAsBitmap
+        useFilter = layerType === 1;
+        useCacheAsBitmap = layerType === 2;
 
-        if (useFilter) {
+        if (useCacheAsBitmap) {
+
+            // cacheAsBitmapパス
+            const cacheHit = Boolean(render_queue[index++]);
+            uniqueKey = `${render_queue[index++]}`;
+            filterKey = `${render_queue[index++]}`;
+
+            // フィルター境界を読み取り
+            filterBounds = render_queue.subarray(index, index + 4);
+            index += 4;
+
+            // renderScale（キャッシュ描画時のスケール）
+            cacheRenderScaleX = render_queue[index++];
+            cacheRenderScaleY = render_queue[index++];
+
+            // 親matrix + スクリーン座標 (a, b, c, d, screenX, screenY)
+            matrix = render_queue.subarray(index, index + 6);
+            index += 6;
+
+            colorTransform = render_queue.subarray(index, index + 8);
+            index += 8;
+
+            if (cacheHit) {
+                // キャッシュ済み: Shapeと同様にmatrix/renderScaleで描画
+                const cachedNode = $cacheStore.get(uniqueKey, "bNode") as Node;
+                if (cachedNode) {
+                    $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
+                    $context.globalCompositeOperation = blendMode;
+                    $context.setTransform(
+                        matrix[0] / cacheRenderScaleX, matrix[1] / cacheRenderScaleX,
+                        matrix[2] / cacheRenderScaleY, matrix[3] / cacheRenderScaleY,
+                        matrix[4], matrix[5]
+                    );
+                    $context.drawDisplayObject(
+                        cachedNode,
+                        filterBounds[0], filterBounds[1],
+                        filterBounds[2], filterBounds[3],
+                        colorTransform
+                    );
+                }
+                return index;
+            }
+
+            // 初回描画: フィルターパラメータをスキップ（アトラスパスでは不使用）
+            index += render_queue[index] + 1;
+
+        } else if (useFilter) {
             // フィルターパス: filterCache/uniqueKey/filterKey を読む
             const filterCache = Boolean(render_queue[index++]);
             uniqueKey = `${render_queue[index++]}`;
@@ -95,7 +148,11 @@ export const execute = (
     }
 
     // コンテナのフィルター/ブレンド用にレイヤーを開始
-    if (useLayer) {
+    let cacheNode: Node | null = null;
+    if (useCacheAsBitmap) {
+        // cacheAsBitmap: temp FBO作成→子要素描画→アトラスノードへコピー
+        cacheNode = $context.containerBeginAtlasNode(layerWidth, layerHeight);
+    } else if (useLayer) {
         $context.containerBeginLayer(layerWidth, layerHeight);
     }
 
@@ -244,7 +301,33 @@ export const execute = (
     }
 
     // コンテナのフィルター/ブレンド結果をメインに合成
-    if (useLayer) {
+    if (cacheNode) {
+        // cacheAsBitmap: アトラス描画終了→キャッシュ→インスタンス描画
+        $context.containerEndAtlasNode();
+
+        // 古いノードを解放
+        const oldNode = $cacheStore.get(uniqueKey, "bNode") as Node;
+        if (oldNode) {
+            $context.removeNode(oldNode);
+        }
+        $cacheStore.set(uniqueKey, "bNode", cacheNode);
+        $cacheStore.set(uniqueKey, "bKey", filterKey);
+
+        // アトラスからインスタンス描画（Shapeと同様にmatrix/renderScaleで描画）
+        $context.globalAlpha = Math.min(Math.max(0, colorTransform![3] + colorTransform![7] / 255), 1);
+        $context.globalCompositeOperation = blendMode;
+        $context.setTransform(
+            matrix![0] / cacheRenderScaleX, matrix![1] / cacheRenderScaleX,
+            matrix![2] / cacheRenderScaleY, matrix![3] / cacheRenderScaleY,
+            matrix![4], matrix![5]
+        );
+        $context.drawDisplayObject(
+            cacheNode,
+            filterBounds![0], filterBounds![1],
+            filterBounds![2], filterBounds![3],
+            colorTransform!
+        );
+    } else if (useLayer) {
         $context.containerEndLayer(
             blendMode, matrix!, colorTransform,
             useFilter, filterBounds, filterParams,

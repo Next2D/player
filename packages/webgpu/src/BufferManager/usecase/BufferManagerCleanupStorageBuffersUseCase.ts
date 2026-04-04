@@ -9,6 +9,7 @@ import type { IPooledStorageBuffer } from "../../interface/IStorageBufferConfig"
  * @param {IPooledStorageBuffer[]} pool - Storage Bufferプール
  * @param {number} current_frame - 現在のフレーム番号
  * @param {number} max_age - 最大保持フレーム数
+ * @return {void}
  */
 export const execute = (
     pool: IPooledStorageBuffer[],

@@ -1,10 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import type { IPath } from "../../interface/IPath";
-import type { IPoint } from "../../interface/IPoint";
 import {
     generateStrokeOutline,
-    generateStrokeMesh,
-    generateStrokeMeshFromPoints
+    generateStrokeMesh
 } from "./MeshStrokeGenerateUseCase";
 
 // Mock $context
@@ -182,69 +180,4 @@ describe("MeshStrokeGenerateUseCase", () =>
         });
     });
 
-    describe("generateStrokeMeshFromPoints", () =>
-    {
-        it("should return Float32Array", () =>
-        {
-            const paths: IPoint[][] = [[
-                { "x": 0, "y": 0 },
-                { "x": 100, "y": 0 }
-            ]];
-
-            const result = generateStrokeMeshFromPoints(paths, 10);
-
-            expect(result).toBeInstanceOf(Float32Array);
-        });
-
-        it("should generate triangles for line segment", () =>
-        {
-            const paths: IPoint[][] = [[
-                { "x": 0, "y": 0 },
-                { "x": 100, "y": 0 }
-            ]];
-
-            const result = generateStrokeMeshFromPoints(paths, 10);
-
-            // 2 triangles * 3 vertices * 4 floats = 24
-            expect(result.length).toBe(24);
-        });
-
-        it("should skip paths with single point", () =>
-        {
-            const paths: IPoint[][] = [[
-                { "x": 0, "y": 0 }
-            ]];
-
-            const result = generateStrokeMeshFromPoints(paths, 10);
-
-            expect(result.length).toBe(0);
-        });
-
-        it("should handle multi-segment path", () =>
-        {
-            const paths: IPoint[][] = [[
-                { "x": 0, "y": 0 },
-                { "x": 100, "y": 0 },
-                { "x": 100, "y": 100 }
-            ]];
-
-            const result = generateStrokeMeshFromPoints(paths, 10);
-
-            // 2 line segments * 24 floats each = 48
-            expect(result.length).toBe(48);
-        });
-
-        it("should handle multiple separate paths", () =>
-        {
-            const paths: IPoint[][] = [
-                [{ "x": 0, "y": 0 }, { "x": 100, "y": 0 }],
-                [{ "x": 200, "y": 200 }, { "x": 300, "y": 200 }]
-            ];
-
-            const result = generateStrokeMeshFromPoints(paths, 10);
-
-            // 2 paths * 1 line segment each * 24 floats = 48
-            expect(result.length).toBe(48);
-        });
-    });
 });

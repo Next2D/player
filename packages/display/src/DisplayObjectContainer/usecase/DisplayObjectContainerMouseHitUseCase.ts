@@ -15,7 +15,9 @@ import {
     $getArray,
     $poolArray,
     $getMap,
-    $poolMap
+    $poolMap,
+    $getFloat32Array6,
+    $poolFloat32Array6
 } from "../../DisplayObjectUtil";
 
 /**
@@ -44,10 +46,34 @@ export const execute = <P extends DisplayObjectContainer, D extends DisplayObjec
         return false;
     }
 
-    const rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
+    let rawMatrix = displayObjectGetRawMatrixUseCase(display_object_container);
+
+    // cacheAsBitmap倍率をrawMatrixに適用（Shapeと同じ方式）
+    const cacheMatrix = display_object_container.cacheAsBitmap;
+    let scaledMatrix: Float32Array | null = null;
+    if (cacheMatrix) {
+        const cm = cacheMatrix.rawData;
+        const csx = Math.sqrt(cm[0] * cm[0] + cm[1] * cm[1]);
+        const csy = Math.sqrt(cm[2] * cm[2] + cm[3] * cm[3]);
+        if (rawMatrix) {
+            scaledMatrix = $getFloat32Array6(
+                rawMatrix[0] * csx, rawMatrix[1] * csx,
+                rawMatrix[2] * csy, rawMatrix[3] * csy,
+                rawMatrix[4], rawMatrix[5]
+            );
+        } else {
+            scaledMatrix = $getFloat32Array6(csx, 0, 0, csy, 0, 0);
+        }
+        rawMatrix = scaledMatrix;
+    }
+
     const tMatrix = rawMatrix
         ? Matrix.multiply(matrix, rawMatrix)
         : matrix;
+
+    if (scaledMatrix) {
+        $poolFloat32Array6(scaledMatrix);
+    }
 
     // mask set
     const clips: D[]   = $getArray();

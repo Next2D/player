@@ -1,3 +1,10 @@
+/**
+ * @description ステンシル書き込み用頂点シェーダー（ベジェ曲線パラメータ付き）
+ *              Stencil write vertex shader with bezier parameters
+ *
+ * @type {string}
+ * @constant
+ */
 export const StencilWriteVertex = /* wgsl */`
 override yFlipSign: f32 = 1.0;
 
@@ -32,6 +39,13 @@ fn main(input: VertexInput) -> VertexOutput {
 }
 `;
 
+/**
+ * @description ステンシル塗り用頂点シェーダー（カラー出力付き）
+ *              Stencil fill vertex shader with color output
+ *
+ * @type {string}
+ * @constant
+ */
 export const StencilFillVertex = /* wgsl */`
 override yFlipSign: f32 = 1.0;
 

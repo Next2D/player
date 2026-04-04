@@ -6,27 +6,27 @@ import { execute as attachmentManagerCreateColorBufferService } from "./Attachme
  * @description カラーバッファを取得（プールから再利用または新規作成）
  *              Get color buffer from pool or create new one
  *
- * @param  {GPUDevice} device
- * @param  {IColorBufferObject[]} colorBufferPool
- * @param  {number} width
- * @param  {number} height
- * @param  {IStencilBufferObject} stencil
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {IColorBufferObject[]} color_buffer_pool - カラーバッファプール
+ * @param  {number} width - バッファ幅
+ * @param  {number} height - バッファ高さ
+ * @param  {IStencilBufferObject} stencil - 関連するステンシルバッファ
  * @return {IColorBufferObject}
  * @method
  * @protected
  */
 export const execute = (
     device: GPUDevice,
-    colorBufferPool: IColorBufferObject[],
+    color_buffer_pool: IColorBufferObject[],
     width: number,
     height: number,
     stencil: IStencilBufferObject
 ): IColorBufferObject => {
     // プールから適切なサイズのものを検索
-    for (let i = 0; i < colorBufferPool.length; i++) {
-        const buffer = colorBufferPool[i];
+    for (let i = 0; i < color_buffer_pool.length; i++) {
+        const buffer = color_buffer_pool[i];
         if (buffer.width >= width && buffer.height >= height) {
-            colorBufferPool.splice(i, 1);
+            color_buffer_pool.splice(i, 1);
             buffer.stencil = stencil;
             buffer.dirty = false;
             return buffer;

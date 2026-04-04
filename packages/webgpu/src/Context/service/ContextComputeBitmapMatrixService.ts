@@ -1,3 +1,10 @@
+/**
+ * @description ビットマップ行列とコンテキスト行列からテクスチャマッピング用の逆行列を計算する
+ *              Computes the inverse matrix for texture mapping from bitmap and context matrices
+ * @param {Float32Array} bitmap_matrix ビットマップ変換行列 / Bitmap transformation matrix
+ * @param {Float32Array} context_matrix コンテキスト変換行列 / Context transformation matrix
+ * @return {Float32Array} 列優先形式の3x3逆行列 / Column-major 3x3 inverse matrix
+ */
 export const execute = (bitmap_matrix: Float32Array, context_matrix: Float32Array): Float32Array => {
     // ビットマップ行列 [a, b, c, d, tx, ty]
     const ba = bitmap_matrix[0];

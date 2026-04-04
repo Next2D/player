@@ -5,12 +5,8 @@ import {
     $getAtlasAttachmentObjects,
     $setAtlasAttachmentObject,
     $getAtlasAttachmentObject,
-    $hasAtlasAttachmentObject,
     $rootNodes,
-    $setAtlasTexture,
-    $getAtlasTexture,
     $getActiveTransferBounds,
-    $getActiveAllTransferBounds,
     $clearTransferBounds,
     $setCurrentAtlasIndex,
     $getCurrentAtlasIndex,
@@ -91,31 +87,6 @@ describe("AtlasManager", () =>
         });
     });
 
-    describe("$hasAtlasAttachmentObject", () =>
-    {
-        it("should return false when no attachment exists", () =>
-        {
-            expect($hasAtlasAttachmentObject()).toBe(false);
-        });
-
-        it("should return true when attachment exists", () =>
-        {
-            const mockAttachment = createMockAttachment(1, 512, 512);
-            $setAtlasAttachmentObject(mockAttachment);
-
-            expect($hasAtlasAttachmentObject()).toBe(true);
-        });
-
-        it("should return false at non-existing index", () =>
-        {
-            const mockAttachment = createMockAttachment(1, 512, 512);
-            $setAtlasAttachmentObject(mockAttachment);
-
-            $setActiveAtlasIndex(5);
-            expect($hasAtlasAttachmentObject()).toBe(false);
-        });
-    });
-
     describe("$rootNodes", () =>
     {
         it("should be empty array after reset", () =>
@@ -130,44 +101,6 @@ describe("AtlasManager", () =>
 
             expect($rootNodes.length).toBe(1);
             expect($rootNodes[0]).toBe(mockNode);
-        });
-    });
-
-    describe("$setAtlasTexture / $getAtlasTexture", () =>
-    {
-        it("should set and get atlas texture", () =>
-        {
-            const mockTexture = {
-                "id": 1,
-                "width": 4096,
-                "height": 4096,
-                "area": 4096 * 4096,
-                "smooth": true,
-                "resource": {},
-                "view": {}
-            } as any;
-
-            $setAtlasTexture(mockTexture);
-
-            expect($getAtlasTexture()).toBe(mockTexture);
-        });
-
-        it("should allow setting to null", () =>
-        {
-            const mockTexture = {
-                "id": 1,
-                "width": 4096,
-                "height": 4096,
-                "area": 4096 * 4096,
-                "smooth": true,
-                "resource": {},
-                "view": {}
-            } as any;
-
-            $setAtlasTexture(mockTexture);
-            $setAtlasTexture(null);
-
-            expect($getAtlasTexture()).toBeNull();
         });
     });
 
@@ -209,28 +142,6 @@ describe("AtlasManager", () =>
         });
     });
 
-    describe("$getActiveAllTransferBounds", () =>
-    {
-        it("should create all transfer bounds at index", () =>
-        {
-            const bounds = $getActiveAllTransferBounds(0);
-
-            expect(bounds).toBeInstanceOf(Float32Array);
-            expect(bounds.length).toBe(4);
-        });
-
-        it("should initialize with max/min values", () =>
-        {
-            const bounds = $getActiveAllTransferBounds(0);
-
-            // Float32Array stores Number.MAX_VALUE as Infinity
-            expect(bounds[0]).toBe(Infinity);
-            expect(bounds[1]).toBe(Infinity);
-            expect(bounds[2]).toBe(-Infinity);
-            expect(bounds[3]).toBe(-Infinity);
-        });
-    });
-
     describe("$clearTransferBounds", () =>
     {
         it("should reset transfer bounds to initial values", () =>
@@ -250,22 +161,19 @@ describe("AtlasManager", () =>
             expect(bounds[3]).toBe(-Infinity);
         });
 
-        it("should reset all transfer bounds arrays", () =>
+        it("should reset multiple transfer bounds arrays", () =>
         {
             const bounds0 = $getActiveTransferBounds(0);
             const bounds1 = $getActiveTransferBounds(1);
-            const allBounds0 = $getActiveAllTransferBounds(0);
 
             bounds0[0] = 50;
             bounds1[0] = 60;
-            allBounds0[0] = 70;
 
             $clearTransferBounds();
 
             // Float32Array stores Number.MAX_VALUE as Infinity
             expect(bounds0[0]).toBe(Infinity);
             expect(bounds1[0]).toBe(Infinity);
-            expect(allBounds0[0]).toBe(Infinity);
         });
     });
 
@@ -348,7 +256,7 @@ describe("AtlasManager", () =>
             $resetAtlas();
 
             // Attachment should be removed
-            expect($hasAtlasAttachmentObject()).toBe(false);
+            expect($getAtlasAttachmentObjects().length).toBe(0);
         });
 
         it("should clear transfer bounds", () =>

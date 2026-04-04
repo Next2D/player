@@ -11,34 +11,34 @@ import { execute as attachmentManagerGetTextureService } from "../service/Attach
  * @description アタッチメントオブジェクトを取得
  *              Get attachment object
  *
- * @param  {GPUDevice} device
- * @param  {IAttachmentObject[]} attachmentPool
- * @param  {Map<string, ITextureObject[]>} texturePool
- * @param  {IColorBufferObject[]} colorBufferPool
- * @param  {IStencilBufferObject[]} stencilBufferPool
- * @param  {number} width
- * @param  {number} height
- * @param  {boolean} msaa
- * @param  {{ attachmentId: number, textureId: number, stencilId: number }} idCounter
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {IAttachmentObject[]} attachment_pool - アタッチメントプール
+ * @param  {Map<string, ITextureObject[]>} texture_pool - テクスチャプール
+ * @param  {IColorBufferObject[]} color_buffer_pool - カラーバッファプール
+ * @param  {IStencilBufferObject[]} stencil_buffer_pool - ステンシルバッファプール
+ * @param  {number} width - バッファ幅
+ * @param  {number} height - バッファ高さ
+ * @param  {boolean} msaa - MSAA有効フラグ
+ * @param  {{ attachmentId: number, textureId: number, stencilId: number }} id_counter - ID管理カウンタ
  * @return {IAttachmentObject}
  * @method
  * @protected
  */
 export const execute = (
     device: GPUDevice,
-    attachmentPool: IAttachmentObject[],
-    texturePool: Map<string, ITextureObject[]>,
-    colorBufferPool: IColorBufferObject[],
-    stencilBufferPool: IStencilBufferObject[],
+    attachment_pool: IAttachmentObject[],
+    texture_pool: Map<string, ITextureObject[]>,
+    color_buffer_pool: IColorBufferObject[],
+    stencil_buffer_pool: IStencilBufferObject[],
     width: number,
     height: number,
     msaa: boolean,
-    idCounter: { attachmentId: number; textureId: number; stencilId: number }
+    id_counter: { attachmentId: number; textureId: number; stencilId: number }
 ): IAttachmentObject => {
     // プールから再利用
-    const attachment = attachmentPool.length > 0
-        ? attachmentPool.pop()!
-        : attachmentManagerCreateAttachmentObjectService(idCounter);
+    const attachment = attachment_pool.length > 0
+        ? attachment_pool.pop()!
+        : attachmentManagerCreateAttachmentObjectService(id_counter);
 
     // サイズとフラグを更新
     attachment.width = width;
@@ -50,16 +50,16 @@ export const execute = (
     // ステンシルバッファを取得または作成
     const stencil = attachmentManagerGetStencilBufferService(
         device,
-        stencilBufferPool,
+        stencil_buffer_pool,
         width,
         height,
-        idCounter
+        id_counter
     );
 
     // カラーバッファを取得または作成（ステンシルを参照）
     const color = attachmentManagerGetColorBufferService(
         device,
-        colorBufferPool,
+        color_buffer_pool,
         width,
         height,
         stencil
@@ -70,11 +70,11 @@ export const execute = (
     // テクスチャを取得
     const texture = attachmentManagerGetTextureService(
         device,
-        texturePool,
+        texture_pool,
         width,
         height,
         true,
-        idCounter
+        id_counter
     );
     attachment.texture = texture;
 

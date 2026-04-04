@@ -5,16 +5,51 @@ import { execute as meshBitmapStrokeGenerateUseCase } from "../../Mesh/usecase/M
 import { execute as contextComputeBitmapMatrixService } from "../service/ContextComputeBitmapMatrixService";
 import { $acquireFillTexture, $releaseFillTexture } from "../../FillTexturePool";
 
+/**
+ * @description ビットマップサンプラーのキャッシュ
+ *              Cache for bitmap samplers
+ */
 const $bitmapSamplerCache = new Map<string, GPUSampler>();
 
+/**
+ * @description ユニフォームデータの事前確保配列（32要素）
+ *              Pre-allocated uniform data array (32 elements)
+ */
 const $uniformData32 = new Float32Array(32);
 
+/**
+ * @description バインドグループエントリの事前確保配列
+ *              Pre-allocated bind group entry array
+ */
 const $entries3: GPUBindGroupEntry[] = [
     { "binding": 0, "resource": { "buffer": null as unknown as GPUBuffer } },
     { "binding": 1, "resource": null as unknown as GPUSampler },
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
+/**
+ * @description ビットマップストローク描画を実行する
+ *              Executes bitmap stroke rendering
+ * @param {GPUDevice} device GPUデバイス / GPU device
+ * @param {GPURenderPassEncoder} render_pass_encoder レンダーパスエンコーダ / Render pass encoder
+ * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
+ * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
+ * @param {IPath[]} vertices パス頂点配列 / Path vertices array
+ * @param {number} thickness ストローク太さ / Stroke thickness
+ * @param {Float32Array} context_matrix コンテキスト変換行列 / Context transformation matrix
+ * @param {Float32Array} stroke_style ストロークスタイル（RGBA） / Stroke style (RGBA)
+ * @param {Uint8Array} pixels ピクセルデータ / Pixel data
+ * @param {Float32Array} bitmap_matrix ビットマップ変換行列 / Bitmap transformation matrix
+ * @param {number} width テクスチャ幅 / Texture width
+ * @param {number} height テクスチャ高さ / Texture height
+ * @param {boolean} repeat リピート有無 / Whether to repeat
+ * @param {boolean} smooth スムーズフィルタ有無 / Whether to use smooth filtering
+ * @param {number} viewport_width ビューポート幅 / Viewport width
+ * @param {number} viewport_height ビューポート高さ / Viewport height
+ * @param {boolean} use_atlas_target アトラスターゲット使用フラグ / Whether to use atlas target
+ * @param {boolean} use_stencil_pipeline ステンシルパイプライン使用フラグ / Whether to use stencil pipeline
+ * @return {GPUTexture | null} ビットマップテクスチャまたはnull / Bitmap texture or null
+ */
 export const execute = (
     device: GPUDevice,
     render_pass_encoder: GPURenderPassEncoder,

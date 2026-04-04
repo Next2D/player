@@ -231,7 +231,8 @@ stage.addChild(frontShape);
 
 ```javascript
 // 将复杂形状缓存为位图
-shape.cacheAsBitmap = true;
+const { Matrix } = next2d.geom;
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 ```
 
 ## Graphics 类

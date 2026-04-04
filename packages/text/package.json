@@ -23,9 +23,6 @@
     "type": "git",
     "url": "git+https://github.com/Next2D/Player.git"
   },
-  "dependencies": {
-    "htmlparser2": "^10.0.0"
-  },
   "peerDependencies": {
     "@next2d/display": "file:../display",
     "@next2d/geom": "file:../geom",

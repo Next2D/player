@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-    TexturePool,
-    initTexturePool,
-    getTexturePool,
-    clearTexturePool
+    TexturePool
 } from "./TexturePool";
 
 // Mock GPUTextureUsage
@@ -105,7 +102,6 @@ describe("TexturePool", () =>
     beforeEach(() =>
     {
         vi.clearAllMocks();
-        clearTexturePool();
     });
 
     describe("TexturePool class", () =>
@@ -116,17 +112,6 @@ describe("TexturePool", () =>
             const pool = new TexturePool(device);
 
             expect(pool).toBeDefined();
-        });
-
-        it("should initialize with empty stats", () =>
-        {
-            const device = createMockDevice();
-            const pool = new TexturePool(device);
-
-            const stats = pool.getStats();
-            expect(stats.total).toBe(0);
-            expect(stats.inUse).toBe(0);
-            expect(stats.available).toBe(0);
         });
 
         describe("beginFrame", () =>
@@ -170,18 +155,6 @@ describe("TexturePool", () =>
                 expect(texture).toBeDefined();
                 expect(texture.width).toBe(256);
                 expect(texture.height).toBe(256);
-            });
-
-            it("should update stats when acquiring", () =>
-            {
-                const device = createMockDevice();
-                const pool = new TexturePool(device);
-
-                pool.acquire(128, 128);
-
-                const stats = pool.getStats();
-                expect(stats.total).toBe(1);
-                expect(stats.inUse).toBe(1);
             });
 
             it("should reuse released texture with same dimensions", () =>
@@ -230,17 +203,14 @@ describe("TexturePool", () =>
 
         describe("release", () =>
         {
-            it("should mark texture as available", () =>
+            it("should not throw when releasing", () =>
             {
                 const device = createMockDevice();
                 const pool = new TexturePool(device);
 
                 const texture = pool.acquire(256, 256);
-                pool.release(texture);
 
-                const stats = pool.getStats();
-                expect(stats.inUse).toBe(0);
-                expect(stats.available).toBe(1);
+                expect(() => pool.release(texture)).not.toThrow();
             });
 
             it("should allow reuse after release", () =>
@@ -250,28 +220,9 @@ describe("TexturePool", () =>
 
                 const texture1 = pool.acquire(256, 256);
                 pool.release(texture1);
+                const texture2 = pool.acquire(256, 256);
 
-                const stats = pool.getStats();
-                expect(stats.available).toBe(1);
-            });
-        });
-
-        describe("getStats", () =>
-        {
-            it("should return accurate pool statistics", () =>
-            {
-                const device = createMockDevice();
-                const pool = new TexturePool(device);
-
-                pool.acquire(128, 128);
-                pool.acquire(256, 256);
-                const tex3 = pool.acquire(512, 512);
-                pool.release(tex3);
-
-                const stats = pool.getStats();
-                expect(stats.total).toBe(3);
-                expect(stats.inUse).toBe(2);
-                expect(stats.available).toBe(1);
+                expect(texture1).toBe(texture2);
             });
         });
 
@@ -291,7 +242,7 @@ describe("TexturePool", () =>
                 expect(tex2.destroy).toHaveBeenCalled();
             });
 
-            it("should reset pool to empty", () =>
+            it("should not throw after dispose", () =>
             {
                 const device = createMockDevice();
                 const pool = new TexturePool(device);
@@ -301,54 +252,7 @@ describe("TexturePool", () =>
 
                 pool.dispose();
 
-                const stats = pool.getStats();
-                expect(stats.total).toBe(0);
-            });
-        });
-    });
-
-    describe("global functions", () =>
-    {
-        describe("initTexturePool", () =>
-        {
-            it("should initialize global pool", () =>
-            {
-                const device = createMockDevice();
-
-                initTexturePool(device);
-
-                expect(getTexturePool()).not.toBeNull();
-            });
-        });
-
-        describe("getTexturePool", () =>
-        {
-            it("should return pool after initialization", () =>
-            {
-                const device = createMockDevice();
-                initTexturePool(device);
-
-                expect(getTexturePool()).toBeInstanceOf(TexturePool);
-            });
-        });
-
-        describe("clearTexturePool", () =>
-        {
-            it("should dispose pool", () =>
-            {
-                const device = createMockDevice();
-                initTexturePool(device);
-                const pool = getTexturePool();
-                const tex = pool!.acquire(128, 128);
-
-                clearTexturePool();
-
-                expect(tex.destroy).toHaveBeenCalled();
-            });
-
-            it("should not throw when pool is null", () =>
-            {
-                expect(() => clearTexturePool()).not.toThrow();
+                expect(() => pool.acquire(64, 64)).not.toThrow();
             });
         });
     });

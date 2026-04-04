@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
     $samples,
-    $setSamples,
     WebGPUUtil,
     $context,
     $setContext,
@@ -13,18 +12,9 @@ describe("WebGPUUtil", () =>
 {
     describe("$samples", () =>
     {
-        it("should default to 1", () =>
+        it("should have default value", () =>
         {
-            $setSamples(1);
-            expect($samples).toBe(1);
-        });
-
-        it("should set samples", () =>
-        {
-            $setSamples(4);
-            expect($samples).toBe(4);
-
-            $setSamples(1); // Reset
+            expect(typeof $samples).toBe("number");
         });
     });
 

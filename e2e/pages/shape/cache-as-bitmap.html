@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Shape cacheAsBitmap</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 500, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // ===== 1. 基本: cacheAsBitmap=Matrix(1,0,0,1) で等倍キャッシュ =====
+        const shape1 = new Shape();
+        shape1.graphics
+            .beginFill(0xFF0000, 1.0)
+            .drawCircle(60, 60, 50)
+            .endFill();
+        shape1.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(shape1);
+
+        // ===== 2. cacheAsBitmap=Matrix(2,0,0,2) で2倍キャッシュ =====
+        const shape2 = new Shape();
+        shape2.graphics
+            .beginFill(0x00FF00, 1.0)
+            .drawCircle(60, 60, 50)
+            .endFill();
+        shape2.x = 140;
+        shape2.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
+        root.addChild(shape2);
+
+        // ===== 3. 先祖のスケールの影響を受けないことを確認 =====
+        // 親Spriteを2倍にしても、キャッシュ品質はcacheAsBitmapのMatrixで固定
+        const container1 = new Sprite();
+        container1.scaleX = 2;
+        container1.scaleY = 2;
+        container1.x = 280;
+        root.addChild(container1);
+
+        const shape3 = new Shape();
+        shape3.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(0, 0, 50, 50)
+            .endFill();
+        shape3.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        container1.addChild(shape3);
+
+        // ===== 4. 比較用: cacheAsBitmapなし（親スケール2倍） =====
+        const container2 = new Sprite();
+        container2.scaleX = 2;
+        container2.scaleY = 2;
+        container2.x = 420;
+        root.addChild(container2);
+
+        const shape4 = new Shape();
+        shape4.graphics
+            .beginFill(0x0000FF, 1.0)
+            .drawRect(0, 0, 50, 50)
+            .endFill();
+        // cacheAsBitmapなし
+        container2.addChild(shape4);
+
+        // ===== 5. 回転した親の中でcacheAsBitmap =====
+        const container3 = new Sprite();
+        container3.x = 100;
+        container3.y = 250;
+        container3.rotation = 30;
+        root.addChild(container3);
+
+        const shape5 = new Shape();
+        shape5.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawRoundRect(0, 0, 80, 60, 10)
+            .endFill();
+        shape5.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        container3.addChild(shape5);
+
+        // ===== 6. 比較用: cacheAsBitmapなし（回転親） =====
+        const container4 = new Sprite();
+        container4.x = 280;
+        container4.y = 250;
+        container4.rotation = 30;
+        root.addChild(container4);
+
+        const shape6 = new Shape();
+        shape6.graphics
+            .beginFill(0xFF00FF, 1.0)
+            .drawRoundRect(0, 0, 80, 60, 10)
+            .endFill();
+        // cacheAsBitmapなし
+        container4.addChild(shape6);
+
+        // ===== 7. 複雑な図形でcacheAsBitmap =====
+        const shape7 = new Shape();
+        shape7.graphics
+            .beginFill(0xFFFF00, 1.0)
+            .drawCircle(40, 40, 30)
+            .endFill()
+            .beginFill(0xFF8800, 1.0)
+            .drawRect(20, 20, 40, 40)
+            .endFill();
+        shape7.x = 20;
+        shape7.y = 360;
+        shape7.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
+        root.addChild(shape7);
+
+        // ===== 8. 線付き図形のcacheAsBitmap =====
+        const shape8 = new Shape();
+        shape8.graphics
+            .lineStyle(3, 0xFFFFFF, 1.0)
+            .beginFill(0x00FFFF, 0.8)
+            .drawEllipse(0, 0, 100, 60)
+            .endFill();
+        shape8.x = 150;
+        shape8.y = 360;
+        shape8.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        root.addChild(shape8);
+
+        // ===== 9. 深いネスト: 祖父母→親→子すべてにスケール =====
+        const grandParent = new Sprite();
+        grandParent.scaleX = 1.5;
+        grandParent.scaleY = 1.5;
+        grandParent.x = 350;
+        grandParent.y = 300;
+        root.addChild(grandParent);
+
+        const parent9 = new Sprite();
+        parent9.scaleX = 1.5;
+        parent9.scaleY = 1.5;
+        grandParent.addChild(parent9);
+
+        const shape9 = new Shape();
+        shape9.graphics
+            .beginFill(0x88FF88, 1.0)
+            .drawCircle(20, 20, 20)
+            .endFill();
+        shape9.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+        parent9.addChild(shape9);
+
+        // ===== 10. cacheAsBitmap=null（デフォルト動作確認） =====
+        const shape10 = new Shape();
+        shape10.graphics
+            .beginFill(0xFFFFFF, 1.0)
+            .drawRect(0, 0, 40, 40)
+            .endFill();
+        shape10.x = 500;
+        shape10.y = 360;
+        shape10.cacheAsBitmap = null;
+        root.addChild(shape10);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

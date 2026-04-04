@@ -1,3 +1,10 @@
+/**
+ * @description ベジェ曲線ベースのマスク用フラグメントシェーダー
+ *              Bezier curve-based mask fragment shader
+ *
+ * @type {string}
+ * @constant
+ */
 export const MaskFragment = /* wgsl */`
 struct FragmentInput {
     @location(0) bezier: vec2<f32>,

@@ -15,6 +15,8 @@ let $filterGradientAttachment: IAttachmentObject | null = null;
 
 /**
  * @description GPUDeviceの参照
+ *              Reference to GPUDevice
+ * @type {GPUDevice | null}
  * @private
  */
 let $device: GPUDevice | null = null;

@@ -6,9 +6,6 @@ import {
     $isMaskTestEnabled,
     $setMaskStencilReference,
     $getMaskStencilReference,
-    $pushMaskAttachment,
-    $popMaskAttachment,
-    $hasMaskAttachment,
     $clipBounds,
     $clipLevels,
     $resetMaskState
@@ -72,37 +69,6 @@ describe("Mask", () =>
         });
     });
 
-    describe("mask attachment stack", () =>
-    {
-        it("should default to empty", () =>
-        {
-            expect($hasMaskAttachment()).toBe(false);
-        });
-
-        it("should push and pop attachments", () =>
-        {
-            const attachment1 = { "id": 1 };
-            const attachment2 = { "id": 2 };
-
-            $pushMaskAttachment(attachment1);
-            expect($hasMaskAttachment()).toBe(true);
-
-            $pushMaskAttachment(attachment2);
-            expect($hasMaskAttachment()).toBe(true);
-
-            expect($popMaskAttachment()).toBe(attachment2);
-            expect($hasMaskAttachment()).toBe(true);
-
-            expect($popMaskAttachment()).toBe(attachment1);
-            expect($hasMaskAttachment()).toBe(false);
-        });
-
-        it("should return undefined when popping empty stack", () =>
-        {
-            expect($popMaskAttachment()).toBeUndefined();
-        });
-    });
-
     describe("clip bounds and levels", () =>
     {
         it("should be Maps", () =>
@@ -137,7 +103,6 @@ describe("Mask", () =>
             $setMaskDrawing(true);
             $setMaskTestEnabled(true);
             $setMaskStencilReference(10);
-            $pushMaskAttachment({ "id": 1 });
             $clipBounds.set(1, new Float32Array([0, 0, 100, 100]));
             $clipLevels.set(1, 5);
 
@@ -148,7 +113,6 @@ describe("Mask", () =>
             expect($isMaskDrawing()).toBe(false);
             expect($isMaskTestEnabled()).toBe(false);
             expect($getMaskStencilReference()).toBe(0);
-            expect($hasMaskAttachment()).toBe(false);
             expect($clipBounds.size).toBe(0);
             expect($clipLevels.size).toBe(0);
         });

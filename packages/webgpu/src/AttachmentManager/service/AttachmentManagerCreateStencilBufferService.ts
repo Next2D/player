@@ -4,10 +4,10 @@ import type { IStencilBufferObject } from "../../interface/IStencilBufferObject"
  * @description ステンシルバッファを新規作成
  *              Create a new stencil buffer
  *
- * @param  {GPUDevice} device
- * @param  {number} width
- * @param  {number} height
- * @param  {{ stencilId: number }} idCounter
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {number} width - バッファ幅
+ * @param  {number} height - バッファ高さ
+ * @param  {{ stencilId: number }} id_counter - ID管理カウンタ
  * @return {IStencilBufferObject}
  * @method
  * @protected
@@ -16,7 +16,7 @@ export const execute = (
     device: GPUDevice,
     width: number,
     height: number,
-    idCounter: { stencilId: number }
+    id_counter: { stencilId: number }
 ): IStencilBufferObject => {
     const texture = device.createTexture({
         "size": { width, height },
@@ -25,7 +25,7 @@ export const execute = (
     });
 
     return {
-        "id": idCounter.stencilId++,
+        "id": id_counter.stencilId++,
         "resource": texture,
         "view": texture.createView(),
         width,

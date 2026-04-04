@@ -1,13 +1,20 @@
 import { execute as textureManagerInitializeSamplersService } from "./TextureManager/service/TextureManagerInitializeSamplersService";
-import { execute as textureManagerCreateTextureFromPixelsUseCase } from "./TextureManager/usecase/TextureManagerCreateTextureFromPixelsUseCase";
-import { execute as textureManagerCreateTextureFromImageBitmapUseCase } from "./TextureManager/usecase/TextureManagerCreateTextureFromImageBitmapUseCase";
 
+/**
+ * @description テクスチャとサンプラーの管理クラス
+ *              Manager class for textures and samplers
+ */
 export class TextureManager
 {
     private device: GPUDevice;
     private textures: Map<string, GPUTexture>;
     private samplers: Map<string, GPUSampler>;
 
+    /**
+     * @description TextureManagerのコンストラクタ
+     *              Constructor for TextureManager
+     * @param {GPUDevice} device - WebGPUデバイス / WebGPU device
+     */
     constructor (device: GPUDevice)
     {
         this.device = device;
@@ -17,6 +24,15 @@ export class TextureManager
         textureManagerInitializeSamplersService(device, this.samplers);
     }
 
+    /**
+     * @description 新しいGPUテクスチャを作成する
+     *              Create a new GPU texture
+     * @param  {string}           name   - テクスチャ名 / Texture name
+     * @param  {number}           width  - テクスチャの幅 / Texture width
+     * @param  {number}           height - テクスチャの高さ / Texture height
+     * @param  {GPUTextureFormat} [format="rgba8unorm"] - テクスチャフォーマット / Texture format
+     * @return {GPUTexture}
+     */
     createTexture (
         name: string,
         width: number,
@@ -35,59 +51,24 @@ export class TextureManager
         return texture;
     }
 
-    createTextureFromPixels (
-        name: string,
-        pixels: Uint8Array,
-        width: number,
-        height: number
-    ): GPUTexture {
-        return textureManagerCreateTextureFromPixelsUseCase(
-            this.device,
-            this.textures,
-            name,
-            pixels,
-            width,
-            height
-        );
-    }
-
-    createTextureFromImageBitmap (name: string, imageBitmap: ImageBitmap): GPUTexture
-    {
-        return textureManagerCreateTextureFromImageBitmapUseCase(
-            this.device,
-            this.textures,
-            name,
-            imageBitmap
-        );
-    }
-
-    updateTexture (
-        name: string,
-        pixels: Uint8Array,
-        width: number,
-        height: number
-    ): void {
-        const texture = this.textures.get(name);
-        if (texture) {
-            this.device.queue.writeTexture(
-                { texture },
-                pixels.buffer,
-                { "bytesPerRow": width * 4, "offset": pixels.byteOffset },
-                { width, height }
-            );
-        }
-    }
-
+    /**
+     * @description 名前でテクスチャを取得する
+     *              Get a texture by name
+     * @param  {string} name - テクスチャ名 / Texture name
+     * @return {GPUTexture | undefined}
+     */
     getTexture (name: string): GPUTexture | undefined
     {
         return this.textures.get(name);
     }
 
-    getSampler (name: string): GPUSampler | undefined
-    {
-        return this.samplers.get(name);
-    }
-
+    /**
+     * @description サンプラーを作成する（既存の場合は返却）
+     *              Create a sampler (returns existing if found)
+     * @param  {string}  name            - サンプラー名 / Sampler name
+     * @param  {boolean} [smooth=true]   - スムージングを有効にするか / Whether to enable smoothing
+     * @return {GPUSampler}
+     */
     createSampler (name: string, smooth: boolean = true): GPUSampler
     {
         const existing = this.samplers.get(name);
@@ -107,15 +88,11 @@ export class TextureManager
         return sampler;
     }
 
-    destroyTexture (name: string): void
-    {
-        const texture = this.textures.get(name);
-        if (texture) {
-            texture.destroy();
-            this.textures.delete(name);
-        }
-    }
-
+    /**
+     * @description 全テクスチャとサンプラーを破棄する
+     *              Dispose all textures and samplers
+     * @return {void}
+     */
     dispose (): void
     {
         for (const texture of this.textures.values()) {

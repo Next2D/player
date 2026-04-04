@@ -1,12 +1,8 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
+import { DEG_TO_RAD, intToPremultipliedRGBA } from "../FilterUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
-
-/**
- * @description 度からラジアンへの変換係数
- */
-const DEG_TO_RAD: number = Math.PI / 180;
 
 /**
  * @description プリアロケートされたFloat32Array
@@ -34,38 +30,47 @@ const $entries4: GPUBindGroupEntry[] = [
 ];
 
 /**
- * @description 32bit整数からRGB値を抽出（プリマルチプライドアルファ対応）
- */
-const intToRGBA = (color: number, alpha: number): [number, number, number, number] => {
-    const r = (color >> 16 & 0xFF) / 255 * alpha;
-    const g = (color >> 8 & 0xFF) / 255 * alpha;
-    const b = (color & 0xFF) / 255 * alpha;
-    return [r, g, b, alpha];
-};
-
-/**
  * @description ベベルフィルターを適用
- *              WebGL版と同様に、erase前処理で差分テクスチャを作成してからブラーを適用
+ *              Apply bevel filter
  *
+ *              WebGL版と同様に、erase前処理で差分テクスチャを作成してからブラーを適用
  *              UV変換方式で元テクスチャとブラーテクスチャを直接サンプリング。
  *              合成時のcopyTextureToTextureと一時テクスチャを使用しない最適化版。
+ *
+ * @param  {IAttachmentObject} source_attachment - 入力テクスチャ
+ * @param  {Float32Array} matrix - 変換行列
+ * @param  {number} distance - ベベルの距離
+ * @param  {number} angle - ベベルの角度（度）
+ * @param  {number} highlight_color - ハイライト色 (32bit整数)
+ * @param  {number} highlight_alpha - ハイライトアルファ
+ * @param  {number} shadow_color - シャドウ色 (32bit整数)
+ * @param  {number} shadow_alpha - シャドウアルファ
+ * @param  {number} blur_x - X方向ブラー量
+ * @param  {number} blur_y - Y方向ブラー量
+ * @param  {number} strength - ベベル強度
+ * @param  {number} quality - クオリティ
+ * @param  {number} type - タイプ (0: full, 1: inner, 2: outer)
+ * @param  {boolean} knockout - ノックアウトモード
+ * @param  {number} device_pixel_ratio - デバイスピクセル比
+ * @param  {IFilterConfig} config - WebGPUリソース設定
+ * @return {IAttachmentObject} - フィルター適用後のアタッチメント
  */
 export const execute = (
-    sourceAttachment: IAttachmentObject,
+    source_attachment: IAttachmentObject,
     matrix: Float32Array,
     distance: number,
     angle: number,
-    highlightColor: number,
-    highlightAlpha: number,
-    shadowColor: number,
-    shadowAlpha: number,
-    blurX: number,
-    blurY: number,
+    highlight_color: number,
+    highlight_alpha: number,
+    shadow_color: number,
+    shadow_alpha: number,
+    blur_x: number,
+    blur_y: number,
     strength: number,
     quality: number,
     type: number,
     knockout: boolean,
-    devicePixelRatio: number,
+    device_pixel_ratio: number,
     config: IFilterConfig
 ): IAttachmentObject => {
 
@@ -74,8 +79,8 @@ export const execute = (
     // 元のオフセットを保存
     const baseOffsetX = $offset.x;
     const baseOffsetY = $offset.y;
-    const baseWidth = sourceAttachment.width;
-    const baseHeight = sourceAttachment.height;
+    const baseWidth = source_attachment.width;
+    const baseHeight = source_attachment.height;
 
     // スケールを計算
     const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
@@ -83,8 +88,8 @@ export const execute = (
 
     // オフセットを計算（WebGL版と同じ）
     const radian = angle * DEG_TO_RAD;
-    const x = Math.cos(radian) * distance * (xScale / devicePixelRatio);
-    const y = Math.sin(radian) * distance * (yScale / devicePixelRatio);
+    const x = Math.cos(radian) * distance * (xScale / device_pixel_ratio);
+    const y = Math.sin(radian) * distance * (yScale / device_pixel_ratio);
 
     // === Erase前処理：差分テクスチャを作成 ===
     const eraseAttachment = frameBufferManager.createTemporaryAttachment(baseWidth, baseHeight);
@@ -92,7 +97,7 @@ export const execute = (
     // Step 1: ソーステクスチャを元の位置にコピー（erase前処理のcopyTextureToTextureは残す）
     commandEncoder.copyTextureToTexture(
         {
-            "texture": sourceAttachment.texture!.resource,
+            "texture": source_attachment.texture!.resource,
             "origin": { "x": 0, "y": 0, "z": 0 }
         },
         {
@@ -136,7 +141,7 @@ export const execute = (
 
         ($entries3[0].resource as GPUBufferBinding).buffer = eraseUniformBuffer;
         $entries3[1].resource = eraseSampler;
-        $entries3[2].resource = sourceAttachment.texture!.view;
+        $entries3[2].resource = source_attachment.texture!.view;
         const eraseBindGroup = device.createBindGroup({
             "layout": eraseBindGroupLayout,
             "entries": $entries3
@@ -156,8 +161,8 @@ export const execute = (
     // === 差分テクスチャにブラーを適用 ===
     const blurAttachment = filterApplyBlurFilterUseCase(
         eraseAttachment, matrix,
-        blurX, blurY, quality,
-        devicePixelRatio, config
+        blur_x, blur_y, quality,
+        device_pixel_ratio, config
     );
 
     // eraseアタッチメントを解放
@@ -207,7 +212,7 @@ export const execute = (
     if (!pipeline || !bindGroupLayout) {
         console.error("[WebGPU BevelFilter] Pipeline not found");
         frameBufferManager.releaseTemporaryAttachment(blurAttachment);
-        return sourceAttachment;
+        return source_attachment;
     }
 
     // サンプラーを作成
@@ -220,8 +225,8 @@ export const execute = (
     // baseScale, baseOffset (16 bytes)
     // blurScale, blurOffset (16 bytes)
     // Total: 80 bytes → 16 floats + 4 floats = 20 floats (80 bytes)
-    const [hr, hg, hb, ha] = intToRGBA(highlightColor, highlightAlpha);
-    const [sr, sg, sb, sa] = intToRGBA(shadowColor, shadowAlpha);
+    const [hr, hg, hb, ha] = intToPremultipliedRGBA(highlight_color, highlight_alpha);
+    const [sr, sg, sb, sa] = intToPremultipliedRGBA(shadow_color, shadow_alpha);
 
     $uniform20[0] = hr;
     $uniform20[1] = hg;
@@ -258,7 +263,7 @@ export const execute = (
     ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
     $entries4[1].resource = sampler;
     $entries4[2].resource = blurAttachment.texture!.view;
-    $entries4[3].resource = sourceAttachment.texture!.view;
+    $entries4[3].resource = source_attachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,
         "entries": $entries4

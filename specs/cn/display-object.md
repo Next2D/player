@@ -44,6 +44,7 @@ DisplayObject 是 Next2D Player 中所有显示对象的基类。
 | `scaleX` | number | 从参考点应用的对象水平缩放值 |
 | `scaleY` | number | 从参考点应用的对象垂直缩放值 |
 | `visible` | boolean | 显示对象是否可见（默认：true） |
+| `cacheAsBitmap` | Matrix \| null | 位图缓存用的 Matrix。**仅可设置缩放值（a, d）**（b, c, tx, ty 将被忽略）。以 1.0 为基准，应用于 displayObject 自身的 scaleX/scaleY。缓存质量 = 指定 Matrix × 自身缩放 × 舞台缩放。缓存时不受祖先 Matrix 影响，但绘制时应用祖先 Matrix。命中测试、宽度和高度基于矢量。**适用对象：Shape、TextField、Sprite、MovieClip**（Video 因图像尺寸固定而不适用）（默认：null） |
 | `x` | number | 相对于父 DisplayObjectContainer 本地坐标的 X 坐标 |
 | `y` | number | 相对于父 DisplayObjectContainer 本地坐标的 Y 坐标 |
 
@@ -157,6 +158,108 @@ displayObject.setGlobalVariable("gameState", "playing");
 const state = displayObject.getGlobalVariable("gameState");
 displayObject.clearGlobalVariable(); // 清除全部
 ```
+
+### cacheAsBitmap 示例
+
+`cacheAsBitmap` 将矢量绘制或容器缓存为位图，从第二帧开始重复使用缓存纹理，从而提高性能。
+
+**适用类：**
+- `Shape` — 缓存矢量绘制
+- `TextField` — 缓存文本渲染
+- `Sprite` — 将容器及其所有子元素一起缓存
+- `MovieClip` — 将容器及其所有子元素一起缓存
+
+> ⚠️ 不适用于 `Video`。由于 Video 具有固定的图像尺寸，缓存没有效果。
+
+**Matrix 限制：**
+Matrix 中仅可设置缩放值（a, d）。旋转（b, c）和平移（tx, ty）将被忽略。
+
+```typescript
+// ✅ 正确用法（仅设置缩放）
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);  // 1 倍
+shape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);  // 2 倍质量
+
+// ❌ 旋转/平移值将被忽略
+shape.cacheAsBitmap = new Matrix(1, 0.5, 0.5, 1, 100, 200);  // b, c, tx, ty 被忽略
+```
+
+**使用场景：**
+
+1. **高速动画** — 高速移动的对象视觉清晰度低，缓存导致的画质降低几乎不可察觉，同时能显著提高性能
+2. **静态背景和 UI 元素** — 缓存不变的 UI 元素（面板、装饰、图标等）可消除每帧重绘成本
+3. **复杂矢量绘制** — 缓存路径较多的复杂 Shape 可大幅降低绘制开销
+
+```typescript
+const { Shape, Sprite } = next2d.display;
+const { Matrix } = next2d.geom;
+
+// 以 1 倍比例缓存（1.0 基准 = 相对于 displayObject 自身的 scaleX/scaleY）
+const shape = new Shape();
+shape.graphics.beginFill(0xFF0000).drawCircle(50, 50, 40).endFill();
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// 以 2 倍分辨率缓存（自身缩放的 2 倍质量）
+const hqShape = new Shape();
+hqShape.graphics.beginFill(0x00FF00).drawRect(0, 0, 100, 80).endFill();
+hqShape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0);
+
+// scaleX/scaleY 会被反映（缓存质量 = Matrix × 自身缩放 × 舞台缩放）
+shape.scaleX = 2; // 缓存质量: 1 × 2 × stageScale
+shape.scaleY = 2;
+
+// 父级缩放不影响缓存质量（但绘制时会应用）
+const container = new Sprite();
+container.scaleX = 3;
+container.scaleY = 3;
+container.addChild(shape);
+
+// 命中测试、宽度和高度基于矢量
+const bounds = shape.getBounds(shape); // 返回矢量边界
+
+// 禁用缓存
+shape.cacheAsBitmap = null;
+```
+
+### 在 DisplayObjectContainer 上使用 cacheAsBitmap
+
+您也可以在 `Sprite` 和 `MovieClip` 等 `DisplayObjectContainer` 子类上设置 `cacheAsBitmap`。
+容器的所有子元素将被渲染到单个纹理中并缓存，在后续帧中重复使用。
+
+```typescript
+const { Shape, Sprite, MovieClip } = next2d.display;
+const { Matrix } = next2d.geom;
+
+// 包含多个子元素的 Sprite
+const sprite = new Sprite();
+const rect = new Shape();
+rect.graphics.beginFill(0xFF0000).drawRect(0, 0, 100, 80).endFill();
+sprite.addChild(rect);
+const circle = new Shape();
+circle.graphics.beginFill(0x00FF00).drawCircle(50, 40, 30).endFill();
+sprite.addChild(circle);
+
+// 将整个容器缓存为位图
+sprite.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// 同样适用于 MovieClip
+const mc = new MovieClip();
+mc.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+
+// 禁用缓存（下一帧恢复正常渲染）
+sprite.cacheAsBitmap = null;
+```
+
+**缓存行为：**
+- 当对象或其祖先的缩放发生变化时，缓存将失效并在下一帧重新生成
+- 位置更改（x, y）会保留缓存 — 仅更新绘制位置
+- 在缩放频繁变化的动画期间，缓存每帧都会重新生成，因此缓存在动画完成后的静态状态下最为有效
+
+**注意事项：**
+- **Matrix 中仅可设置缩放值**（旋转和平移将被忽略）
+- **不适用于 Video**（固定尺寸的图像数据）
+- 缓存期间，子元素的更改（添加/删除/属性更改）不会反映在屏幕上
+- 当 `stage.rendererScale` 更改时，缓存会自动失效
+- 同时设置 `filter` 和 `cacheAsBitmap` 时，`cacheAsBitmap` 优先
 
 ## 相关
 

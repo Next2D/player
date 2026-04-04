@@ -18,7 +18,9 @@ import {
 import {
     $MATRIX_ARRAY_IDENTITY,
     $poolBoundsArray,
-    $colorContext
+    $colorContext,
+    $getFloat32Array6,
+    $poolFloat32Array6
 } from "../../DisplayObjectUtil";
 
 /**
@@ -108,14 +110,34 @@ export const execute = <D extends DisplayObject>(
 
     const rawBounds = displayObjectGetRawBoundsUseCase(display_object);
     const martix = displayObjectGetRawMatrixUseCase(display_object);
+
+    // cacheAsBitmap倍率をhitTest用のmatrixに適用
+    const cacheMatrix = display_object.cacheAsBitmap;
+    let hitMatrix = martix ? martix : $MATRIX_ARRAY_IDENTITY;
+    let scaledMatrix: Float32Array | null = null;
+    if (cacheMatrix && hitMatrix) {
+        const m = cacheMatrix.rawData;
+        const csx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        const csy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+        scaledMatrix = $getFloat32Array6(
+            hitMatrix[0] * csx, hitMatrix[1] * csx,
+            hitMatrix[2] * csy, hitMatrix[3] * csy,
+            hitMatrix[4], hitMatrix[5]
+        );
+        hitMatrix = scaledMatrix;
+    }
+
     const bounds = displayObjectCalcBoundsMatrixService(
         rawBounds[0], rawBounds[1],
         rawBounds[2], rawBounds[3],
-        martix ? martix : $MATRIX_ARRAY_IDENTITY
+        hitMatrix
     );
 
     // pool
     $poolBoundsArray(rawBounds);
+    if (scaledMatrix) {
+        $poolFloat32Array6(scaledMatrix);
+    }
 
     const rectangle = new Rectangle(
         bounds[0], bounds[1],

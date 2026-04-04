@@ -10,10 +10,10 @@ import type { IPath } from "../../interface/IPath";
  *
  * color/matrixはuniform bufferで供給される
  *
- * @param  {IPath} vertex
- * @param  {Float32Array} buffer
- * @param  {number} index - 現在の頂点インデックス
- * @return {number} 新しい頂点インデックス
+ * @param  {IPath} vertex - 頂点パスデータ / Vertex path data
+ * @param  {Float32Array} buffer - 出力先バッファ / Output buffer
+ * @param  {number} index - 現在の頂点インデックス / Current vertex index
+ * @return {number} 新しい頂点インデックス / New vertex index
  * @method
  * @protected
  */

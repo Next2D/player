@@ -2,8 +2,8 @@
  * @description サンプラーを初期化
  *              Initialize samplers
  *
- * @param  {GPUDevice} device
- * @param  {Map<string, GPUSampler>} samplers
+ * @param  {GPUDevice} device - GPUデバイス
+ * @param  {Map<string, GPUSampler>} samplers - サンプラー管理マップ
  * @return {void}
  * @method
  * @protected

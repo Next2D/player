@@ -1,3 +1,10 @@
+/**
+ * @description 基本頂点シェーダー（行列変換・プリマルチプライドカラー出力）
+ *              Basic vertex shader with matrix transform and premultiplied color output
+ *
+ * @type {string}
+ * @constant
+ */
 export const BasicVertex = /* wgsl */`
 override yFlipSign: f32 = 1.0;
 

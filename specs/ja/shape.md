@@ -231,7 +231,8 @@ stage.addChild(frontShape);
 
 ```typescript
 // 複雑な図形をビットマップとしてキャッシュ
-shape.cacheAsBitmap = true;
+const { Matrix } = next2d.geom;
+shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
 ```
 
 ## Graphics クラス
