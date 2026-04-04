@@ -1204,7 +1204,7 @@ export class Context
             vertex_count,
             bind_group,
             uniform_offset,
-            this.currentRenderTarget,
+            this.currentRenderTarget !== null,
             use_stencil_pipeline,
             clipLevel
         );
@@ -1299,7 +1299,7 @@ export class Context
         const useStencilPipeline = useMainStencil;
 
         // アトラスへの描画かどうか
-        const useAtlasTarget = this.currentRenderTarget;
+        const useAtlasTarget = this.currentRenderTarget !== null;
 
         const lutTexture = contextGradientFillUseCase(
             this.device,
@@ -1384,7 +1384,7 @@ export class Context
             smooth,
             this.viewportWidth,
             this.viewportHeight,
-            this.currentRenderTarget,
+            this.currentRenderTarget !== null,
             !!useStencilPipeline,
             clipLevel
         );
@@ -1451,7 +1451,7 @@ export class Context
             focal,
             this.viewportWidth,
             this.viewportHeight,
-            this.currentRenderTarget,
+            this.currentRenderTarget !== null,
             useStencilPipeline
         );
 
@@ -1517,7 +1517,7 @@ export class Context
             smooth,
             this.viewportWidth,
             this.viewportHeight,
-            this.currentRenderTarget,
+            this.currentRenderTarget !== null,
             useStencilPipeline
         );
 
