@@ -21,6 +21,10 @@ const execute = () =>
         readFileSync(`${process.cwd()}/package.json`, { "encoding": "utf8" })
     );
 
+    if (!basePackageJson.dependencies) {
+        basePackageJson.dependencies = {};
+    }
+
     for (let idx = 0; idx < dirList.length; ++idx) {
 
         const dirName = dirList[idx];
