@@ -51,7 +51,8 @@ export const execute = <P extends DisplayObjectContainer>(
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
-    renderer_height: number
+    renderer_height: number,
+    in_filter_layer: boolean = false
 ): void => {
 
     if (!display_object_container.visible) {
@@ -120,7 +121,12 @@ export const execute = <P extends DisplayObjectContainer>(
     // キャッシュテクスチャは親のスケールを含むサイズで描画し、
     // コンポジットは setTransform(1,0,0,1,x,y) で1:1描画されるため正しい画面サイズになる
     // 親の移動はキャッシュヒット（位置だけ更新）、スケール変更はキャッシュミス（再描画）
-    const cacheMatrix = display_object_container.cacheAsBitmap;
+    // issue #274: 親がfilter等の中間レイヤー内で描画される場合は、cacheAsBitmapの
+    // スケール倍テクスチャが親レイヤーにフィットせず端が欠ける。該当パスでは
+    // cacheAsBitmapを無効化して通常描画にフォールバックする。
+    const cacheMatrix = in_filter_layer
+        ? null
+        : display_object_container.cacheAsBitmap;
     if (cacheMatrix) {
 
         const m = cacheMatrix.rawData;
@@ -642,6 +648,10 @@ export const execute = <P extends DisplayObjectContainer>(
             continue;
         }
 
+        // 自身がfilter等のlayerに乗っている、または今回filterを発動した場合、
+        // その配下の子コンテナのcacheAsBitmapは抑止する（issue #274）
+        const childInFilterLayer = in_filter_layer || Boolean(display_object_container.filters && display_object_container.filters.length);
+
         switch (true) {
 
             case child.isContainerEnabled: // 0x00
@@ -651,7 +661,8 @@ export const execute = <P extends DisplayObjectContainer>(
                     tMatrix,
                     tColorTransform,
                     renderer_width,
-                    renderer_height
+                    renderer_height,
+                    childInFilterLayer
                 );
                 break;
 

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - 全フィルターに対する cacheAsBitmap子の回帰確認 (issue #274)</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(960, 720, 60);
+        const { Shape, Sprite } = next2d.display;
+        const {
+            BlurFilter, DropShadowFilter, GlowFilter, BevelFilter,
+            ColorMatrixFilter, ConvolutionFilter,
+            GradientGlowFilter, GradientBevelFilter
+        } = next2d.filters;
+        const { Matrix } = next2d.geom;
+
+        // slime-ten-puzzle SelectTime5Atom 相当: 横長の複数子構成Sprite
+        const buildAtom = () => {
+            const inner = new Sprite();
+            const body = new Shape();
+            body.graphics.beginFill(0x88AACC, 1.0).drawRoundRect(0, 0, 180, 60, 30, 30).endFill();
+            inner.addChild(body);
+            const bar = new Shape();
+            bar.graphics.beginFill(0xFFFFFF, 1.0).drawRect(40, 11, 12, 38).endFill();
+            inner.addChild(bar);
+            const dotA = new Shape();
+            dotA.graphics.beginFill(0xFFFFFF, 1.0).drawCircle(90, 30, 12).endFill();
+            inner.addChild(dotA);
+            const dotB = new Shape();
+            dotB.graphics.beginFill(0xFFFFFF, 1.0).drawCircle(130, 30, 12).endFill();
+            inner.addChild(dotB);
+            return inner;
+        };
+
+        const sepia = [
+            0.25, 0, 0, 0, 0,
+            0, 0.25, 0, 0, 0,
+            0, 0, 0.25, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        const entries = [
+            { label: "no filter", filters: null },
+            { label: "Blur", filters: [new BlurFilter(8, 8, 1)] },
+            { label: "DropShadow", filters: [new DropShadowFilter(4, 45, 0x000000, 0.8, 6, 6, 1, 1)] },
+            { label: "Glow", filters: [new GlowFilter(0xFFFF00, 1.0, 10, 10, 2, 1)] },
+            { label: "Bevel", filters: [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 6, 6, 1, 1)] },
+            { label: "ColorMatrix(sepia)", filters: [new ColorMatrixFilter(sepia)] },
+            { label: "Convolution(blur)", filters: [new ConvolutionFilter(3, 3, [
+                1,1,1,
+                1,1,1,
+                1,1,1
+            ], 9)] },
+            { label: "GradientGlow", filters: [new GradientGlowFilter(
+                0, 45, [0xFFFFFF, 0xFFAA00], [0, 1], [0, 255], 8, 8, 2, 1, "outer"
+            )] },
+            { label: "GradientBevel", filters: [new GradientBevelFilter(
+                4, 45, [0xFFFFFF, 0x000000], [1, 1], [0, 255], 8, 8, 2, 1
+            )] }
+        ];
+
+        const cols = 3;
+        const cellW = 310;
+        const cellH = 230;
+        entries.forEach((entry, idx) => {
+            const col = idx % cols;
+            const row = Math.floor(idx / cols);
+
+            const wrap = new Sprite();
+            const atom = buildAtom();
+            atom.cacheAsBitmap = new Matrix(1.5, 0, 0, 1.5, 0, 0);
+            atom.x = -90;
+            atom.y = -30;
+            wrap.addChild(atom);
+            wrap.x = 110 + col * cellW;
+            wrap.y = 80 + row * cellH;
+            if (entry.filters) {
+                wrap.filters = entry.filters;
+            }
+            root.addChild(wrap);
+        });
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>
