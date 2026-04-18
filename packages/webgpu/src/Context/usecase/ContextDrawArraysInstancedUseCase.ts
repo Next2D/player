@@ -14,15 +14,20 @@ import {
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
 
 /**
- * @description キャッシュ済みバインドグループ
- *              Cached bind group
+ * @description atlasViewをキーにしたBindGroupキャッシュ。複数アトラスを
+ *              交互に描画してもヒットする。textureが破棄されたら自動GC。
+ *              BindGroup cache keyed by atlas view. Survives multi-atlas
+ *              switching; entries are GC'd when the texture view is released.
  */
-let $cachedBindGroup: GPUBindGroup | null = null;
+let $bindGroupCache: WeakMap<GPUTextureView, GPUBindGroup> = new WeakMap();
 /**
- * @description キャッシュ済みアトラステクスチャビュー
- *              Cached atlas texture view
+ * @description キャッシュの整合性ガード。samplerまたはbindGroupLayoutが
+ *              切り替わった場合は全エントリを無効化する。
+ *              Invalidates the entire cache when the sampler or bind
+ *              group layout changes.
  */
-let $cachedAtlasView: GPUTextureView | null = null;
+let $cachedSampler: GPUSampler | null = null;
+let $cachedLayout: GPUBindGroupLayout | null = null;
 
 /**
  * @description ブレンドモードに応じたインスタンスパイプライン名を返す
@@ -176,10 +181,17 @@ export const execute = (
         return null;
     }
 
-    // BindGroupキャッシュ: アトラスのテクスチャビューが同じなら再利用
+    // BindGroupキャッシュ: atlasView毎にBindGroupを保持。sampler/layoutが
+    // 切り替わった場合はキャッシュをクリアして整合性を保つ。
     const atlasView = atlasAttachment.texture!.view;
-    if (!$cachedBindGroup || $cachedAtlasView !== atlasView) {
-        $cachedBindGroup = device.createBindGroup({
+    if ($cachedSampler !== sampler || $cachedLayout !== bindGroupLayout) {
+        $bindGroupCache = new WeakMap();
+        $cachedSampler = sampler;
+        $cachedLayout = bindGroupLayout;
+    }
+    let bindGroup = $bindGroupCache.get(atlasView);
+    if (!bindGroup) {
+        bindGroup = device.createBindGroup({
             "layout": bindGroupLayout,
             "entries": [
                 {
@@ -192,13 +204,13 @@ export const execute = (
                 }
             ]
         });
-        $cachedAtlasView = atlasView;
+        $bindGroupCache.set(atlasView, bindGroup);
     }
 
     // 描画
     passEncoder.setVertexBuffer(0, vertexBuffer);
     passEncoder.setVertexBuffer(1, instanceBuffer);
-    passEncoder.setBindGroup(0, $cachedBindGroup);
+    passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6, shaderManager.count, 0, 0);
 
     // レンダーパスを終了

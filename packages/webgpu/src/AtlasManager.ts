@@ -102,15 +102,15 @@ export const $setAtlasCreator = (creator: AtlasCreator): void =>
  */
 export const $getAtlasAttachmentObject = (): IAttachmentObject | null =>
 {
-    if (!($activeAtlasIndex in $atlasAttachmentObjects)) {
-        if ($atlasCreator) {
-            const attachment = $atlasCreator($activeAtlasIndex);
-            $setAtlasAttachmentObject(attachment);
-        } else {
+    let attachment = $atlasAttachmentObjects[$activeAtlasIndex];
+    if (!attachment) {
+        if (!$atlasCreator) {
             return null;
         }
+        attachment = $atlasCreator($activeAtlasIndex);
+        $setAtlasAttachmentObject(attachment);
     }
-    return $atlasAttachmentObjects[$activeAtlasIndex];
+    return attachment;
 };
 
 /**
@@ -121,10 +121,7 @@ export const $getAtlasAttachmentObject = (): IAttachmentObject | null =>
  */
 export const $getAtlasAttachmentObjectByIndex = (index: number): IAttachmentObject | null =>
 {
-    if (!(index in $atlasAttachmentObjects)) {
-        return null;
-    }
-    return $atlasAttachmentObjects[index];
+    return $atlasAttachmentObjects[index] ?? null;
 };
 
 /**
@@ -149,15 +146,17 @@ const $transferBounds: Float32Array[] = [];
  */
 export const $getActiveTransferBounds = (index: number): Float32Array =>
 {
-    if (!(index in $transferBounds)) {
-        $transferBounds[index] = new Float32Array([
+    let bounds = $transferBounds[index];
+    if (!bounds) {
+        bounds = new Float32Array([
             $MAX_VALUE,
             $MAX_VALUE,
             $MIN_VALUE,
             $MIN_VALUE
         ]);
+        $transferBounds[index] = bounds;
     }
-    return $transferBounds[index];
+    return bounds;
 };
 
 /**
