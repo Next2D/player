@@ -29,17 +29,19 @@ export const $setAtlasAttachmentObject = (attachment_object: IAttachmentObject):
 
 export const $getAtlasAttachmentObject = (): IAttachmentObject =>
 {
-    if (!($activeAtlasIndex in $atlasAttachmentObjects)) {
-        $setAtlasAttachmentObject(
-            frameBufferManagerGetAttachmentObjectUseCase($RENDER_MAX_SIZE, $RENDER_MAX_SIZE, true)
+    let attachmentObject = $atlasAttachmentObjects[$activeAtlasIndex];
+    if (!attachmentObject) {
+        attachmentObject = frameBufferManagerGetAttachmentObjectUseCase(
+            $RENDER_MAX_SIZE, $RENDER_MAX_SIZE, true
         );
+        $atlasAttachmentObjects[$activeAtlasIndex] = attachmentObject;
     }
-    return $atlasAttachmentObjects[$activeAtlasIndex];
+    return attachmentObject;
 };
 
 export const $hasAtlasAttachmentObject = (): boolean =>
 {
-    return $activeAtlasIndex in $atlasAttachmentObjects;
+    return !!$atlasAttachmentObjects[$activeAtlasIndex];
 };
 
 export const $rootNodes: TexturePacker[] = [];
@@ -58,15 +60,17 @@ const $transferBounds: Float32Array[] = [];
 
 export const $getActiveTransferBounds = (index: number): Float32Array =>
 {
-    if (!(index in $transferBounds)) {
-        $transferBounds[index] = new Float32Array([
+    let bounds = $transferBounds[index];
+    if (!bounds) {
+        bounds = new Float32Array([
             $MAX_VALUE,
             $MAX_VALUE,
             $MIN_VALUE,
             $MIN_VALUE
         ]);
+        $transferBounds[index] = bounds;
     }
-    return $transferBounds[index];
+    return bounds;
 };
 
 export const $clearTransferBounds = (): void =>

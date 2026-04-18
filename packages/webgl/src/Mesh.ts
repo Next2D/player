@@ -73,7 +73,9 @@ export const $addFillBuffer = (buffer: Float32Array): void =>
     const length = buffer.length + $fillBufferOffset;
     if (length > $fillBuffer.length) {
         const newBuffer = new Float32Array($upperPowerOfTwo(length));
-        newBuffer.set($fillBuffer);
+        if ($fillBufferOffset > 0) {
+            newBuffer.set($fillBuffer.subarray(0, $fillBufferOffset));
+        }
         newBuffer.set(buffer, $fillBufferOffset);
 
         $fillBuffer = newBuffer;
