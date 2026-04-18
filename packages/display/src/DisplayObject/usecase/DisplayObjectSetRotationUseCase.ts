@@ -51,19 +51,19 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
         radianY = radianY + radian - radianX;
         radianX = radian;
 
-        matrix.b = scaleX * Math.sin(radianX);
-        if (matrix.b === 1 || matrix.b === -1) {
-            matrix.a = 0;
-        } else {
-            matrix.a = scaleX * Math.cos(radianX);
-        }
+        // cosが0（sinが±1）の時のみ a/d を 0 にクリアする。
+        // 以前は matrix.b の値そのものを見ていたため、scaleX×sin(θ) がたまたま
+        // ±1 になるケース（例: scaleX=2, rotation=30°）で誤検出が発生し
+        // matrix.a が消えて幅が潰れる不具合を起こしていた。
+        const sinX = Math.sin(radianX);
+        const cosX = Math.cos(radianX);
+        matrix.b = scaleX * sinX;
+        matrix.a = Math.abs(sinX) === 1 ? 0 : scaleX * cosX;
 
-        matrix.c = -scaleY * Math.sin(radianY);
-        if (matrix.c === 1 || matrix.c === -1) {
-            matrix.d = 0;
-        } else {
-            matrix.d = scaleY * Math.cos(radianY);
-        }
+        const sinY = Math.sin(radianY);
+        const cosY = Math.cos(radianY);
+        matrix.c = -scaleY * sinY;
+        matrix.d = Math.abs(sinY) === 1 ? 0 : scaleY * cosY;
     }
 
     display_object.$scaleX   = null;

@@ -41,8 +41,32 @@ describe("DisplayObjectSetRotationUseCase.js test", () =>
         expect(displayObject.$rotation).toBe(32);
 
         execute(displayObject, 32);
-        
+
         expect(displayObject.changed).toBe(false);
         expect(displayObject.$rotation).toBe(32);
+    });
+
+    // Regression guard for issue #274: scaleX×sin(rotation) が ±1 になる組み合わせ
+    // (例: scaleX=2, rotation=30°) でも a/d が維持されることを確認する。
+    it("preserves matrix.a when scaleX * sin(rotation) happens to equal 1 (issue #274)", () =>
+    {
+        const displayObject = new DisplayObject();
+        displayObject.scaleX = 2;
+        displayObject.scaleY = 1;
+        displayObject.rotation = 30;
+
+        const rawData = displayObject.$matrix?.rawData;
+        if (!rawData) {
+            throw new Error("rawData is null");
+        }
+
+        // a = scaleX * cos(30°) = 2 * 0.866 ≈ 1.732
+        expect(rawData[0]).toBeCloseTo(1.7320508, 5);
+        // b = scaleX * sin(30°) = 2 * 0.5 = 1
+        expect(rawData[1]).toBeCloseTo(1, 5);
+        // c = -scaleY * sin(30°) = -0.5
+        expect(rawData[2]).toBeCloseTo(-0.5, 5);
+        // d = scaleY * cos(30°) ≈ 0.866
+        expect(rawData[3]).toBeCloseTo(0.8660254, 5);
     });
 });

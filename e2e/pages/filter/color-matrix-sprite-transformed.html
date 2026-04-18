@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - ColorMatrixFilter on Sprite with transformed Shapes (issue #274)</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 400, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { ColorMatrixFilter } = next2d.filters;
+
+        // セピア調のColorMatrix（適用確認用）
+        const sepia = [
+            0.393, 0.769, 0.189, 0, 0,
+            0.349, 0.686, 0.168, 0, 0,
+            0.272, 0.534, 0.131, 0, 0,
+            0,     0,     0,     1, 0
+        ];
+
+        // 各Shapeにscale+rotation(=Matrix相当)を個別適用しつつSpriteに複数addChildするヘルパー
+        const buildTransformedChildrenSprite = (x, y) => {
+            const sprite = new Sprite();
+            sprite.x = x;
+            sprite.y = y;
+
+            // Shape1: 赤い矩形をスケール1.5倍&15deg回転&移動
+            const shape1 = new Shape();
+            shape1.graphics
+                .beginFill(0xFF0000, 1.0)
+                .drawRect(0, 0, 60, 40)
+                .endFill();
+            shape1.scaleX = 1.5;
+            shape1.scaleY = 1.5;
+            shape1.rotation = 15;
+            shape1.x = 20;
+            shape1.y = 30;
+            sprite.addChild(shape1);
+
+            // Shape2: 緑の円をスケール1.2倍&-20deg回転&移動
+            const shape2 = new Shape();
+            shape2.graphics
+                .beginFill(0x00FF00, 1.0)
+                .drawCircle(30, 30, 25)
+                .endFill();
+            shape2.scaleX = 1.2;
+            shape2.scaleY = 1.2;
+            shape2.rotation = -20;
+            shape2.x = 100;
+            shape2.y = 40;
+            sprite.addChild(shape2);
+
+            // Shape3: 青い矩形を非等倍拡大&30deg回転&移動
+            const shape3 = new Shape();
+            shape3.graphics
+                .beginFill(0x0066FF, 1.0)
+                .drawRect(0, 0, 40, 40)
+                .endFill();
+            shape3.scaleX = 2.0;
+            shape3.scaleY = 1.0;
+            shape3.rotation = 30;
+            shape3.x = 40;
+            shape3.y = 110;
+            sprite.addChild(shape3);
+
+            // Shape4: 黄色い矩形を縮小&-45deg回転&移動
+            const shape4 = new Shape();
+            shape4.graphics
+                .beginFill(0xFFFF00, 1.0)
+                .drawRect(0, 0, 60, 30)
+                .endFill();
+            shape4.scaleX = 0.8;
+            shape4.scaleY = 1.3;
+            shape4.rotation = -45;
+            shape4.x = 160;
+            shape4.y = 120;
+            sprite.addChild(shape4);
+
+            return sprite;
+        };
+
+        // ===== 参照用: フィルターなし =====
+        const reference = buildTransformedChildrenSprite(30, 30);
+        root.addChild(reference);
+
+        // ===== 再現対象: Sprite全体に ColorMatrixFilter =====
+        // 期待: 参照と同じ領域にセピア調で正しく表示される
+        // バグ: 左上1/4のみ描画 & セピア未適用
+        const withFilter = buildTransformedChildrenSprite(320, 30);
+        withFilter.filters = [new ColorMatrixFilter(sepia)];
+        root.addChild(withFilter);
+
+        // ===== 確認用: Sprite自身もスケーリング =====
+        const withFilterScaled = buildTransformedChildrenSprite(30, 220);
+        withFilterScaled.scaleX = 0.7;
+        withFilterScaled.scaleY = 0.7;
+        withFilterScaled.filters = [new ColorMatrixFilter(sepia)];
+        root.addChild(withFilterScaled);
+
+        // ===== 確認用: ネストしたSprite =====
+        const outer = new Sprite();
+        outer.x = 320;
+        outer.y = 220;
+        const inner = buildTransformedChildrenSprite(0, 0);
+        outer.addChild(inner);
+        outer.filters = [new ColorMatrixFilter(sepia)];
+        root.addChild(outer);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>
