@@ -2522,7 +2522,9 @@ export class Context
         filter_bounds: Float32Array | null,
         filter_params: Float32Array | null,
         unique_key: string,
-        filter_key: string
+        filter_key: string,
+        layer_scale_x: number = 1,
+        layer_scale_y: number = 1
     ): void {
         this.drawArraysInstanced();
 
@@ -2558,7 +2560,9 @@ export class Context
             contentSize.width,
             contentSize.height,
             this.$filterConfig,
-            this.bufferManager
+            this.bufferManager,
+            layer_scale_x,
+            layer_scale_y
         );
 
         // メインのアタッチメントをバインド

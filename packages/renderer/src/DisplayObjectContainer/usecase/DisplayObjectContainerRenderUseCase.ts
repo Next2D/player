@@ -46,6 +46,9 @@ export const execute = (
     let filterParams: Float32Array | null = null;
     let matrix: Float32Array | null = null;
     let colorTransform: Float32Array | null = null;
+    // filter layer内部スケール (子孫のcacheAsBitmap最大値)。compose時に 1/layerScaleで縮小合成する。
+    let layerScaleX = 1;
+    let layerScaleY = 1;
     if (useLayer) {
 
         layerWidth  = render_queue[index++];
@@ -113,6 +116,9 @@ export const execute = (
                 matrix = render_queue.subarray(index, index + 6);
                 index += 6;
 
+                // layerScale (HIT時は合成時のscale補正には未使用)
+                index += 2;
+
                 colorTransform = render_queue.subarray(index, index + 8);
                 index += 8;
 
@@ -129,6 +135,9 @@ export const execute = (
 
             matrix = render_queue.subarray(index, index + 6);
             index += 6;
+
+            layerScaleX = render_queue[index++];
+            layerScaleY = render_queue[index++];
 
             colorTransform = render_queue.subarray(index, index + 8);
             index += 8;
@@ -331,7 +340,8 @@ export const execute = (
         $context.containerEndLayer(
             blendMode, matrix!, colorTransform,
             useFilter, filterBounds, filterParams,
-            uniqueKey, filterKey
+            uniqueKey, filterKey,
+            layerScaleX, layerScaleY
         );
     }
 

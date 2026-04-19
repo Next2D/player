@@ -502,12 +502,15 @@ export class Context
         filter_bounds: Float32Array | null,
         filter_params: Float32Array | null,
         unique_key: string,
-        filter_key: string
+        filter_key: string,
+        layer_scale_x: number = 1,
+        layer_scale_y: number = 1
     ): void {
         contextContainerEndLayerUseCase(
             blend_mode, matrix, color_transform,
             use_filter, filter_bounds, filter_params,
-            unique_key, filter_key
+            unique_key, filter_key,
+            layer_scale_x, layer_scale_y
         );
     }
 

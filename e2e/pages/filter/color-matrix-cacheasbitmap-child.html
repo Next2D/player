@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - ColorMatrixFilter parent with cacheAsBitmap child</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 500, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { ColorMatrixFilter } = next2d.filters;
+        const { Matrix } = next2d.geom;
+
+        // slime-ten-puzzle の SelectTime5Atom 相当: 複数子を持つ横長スプライト
+        const buildAtom = () => {
+            const inner = new Sprite();
+
+            const body = new Shape();
+            body.graphics.beginFill(0x88AACC, 1.0).drawRoundRect(0, 0, 180, 60, 30, 30).endFill();
+            inner.addChild(body);
+
+            const text5 = new Shape();
+            text5.graphics.beginFill(0xFFFFFF, 1.0).drawRect(40, 11, 12, 38).endFill();
+            inner.addChild(text5);
+
+            const text0a = new Shape();
+            text0a.graphics.beginFill(0xFFFFFF, 1.0).drawCircle(90, 30, 12).endFill();
+            inner.addChild(text0a);
+
+            const text0b = new Shape();
+            text0b.graphics.beginFill(0xFFFFFF, 1.0).drawCircle(130, 30, 12).endFill();
+            inner.addChild(text0b);
+
+            return inner;
+        };
+
+        const sepia = [
+            0.25, 0, 0, 0, 0,
+            0, 0.25, 0, 0, 0,
+            0, 0, 0.25, 0, 0,
+            0, 0, 0, 1, 0
+        ];
+
+        // 1. 子にcacheAsBitmap + 親にフィルター（問題再現狙い）
+        const wrap1 = new Sprite();
+        const atom1 = buildAtom();
+        atom1.cacheAsBitmap = new Matrix(1.5, 0, 0, 1.5, 0, 0);
+        atom1.x = -90;
+        atom1.y = -30;
+        wrap1.addChild(atom1);
+        wrap1.x = 200;
+        wrap1.y = 80;
+        wrap1.filters = [new ColorMatrixFilter(sepia)];
+        root.addChild(wrap1);
+
+        // 2. 比較用: cacheAsBitmapなし + 親にフィルター
+        const wrap2 = new Sprite();
+        const atom2 = buildAtom();
+        atom2.x = -90;
+        atom2.y = -30;
+        wrap2.addChild(atom2);
+        wrap2.x = 200;
+        wrap2.y = 200;
+        wrap2.filters = [new ColorMatrixFilter(sepia)];
+        root.addChild(wrap2);
+
+        // 3. 比較用: cacheAsBitmapあり + フィルターなし
+        const wrap3 = new Sprite();
+        const atom3 = buildAtom();
+        atom3.cacheAsBitmap = new Matrix(1.5, 0, 0, 1.5, 0, 0);
+        atom3.x = -90;
+        atom3.y = -30;
+        wrap3.addChild(atom3);
+        wrap3.x = 200;
+        wrap3.y = 320;
+        root.addChild(wrap3);
+
+        // 4. 比較用: 子にフィルターを直接適用
+        const wrap4 = new Sprite();
+        const atom4 = buildAtom();
+        atom4.x = -90;
+        atom4.y = -30;
+        atom4.cacheAsBitmap = new Matrix(1.5, 0, 0, 1.5, 0, 0);
+        atom4.filters = [new ColorMatrixFilter(sepia)];
+        wrap4.addChild(atom4);
+        wrap4.x = 500;
+        wrap4.y = 80;
+        root.addChild(wrap4);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

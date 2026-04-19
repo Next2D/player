@@ -13,6 +13,7 @@ import { execute as displayObjectIsMaskReflectedInDisplayUseCase } from "../../D
 import { execute as displayObjectContainerGenerateClipQueueUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerGenerateClipQueueUseCase";
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { execute as displayObjectContainerGetLayerBoundsUseCase } from "./DisplayObjectContainerGetLayerBoundsUseCase";
+import { execute as displayObjectContainerGetLayerScaleUseCase } from "./DisplayObjectContainerGetLayerScaleUseCase";
 import { execute as displayObjectContainerCalcBoundsMatrixUseCase } from "../../DisplayObjectContainer/usecase/DisplayObjectContainerCalcBoundsMatrixUseCase";
 import { stage } from "../../Stage";
 import { renderQueue } from "@next2d/render-queue";
@@ -51,7 +52,8 @@ export const execute = <P extends DisplayObjectContainer>(
     matrix: Float32Array,
     color_transform: Float32Array,
     renderer_width: number,
-    renderer_height: number
+    renderer_height: number,
+    in_filter_layer: boolean = false
 ): void => {
 
     if (!display_object_container.visible) {
@@ -120,6 +122,9 @@ export const execute = <P extends DisplayObjectContainer>(
     // キャッシュテクスチャは親のスケールを含むサイズで描画し、
     // コンポジットは setTransform(1,0,0,1,x,y) で1:1描画されるため正しい画面サイズになる
     // 親の移動はキャッシュヒット（位置だけ更新）、スケール変更はキャッシュミス（再描画）
+    // 親がfilter等の中間レイヤー内にいる場合、filter layer 側で layerScale倍の
+    // 解像度を確保してから最終compose時に 1/layerScale で縮小合成する仕組みによって
+    // cacheAsBitmap子のテクスチャが親layerに収まる (issue #274 根本対応)。
     const cacheMatrix = display_object_container.cacheAsBitmap;
     if (cacheMatrix) {
 
@@ -184,15 +189,19 @@ export const execute = <P extends DisplayObjectContainer>(
                 const screenX = matrix[0] * localOriginX + matrix[2] * localOriginY + matrix[4];
                 const screenY = matrix[1] * localOriginX + matrix[3] * localOriginY + matrix[5];
 
-                // Shapeと同様にmatrixにcacheScaleを乗算して送る
-                // レンダラーで matrix/renderScale → cacheScale成分が反映される
+                // 通常: matrixにcacheScaleを乗算。レンダラで matrix/renderScale → cacheScale成分が反映される。
+                // issue #274: 親がfilter layer を持ち、layer を cacheScale 倍解像度で確保している場合は、
+                // 親のtMatrix に既に layerScale (=cacheScale) が掛かっているため、cacheScale 乗算を省略して
+                // 合成 scale=1 で layer にちょうど収まるようにする。
+                const hitMatrixScaleX = in_filter_layer ? 1 : cacheScaleX;
+                const hitMatrixScaleY = in_filter_layer ? 1 : cacheScaleY;
                 renderQueue.push(1,
                     0, 0, // layerWidth/Height: HIT時は未使用
                     2, 1, display_object_container.instanceId, bitmapCacheKey,
                     cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
                     renderScaleX, renderScaleY,
-                    matrix[0] * cacheScaleX, matrix[1] * cacheScaleX,
-                    matrix[2] * cacheScaleY, matrix[3] * cacheScaleY,
+                    matrix[0] * hitMatrixScaleX, matrix[1] * hitMatrixScaleX,
+                    matrix[2] * hitMatrixScaleY, matrix[3] * hitMatrixScaleY,
                     screenX, screenY,
                     tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                     tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
@@ -249,14 +258,17 @@ export const execute = <P extends DisplayObjectContainer>(
         const missScreenX = matrix[0] * localOriginX + matrix[2] * localOriginY + matrix[4];
         const missScreenY = matrix[1] * localOriginX + matrix[3] * localOriginY + matrix[5];
 
+        // HITパスと同じ規則: filter layer 内では cacheScale 乗算を省略
+        const missMatrixScaleX = in_filter_layer ? 1 : cacheScaleX;
+        const missMatrixScaleY = in_filter_layer ? 1 : cacheScaleY;
         renderQueue.push(
             1,
             localLayerWidth, localLayerHeight,
             2, 0, display_object_container.instanceId, bitmapCacheKey,
             cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
             renderScaleX, renderScaleY,
-            matrix[0] * cacheScaleX, matrix[1] * cacheScaleX,
-            matrix[2] * cacheScaleY, matrix[3] * cacheScaleY,
+            matrix[0] * missMatrixScaleX, matrix[1] * missMatrixScaleX,
+            matrix[2] * missMatrixScaleY, matrix[3] * missMatrixScaleY,
             missScreenX, missScreenY,
             tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
             tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
@@ -368,16 +380,29 @@ export const execute = <P extends DisplayObjectContainer>(
                     display_object_container, matrix
                 );
 
+                // 子孫にcacheAsBitmapを持つ要素があれば、そのスケールに合わせて
+                // filterレイヤーの解像度を引き上げる。これにより親レイヤー内で
+                // 子のcacheScale倍テクスチャが端まで収まる (issue #274 発展対応)。
+                const layerScale = new Float32Array([1, 1]);
+                displayObjectContainerGetLayerScaleUseCase(
+                    display_object_container, layerScale
+                );
+                const layerScaleX = layerScale[0];
+                const layerScaleY = layerScale[1];
+
+                const layerWidth  = Math.ceil(Math.abs(layerBounds[2] - layerBounds[0]) * layerScaleX);
+                const layerHeight = Math.ceil(Math.abs(layerBounds[3] - layerBounds[1]) * layerScaleY);
+
                 if (filterCache) {
 
                     // キャッシュがあって、変更がなければキャッシュを使用
                     if (!updated) {
                         renderQueue.push(1,
-                            Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
-                            Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
+                            layerWidth, layerHeight,
                             1, 1, display_object_container.instanceId, filterKey,
                             bounds[0], bounds[1], bounds[2], bounds[3],
                             tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
+                            layerScaleX, layerScaleY,
                             tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                             tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
                         );
@@ -400,23 +425,26 @@ export const execute = <P extends DisplayObjectContainer>(
 
                 renderQueue.push(
                     1,
-                    Math.ceil(Math.abs(layerBounds[2] - layerBounds[0])),
-                    Math.ceil(Math.abs(layerBounds[3] - layerBounds[1])),
+                    layerWidth, layerHeight,
                     1, 0, display_object_container.instanceId, filterKey,
                     bounds[0], bounds[1], bounds[2], bounds[3],
                     tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
+                    layerScaleX, layerScaleY,
                     tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                     tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
                     params.length
                 );
                 renderQueue.set(new Float32Array(params));
 
-                const fa0 = tMatrix[0];
-                const fa1 = tMatrix[1];
-                const fa2 = tMatrix[2];
-                const fa3 = tMatrix[3];
-                const faTx = tMatrix[4] - layerBounds[0];
-                const faTy = tMatrix[5] - layerBounds[1];
+                // 子に渡すtMatrixは layerScale 倍で scale して、layer 内の
+                // 拡張座標系で描画させる。layer自体は compose時に 1/layerScaleで
+                // 縮小合成され最終的に元サイズで表示される。
+                const fa0 = tMatrix[0] * layerScaleX;
+                const fa1 = tMatrix[1] * layerScaleX;
+                const fa2 = tMatrix[2] * layerScaleY;
+                const fa3 = tMatrix[3] * layerScaleY;
+                const faTx = (tMatrix[4] - layerBounds[0]) * layerScaleX;
+                const faTy = (tMatrix[5] - layerBounds[1]) * layerScaleY;
 
                 if (tMatrix !== matrix) {
                     Matrix.release(tMatrix);
@@ -642,6 +670,11 @@ export const execute = <P extends DisplayObjectContainer>(
             continue;
         }
 
+        // 自身が filter を発動した、または既に filter layer 内にいる場合は、
+        // 子コンテナに伝播して cacheAsBitmap 合成scaleの二重適用を防ぐ
+        const childInFilterLayer = in_filter_layer
+            || Boolean(display_object_container.filters && display_object_container.filters.length);
+
         switch (true) {
 
             case child.isContainerEnabled: // 0x00
@@ -651,7 +684,8 @@ export const execute = <P extends DisplayObjectContainer>(
                     tMatrix,
                     tColorTransform,
                     renderer_width,
-                    renderer_height
+                    renderer_height,
+                    childInFilterLayer
                 );
                 break;
 

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Filters on Sprite with transformed Shapes (issue #274 regression)</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(960, 720, 60);
+        const { Shape, Sprite } = next2d.display;
+        const {
+            BlurFilter, DropShadowFilter, GlowFilter, BevelFilter,
+            ColorMatrixFilter, ConvolutionFilter,
+            GradientGlowFilter, GradientBevelFilter
+        } = next2d.filters;
+
+        // 各Shapeに個別のscale+rotationを与えつつSpriteにaddChildするヘルパー。
+        // issue #274 で描画漏れが起きていた構成を再現するためのもの。
+        const buildTransformedChildrenSprite = () => {
+            const sprite = new Sprite();
+
+            const shape1 = new Shape();
+            shape1.graphics.beginFill(0xFF0000, 1.0).drawRect(0, 0, 60, 40).endFill();
+            shape1.scaleX = 1.5; shape1.scaleY = 1.5; shape1.rotation = 15;
+            shape1.x = 20; shape1.y = 30;
+            sprite.addChild(shape1);
+
+            const shape2 = new Shape();
+            shape2.graphics.beginFill(0x00FF00, 1.0).drawCircle(30, 30, 25).endFill();
+            shape2.scaleX = 1.2; shape2.scaleY = 1.2; shape2.rotation = -20;
+            shape2.x = 100; shape2.y = 40;
+            sprite.addChild(shape2);
+
+            const shape3 = new Shape();
+            shape3.graphics.beginFill(0x0066FF, 1.0).drawRect(0, 0, 40, 40).endFill();
+            shape3.scaleX = 2.0; shape3.scaleY = 1.0; shape3.rotation = 30;
+            shape3.x = 40; shape3.y = 110;
+            sprite.addChild(shape3);
+
+            const shape4 = new Shape();
+            shape4.graphics.beginFill(0xFFFF00, 1.0).drawRect(0, 0, 60, 30).endFill();
+            shape4.scaleX = 0.8; shape4.scaleY = 1.3; shape4.rotation = -45;
+            shape4.x = 160; shape4.y = 120;
+            sprite.addChild(shape4);
+
+            return sprite;
+        };
+
+        // セピア風ColorMatrix
+        const sepia = [
+            0.393, 0.769, 0.189, 0, 0,
+            0.349, 0.686, 0.168, 0, 0,
+            0.272, 0.534, 0.131, 0, 0,
+            0,     0,     0,     1, 0
+        ];
+
+        const entries = [
+            { label: "no filter", filters: null },
+            { label: "Blur", filters: [new BlurFilter(8, 8, 1)] },
+            { label: "DropShadow", filters: [new DropShadowFilter(4, 45, 0x000000, 0.8, 6, 6, 1, 1)] },
+            { label: "Glow", filters: [new GlowFilter(0xFFFF00, 1.0, 10, 10, 2, 1)] },
+            { label: "Bevel", filters: [new BevelFilter(4, 45, 0xFFFFFF, 1, 0x000000, 1, 6, 6, 1, 1)] },
+            { label: "ColorMatrix(sepia)", filters: [new ColorMatrixFilter(sepia)] },
+            { label: "Convolution(blur)", filters: [new ConvolutionFilter(3, 3, [
+                1,1,1,
+                1,1,1,
+                1,1,1
+            ], 9)] },
+            { label: "GradientGlow", filters: [new GradientGlowFilter(
+                0, 45, [0xFFFFFF, 0xFFAA00], [0, 1], [0, 255], 8, 8, 2, 1, "outer"
+            )] },
+            { label: "GradientBevel", filters: [new GradientBevelFilter(
+                4, 45, [0xFFFFFF, 0x000000], [1, 1], [0, 255], 8, 8, 2, 1
+            )] }
+        ];
+
+        const cols = 3;
+        const cellW = 310;
+        const cellH = 230;
+        entries.forEach((entry, idx) => {
+            const col = idx % cols;
+            const row = Math.floor(idx / cols);
+            const sprite = buildTransformedChildrenSprite();
+            sprite.x = 20 + col * cellW;
+            sprite.y = 20 + row * cellH;
+            if (entry.filters) {
+                sprite.filters = entry.filters;
+            }
+            root.addChild(sprite);
+        });
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

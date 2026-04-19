@@ -25,15 +25,19 @@ export const execute = (
     smooth: boolean = false
 ): void => {
 
-    if ($activeTextureUnit === -1 || unit !== $activeTextureUnit) {
+    if ($activeTextureUnit !== unit) {
         $setActiveTextureUnit(unit);
         $gl.activeTexture(unit);
     }
 
-    const boundTextures = $boundTextures[index];
-    if (boundTextures !== null && texture_object !== null
-        && boundTextures.id === texture_object.id
-        || texture_object === boundTextures
+    const boundTexture = $boundTextures[index];
+    if (boundTexture === texture_object) {
+        // Same reference, already bound to this unit.
+        return;
+    }
+    if (boundTexture !== null
+        && texture_object !== null
+        && boundTexture.id === texture_object.id
     ) {
         return;
     }
@@ -43,7 +47,8 @@ export const execute = (
 
     if (texture_object && texture_object.smooth !== smooth) {
         texture_object.smooth = smooth;
-        $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MIN_FILTER, smooth ? $gl.LINEAR : $gl.NEAREST);
-        $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MAG_FILTER, smooth ? $gl.LINEAR : $gl.NEAREST);
+        const filter = smooth ? $gl.LINEAR : $gl.NEAREST;
+        $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MIN_FILTER, filter);
+        $gl.texParameteri($gl.TEXTURE_2D, $gl.TEXTURE_MAG_FILTER, filter);
     }
 };

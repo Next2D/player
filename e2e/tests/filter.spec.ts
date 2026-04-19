@@ -85,4 +85,32 @@ test.describe("Filterテスト", () => {
 
         await expect(page).toHaveScreenshot("filter-quality.png");
     });
+
+    test("ColorMatrixFilter on Sprite with transformed Shapes (issue #274)", async ({ page }) => {
+        await page.goto("/e2e/pages/filter/color-matrix-sprite-transformed.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("filter-color-matrix-sprite-transformed.png");
+    });
+
+    test("全フィルター on Sprite with transformed Shapes (issue #274 regression)", async ({ page }) => {
+        await page.goto("/e2e/pages/filter/filters-sprite-transformed.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("filters-sprite-transformed.png");
+    });
+
+    test("ColorMatrixFilter on Sprite with cacheAsBitmap child (issue #274)", async ({ page }) => {
+        await page.goto("/e2e/pages/filter/color-matrix-cacheasbitmap-child.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("filter-color-matrix-cacheasbitmap-child.png");
+    });
+
+    test("全フィルター on Sprite with cacheAsBitmap child (issue #274 regression)", async ({ page }) => {
+        await page.goto("/e2e/pages/filter/filters-cacheasbitmap-child.html");
+        await waitForCanvas(page);
+
+        await expect(page).toHaveScreenshot("filters-cacheasbitmap-child.png");
+    });
 });

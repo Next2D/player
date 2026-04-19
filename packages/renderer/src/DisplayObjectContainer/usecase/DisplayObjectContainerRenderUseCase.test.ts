@@ -137,6 +137,8 @@ describe("DisplayObjectContainerRenderUseCase.js test", () => {
         data.push(-10, -10, 110, 110);
         // matrix (6)
         data.push(1, 0, 0, 1, 0, 0);
+        // layerScaleX, layerScaleY (2)
+        data.push(1, 1);
         // colorTransform (8)
         data.push(1, 1, 1, 1, 0, 0, 0, 0);
 

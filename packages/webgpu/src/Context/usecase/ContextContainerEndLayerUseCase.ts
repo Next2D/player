@@ -674,7 +674,11 @@ export const execute = (
     _content_width: number,
     _content_height: number,
     config: ILocalFilterConfig,
-    buffer_manager: BufferManager
+    buffer_manager: BufferManager,
+    // TODO: WebGPU版でも layer_scale による 1/layerScale 縮小合成に対応する。
+    // 現状はWebGL版のみで動作、WebGPU版は従来通り layer_scale=1 として合成される。
+    _layer_scale_x: number = 1,
+    _layer_scale_y: number = 1
 ): void => {
 
     if (use_filter && matrix && filter_bounds && params) {

@@ -123,7 +123,7 @@ export const execute = (recodes : any[] | null): any[] =>
                 {
                     const type: IGradientType = recodes[idx++];
                     const stops: IColorStop[] = recodes[idx++];
-                    const matrix: Float32Array = recodes[idx++];
+                    const matrix: ArrayLike<number> = recodes[idx++];
                     const spread: ISpreadMethod = recodes[idx++];
                     const interpolation: IInterpolationMethod = recodes[idx++];
                     const focal: number = recodes[idx++];
@@ -146,7 +146,12 @@ export const execute = (recodes : any[] | null): any[] =>
                         );
                     }
 
-                    array.push(...matrix);
+                    // JSON由来のデシリアライズではFloat32Arrayがkeyed object
+                    // ({0:v,...,5:v})になるためspreadではなくindexアクセスで読む
+                    array.push(
+                        matrix[0], matrix[1], matrix[2],
+                        matrix[3], matrix[4], matrix[5]
+                    );
 
                     switch (spread) {
 
@@ -225,7 +230,7 @@ export const execute = (recodes : any[] | null): any[] =>
 
                     const type: IGradientType = recodes[idx++];
                     const stops: IColorStop[] = recodes[idx++];
-                    const matrix: Float32Array = recodes[idx++];
+                    const matrix: ArrayLike<number> = recodes[idx++];
                     const spread: ISpreadMethod = recodes[idx++];
                     const interpolation: IInterpolationMethod = recodes[idx++];
                     const focal: number = recodes[idx++];
@@ -244,7 +249,12 @@ export const execute = (recodes : any[] | null): any[] =>
                         );
                     }
 
-                    array.push(...matrix);
+                    // JSON由来のデシリアライズではFloat32Arrayがkeyed object
+                    // ({0:v,...,5:v})になるためspreadではなくindexアクセスで読む
+                    array.push(
+                        matrix[0], matrix[1], matrix[2],
+                        matrix[3], matrix[4], matrix[5]
+                    );
 
                     switch (spread) {
 
