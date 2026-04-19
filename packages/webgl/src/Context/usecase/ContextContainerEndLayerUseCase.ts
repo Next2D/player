@@ -55,7 +55,11 @@ export const execute = (
     filter_bounds: Float32Array | null,
     filter_params: Float32Array | null,
     unique_key: string,
-    filter_key: string
+    filter_key: string,
+    // layer_scale は display 側で layer サイズに反映済み。
+    // compose時は layer 全体を等倍でmainに貼るので直接は参照しない。
+    _layer_scale_x: number = 1,
+    _layer_scale_y: number = 1
 ): void => {
 
     // 一時アタッチメントへの描画をフラッシュ
@@ -228,6 +232,11 @@ export const execute = (
             }
         }
 
+        // issue #274: layer は layerScale 倍解像度で確保されており、
+        // 子孫のcacheAsBitmap子は既にその倍解像度でlayer内に収まっている。
+        // cacheAsBitmap の仕様としてスクリーン上も cacheScale 倍のサイズで
+        // 表示されるため、ここでの縮小は行わずそのまま main に合成する。
+
         // キャッシュに保存
         if (unique_key) {
             $cacheStore.set(unique_key, "fKey", filter_key);
@@ -268,6 +277,7 @@ export const execute = (
         $context.bind($context.$mainAttachmentObject as IAttachmentObject);
 
         if (textureObject) {
+            // cacheAsBitmap と同様、layer は layerScale 倍解像度のままmainに合成する
             $context.reset();
             $context.globalCompositeOperation = blend_mode;
             blendDrawFilterToMainUseCase(
