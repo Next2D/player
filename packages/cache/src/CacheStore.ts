@@ -209,7 +209,7 @@ export class CacheStore
      */
     get (unique_key: string, key: string): any
     {
-        return cacheStoreGetService(this._$store, unique_key, key);
+        return cacheStoreGetService(this._$store, this._$trash, unique_key, key);
     }
 
     /**

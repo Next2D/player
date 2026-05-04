@@ -37,6 +37,20 @@ const $FILL_TEXTURE_USAGE = 0x06;
 const $RENDER_TEXTURE_USAGE = 0x16;
 
 /**
+ * @description 同一サイズのバケットあたりの最大保持数
+ *              Maximum number of textures held per same-size bucket
+ * @type {number}
+ */
+const $MAX_BUCKET_SIZE = 32;
+
+/**
+ * @description プール全体での最大保持数（fill/render それぞれに適用）
+ *              Maximum number of textures held in the entire pool (applied independently to fill/render)
+ * @type {number}
+ */
+const $MAX_TOTAL = 256;
+
+/**
  * @description 塗りテクスチャのオブジェクトプール
  *              Object pool for fill textures
  * @type {Map<string, GPUTexture[]>}
@@ -44,11 +58,25 @@ const $RENDER_TEXTURE_USAGE = 0x16;
 const $pool: Map<string, GPUTexture[]> = new Map();
 
 /**
+ * @description 塗りテクスチャプールの総数
+ *              Total count of textures currently held in the fill pool
+ * @type {number}
+ */
+let $fillTotalCount = 0;
+
+/**
  * @description レンダーテクスチャのオブジェクトプール
  *              Object pool for render textures
  * @type {Map<string, GPUTexture[]>}
  */
 const $renderPool: Map<string, GPUTexture[]> = new Map();
+
+/**
+ * @description レンダーテクスチャプールの総数
+ *              Total count of textures currently held in the render pool
+ * @type {number}
+ */
+let $renderTotalCount = 0;
 
 /**
  * @description プールから塗りテクスチャを取得、なければ新規作成
@@ -63,6 +91,7 @@ export const $acquireFillTexture = (device: GPUDevice, width: number, height: nu
     const key = `${width}_${height}`;
     const list = $pool.get(key);
     if (list && list.length > 0) {
+        $fillTotalCount--;
         return list.pop()!;
     }
     return device.createTexture({
@@ -73,8 +102,8 @@ export const $acquireFillTexture = (device: GPUDevice, width: number, height: nu
 };
 
 /**
- * @description 塗りテクスチャをプールに返却
- *              Release a fill texture back to the pool
+ * @description 塗りテクスチャをプールに返却。上限超過時は destroy する
+ *              Release a fill texture back to the pool. Destroyed when limits are exceeded
  * @param  {GPUTexture} texture
  * @return {void}
  */
@@ -86,7 +115,14 @@ export const $releaseFillTexture = (texture: GPUTexture): void =>
         list = [];
         $pool.set(key, list);
     }
+
+    if (list.length >= $MAX_BUCKET_SIZE || $fillTotalCount >= $MAX_TOTAL) {
+        texture.destroy();
+        return;
+    }
+
     list.push(texture);
+    $fillTotalCount++;
 };
 
 /**
@@ -102,6 +138,7 @@ export const $acquireRenderTexture = (device: GPUDevice, width: number, height: 
     const key = `${width}_${height}`;
     const list = $renderPool.get(key);
     if (list && list.length > 0) {
+        $renderTotalCount--;
         return list.pop()!;
     }
     return device.createTexture({
@@ -112,8 +149,8 @@ export const $acquireRenderTexture = (device: GPUDevice, width: number, height: 
 };
 
 /**
- * @description レンダーテクスチャをプールに返却
- *              Release a render texture back to the pool
+ * @description レンダーテクスチャをプールに返却。上限超過時は destroy する
+ *              Release a render texture back to the pool. Destroyed when limits are exceeded
  * @param  {GPUTexture} texture
  * @return {void}
  */
@@ -125,7 +162,14 @@ export const $releaseRenderTexture = (texture: GPUTexture): void =>
         list = [];
         $renderPool.set(key, list);
     }
+
+    if (list.length >= $MAX_BUCKET_SIZE || $renderTotalCount >= $MAX_TOTAL) {
+        texture.destroy();
+        return;
+    }
+
     list.push(texture);
+    $renderTotalCount++;
 };
 
 /**
@@ -141,6 +185,7 @@ export const $clearFillTexturePool = (): void =>
         }
     }
     $pool.clear();
+    $fillTotalCount = 0;
 
     for (const [, list] of $renderPool) {
         for (const texture of list) {
@@ -148,4 +193,5 @@ export const $clearFillTexturePool = (): void =>
         }
     }
     $renderPool.clear();
+    $renderTotalCount = 0;
 };

@@ -421,6 +421,7 @@ export const execute = <P extends DisplayObjectContainer>(
 
                     // どこかで変更があったので、キャッシュを削除
                     $cacheStore.removeById(`${display_object_container.instanceId}`);
+                    $cacheStore.$removeIds.push(display_object_container.instanceId);
                 }
 
                 renderQueue.push(
