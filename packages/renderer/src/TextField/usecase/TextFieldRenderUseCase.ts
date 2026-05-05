@@ -63,11 +63,16 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
         const hasNode = Boolean(render_queue[index++]);
 
-        node = hasNode
-            ? $cacheStore.get(uniqueKey, `${cacheKey}`) as Node
-            : $context.createNode(width, height);
-
-        if (!hasNode) {
+        if (hasNode) {
+            node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
+        } else {
+            // TextFieldResetUseCase 等で Main 側のみ wipe された場合、
+            // Worker には旧 Node が残っているため、新規作成前に解放してアトラスリーク防止
+            const oldNode = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node | null;
+            if (oldNode) {
+                $context.removeNode(oldNode);
+            }
+            node = $context.createNode(width, height);
             $cacheStore.set(uniqueKey, `${cacheKey}`, node);
         }
 

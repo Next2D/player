@@ -16,6 +16,7 @@ vi.mock("../../RendererUtil", () => ({
         "reset": vi.fn(),
         "setTransform": vi.fn(),
         "createNode": vi.fn(() => mockNode),
+        "removeNode": vi.fn(),
         "beginNodeRendering": vi.fn(),
         "endNodeRendering": vi.fn(),
         "drawElement": vi.fn(),

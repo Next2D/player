@@ -706,8 +706,12 @@ export const execute = (
             filterAttachment, matrix, params, devicePixelRatio, config
         );
 
-        // キャッシュに保存
+        // キャッシュに保存（古いfTextureを先に解放してGPUリーク防止）
         if (unique_key) {
+            const oldAttachment = $cacheStore.get(unique_key, "fTexture") as IAttachmentObject | null;
+            if (oldAttachment) {
+                config.frameBufferManager.releaseTemporaryAttachment(oldAttachment);
+            }
             $cacheStore.set(unique_key, "fKey", filter_key);
             $cacheStore.set(unique_key, "fTexture", filterAttachment);
         }

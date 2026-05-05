@@ -20,8 +20,9 @@ export const execute = (remove_cache_keys: Float32Array): void =>
         }
 
         const cache = $cacheStore.getById(cacheKey);
-        for (const node of cache.values()) {
-            $context.removeNode(node);
+        for (const value of cache.values()) {
+            // Node / ITextureObject / IAttachmentObject を型判定して適切に解放（プリミティブはスキップ）
+            $context.releaseTextureCache(value);
         }
 
         $cacheStore.removeById(cacheKey);

@@ -1,6 +1,7 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
+import type { ITextureObject } from "./interface/ITextureObject";
 import type { Node } from "@next2d/texture-packer";
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService";
 import { execute as moveTo } from "./PathCommand/usecase/PathCommandMoveToUseCase";
@@ -29,6 +30,7 @@ import { execute as contextUseGridService } from "./Context/service/ContextUseGr
 import { execute as contextClipUseCase } from "./Context/usecase/ContextClipUseCase";
 import { execute as atlasManagerCreateNodeService } from "./AtlasManager/service/AtlasManagerCreateNodeService";
 import { execute as atlasManagerRemoveNodeService } from "./AtlasManager/service/AtlasManagerRemoveNodeService";
+import { execute as textureManagerReleaseTextureObjectUseCase } from "./TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase";
 import { execute as blnedDrawDisplayObjectUseCase } from "./Blend/usecase/BlnedDrawDisplayObjectUseCase";
 import { execute as blnedClearArraysInstancedUseCase } from "./Blend/usecase/BlnedClearArraysInstancedUseCase";
 import { execute as blnedDrawArraysInstancedUseCase } from "./Blend/usecase/BlnedDrawArraysInstancedUseCase";
@@ -378,6 +380,30 @@ export class Context
     removeNode (node: Node): void
     {
         atlasManagerRemoveNodeService(node);
+    }
+
+    /**
+     * @description CacheStore に格納された任意の値を解放する。
+     *              Release any value stored in CacheStore.
+     *
+     *              CommandRemoveCacheService から instanceId / uniqueKey 単位で呼ばれ、
+     *              その map に含まれる Node / ITextureObject / プリミティブの全てを
+     *              安全に解放できるよう型判定で振り分ける。
+     *              プリミティブ（fKey の数値など）はスキップする。
+     *
+     * @param  {*} value
+     * @return {void}
+     */
+    releaseTextureCache (value: any): void
+    {
+        if (!value || typeof value !== "object") {
+            return ;
+        }
+        if ("w" in value) {
+            atlasManagerRemoveNodeService(value as Node);
+        } else if ("resource" in value) {
+            textureManagerReleaseTextureObjectUseCase(value as ITextureObject);
+        }
     }
 
     beginNodeRendering (node: Node): void

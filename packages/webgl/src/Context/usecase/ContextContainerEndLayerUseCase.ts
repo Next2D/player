@@ -237,8 +237,12 @@ export const execute = (
         // cacheAsBitmap の仕様としてスクリーン上も cacheScale 倍のサイズで
         // 表示されるため、ここでの縮小は行わずそのまま main に合成する。
 
-        // キャッシュに保存
+        // キャッシュに保存（古いfTextureを先に解放してからGPUリーク防止）
         if (unique_key) {
+            const oldTexture = $cacheStore.get(unique_key, "fTexture") as ITextureObject | null;
+            if (oldTexture) {
+                textureManagerReleaseTextureObjectUseCase(oldTexture);
+            }
             $cacheStore.set(unique_key, "fKey", filter_key);
             $cacheStore.set(unique_key, "fTexture", textureObject);
         }

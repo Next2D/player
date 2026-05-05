@@ -71,7 +71,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             const width  = Math.ceil(Math.abs(xMax - xMin));
             const height = Math.ceil(Math.abs(yMax - yMin));
 
-            // fixed logic
+            // ShapeClearBitmapBufferUseCase 等で Main 側のみ wipe された場合、
+            // Worker には旧 Node が残っているため、新規作成前に解放してアトラスリーク防止
+            const oldBitmapNode = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node | null;
+            if (oldBitmapNode) {
+                $context.removeNode(oldBitmapNode);
+            }
             node = $context.createNode(width, height);
             $cacheStore.set(uniqueKey, `${cacheKey}`, node);
 
@@ -109,7 +114,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             const width  = Math.ceil(Math.abs(xMax - xMin) * xScale);
             const height = Math.ceil(Math.abs(yMax - yMin) * yScale);
 
-            // fixed logic
+            // ShapeClearBitmapBufferUseCase 等で Main 側のみ wipe された場合、
+            // Worker には旧 Node が残っているため、新規作成前に解放してアトラスリーク防止
+            const oldNode = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node | null;
+            if (oldNode) {
+                $context.removeNode(oldNode);
+            }
             node = $context.createNode(width, height);
             $cacheStore.set(uniqueKey, `${cacheKey}`, node);
 
