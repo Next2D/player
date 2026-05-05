@@ -9,6 +9,7 @@ import { execute as cacheStoreGenerateKeysService } from "./CacheStore/service/C
 import { execute as cacheStoreGenerateFilterKeysService } from "./CacheStore/service/CacheStoreGenerateFilterKeysService";
 import { execute as cacheStoreRemoveTimerService } from "./CacheStore/service/CacheStoreRemoveTimerService";
 import { execute as cacheStoreRemoveTimerScheduledCacheService } from "./CacheStore/service/CacheStoreRemoveTimerScheduledCacheService";
+import { execute as cacheStoreCancelRemoveTimerService } from "./CacheStore/service/CacheStoreCancelRemoveTimerService";
 
 /**
  * @description キャッシュ管理クラス
@@ -157,6 +158,20 @@ export class CacheStore
     }
 
     /**
+     * @description 指定IDの削除タイマー登録を取り消す（再利用時に呼ぶ）
+     *              Cancel the deletion timer registration for the specified ID (call on reuse)
+     *
+     * @param   {string} id
+     * @returns {void}
+     * @method
+     * @public
+     */
+    cancelRemoveTimer (id: string): void
+    {
+        cacheStoreCancelRemoveTimerService(this._$store, this._$trash, id);
+    }
+
+    /**
      * @description タイマーでセットされた削除フラグを持つIDをキャッシュストアから削除する
      *              Remove the ID with the deletion flag set by the timer from the cache store
      *
@@ -209,7 +224,7 @@ export class CacheStore
      */
     get (unique_key: string, key: string): any
     {
-        return cacheStoreGetService(this._$store, unique_key, key);
+        return cacheStoreGetService(this._$store, this._$trash, unique_key, key);
     }
 
     /**

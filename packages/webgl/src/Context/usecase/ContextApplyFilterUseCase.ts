@@ -82,14 +82,21 @@ export const execute = (
 
     let useCache = false;
     const fKey = $cacheStore.get(unique_key, "fKey");
-    if (fKey === key) {
-        const cacheTextureObject = $cacheStore.get(unique_key, "fTexture") as ITextureObject;
+    const cacheTextureObject = $cacheStore.get(unique_key, "fTexture") as ITextureObject | null;
+    if (fKey === key && cacheTextureObject) {
         if (updated) {
+            // 同 filterKey で更新あり: 旧テクスチャを解放して再生成
             textureManagerReleaseTextureObjectUseCase(cacheTextureObject);
         } else {
+            // 同 filterKey で更新なし: キャッシュをそのまま再利用
             useCache = true;
             textureObject = cacheTextureObject;
         }
+    } else if (cacheTextureObject) {
+        // filterKey が変わった（matrix 変化等）場合に旧テクスチャを解放してから上書き。
+        // これがないと、フィルター付き Shape のスケール/回転アニメーション中に
+        // 毎フレーム GPU テクスチャがリークする。
+        textureManagerReleaseTextureObjectUseCase(cacheTextureObject);
     }
 
     let offsetX = 0;

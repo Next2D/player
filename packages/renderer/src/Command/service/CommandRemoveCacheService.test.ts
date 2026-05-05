@@ -15,7 +15,8 @@ vi.mock("@next2d/cache", () => {
 
 vi.mock("../../RendererUtil", () => ({
     "$context": {
-        "removeNode": vi.fn()
+        "removeNode": vi.fn(),
+        "releaseTextureCache": vi.fn()
     }
 }));
 
@@ -39,7 +40,7 @@ describe("CommandRemoveCacheService.js test", () => {
 
         expect($cacheStore.has).toHaveBeenCalledWith("1");
         expect($cacheStore.getById).toHaveBeenCalledWith("1");
-        expect($context.removeNode).toHaveBeenCalledTimes(2);
+        expect($context.releaseTextureCache).toHaveBeenCalledTimes(2);
         expect($cacheStore.removeById).toHaveBeenCalledWith("1");
     });
 

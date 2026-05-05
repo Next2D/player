@@ -116,6 +116,16 @@ export const execute = <D extends DisplayObject>(
             $cacheStore.removeTimer(displayObject.uniqueKey);
         }
 
+        // コンテナの instanceId ベースキャッシュ → removeTimer (1秒猶予)
+        // Shape/Text/Video の filter キャッシュ (Main にエントリなし) → 直接 $removeIds.push
+        // どちらも Worker 側の GPU リソースを解放する。
+        const instanceIdKey = `${displayObject.instanceId}`;
+        if ($cacheStore.has(instanceIdKey)) {
+            $cacheStore.removeTimer(instanceIdKey);
+        } else {
+            $cacheStore.$removeIds.push(displayObject.instanceId);
+        }
+
         if (displayObject.willTrigger(Event.REMOVED)) {
             displayObject.dispatchEvent(
                 new Event(Event.REMOVED, true)

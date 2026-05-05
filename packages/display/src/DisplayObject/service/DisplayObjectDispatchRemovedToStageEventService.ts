@@ -31,4 +31,16 @@ export const execute = <D extends DisplayObject>(display_object: D): void =>
     ) {
         $cacheStore.removeTimer(display_object.uniqueKey);
     }
+
+    // instanceId ベースキャッシュの cleanup
+    // - コンテナの filter/cacheAsBitmap/blend (Main に "filterKey"/"bitmapKey" あり) → removeTimer (1秒猶予で再復帰可)
+    // - Shape/Text/Video の filter (ContextApplyFilterUseCase が Worker 側 "fKey"/"fTexture"/"offsetX"/"offsetY" を格納)
+    //   は Main 側にエントリがないため、$removeIds に直接 push して Worker 側の GPU リソースを解放する。
+    // どちらも放置するとナビゲーション繰り返しでアトラス/GPU メモリが枯渇する。
+    const instanceIdKey = `${display_object.instanceId}`;
+    if ($cacheStore.has(instanceIdKey)) {
+        $cacheStore.removeTimer(instanceIdKey);
+    } else {
+        $cacheStore.$removeIds.push(display_object.instanceId);
+    }
 };

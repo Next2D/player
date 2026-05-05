@@ -54,11 +54,16 @@ export const execute = (
 
         const hasNode = Boolean(render_queue[index++]);
 
-        node = hasNode
-            ? $cacheStore.get(uniqueKey, `${cacheKey}`) as Node
-            : $context.createNode(width, height);
-
-        if (!hasNode) {
+        if (hasNode) {
+            node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
+        } else {
+            // Main 側のみ wipe された race を考慮し、新規作成前に旧 Node を解放
+            // （Shape/TextField MISS パスと同じ防御策。通常は no-op）
+            const oldNode = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node | null;
+            if (oldNode) {
+                $context.removeNode(oldNode);
+            }
+            node = $context.createNode(width, height);
             $cacheStore.set(uniqueKey, `${cacheKey}`, node);
         }
 

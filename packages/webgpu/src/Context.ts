@@ -3111,6 +3111,33 @@ export class Context
     }
 
     /**
+     * @description CacheStore に格納された任意の値を解放する。
+     *              Release any value stored in CacheStore.
+     *
+     *              CommandRemoveCacheService から instanceId / uniqueKey 単位で呼ばれ、
+     *              Node / IAttachmentObject / プリミティブの全てを安全に解放できるよう
+     *              型判定で振り分ける。
+     *
+     * @param  {*} value
+     * @return {void}
+     */
+    releaseTextureCache (value: any): void
+    {
+        if (!value || typeof value !== "object") {
+            return ;
+        }
+        if ("w" in value) {
+            const node = value as Node;
+            const rootNode = $rootNodes[node.index];
+            if (rootNode) {
+                rootNode.dispose(node.x, node.y, node.w, node.h);
+            }
+        } else if ("color" in value || "texture" in value) {
+            this.frameBufferManager.releaseTemporaryAttachment(value as IAttachmentObject);
+        }
+    }
+
+    /**
      * @description フレームバッファの描画情報をキャンバスに転送
      *              Transfer frame buffer contents to the canvas
      *              スワップチェーンはCopyDstをサポートしないため、レンダーパスでブリット

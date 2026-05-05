@@ -338,10 +338,11 @@ export const execute = <P extends DisplayObjectContainer>(
             const filterKey = $cacheStore.generateFilterKeys(
                 tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3]
             );
-            const filterCache = $cacheStore.get(
+            const cachedFilterKey = $cacheStore.get(
                 `${display_object_container.instanceId}`,
-                `${filterKey}`
+                "filterKey"
             );
+            const filterCache = cachedFilterKey === filterKey;
 
             let updated = false;
             const params = [];
@@ -393,35 +394,37 @@ export const execute = <P extends DisplayObjectContainer>(
                 const layerWidth  = Math.ceil(Math.abs(layerBounds[2] - layerBounds[0]) * layerScaleX);
                 const layerHeight = Math.ceil(Math.abs(layerBounds[3] - layerBounds[1]) * layerScaleY);
 
-                if (filterCache) {
+                if (filterCache && !updated) {
 
                     // キャッシュがあって、変更がなければキャッシュを使用
-                    if (!updated) {
-                        renderQueue.push(1,
-                            layerWidth, layerHeight,
-                            1, 1, display_object_container.instanceId, filterKey,
-                            bounds[0], bounds[1], bounds[2], bounds[3],
-                            tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
-                            layerScaleX, layerScaleY,
-                            tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
-                            tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
-                        );
+                    renderQueue.push(1,
+                        layerWidth, layerHeight,
+                        1, 1, display_object_container.instanceId, filterKey,
+                        bounds[0], bounds[1], bounds[2], bounds[3],
+                        tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3], layerBounds[0], layerBounds[1],
+                        layerScaleX, layerScaleY,
+                        tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
+                        tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7]
+                    );
 
-                        $poolBoundsArray(layerBounds);
-                        $poolBoundsArray(bounds);
+                    $poolBoundsArray(layerBounds);
+                    $poolBoundsArray(bounds);
 
-                        if (tColorTransform !== color_transform) {
-                            ColorTransform.release(tColorTransform);
-                        }
-                        if (tMatrix !== matrix) {
-                            Matrix.release(tMatrix);
-                        }
-                        return ;
+                    if (tColorTransform !== color_transform) {
+                        ColorTransform.release(tColorTransform);
                     }
-
-                    // どこかで変更があったので、キャッシュを削除
-                    $cacheStore.removeById(`${display_object_container.instanceId}`);
+                    if (tMatrix !== matrix) {
+                        Matrix.release(tMatrix);
+                    }
+                    return ;
                 }
+
+                // filterCache && updated の場合は MISS パスへフォールスルー。
+                // Main は直後の set("filterKey", ...) で上書きされ、Worker 側は
+                // ContextContainerEndLayerUseCase 内で旧 fTexture を解放してから
+                // 新しいテクスチャを保存するため、ここでの removeById/$removeIds.push は
+                // 不要。push してしまうと、Worker が同フレームで作成した新キャッシュを
+                // 次フレーム冒頭で wipe してしまい、その次の HIT で無描画になる。
 
                 renderQueue.push(
                     1,
@@ -461,7 +464,7 @@ export const execute = <P extends DisplayObjectContainer>(
 
                 $cacheStore.set(
                     `${display_object_container.instanceId}`,
-                    `${filterKey}`, true
+                    "filterKey", filterKey
                 );
 
             } else {
