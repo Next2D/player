@@ -5,7 +5,9 @@ import { execute as textFieldBlinkingClearTimeoutService } from "../service/Text
 import { execute as textFieldBlinkingUseCase } from "./TextFieldBlinkingUseCase";
 import {
     $textArea,
-    $getBlinkingTimerId
+    $getBlinkingTimerId,
+    $getSelectedTextField,
+    $setSelectedTextField
 } from "../../TextUtil";
 
 /**
@@ -26,6 +28,8 @@ export const execute = (text_field: TextField, name: string): void =>
     $textArea.value = "";
     if (text_field.focus) {
 
+        $setSelectedTextField(text_field);
+
         setTimeout((): void =>
         {
             $textArea.focus();
@@ -40,6 +44,11 @@ export const execute = (text_field: TextField, name: string): void =>
         }
 
     } else {
+
+        if ($getSelectedTextField() === text_field) {
+            $setSelectedTextField(null);
+        }
+
         // params reset
         text_field.focusIndex   = -1;
         text_field.selectIndex  = -1;
