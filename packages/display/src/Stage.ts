@@ -99,6 +99,16 @@ export class Stage extends DisplayObjectContainer
     private _$backgroundColor: number;
 
     /**
+     * @description Stageの機能を所持しているかを返却
+     *              Returns whether Stage functions are possessed.
+     *
+     * @type {boolean}
+     * @readonly
+     * @public
+     */
+    public readonly isStage: boolean;
+
+    /**
      * @constructor
      * @public
      */
@@ -117,6 +127,7 @@ export class Stage extends DisplayObjectContainer
         // private
         this._$ready           = false;
         this._$backgroundColor = -1;
+        this.isStage           = true;
     }
 
     /**
