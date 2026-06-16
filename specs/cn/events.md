@@ -204,6 +204,57 @@ stage.addEventListener(KeyboardEvent.KEY_DOWN, (event) => {
 });
 ```
 
+## 手柄事件
+
+通过 Web Gamepad API 处理游戏控制器输入。所有手柄事件均发送至 `stage`。
+
+> **浏览器要求**：在页面获得焦点的状态下按下控制器按钮后，手柄才会被识别（浏览器安全规范）。
+
+| 事件 | 常量 | 说明 |
+|------|------|------|
+| `gamepadconnected` | `GamepadEvent.GAMEPAD_CONNECTED` | 手柄已连接并被识别 |
+| `gamepaddisconnected` | `GamepadEvent.GAMEPAD_DISCONNECTED` | 手柄已断开连接 |
+| `gamepadbuttondown` | `GamepadEvent.BUTTON_DOWN` | 按钮被按下 |
+| `gamepadbuttonup` | `GamepadEvent.BUTTON_UP` | 按钮被释放 |
+| `gamepadaxesmotion` | `GamepadEvent.AXES_MOTION` | 摇杆（轴）发生变化（阈值 0.1） |
+
+### GamepadEvent 属性
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `gamepadIndex` | number | 手柄的索引编号 |
+| `buttonIndex` | number \| undefined | 按钮编号（BUTTON_DOWN/UP 时） |
+| `buttonValue` | number \| undefined | 按钮按压程度 0.0〜1.0（BUTTON_DOWN/UP 时） |
+| `axisIndex` | number \| undefined | 轴的编号（AXES_MOTION 时） |
+| `axisValue` | number \| undefined | 轴的值 -1.0〜1.0（AXES_MOTION 时） |
+
+```typescript
+const { GamepadEvent } = next2d.events;
+
+// 连接 / 断开
+stage.addEventListener(GamepadEvent.GAMEPAD_CONNECTED, (event) => {
+    console.log(`手柄 ${event.gamepadIndex} 已连接`);
+});
+
+stage.addEventListener(GamepadEvent.GAMEPAD_DISCONNECTED, (event) => {
+    console.log(`手柄 ${event.gamepadIndex} 已断开`);
+});
+
+// 按钮输入
+stage.addEventListener(GamepadEvent.BUTTON_DOWN, (event) => {
+    console.log(`按钮 ${event.buttonIndex} 按下 (value: ${event.buttonValue})`);
+});
+
+stage.addEventListener(GamepadEvent.BUTTON_UP, (event) => {
+    console.log(`按钮 ${event.buttonIndex} 释放`);
+});
+
+// 摇杆输入
+stage.addEventListener(GamepadEvent.AXES_MOTION, (event) => {
+    console.log(`轴 ${event.axisIndex}: ${event.axisValue}`);
+});
+```
+
 ## 焦点事件
 
 | 事件 | 常量 | 说明 |

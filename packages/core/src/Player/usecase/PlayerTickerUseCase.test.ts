@@ -45,6 +45,10 @@ vi.mock("../service/PlayerRemoveCachePostMessageService", () => ({
     execute: vi.fn()
 }));
 
+vi.mock("../service/PlayerGamepadTickerService", () => ({
+    execute: vi.fn()
+}));
+
 describe("PlayerTickerUseCase.js test", () =>
 {
     beforeEach(() => {

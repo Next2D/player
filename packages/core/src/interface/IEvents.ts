@@ -3,6 +3,7 @@ import type {
     EventDispatcher,
     EventPhase,
     FocusEvent,
+    GamepadEvent,
     HTTPStatusEvent,
     IOErrorEvent,
     PointerEvent,
@@ -16,6 +17,7 @@ export interface IEvents {
     EventDispatcher: typeof EventDispatcher;
     EventPhase: typeof EventPhase;
     FocusEvent: typeof FocusEvent;
+    GamepadEvent: typeof GamepadEvent;
     HTTPStatusEvent: typeof HTTPStatusEvent;
     IOErrorEvent: typeof IOErrorEvent;
     PointerEvent: typeof PointerEvent;
