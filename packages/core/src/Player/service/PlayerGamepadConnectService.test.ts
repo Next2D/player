@@ -1,7 +1,7 @@
 import { execute } from "./PlayerGamepadConnectService";
 import { $gamepadButtonStates, $gamepadAxisStates } from "../../GamepadState";
 import { stage } from "@next2d/display";
-import { GamepadEvent } from "@next2d/events";
+import { GamepadEvent as Next2DGamepadEvent } from "@next2d/events";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 describe("PlayerGamepadConnectService.js test", () =>
@@ -51,7 +51,7 @@ describe("PlayerGamepadConnectService.js test", () =>
         let result = "";
         let gamepadIndex = -1;
         stage.hasEventListener = vi.fn().mockReturnValue(true);
-        stage.dispatchEvent = vi.fn((event: GamepadEvent) =>
+        stage.dispatchEvent = vi.fn((event: Next2DGamepadEvent) =>
         {
             result = event.type;
             gamepadIndex = event.gamepadIndex;

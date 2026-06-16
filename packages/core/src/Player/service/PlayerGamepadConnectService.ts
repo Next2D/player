@@ -1,6 +1,6 @@
 import { $gamepadButtonStates, $gamepadAxisStates } from "../../GamepadState";
 import { stage } from "@next2d/display";
-import { GamepadEvent } from "@next2d/events";
+import { GamepadEvent as Next2DGamepadEvent } from "@next2d/events";
 
 /**
  * @description ゲームパッド接続イベントを実行する
@@ -27,11 +27,11 @@ export const execute = (event: GamepadEvent): void =>
         Array.from({ "length": gamepad.axes.length }, () => 0)
     );
 
-    if (!stage.hasEventListener(GamepadEvent.GAMEPAD_CONNECTED)) {
+    if (!stage.hasEventListener(Next2DGamepadEvent.GAMEPAD_CONNECTED)) {
         return ;
     }
 
-    const gamepadEvent = new GamepadEvent(GamepadEvent.GAMEPAD_CONNECTED);
+    const gamepadEvent = new Next2DGamepadEvent(Next2DGamepadEvent.GAMEPAD_CONNECTED);
     gamepadEvent.gamepadIndex = gamepad.index;
     stage.dispatchEvent(gamepadEvent);
 };
