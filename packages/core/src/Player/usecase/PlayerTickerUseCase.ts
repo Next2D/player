@@ -4,6 +4,7 @@ import { Event } from "@next2d/events";
 import { $cacheStore } from "@next2d/cache";
 import { execute as playerRenderingPostMessageService } from "../service/PlayerRenderingPostMessageService";
 import { execute as playerRemoveCachePostMessageService } from "../service/PlayerRemoveCachePostMessageService";
+import { execute as playerGamepadTickerService } from "../service/PlayerGamepadTickerService";
 
 /**
  * @private
@@ -39,6 +40,9 @@ export const execute = (timestamp: number): void =>
 
         // 定期処理
         stage.$ticker();
+
+        // gamepad polling
+        playerGamepadTickerService();
 
         // enter frame event
         if (stage.hasEventListener(Event.ENTER_FRAME)) {

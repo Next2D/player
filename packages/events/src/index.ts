@@ -2,6 +2,7 @@ export * from "./Event";
 export * from "./EventDispatcher";
 export * from "./EventPhase";
 export * from "./FocusEvent";
+export * from "./GamepadEvent";
 export * from "./HTTPStatusEvent";
 export * from "./IOErrorEvent";
 export * from "./PointerEvent";
