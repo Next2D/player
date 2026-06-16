@@ -204,6 +204,57 @@ stage.addEventListener(KeyboardEvent.KEY_DOWN, (event) => {
 });
 ```
 
+## Gamepad Events
+
+Handles game controller input through the Web Gamepad API. All gamepad events are dispatched to `stage`.
+
+> **Browser requirement**: A gamepad is recognized when the user presses a button on the controller while the page has focus (browser security requirement).
+
+| Event | Constant | Description |
+|-------|----------|-------------|
+| `gamepadconnected` | `GamepadEvent.GAMEPAD_CONNECTED` | Gamepad connected and recognized |
+| `gamepaddisconnected` | `GamepadEvent.GAMEPAD_DISCONNECTED` | Gamepad disconnected |
+| `gamepadbuttondown` | `GamepadEvent.BUTTON_DOWN` | Button pressed |
+| `gamepadbuttonup` | `GamepadEvent.BUTTON_UP` | Button released |
+| `gamepadaxesmotion` | `GamepadEvent.AXES_MOTION` | Stick (axis) changed (threshold 0.1) |
+
+### GamepadEvent Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `gamepadIndex` | number | Gamepad index number |
+| `buttonIndex` | number \| undefined | Button number (on BUTTON_DOWN/UP) |
+| `buttonValue` | number \| undefined | Degree of button press 0.0–1.0 (on BUTTON_DOWN/UP) |
+| `axisIndex` | number \| undefined | Axis number (on AXES_MOTION) |
+| `axisValue` | number \| undefined | Axis value -1.0–1.0 (on AXES_MOTION) |
+
+```typescript
+const { GamepadEvent } = next2d.events;
+
+// Connect / disconnect
+stage.addEventListener(GamepadEvent.GAMEPAD_CONNECTED, (event) => {
+    console.log(`Gamepad ${event.gamepadIndex} connected`);
+});
+
+stage.addEventListener(GamepadEvent.GAMEPAD_DISCONNECTED, (event) => {
+    console.log(`Gamepad ${event.gamepadIndex} disconnected`);
+});
+
+// Button input
+stage.addEventListener(GamepadEvent.BUTTON_DOWN, (event) => {
+    console.log(`Button ${event.buttonIndex} pressed (value: ${event.buttonValue})`);
+});
+
+stage.addEventListener(GamepadEvent.BUTTON_UP, (event) => {
+    console.log(`Button ${event.buttonIndex} released`);
+});
+
+// Stick input
+stage.addEventListener(GamepadEvent.AXES_MOTION, (event) => {
+    console.log(`Axis ${event.axisIndex}: ${event.axisValue}`);
+});
+```
+
 ## Focus Events
 
 | Event | Constant | Description |

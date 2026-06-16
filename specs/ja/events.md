@@ -204,6 +204,57 @@ stage.addEventListener(KeyboardEvent.KEY_DOWN, (event) => {
 });
 ```
 
+## ゲームパッドイベント
+
+Web Gamepad APIを通じてゲームコントローラーの入力を処理します。すべてのゲームパッドイベントは `stage` に対して発行されます。
+
+> **ブラウザ要件**: ゲームパッドはページにフォーカスがある状態でコントローラーのボタンを押すことで認識されます（ブラウザのセキュリティ仕様）。
+
+| イベント | 定数 | 説明 |
+|----------|------|------|
+| `gamepadconnected` | `GamepadEvent.GAMEPAD_CONNECTED` | ゲームパッドが接続・認識された |
+| `gamepaddisconnected` | `GamepadEvent.GAMEPAD_DISCONNECTED` | ゲームパッドが切断された |
+| `gamepadbuttondown` | `GamepadEvent.BUTTON_DOWN` | ボタンが押された |
+| `gamepadbuttonup` | `GamepadEvent.BUTTON_UP` | ボタンが離された |
+| `gamepadaxesmotion` | `GamepadEvent.AXES_MOTION` | スティック（軸）が変化した（閾値 0.1） |
+
+### GamepadEvent プロパティ
+
+| プロパティ | 型 | 説明 |
+|-----------|------|------|
+| `gamepadIndex` | number | ゲームパッドのインデックス番号 |
+| `buttonIndex` | number \| undefined | ボタン番号（BUTTON_DOWN/UP 時） |
+| `buttonValue` | number \| undefined | ボタンの押し具合 0.0〜1.0（BUTTON_DOWN/UP 時） |
+| `axisIndex` | number \| undefined | 軸の番号（AXES_MOTION 時） |
+| `axisValue` | number \| undefined | 軸の値 -1.0〜1.0（AXES_MOTION 時） |
+
+```typescript
+const { GamepadEvent } = next2d.events;
+
+// 接続・切断
+stage.addEventListener(GamepadEvent.GAMEPAD_CONNECTED, (event) => {
+    console.log(`ゲームパッド ${event.gamepadIndex} が接続されました`);
+});
+
+stage.addEventListener(GamepadEvent.GAMEPAD_DISCONNECTED, (event) => {
+    console.log(`ゲームパッド ${event.gamepadIndex} が切断されました`);
+});
+
+// ボタン操作
+stage.addEventListener(GamepadEvent.BUTTON_DOWN, (event) => {
+    console.log(`ボタン ${event.buttonIndex} 押下 (value: ${event.buttonValue})`);
+});
+
+stage.addEventListener(GamepadEvent.BUTTON_UP, (event) => {
+    console.log(`ボタン ${event.buttonIndex} 解放`);
+});
+
+// スティック操作
+stage.addEventListener(GamepadEvent.AXES_MOTION, (event) => {
+    console.log(`軸 ${event.axisIndex}: ${event.axisValue}`);
+});
+```
+
 ## フォーカスイベント
 
 | イベント | 定数 | 説明 |
