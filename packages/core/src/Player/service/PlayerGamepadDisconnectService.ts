@@ -1,6 +1,6 @@
 import { $gamepadButtonStates, $gamepadAxisStates } from "../../GamepadState";
 import { stage } from "@next2d/display";
-import { GamepadEvent } from "@next2d/events";
+import { GamepadEvent as Next2DGamepadEvent } from "@next2d/events";
 
 /**
  * @description ゲームパッド切断イベントを実行する
@@ -21,11 +21,11 @@ export const execute = (event: GamepadEvent): void =>
     $gamepadButtonStates.delete(gamepad.index);
     $gamepadAxisStates.delete(gamepad.index);
 
-    if (!stage.hasEventListener(GamepadEvent.GAMEPAD_DISCONNECTED)) {
+    if (!stage.hasEventListener(Next2DGamepadEvent.GAMEPAD_DISCONNECTED)) {
         return ;
     }
 
-    const gamepadEvent = new GamepadEvent(GamepadEvent.GAMEPAD_DISCONNECTED);
+    const gamepadEvent = new Next2DGamepadEvent(Next2DGamepadEvent.GAMEPAD_DISCONNECTED);
     gamepadEvent.gamepadIndex = gamepad.index;
     stage.dispatchEvent(gamepadEvent);
 };
