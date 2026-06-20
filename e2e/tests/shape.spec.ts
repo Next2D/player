@@ -89,6 +89,15 @@ test.describe("Shape描画テスト", () => {
 
             await expect(page).toHaveScreenshot("load-image-flip.png");
         });
+
+        // 透明PNGがプリマルチプライドアルファで正しく合成されることの回帰テスト。
+        // ストレートアルファのまま合成すると半透明領域の白抜け・縁の白線が再発する。
+        test("Shape.load - 透明画像のプリマルチプライ合成（白抜け・白縁の回帰）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/transparent-premultiply.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("transparent-premultiply.png");
+        });
     });
 
     test.describe("Graphics操作", () => {

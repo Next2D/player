@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Transparent Image Premultiplied Alpha</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #ffffff; }
+    </style>
+</head>
+<body>
+<!--
+    透明PNG（アルファ付き画像）の合成が正しくプリマルチプライドアルファで
+    行われるかを検証する回帰テスト用ページ。
+
+    不具合（ストレートアルファのままアトラスへ合成）が再発すると、
+      1. 半透明領域が白浮き（白抜け）する
+      2. 縮小時に縁へ白い線（ハロー）が出る
+    背景を中間色のベタ塗りにして、上記の白漏れが顕著に出るようにしている。
+-->
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(480, 360, 60);
+        const { Shape } = next2d.display;
+
+        const IMAGE = "/e2e/fixtures/images/title-logo-transparent.png";
+
+        // 中間色のベタ塗り背景（ベクター塗り=プリマルチプライ正常）。
+        // 透明画像の白漏れがあれば、この背景の上で明確に差分として現れる。
+        const background = new Shape();
+        background.graphics
+            .beginFill(0x2e6f8e, 1.0)
+            .drawRect(0, 0, 480, 360)
+            .endFill();
+        root.addChild(background);
+
+        // 1) 等倍表示：半透明領域の白抜けを検出
+        const logo = new Shape();
+        await logo.load(IMAGE);
+        logo.x = 20;
+        logo.y = 30;
+        root.addChild(logo);
+
+        // 2) 0.5倍縮小表示：縁の白線（リニア補間ハロー）を検出
+        const logoScaled = new Shape();
+        await logoScaled.load(IMAGE);
+        logoScaled.x = 20;
+        logoScaled.y = 200;
+        logoScaled.scaleX = 0.5;
+        logoScaled.scaleY = 0.5;
+        root.addChild(logoScaled);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>
