@@ -26,6 +26,25 @@ void main() {
 }`;
 };
 
+export const TEXTURE_PREMULTIPLY = (): string =>
+{
+    return `#version 300 es
+precision mediump float;
+
+uniform sampler2D u_texture;
+
+in vec2 v_coord;
+out vec4 o_color;
+
+void main() {
+    vec4 src = texture(u_texture, v_coord);
+    // ストレートアルファのソースをプリマルチプライドアルファへ変換して出力する。
+    // アトラスはプリマルチプライ空間で構築され blendFunc(ONE, ONE_MINUS_SRC_ALPHA) で
+    // 合成されるため、変換しないと透明部の白抜けや縁の白線が発生する。
+    o_color = vec4(src.rgb * src.a, src.a);
+}`;
+};
+
 export const INSTANCE_TEXTURE = (): string =>
 {
     return `#version 300 es
