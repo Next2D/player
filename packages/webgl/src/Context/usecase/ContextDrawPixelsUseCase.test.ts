@@ -8,7 +8,7 @@ vi.mock("../../TextureManager/usecase/TextureManagerCreateFromPixelsUseCase", ()
 vi.mock("../../TextureManager/usecase/TextureManagerReleaseTextureObjectUseCase", () => ({
     execute: vi.fn()
 }));
-vi.mock("../../Shader/Variants/Blend/service/VariantsBlendTextureShaderService", () => ({
+vi.mock("../../Shader/Variants/Blend/service/VariantsBlendTexturePremultiplyShaderService", () => ({
     execute: vi.fn(() => ({}))
 }));
 vi.mock("../../Shader/ShaderManager/service/ShaderManagerSetTextureUniformService", () => ({
