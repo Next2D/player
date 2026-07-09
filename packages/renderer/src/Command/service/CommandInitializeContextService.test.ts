@@ -33,6 +33,8 @@ describe("CommandInitializeContextService.js test", () =>
                     "bindTexture": vi.fn(),
                     "texParameteri": vi.fn(),
                     "texStorage2D": vi.fn(),
+                    "texStorage3D": vi.fn(),
+                    "framebufferTextureLayer": vi.fn(),
                     "createBuffer": vi.fn(),
                     "createVertexArray": vi.fn(),
                     "bindBuffer": vi.fn(),
