@@ -95,8 +95,11 @@ const $interpolateColor = (
     const stopsLength = stops.length / 5;
 
     // 最初と最後のストップを見つける
+    // endIdx の番兵は -1（0 は「最初のストップが該当」の正当な値のため、
+    // 0 を番兵にすると t が最初のストップ未満のときに最後のストップと
+    // 誤って補間され、範囲外へ外挿されてしまう）
     let startIdx = 0;
-    let endIdx = 0;
+    let endIdx = -1;
 
     for (let i = 0; i < stopsLength; i++) {
         // offset は既に 0-1 範囲
@@ -104,14 +107,14 @@ const $interpolateColor = (
         if (offset <= t) {
             startIdx = i;
         }
-        if (offset >= t && endIdx === 0) {
+        if (offset >= t && endIdx === -1) {
             endIdx = i;
             break;
         }
     }
 
     // 最後のストップを超えている場合
-    if (endIdx === 0) {
+    if (endIdx === -1) {
         endIdx = stopsLength - 1;
     }
 

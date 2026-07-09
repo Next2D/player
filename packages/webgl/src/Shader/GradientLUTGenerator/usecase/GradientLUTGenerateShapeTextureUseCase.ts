@@ -71,10 +71,13 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
             shaderManager, stops, begin, end, table
         );
 
+        // 先頭チャンクは0、末尾チャンクは1まで矩形を拡張して描画する。
+        // シェーダー側が最初/最後のストップ色でパディングするため、
+        // ストップ範囲外のtexelが未描画(前回内容のまま)になるのを防ぐ。
         gradientLUTGeneratorFillTextureUseCase(
             shaderManager,
-            stops[0],
-            stops[stops.length - 5]
+            begin === 0 ? 0 : stops[begin * 5],
+            end === stopsLength ? 1 : stops[(end - 1) * 5]
         );
     }
     blendResetService();

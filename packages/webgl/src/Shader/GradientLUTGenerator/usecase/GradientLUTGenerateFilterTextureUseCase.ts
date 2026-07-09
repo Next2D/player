@@ -48,8 +48,13 @@ export const execute = (
             shaderManager, ratios, colors, alphas, begin, end
         );
 
+        // 先頭チャンクは0、末尾チャンクは1まで矩形を拡張して描画する。
+        // シェーダー側が最初/最後のストップ色でパディングするため、
+        // ストップ範囲外のtexelが未描画(前回内容のまま)になるのを防ぐ。
         gradientLUTGeneratorFillTextureUseCase(
-            shaderManager, ratios[begin] / 255, ratios[end - 1] / 255
+            shaderManager,
+            begin === 0 ? 0 : ratios[begin] / 255,
+            end === stopsLength ? 1 : ratios[end - 1] / 255
         );
     }
     blendResetService();

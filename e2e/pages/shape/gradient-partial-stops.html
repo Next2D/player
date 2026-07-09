@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Gradient Partial Stops</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+
+        // 部分的なratios（0で始まらない/255で終わらない）のグラデーション回帰テスト。
+        // 検出対象:
+        // 1. LUTのクワッドが[最初のratio, 最後のratio]しか描画されず、
+        //    pad領域（範囲外）が未描画texel（透明or前回の内容）になる不具合
+        // 2. グラデーション用頂点バッファの更新時に、バインドされたままの
+        //    塗りメッシュバッファをbufferSubDataで破壊する不具合（迷い線）
+        // 重要: アプリ内で最初に描画されるグラデーションを部分ratiosにすること
+        // （最初のグラデーションでクワッドが生成されるため）
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { Shape } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        const make = (fn) => {
+            const s = new Shape();
+            fn(s.graphics);
+            root.addChild(s);
+        };
+
+        // 1: 最初のグラデーションを部分ratios[105,255]に（padが第1色で塗られること）
+        make((g) => {
+            const m = new Matrix();
+            m.createGradientBox(180, 90, 0, 10, 10);
+            g.beginGradientFill("linear", [0x267390, 0x14A597], [1, 1], [105, 255], m)
+                .drawRect(10, 10, 180, 90).endFill();
+        });
+
+        // 2: 異なるstops（バッファ更新経路）。左padは赤で塗られること
+        make((g) => {
+            const m = new Matrix();
+            m.createGradientBox(180, 90, 0, 210, 10);
+            g.beginGradientFill("linear", [0xFF0000, 0x0000FF], [1, 1], [128, 255], m)
+                .drawRect(210, 10, 180, 90).endFill();
+        });
+
+        // 3: 両側にpad（64-192）。左は白、右は紫で塗られること
+        make((g) => {
+            const m = new Matrix();
+            m.createGradientBox(180, 90, 0, 410, 10);
+            g.beginGradientFill("linear", [0xFFFFFF, 0xB878C8], [1, 1], [64, 192], m)
+                .drawRect(410, 10, 180, 90).endFill();
+        });
+
+        // 4: radialの部分ratios（中心側pad）
+        make((g) => {
+            const m = new Matrix();
+            m.createGradientBox(180, 180, 0, 610, 10);
+            g.beginGradientFill("radial", [0xFFFF00, 0xE08A00], [1, 1], [80, 255], m)
+                .drawCircle(700, 100, 90).endFill();
+        });
+
+        // 5: 実バグの再現形状: cubicCurveToの円 + 部分ratios（スコアバッジ相当）
+        //    上半分が第1色で塗られ、迷い線が出ないこと
+        make((g) => {
+            const m = new Matrix();
+            m.createGradientBox(88.68945, 88.24082, Math.PI / 2, 4.89935, 3.35938);
+            g.beginGradientFill("linear", [0x267390, 0x14A597], [1, 1], [105, 255], m)
+                .moveTo(49.2441, 91.6002)
+                .cubicCurveTo(73.735, 91.6002, 93.5888, 71.8469, 93.5888, 47.4798)
+                .cubicCurveTo(93.5888, 23.1128, 73.735, 3.35938, 49.2441, 3.35938)
+                .cubicCurveTo(24.7532, 3.35938, 4.89935, 23.1128, 4.89935, 47.4798)
+                .cubicCurveTo(4.89935, 71.8469, 24.7532, 91.6002, 49.2441, 91.6002)
+                .endFill();
+        });
+
+        // 5の円を見やすい位置とサイズに
+        const badge = root.getChildAt(root.numChildren - 1);
+        badge.x = 60;
+        badge.y = 150;
+        badge.scaleX = 3;
+        badge.scaleY = 3;
+
+        // 6: 部分ratiosのグラデーションストローク
+        make((g) => {
+            const m = new Matrix();
+            m.createGradientBox(180, 90, 0, 480, 200);
+            g.lineStyle(20)
+                .lineGradientStyle("linear", [0xF5E7BE, 0xE08A00], [1, 1], [100, 220], m)
+                .drawRect(490, 210, 160, 70);
+        });
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

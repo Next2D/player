@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Next2D Perf - Text</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #000000; }</style>
+</head>
+<body>
+<script type="module">
+    import { runBenchmark } from "./harness.js";
+
+    window.addEventListener("DOMContentLoaded", async () => {
+
+        // テキストの毎フレーム更新: 文字ラスタライズと
+        // テキストレイアウトのスループットを計測
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { TextField } = next2d.text;
+
+        const COUNT = 800;
+        const fields = [];
+        for (let i = 0; i < COUNT; i++) {
+            const tf = new TextField();
+            tf.defaultTextFormat.size = 10;
+            tf.defaultTextFormat.color = 0xFFFFFF;
+            tf.autoSize = "left";
+            tf.x = 2 + (i % 20) * 45;
+            tf.y = 2 + Math.floor(i / 20) * 14;
+            tf.text = "0";
+            root.addChild(tf);
+            fields.push(tf);
+        }
+
+        await runBenchmark((frame) => {
+            for (let i = 0; i < fields.length; i++) {
+                fields[i].text = `#${i} : ${frame * 7 + i * 13}`;
+            }
+        });
+    });
+</script>
+</body>
+</html>
