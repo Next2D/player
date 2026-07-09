@@ -39,13 +39,14 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     // cache uniqueKey
     const uniqueKey = `${render_queue[index++]}`;
-    const cacheKey  = render_queue[index++];
+    const cacheKey  = `${render_queue[index++]}`;
 
     const xScale = render_queue[index++];
     const yScale = render_queue[index++];
 
     // フィルターキャッシュ用のユニークキー（instanceId）
-    const filterKey = `${render_queue[index++]}`;
+    // 文字列化はフィルター使用時のみ行う
+    const filterKeyNumber = render_queue[index++];
 
     let node: Node;
     const hasCache = render_queue[index++];
@@ -63,7 +64,14 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         $context.useGrid(gridData);
 
         const length = render_queue[index++];
-        const commands = render_queue.subarray(index, index + length);
+
+        // ビットマップのピクセルは4バイト/floatでパックされている
+        // (ShapeGenerateRenderQueueUseCase参照)。lengthはバイト数。
+        // 条件はwriter側の分岐(!(isDrawable || isGridEnabled))と完全一致させる
+        const isPackedPixels = !isDrawable && !isGridEnabled;
+        const commands = isPackedPixels
+            ? null
+            : render_queue.subarray(index, index + length);
 
         if (isBitmap && !isGridEnabled) {
 
@@ -73,12 +81,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             // ShapeClearBitmapBufferUseCase 等で Main 側のみ wipe された場合、
             // Worker には旧 Node が残っているため、新規作成前に解放してアトラスリーク防止
-            const oldBitmapNode = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node | null;
+            const oldBitmapNode = $cacheStore.get(uniqueKey, cacheKey) as Node | null;
             if (oldBitmapNode) {
                 $context.removeNode(oldBitmapNode);
             }
             node = $context.createNode(width, height);
-            $cacheStore.set(uniqueKey, `${cacheKey}`, node);
+            $cacheStore.set(uniqueKey, cacheKey, node);
 
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
@@ -97,10 +105,15 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             );
 
             if (isDrawable) {
-                shapeCommandService(commands);
+                shapeCommandService(commands as Float32Array);
                 $context.drawFill();
             } else {
-                $context.drawPixels(node, new Uint8Array(commands));
+                // パックされたバイト列をビューで復元(GLアップロードは同期のためコピー不要)
+                $context.drawPixels(node, new Uint8Array(
+                    render_queue.buffer,
+                    render_queue.byteOffset + index * 4,
+                    length
+                ));
             }
 
             $context.endNodeRendering();
@@ -116,12 +129,12 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             // ShapeClearBitmapBufferUseCase 等で Main 側のみ wipe された場合、
             // Worker には旧 Node が残っているため、新規作成前に解放してアトラスリーク防止
-            const oldNode = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node | null;
+            const oldNode = $cacheStore.get(uniqueKey, cacheKey) as Node | null;
             if (oldNode) {
                 $context.removeNode(oldNode);
             }
             node = $context.createNode(width, height);
-            $cacheStore.set(uniqueKey, `${cacheKey}`, node);
+            $cacheStore.set(uniqueKey, cacheKey, node);
 
             // fixed logic
             const currentAttachment = $context.currentAttachmentObject;
@@ -148,7 +161,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             }
 
             // 描画コマンドを実行
-            shapeCommandService(commands);
+            shapeCommandService(commands as Float32Array);
 
             // 描画実行
             $context.drawFill();
@@ -161,10 +174,10 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             }
         }
 
-        index += length;
+        index += isPackedPixels ? Math.ceil(length / 4) : length;
 
     } else {
-        node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
+        node = $cacheStore.get(uniqueKey, cacheKey) as Node;
         if (!node) {
             return index;
         }
@@ -186,7 +199,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, filterKey, updated,
+            node, `${filterKeyNumber}`, updated,
             width, height, isBitmap,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Next2D Perf - Sprites</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #000000; }</style>
+</head>
+<body>
+<script type="module">
+    import { runBenchmark, createRandom } from "./harness.js";
+
+    window.addEventListener("DOMContentLoaded", async () => {
+
+        // 大量スプライトの変形更新: DisplayObjectツリー管理、
+        // renderQueueシリアライズ、インスタンス描画のスループットを計測
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { Shape } = next2d.display;
+
+        const rand = createRandom(12345);
+        const COUNT = 30000;
+        const COLORS = [
+            0xFF5252, 0xFF9800, 0xFFEB3B, 0x4CAF50, 0x00BCD4,
+            0x2196F3, 0x9C27B0, 0xE91E63, 0x8BC34A, 0x607D8B
+        ];
+
+        // 10種のテンプレートを共有して300インスタンスずつ
+        const templates = COLORS.map((color) => {
+            const t = new Shape();
+            t.graphics.beginFill(color).drawCircle(0, 0, 6).endFill();
+            return t;
+        });
+
+        const items = [];
+        for (let i = 0; i < COUNT; i++) {
+            const s = new Shape();
+            s.graphics.copyFrom(templates[i % COLORS.length].graphics);
+            s.x = rand() * 900;
+            s.y = rand() * 560;
+            items.push({
+                "shape": s,
+                "vx": (rand() - 0.5) * 4,
+                "vy": (rand() - 0.5) * 4,
+                "vr": (rand() - 0.5) * 8
+            });
+            root.addChild(s);
+        }
+
+        await runBenchmark(() => {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const s = item.shape;
+                let x = s.x + item.vx;
+                let y = s.y + item.vy;
+                if (x < 0 || x > 900) { item.vx *= -1; x = s.x; }
+                if (y < 0 || y > 560) { item.vy *= -1; y = s.y; }
+                s.x = x;
+                s.y = y;
+                s.rotation += item.vr;
+            }
+        });
+    });
+</script>
+</body>
+</html>

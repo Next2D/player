@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Next2D Perf - Blend</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #000000; }</style>
+</head>
+<body>
+<script type="module">
+    import { runBenchmark, createRandom } from "./harness.js";
+
+    window.addEventListener("DOMContentLoaded", async () => {
+
+        // ブレンドモードの重ね合わせ: 通常ブレンドと
+        // バックドロップが必要な複雑ブレンドのキュー処理を計測
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { Shape } = next2d.display;
+
+        const rand = createRandom(34567);
+        const SIMPLE_BLENDS = ["multiply", "screen", "add", "alpha", "normal"];
+        const COMPLEX_BLENDS = ["overlay", "hardlight", "darken", "lighten"];
+
+        const items = [];
+        const make = (count, blends) => {
+            for (let i = 0; i < count; i++) {
+                const s = new Shape();
+                const color = (Math.floor(rand() * 0xFFFFFF)) | 0x101010;
+                s.graphics
+                    .beginFill(color, 0.7)
+                    .drawCircle(0, 0, 40)
+                    .endFill();
+                s.x = rand() * 900;
+                s.y = rand() * 560;
+                s.blendMode = blends[i % blends.length];
+                root.addChild(s);
+                items.push({
+                    "shape": s,
+                    "vx": (rand() - 0.5) * 6,
+                    "vy": (rand() - 0.5) * 6
+                });
+            }
+        };
+
+        // 重なり合う移動シェイプ（普通のブレンド多数 + 複雑ブレンド少数）
+        make(500, SIMPLE_BLENDS);
+        make(100, COMPLEX_BLENDS);
+
+        await runBenchmark(() => {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const s = item.shape;
+                let x = s.x + item.vx;
+                let y = s.y + item.vy;
+                if (x < 0 || x > 900) { item.vx *= -1; x = s.x; }
+                if (y < 0 || y > 560) { item.vy *= -1; y = s.y; }
+                s.x = x;
+                s.y = y;
+            }
+        });
+    });
+</script>
+</body>
+</html>

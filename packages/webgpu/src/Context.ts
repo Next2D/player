@@ -19,7 +19,7 @@ import {
     $getAtlasAttachmentObject,
     $getAtlasAttachmentObjectByIndex
 } from "./AtlasManager";
-import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
+import { addDisplayObjectToInstanceArray, getInstancedShaderManager, getComplexBlendQueue } from "./Blend/BlendInstancedManager";
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
 import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskBoundsService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
@@ -52,11 +52,14 @@ import {
 } from "./FillTexturePool";
 import {
     $setFilterGradientLUTDevice,
-    $clearFilterGradientAttachment
+    $clearFilterGradientAttachment,
+    $cleanupFilterLUTCache,
+    $clearFilterLUTCache
 } from "./Filter/FilterGradientLUTCache";
 
 // Context services
 import { execute as contextFillWithStencilService } from "./Context/service/ContextFillWithStencilService";
+import { execute as frameBufferManagerResolveAttachmentService } from "./FrameBufferManager/service/FrameBufferManagerResolveAttachmentService";
 import { execute as contextFillWithStencilMainService } from "./Context/service/ContextFillWithStencilMainService";
 import { execute as contextFillSimpleService } from "./Context/service/ContextFillSimpleService";
 
@@ -123,6 +126,12 @@ const $ctUniform8 = new Float32Array(8);
  *              Pre-allocated uniform for atlas node copy with Y-flip
  */
 const $atlasNodeCopyUniform = new Float32Array([1, -1, 0, 1]);
+
+// copyTempToAtlasNode() 用 Static BindGroup キャッシュ
+// uniformは定数、samplerはキャッシュ済みのため、source viewのみが可変。
+// viewをキーにBindGroupを再利用する(present()と同型)。
+let $atlasNodeCopyUniformBuffer: GPUBuffer | null = null;
+const $atlasNodeCopyBindGroups: WeakMap<GPUTextureView, GPUBindGroup> = new WeakMap();
 
 /**
  * @description fill() 用 uniform プリアロケート (color + matrix = 16 floats = 64 bytes)
@@ -244,6 +253,16 @@ export class Context
     private commandEncoder: GPUCommandEncoder | null = null;
     /** @description レンダーパスエンコーダー / Render pass encoder */
     private renderPassEncoder: GPURenderPassEncoder | null = null;
+
+    /**
+     * @description 現在openなrenderPassEncoderがインスタンスバッチ用パスかどうか。
+     *              インスタンスパスは連続バッチ間で再利用されるが、fill/clip等の
+     *              ステンシル前提のパスとは互換性がないため、他経路では必ず閉じる。
+     *              Whether the currently open render pass belongs to instanced
+     *              batching. Such passes are reused across consecutive batches
+     *              but are incompatible with stencil-based fill/clip passes.
+     */
+    private renderPassIsInstanced: boolean = false;
 
     /** @description メインキャンバステクスチャ（最終表示用、フレームごとに1回取得） / Main canvas texture (for final display, acquired once per frame) */
     private mainTexture: GPUTexture | null = null;
@@ -407,8 +426,9 @@ export class Context
         this.textureManager = new TextureManager(device);
         this.frameBufferManager = new FrameBufferManager(device, preferred_format);
         this.pipelineManager = new PipelineManager(device, preferred_format);
-        // 遅延パイプライン群を即座に先行作成（初回アクセス時のレイテンシ解消）
-        this.pipelineManager.preloadLazyGroups();
+        // 遅延パイプライン群はバックグラウンドで順次warm up（起動ブロック解消）。
+        // warm up前に必要になったパイプラインは getPipeline() が同期生成する。
+        this.pipelineManager.warmupLazyGroupsAsync();
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
         $setGradientLUTDevice(device);
@@ -506,8 +526,11 @@ export class Context
         $bgColorAttachment.view = clearUseMsaa
             ? this.$mainAttachmentObject.msaaTexture!.view
             : this.$mainAttachmentObject.texture.view;
-        $bgColorAttachment.resolveTarget = clearUseMsaa
-            ? this.$mainAttachmentObject.texture.view : undefined;
+        // リゾルブ遅延: クリアも書き込みパスとして扱い、読み手直前にまとめて解決する
+        $bgColorAttachment.resolveTarget = undefined;
+        if (clearUseMsaa) {
+            this.$mainAttachmentObject.msaaDirty = true;
+        }
         $bgClearValue.r = this.$clearColorR;
         $bgClearValue.g = this.$clearColorG;
         $bgClearValue.b = this.$clearColorB;
@@ -526,6 +549,7 @@ export class Context
 
         // 背景クリア用のレンダーパスを開始して即座に終了
         this.renderPassEncoder = this.commandEncoder!.beginRenderPass($bgDescriptor);
+        this.renderPassIsInstanced = false;
         this.renderPassEncoder.end();
         this.renderPassEncoder = null;
     }
@@ -610,6 +634,7 @@ export class Context
             $clearGradientAttachmentObjects();
             $clearLUTCache();
             $clearFilterGradientAttachment();
+            $clearFilterLUTCache();
             // アトラスのパッキングデータをリセット（WebGL版と同じ）
             $resetAtlas();
             // FrameBufferManagerのアトラステクスチャを再作成（古いコンテンツをクリア）
@@ -886,11 +911,17 @@ export class Context
         this.ensureCommandEncoder();
 
         // 既存のレンダーパスがある場合はearlyリターン（ノード領域クリアのみ確認）
+        // ただしインスタンスバッチ用パスはステンシル構成が異なるため引き継がず閉じる
         if (this.renderPassEncoder) {
-            if (this.currentRenderTarget) {
-                this.ensureNodeAreaCleared();
+            if (!this.renderPassIsInstanced) {
+                if (this.currentRenderTarget) {
+                    this.ensureNodeAreaCleared();
+                }
+                return;
             }
-            return;
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
         }
 
         // レンダーパスがない場合のみ新規作成
@@ -921,6 +952,7 @@ export class Context
                     resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
             } else if (!this.currentRenderTarget && ($isMaskTestEnabled() || $isMaskDrawing()) && this.$mainAttachmentObject?.stencil?.view) {
                 // マスク描画時またはマスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
                 // マスク描画時: ステンシルバッファにマスク形状を書き込む
@@ -930,7 +962,11 @@ export class Context
                 const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
                     ? this.$mainAttachmentObject.msaaStencil.view
                     : this.$mainAttachmentObject.stencil.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+                // リゾルブ遅延: 書き込みパスでは解決しない
+                const mainResolveTarget = null;
+                if (mainUseMsaa) {
+                    this.$mainAttachmentObject.msaaDirty = true;
+                }
 
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
                     mainColorView,
@@ -940,6 +976,7 @@ export class Context
                     mainResolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
                 // マスクテスト時はステンシル参照値を設定
                 if ($isMaskTestEnabled()) {
                     this.renderPassEncoder.setStencilReference($getMaskStencilReference());
@@ -949,7 +986,11 @@ export class Context
                 // 2パスステンシルフィルを使用するため、常にステンシル付きレンダーパスを作成
                 const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
                 const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+                // リゾルブ遅延: 書き込みパスでは解決しない
+                const mainResolveTarget = null;
+                if (mainUseMsaa) {
+                    this.$mainAttachmentObject.msaaDirty = true;
+                }
 
                 if (this.$mainAttachmentObject.stencil?.view) {
                     // ステンシル付きレンダーパス（2パスステンシルフィル用）
@@ -965,6 +1006,7 @@ export class Context
                         mainResolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 } else {
                     // ステンシルなし（フォールバック）
                     const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
@@ -974,6 +1016,7 @@ export class Context
                         mainResolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 }
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
@@ -983,6 +1026,7 @@ export class Context
                     resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
             }
         }
 
@@ -1564,6 +1608,13 @@ export class Context
             return;
         }
 
+        // インスタンスバッチ用パスはステンシル構成が異なるため引き継がず閉じる
+        if (this.renderPassEncoder && this.renderPassIsInstanced) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
+        }
+
         // レンダーパスがない場合は作成
         if (!this.renderPassEncoder) {
             this.ensureCommandEncoder();
@@ -1585,6 +1636,7 @@ export class Context
                     "load"
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
             } else {
                 return;
             }
@@ -1717,6 +1769,7 @@ export class Context
                         resolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 } else {
                     const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                         colorView,
@@ -1725,6 +1778,7 @@ export class Context
                         resolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 }
 
                 this.nodeRenderPassAtlasIndex = node.index;
@@ -1907,6 +1961,44 @@ export class Context
      *
      * @return {void}
      */
+    /**
+     * @description メインアタッチメントのMSAAテクスチャに未リゾルブの描き込みがあれば、
+     *              リゾルブ専用パス(描画なし・load/store+resolveTarget)で1回だけ解決する。
+     *              書き込みパスはresolveTargetを持たないため、リゾルブは
+     *              「リゾルブ済みテクスチャを読む直前」のここに集約される。
+     *              Resolve the main attachment's MSAA texture once via a
+     *              resolve-only pass when it has unresolved drawing. Write
+     *              passes carry no resolveTarget, so resolution happens only
+     *              right before the resolved texture is read.
+     *
+     * @return {void}
+     */
+    private resolveMainAttachment (): void
+    {
+        const mainAttachment = this.$mainAttachmentObject;
+        if (!mainAttachment
+            || !mainAttachment.msaaDirty
+            || !mainAttachment.msaa
+            || !mainAttachment.msaaTexture?.view
+            || !mainAttachment.texture?.view
+        ) {
+            return ;
+        }
+
+        // 開いているパスがあれば終了(以降のリゾルブ専用パスと並行できないため)
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
+        }
+
+        this.ensureCommandEncoder();
+
+        frameBufferManagerResolveAttachmentService(
+            this.commandEncoder!, this.frameBufferManager, mainAttachment
+        );
+    }
+
     drawArraysInstanced (): void
     {
         // フレームが開始されていない場合は開始
@@ -1915,7 +2007,9 @@ export class Context
         }
 
         // 既存のレンダーパスを終了（アトラスパス統合をリセット）
-        if (this.renderPassEncoder) {
+        // ただし自前のインスタンスバッチ用パスは、状態が一致すればusecase側で再利用する
+        // (パス終了ごとの全画面MSAAリゾルブとロード/ストア往復を削減)
+        if (this.renderPassEncoder && !this.renderPassIsInstanced) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
@@ -1932,6 +2026,7 @@ export class Context
 
         if (this.useOptimizedInstancing) {
             // 最適化版: Storage Buffer + Indirect Drawing
+            const previousPass = this.renderPassEncoder;
             this.renderPassEncoder = contextDrawIndirectUseCase(
                 this.device,
                 this.commandEncoder!,
@@ -1941,9 +2036,15 @@ export class Context
                 this.frameBufferManager,
                 this.textureManager,
                 this.pipelineManager,
-                true, // useIndirect
-                true  // useStorageBuffer
+                // インスタンス数はCPU側で確定しているため間接描画は不要。
+                // indirectバッファ生成+writeBufferのバッチ毎オーバーヘッドを避けて直接draw()する。
+                false, // useIndirect
+                true,  // useStorageBuffer
+                this.renderPassIsInstanced
             );
+            // count===0で未変更返却の場合はフラグ維持、新規/再利用パスならinstanced扱い
+            this.renderPassIsInstanced = this.renderPassEncoder !== null
+                && (this.renderPassEncoder !== previousPass || this.renderPassIsInstanced);
         } else {
             // 従来版: 毎フレームVertex Buffer新規生成
             this.renderPassEncoder = contextDrawArraysInstancedUseCase(
@@ -1956,6 +2057,7 @@ export class Context
                 this.textureManager,
                 this.pipelineManager
             );
+            this.renderPassIsInstanced = false;
         }
 
         // 複雑なブレンドモードの処理
@@ -1970,6 +2072,20 @@ export class Context
      */
     private processComplexBlendQueue (): void
     {
+        // キューが空なら何もしない(開いたままのインスタンスパスも維持できる)
+        if (!getComplexBlendQueue().length) {
+            return;
+        }
+
+        // 複雑ブレンドはリゾルブ済みのメインテクスチャを読むため、
+        // 開いているレンダーパスを終了し、未リゾルブ分を解決する
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
+        }
+        this.resolveMainAttachment();
+
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
@@ -2129,6 +2245,8 @@ export class Context
         // フレームエンコーダーを使用してMSAAテクスチャに描画
         this.ensureCommandEncoder();
         $msaaColorAttachment.view = attachment.msaaTexture!.view;
+        // アトラスへの書き込みは従来通りパス終了時に解決する
+        // (アトラスの解決済みテクスチャはインスタンス描画が毎バッチ参照するため遅延できない)
         $msaaColorAttachment.resolveTarget = attachment.texture!.view;
 
         const stencilView = attachment.msaaStencil?.view;
@@ -2268,6 +2386,8 @@ export class Context
         // フレームエンコーダーを使用してMSAAテクスチャに描画
         this.ensureCommandEncoder();
         $msaaColorAttachment.view = attachment.msaaTexture!.view;
+        // アトラスへの書き込みは従来通りパス終了時に解決する
+        // (アトラスの解決済みテクスチャはインスタンス描画が毎バッチ参照するため遅延できない)
         $msaaColorAttachment.resolveTarget = attachment.texture!.view;
 
         const stencilView = attachment.msaaStencil?.view;
@@ -2618,7 +2738,7 @@ export class Context
     {
         this.drawArraysInstanced();
 
-        // 既存のレンダーパスを終了（temp FBOのMSAAリゾルブが実行される）
+        // 既存のレンダーパスを終了
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
@@ -2631,6 +2751,11 @@ export class Context
 
         // mainを復元
         this.$mainAttachmentObject = this.$containerLayerStack.pop() as IAttachmentObject;
+
+        // リゾルブ遅延: temp FBO(メインのMSAA設定を継承)の未リゾルブ分を解決してからコピー
+        frameBufferManagerResolveAttachmentService(
+            this.commandEncoder!, this.frameBufferManager, tempAttachment
+        );
 
         // temp FBO → アトラスノードへコピー
         this.copyTempToAtlasNode(tempAttachment, node);
@@ -2671,20 +2796,36 @@ export class Context
         // アトラスのShape描画はFillVertexのyFlipSign=1.0によりY反転で格納されるため、
         // cacheAsBitmapのコピーも同じ規則に合わせてY反転する
         // UV.y = texCoord.y * scaleY + offsetY = texCoord.y * (-1) + 1 = 1 - texCoord.y
-        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer($atlasNodeCopyUniform);
+        // uniformは定数のため永続バッファに一度だけ書き込み、BindGroupはsource view毎に再利用
+        if (!$atlasNodeCopyUniformBuffer) {
+            $atlasNodeCopyUniformBuffer = this.device.createBuffer({
+                "size": $atlasNodeCopyUniform.byteLength,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+            this.device.queue.writeBuffer(
+                $atlasNodeCopyUniformBuffer, 0,
+                $atlasNodeCopyUniform.buffer,
+                $atlasNodeCopyUniform.byteOffset,
+                $atlasNodeCopyUniform.byteLength
+            );
+        }
 
-        // サンプラーとソーステクスチャ（MSAAリゾルブ済みのテクスチャ）
-        const sampler = this.textureManager.createSampler("container_atlas_copy", false);
         const srcView = temp_attachment.texture.view;
 
-        const bindGroup = this.device.createBindGroup({
-            "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": srcView }
-            ]
-        });
+        let bindGroup = $atlasNodeCopyBindGroups.get(srcView);
+        if (!bindGroup) {
+            // サンプラーとソーステクスチャ（MSAAリゾルブ済みのテクスチャ）
+            const sampler = this.textureManager.createSampler("container_atlas_copy", false);
+            bindGroup = this.device.createBindGroup({
+                "layout": bindGroupLayout,
+                "entries": [
+                    { "binding": 0, "resource": { "buffer": $atlasNodeCopyUniformBuffer } },
+                    { "binding": 1, "resource": sampler },
+                    { "binding": 2, "resource": srcView }
+                ]
+            });
+            $atlasNodeCopyBindGroups.set(srcView, bindGroup);
+        }
 
         // アトラスのノード領域にレンダーパスを作成
         const colorView = useMsaa ? atlas.msaaTexture!.view : atlas.texture.view;
@@ -2850,9 +2991,12 @@ export class Context
         });
 
         const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
-        const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
+        // リゾルブ遅延: 書き込みパスでは解決しない
+        if (useMsaa) {
+            mainAttachment.msaaDirty = true;
+        }
         const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-            colorView, 0, 0, 0, 0, "load", resolveTarget
+            colorView, 0, 0, 0, 0, "load", null
         );
 
         const vpX = Math.max(0, drawX);
@@ -3033,6 +3177,7 @@ export class Context
 
         // Gradient LUTキャッシュのTTL超過エントリを解放
         $cleanupLUTCache();
+        $cleanupFilterLUTCache();
 
         // Dynamic Uniform BindGroupをリセット（バッファオフセットがリセットされるため）
         this.fillDynamicBindGroup = null;
@@ -3174,6 +3319,9 @@ export class Context
             return;
         }
 
+        // present はリゾルブ済みテクスチャをサンプリングするため、未リゾルブ分を解決
+        this.resolveMainAttachment();
+
         // Static BindGroup キャッシュ: mainAttachment.texture.viewが同じ間は再利用
         const currentView = this.$mainAttachmentObject.texture.view;
         if (!$presentBindGroup || $presentBindGroupView !== currentView) {
@@ -3230,7 +3378,11 @@ export class Context
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
         }
+
+        // リゾルブ済みテクスチャを読むため、未リゾルブ分を解決
+        this.resolveMainAttachment();
 
         // GPUバッファにピクセルデータを読み込み
         const bytesPerPixel = 4;
@@ -3390,6 +3542,7 @@ export class Context
                 stencilLoadOp  // 最初のマスク: クリア、ネスト: 保持
             );
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            this.renderPassIsInstanced = false;
 
             // ビューポートサイズを更新
             this.viewportWidth = this.$mainAttachmentObject.width;

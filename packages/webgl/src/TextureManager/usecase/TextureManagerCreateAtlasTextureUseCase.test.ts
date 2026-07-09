@@ -23,9 +23,13 @@ describe("TextureManagerCreateAtlasTextureUseCase.js method test", () =>
                         expect(v).toBe("createTexture");
                     }),
                     "texParameteri": vi.fn(() => { return "texParameteri" }),
-                    "texStorage2D": vi.fn(() => { return "texStorage2D" }),
+                    "texStorage3D": vi.fn((target, levels, format, width, height, layers) =>
+                    {
+                        expect(layers).toBe(1);
+                    }),
                     "TEXTURE0": 0,
                     "TEXTURE3": 0,
+                    "TEXTURE_2D_ARRAY": "TEXTURE_2D_ARRAY",
                 }
             }
         });

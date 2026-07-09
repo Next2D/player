@@ -2,10 +2,12 @@ import type { IAjaxOption } from "./interface/IAjaxOption";
 import type { ISprite } from "./interface/ISprite";
 import type { IDisplayObject } from "./interface/IDisplayObject";
 import type { IURLRequestHeader } from "./interface/IURLRequestHeader";
+import type { IFilterArray } from "./interface/IFilterArray";
 import type { LoaderInfo } from "./LoaderInfo";
 import type { Graphics } from "./Graphics";
 import type { MovieClip } from "./MovieClip";
 import { Point } from "@next2d/geom";
+import { renderQueue } from "@next2d/render-queue";
 
 /**
  * @description 現在のマウスの座標情報
@@ -317,6 +319,93 @@ export const $getBoundsArray = (
 export const $poolBoundsArray = (array: Float32Array): void =>
 {
     $boundsArrays.push(array);
+};
+
+/**
+ * @description 直近の $prepareFilterBuffers 実行でフィルターの更新があったかどうか
+ *              Whether any filter was updated in the last $prepareFilterBuffers call.
+ *
+ * @type {boolean}
+ * @private
+ */
+let $filterUpdated: boolean = false;
+
+/**
+ * @description 直近の $prepareFilterBuffers 実行でフィルターの更新があったかどうかを返す
+ *              Returns whether any filter was updated in the last $prepareFilterBuffers call.
+ *
+ * @return {boolean}
+ * @method
+ * @protected
+ */
+export const $getFilterUpdated = (): boolean => $filterUpdated;
+
+/**
+ * @description フィルターのシリアライズ結果($buffer)を$updated連動で最新化し、
+ *              適用可能なフィルターのバウンディングボックスと合計パラメータ数を算出。
+ *              Refresh each filter's serialized $buffer (invalidated by $updated),
+ *              collect bounds of applicable filters and return the total parameter count.
+ *
+ * @param  {array} filters
+ * @param  {Float32Array} bounds
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $prepareFilterBuffers = (
+    filters: IFilterArray,
+    bounds: Float32Array
+): number => {
+
+    $filterUpdated = false;
+
+    let length = 0;
+    for (let idx = 0; idx < filters.length; idx++) {
+
+        const filter = filters[idx];
+        if (!filter || !filter.canApplyFilter()) {
+            continue;
+        }
+
+        // フィルターが更新されたかをチェック
+        if (filter.$updated) {
+            $filterUpdated = true;
+            filter.$buffer = null;
+        }
+        filter.$updated = false;
+
+        filter.getBounds(bounds);
+
+        if (!filter.$buffer) {
+            filter.$buffer = filter.toNumberArray();
+        }
+
+        length += filter.$buffer.length;
+    }
+
+    return length;
+};
+
+/**
+ * @description $prepareFilterBuffers で最新化した各フィルターの$bufferをrenderQueueへ書き込む
+ *              Write each filter's $buffer (refreshed by $prepareFilterBuffers) to the renderQueue.
+ *
+ * @param  {array} filters
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $pushFilterBuffers = (filters: IFilterArray): void =>
+{
+    for (let idx = 0; idx < filters.length; idx++) {
+
+        const filter = filters[idx];
+        if (!filter || !filter.canApplyFilter() || !filter.$buffer) {
+            continue;
+        }
+
+        renderQueue.set(filter.$buffer);
+    }
 };
 
 /**

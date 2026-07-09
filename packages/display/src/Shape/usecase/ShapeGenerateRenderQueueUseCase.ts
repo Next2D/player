@@ -18,7 +18,10 @@ import {
     $MATRIX_ARRAY_IDENTITY,
     $getFloat32Array6,
     $poolFloat32Array6,
-    $getBoundsArray
+    $getBoundsArray,
+    $prepareFilterBuffers,
+    $pushFilterBuffers,
+    $getFilterUpdated
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -47,14 +50,14 @@ export const execute = (
 ): void => {
 
     if (!shape.visible) {
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
     const graphics   = shape.graphics;
     const isDrawable = graphics.isDrawable;
     if (!isDrawable && !shape.isBitmap) {
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -73,7 +76,7 @@ export const execute = (
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -114,7 +117,7 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-            renderQueue.push(0);
+            renderQueue.push1(0);
             return;
 
         default:
@@ -133,7 +136,7 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return;
     }
 
@@ -259,7 +262,7 @@ export const execute = (
 
     if (!cache) {
 
-        renderQueue.push(0);
+        renderQueue.push1(0);
 
         if (isGridEnabled) {
 
@@ -334,7 +337,7 @@ export const execute = (
                 maxYPQ = Math.min(m + 0.00001, 1);
             }
 
-            renderQueue.push(
+            renderQueue.push24(
                 pMatrix[0], pMatrix[1], pMatrix[2], pMatrix[3], pMatrix[4], pMatrix[5],
                 aMatrix[0], aMatrix[1], aMatrix[2], aMatrix[3], aMatrix[4] - aOffsetX, aMatrix[5] - aOffsetY,
                 parentXMin, parentYMin, parentWidth, parentHeight,
@@ -346,12 +349,17 @@ export const execute = (
             $poolFloat32Array6(pMatrix);
         }
 
-        const buffer = isDrawable || isGridEnabled
-            ? graphics.buffer
-            : shape.$bitmapBuffer as Uint8Array;
-
-        renderQueue.push(buffer.length);
-        renderQueue.set(buffer);
+        if (isDrawable || isGridEnabled) {
+            const buffer = graphics.buffer;
+            renderQueue.push1(buffer.length);
+            renderQueue.set(buffer);
+        } else {
+            // ビットマップのピクセルは1byte=1floatに展開せず4バイト/floatでパックし、
+            // 転送量とキュー常駐メモリを1/4にする(読み出し側はShapeRenderUseCase)
+            const buffer = shape.$bitmapBuffer as Uint8Array;
+            renderQueue.push1(buffer.length);
+            renderQueue.setUint8(buffer);
+        }
 
         $cacheStore.set(shape.uniqueKey, `${cacheKey}`, true);
 
@@ -364,56 +372,33 @@ export const execute = (
             shape.$cache = $cacheStore.getById(shape.uniqueKey);
             shape.$cache.set(shape.uniqueKey, true);
         }
-        renderQueue.push(1);
+        renderQueue.push1(1);
     }
 
-    renderQueue.push(
+    renderQueue.push1(
         displayObjectBlendToNumberService(shape.blendMode)
     );
 
     const filters = shape.filters;
     if (filters) {
 
-        let updated = false;
-        const params = [];
         const bounds = $getBoundsArray(0, 0, 0, 0);
-        for (let idx = 0; idx < filters.length; idx++) {
+        const paramsLength = $prepareFilterBuffers(filters, bounds);
 
-            const filter = filters[idx];
-            if (!filter || !filter.canApplyFilter()) {
-                continue;
-            }
-
-            // フィルターが更新されたかをチェック
-            if (filter.$updated) {
-                updated = true;
-            }
-            filter.$updated = false;
-
-            filter.getBounds(bounds);
-
-            const buffer = filter.toNumberArray();
-
-            for (let idx = 0; idx < buffer.length; idx += 4096) {
-                params.push(...buffer.subarray(idx, idx + 4096));
-            }
-        }
-
-        const useFilfer = params.length > 0;
-        if (useFilfer) {
-            renderQueue.push(
-                +useFilfer, +updated,
+        if (paramsLength > 0) {
+            renderQueue.push7(
+                1, +$getFilterUpdated(),
                 bounds[0], bounds[1], bounds[2], bounds[3],
-                params.length
+                paramsLength
             );
-            renderQueue.set(new Float32Array(params));
+            $pushFilterBuffers(filters);
         } else {
-            renderQueue.push(0);
+            renderQueue.push1(0);
         }
 
         $poolBoundsArray(bounds);
     } else {
-        renderQueue.push(0);
+        renderQueue.push1(0);
     }
 
     if (tColorTransform !== color_transform) {

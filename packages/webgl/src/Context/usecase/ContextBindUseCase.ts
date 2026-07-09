@@ -47,9 +47,14 @@ export const execute = (context: Context, attachment_object: IAttachmentObject):
         : attachment_object.stencil as IStencilBufferObject;
 
     // 再利用のオブジェクトの場合は、描画情報をクリアする
+    // テクスチャプールから再利用されたテクスチャ(dirty)もステイル内容を含むためクリア対象
     // clearColorは初期化時に(0,0,0,0)で固定済みのためそのまま使用
-    if (object.dirty) {
+    const texture = attachment_object.texture;
+    if (object.dirty || texture && texture.dirty) {
         object.dirty = false;
+        if (texture) {
+            texture.dirty = false;
+        }
         context.clearRect(0, 0, attachment_object.width, attachment_object.height);
     }
 

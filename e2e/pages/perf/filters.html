@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Next2D Perf - Filters</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #000000; }</style>
+</head>
+<body>
+<script type="module">
+    import { runBenchmark, createRandom } from "./harness.js";
+
+    window.addEventListener("DOMContentLoaded", async () => {
+
+        // フィルターの毎フレーム再適用: パラメータを変化させて
+        // フィルターキャッシュの再生成とGPUフィルターパイプラインを計測
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { Shape } = next2d.display;
+        const { BlurFilter, GlowFilter, DropShadowFilter } = next2d.filters;
+
+        const rand = createRandom(23456);
+        const COUNT = 120;
+
+        const items = [];
+        for (let i = 0; i < COUNT; i++) {
+            const s = new Shape();
+            const color = (Math.floor(rand() * 0xFFFFFF)) | 0x202020;
+            s.graphics
+                .beginFill(color)
+                .drawRoundRect(0, 0, 60, 60, 12)
+                .endFill();
+            s.x = 20 + (i % 12) * 72;
+            s.y = 20 + Math.floor(i / 12) * 52;
+            root.addChild(s);
+            items.push(s);
+        }
+
+        await runBenchmark((frame) => {
+            // 毎フレーム、フィルターのパラメータを変化させて再適用させる
+            const b = 2 + (frame % 30) * 0.5;
+            for (let i = 0; i < items.length; i++) {
+                const s = items[i];
+                switch (i % 3) {
+                    case 0:
+                        s.filters = [new BlurFilter(b, b, 1)];
+                        break;
+                    case 1:
+                        s.filters = [new GlowFilter(0x00FFCC, 0.8, b, b, 2, 1)];
+                        break;
+                    default:
+                        s.filters = [new DropShadowFilter(4, 45, 0x000000, 0.6, b, b, 1, 1)];
+                        break;
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

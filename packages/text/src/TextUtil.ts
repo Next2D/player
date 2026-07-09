@@ -101,6 +101,48 @@ export const $setCurrentWidth = (width: number): void =>
 };
 
 /**
+ * @description 最後に$contextへ設定したフォントスタイル文字列
+ *              The font style string last assigned to $context
+ *
+ * @type {string}
+ * @private
+ */
+let $currentFontStyle: string = "";
+
+/**
+ * @description $context.fontの設定をラップし、同一スタイルの再代入をスキップする。
+ *              font代入はブラウザ内部でフォント文字列のパースを伴う重い操作のため、
+ *              1文字ごとのレイアウト処理で同一フォーマットが続く場合の負荷を除去する。
+ *              Wraps assignment to $context.font and skips redundant assignment
+ *              of the same style. Assigning font triggers font-string parsing
+ *              inside the browser, so this removes the cost for consecutive
+ *              characters that share the same format.
+ *
+ * @param  {string} font_style
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setContextFont = (font_style: string): void =>
+{
+    if ($currentFontStyle !== font_style) {
+        $currentFontStyle = font_style;
+        $context.font = font_style;
+    }
+};
+
+/**
+ * @description カラー文字列→数値変換のキャッシュ。
+ *              canvasのfillStyle往復はコストが高いため、一意なカラー文字列ごとに1度だけ変換する。
+ *              Cache for color-string-to-number conversion. The canvas fillStyle
+ *              round trip is expensive, so convert each unique color string once.
+ *
+ * @type {Map<string, number>}
+ * @private
+ */
+const $colorStringCache: Map<string, number> = new Map();
+
+/**
  * @description カラー文字列を数値に変換
  *              Convert color string to number
  *
@@ -115,8 +157,19 @@ export const $convertColorStringToNumber = (value: string): number =>
         return 0;
     }
 
+    const cachedColor = $colorStringCache.get(value);
+    if (cachedColor !== undefined) {
+        return cachedColor;
+    }
+
     $context.fillStyle = value;
-    return +`0x${$context.fillStyle.slice(1)}`;
+    const color = +`0x${$context.fillStyle.slice(1)}`;
+
+    if (256 > $colorStringCache.size) {
+        $colorStringCache.set(value, color);
+    }
+
+    return color;
 };
 
 /**

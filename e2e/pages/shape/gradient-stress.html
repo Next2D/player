@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Gradient Stress</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+
+        // 多数の異なるグラデーション + 決定的な再ラスタで、
+        // グラデーションLUT/キャッシュ系のデグレ(取り違え・破損)を検出する。
+        // 1. 40種の異なるstopsを同一フレームに描画(キャッシュ境界超え)
+        // 2. 一部Shapeを一定フレーム数スケール変化させ再ラスタを繰り返した後、
+        //    決定的な最終スケールで停止してスナップショット比較する
+        const root = await next2d.createRootMovieClip(900, 700, 60);
+        const { Shape } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        const colorAt = (i, salt) => {
+            const r = (i * 97 + salt * 13 + 40) % 256;
+            const g = (i * 53 + salt * 71 + 80) % 256;
+            const b = (i * 31 + salt * 29 + 120) % 256;
+            return r << 16 | g << 8 | b;
+        };
+
+        for (let i = 0; i < 40; i++) {
+            const s = new Shape();
+            const m = new Matrix();
+            const x = (i % 8) * 110 + 10;
+            const y = ((i / 8) | 0) * 90 + 10;
+            m.createGradientBox(100, 70, 0, x, y);
+            s.graphics
+                .beginGradientFill(
+                    "linear",
+                    [colorAt(i, 1), colorAt(i, 2)],
+                    [1, 1],
+                    [0, 255],
+                    m
+                )
+                .drawRect(x, y, 100, 70)
+                .endFill();
+            root.addChild(s);
+        }
+
+        // 再ラスタ誘発用: 3ストップグラデーションのShapeを30フレームだけスケール変化
+        const anim = new Shape();
+        const am = new Matrix();
+        am.createGradientBox(200, 100, 0, 0, 0);
+        anim.graphics
+            .beginGradientFill(
+                "linear",
+                [0xFF0000, 0x00FF00, 0x0000FF],
+                [1, 1, 1],
+                [0, 128, 255],
+                am
+            )
+            .drawRect(0, 0, 200, 100)
+            .endFill();
+        anim.x = 350;
+        anim.y = 520;
+        root.addChild(anim);
+
+        let frame = 0;
+        const onEnterFrame = () => {
+            frame++;
+            if (frame <= 30) {
+                // 決定的なスケール変化で再ラスタを繰り返す
+                anim.scaleX = 1 + 0.5 * Math.sin(frame / 5);
+                anim.scaleY = 1 + 0.5 * Math.sin(frame / 5);
+                return ;
+            }
+
+            // 最終状態は固定してスナップショットを安定させる
+            anim.scaleX = 1.25;
+            anim.scaleY = 1.25;
+            root.removeEventListener("enterFrame", onEnterFrame);
+            window.__E2E_RENDER_COMPLETE__ = true;
+        };
+        root.addEventListener("enterFrame", onEnterFrame);
+    });
+</script>
+</body>
+</html>

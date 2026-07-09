@@ -1,13 +1,16 @@
 import { execute } from "./CacheStoreGetService";
 import { describe, expect, it } from "vitest";
 
+// LRU無効(従来挙動)のスタブ
+const $cacheStoreStub = { "$maxStoreSize": 0 } as any;
+
 describe("CacheStoreGetService.js test", () =>
 {
     it("test case1", () =>
     {
         const store = new Map();
         const trash = new Map();
-        expect(execute(store, trash, "1", "0")).toBe(null);
+        expect(execute($cacheStoreStub, store, trash, "1", "0")).toBe(null);
     });
 
     it("test case2", () =>
@@ -15,7 +18,7 @@ describe("CacheStoreGetService.js test", () =>
         const store = new Map();
         const trash = new Map();
         store.set("1", new Map());
-        expect(execute(store, trash, "1", "0")).toBe(null);
+        expect(execute($cacheStoreStub, store, trash, "1", "0")).toBe(null);
     });
 
     it("test case3", () =>
@@ -26,7 +29,7 @@ describe("CacheStoreGetService.js test", () =>
         const store = new Map();
         const trash = new Map();
         store.set("1", data);
-        expect(execute(store, trash, "1", "0")).toBe("test");
+        expect(execute($cacheStoreStub, store, trash, "1", "0")).toBe("test");
     });
 
     it("get should cancel pending deletion when entry is in trash_store", () =>
@@ -44,7 +47,7 @@ describe("CacheStoreGetService.js test", () =>
         expect(trash.has("1")).toBe(true);
         expect(data.has("trash")).toBe(true);
 
-        const result = execute(store, trash, "1", "0");
+        const result = execute($cacheStoreStub, store, trash, "1", "0");
 
         // 値は問題なく取得できる
         expect(result).toBe("test");
@@ -73,7 +76,7 @@ describe("CacheStoreGetService.js test", () =>
         trash.set("2", otherData);
 
         // 別 id のエントリへの get は trash_store を触らない
-        execute(store, trash, "1", "0");
+        execute($cacheStoreStub, store, trash, "1", "0");
 
         expect(trash.has("2")).toBe(true);
         expect(otherData.has("trash")).toBe(true);

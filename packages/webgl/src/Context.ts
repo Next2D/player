@@ -58,7 +58,8 @@ import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator
 import {
     $getAtlasAttachmentObject,
     $clearTransferBounds,
-    $getAtlasTextureObject
+    $getAtlasTextureObject,
+    $setAtlasPageDirty
 } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -158,7 +159,8 @@ export class Context
         // FrameBufferManagerの初期起動
         $setReadFrameBuffer(gl);
         $setDrawFrameBuffer(gl);
-        $setAtlasFrameBuffer(gl, $getAtlasTextureObject());
+        $getAtlasTextureObject();
+        $setAtlasFrameBuffer(gl);
         $setBitmapFrameBuffer(gl);
 
         // VertexArrayObjectの初期起動
@@ -409,6 +411,10 @@ export class Context
     beginNodeRendering (node: Node): void
     {
         this.newDrawState = true;
+
+        // このページには未解決の描き込みがある(次回の解決対象)
+        $setAtlasPageDirty(node.index);
+
         contextUpdateTransferBoundsService(node);
         contextBeginNodeRenderingService(node.x, node.y, node.w, node.h);
     }

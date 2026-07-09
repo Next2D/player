@@ -25,6 +25,16 @@ let $cachedBindGroup: GPUBindGroup | null = null;
 let $cachedAtlasView: GPUTextureView | null = null;
 
 /**
+ * @description 開いたまま返却したインスタンスパスの作成時状態。
+ *              次バッチが同一状態ならパスを再利用する(全画面MSAAリゾルブ削減)。
+ *              State of the instanced pass that was returned open. The next
+ *              batch reuses the pass when the state matches, avoiding a
+ *              full-screen MSAA resolve per batch.
+ */
+let $openPassColorView: GPUTextureView | null = null;
+let $openPassUseStencil: boolean = false;
+
+/**
  * @description Indirect描画を使用したインスタンス描画を実行する
  *              Executes instanced drawing with indirect draw support
  * @param {GPUDevice} device GPUデバイス / GPU device
@@ -49,18 +59,13 @@ export const execute = (
     texture_manager: TextureManager,
     pipeline_manager: PipelineManager,
     use_indirect: boolean = true,
-    use_storage_buffer: boolean = true
+    use_storage_buffer: boolean = true,
+    render_pass_is_instanced: boolean = false
 ): GPURenderPassEncoder | null => {
     const shaderManager = getInstancedShaderManager();
 
     if (shaderManager.count === 0) {
         return render_pass_encoder;
-    }
-
-    // 既存のレンダーパスを終了
-    if (render_pass_encoder) {
-        render_pass_encoder.end();
-        render_pass_encoder = null;
     }
 
     const isMasked = $isMaskTestEnabled();
@@ -102,42 +107,67 @@ export const execute = (
         return null;
     }
 
-    // レンダーパスを作成
+    // レンダーパスを作成(前回のインスタンスパスと状態が一致すれば再利用)
+    const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
+    const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
+
+    // リゾルブ遅延: 書き込みパスでは解決せず、読み手直前にまとめて解決する
+    const resolveTarget = null;
+    if (useMsaa) {
+        main_attachment.msaaDirty = true;
+    }
+    const useStencilPass = Boolean(useStencil);
+
     let passEncoder: GPURenderPassEncoder;
 
-    if (useStencil) {
-        // MSAA対応
-        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
-        const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
-        const stencilView = useMsaa && main_attachment.msaaStencil?.view
-            ? main_attachment.msaaStencil.view : main_attachment.stencil!.view;
-        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
-
-        const renderPassDescriptor = frame_buffer_manager.createStencilRenderPassDescriptor(
-            colorView,
-            stencilView,
-            "load",
-            "load",
-            resolveTarget
-        );
-        passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
+    if (render_pass_encoder
+        && render_pass_is_instanced
+        && $openPassColorView === colorView
+        && $openPassUseStencil === useStencilPass
+    ) {
+        // 同一アタッチメント・同一ステンシル構成の連続バッチ:
+        // パスを閉じずにpipeline/バッファだけ差し替えて描画する。
+        // パス終了ごとの全画面MSAAリゾルブとロード/ストア往復が消える。
+        passEncoder = render_pass_encoder;
     } else {
-        // 通常のレンダーパス（MSAA対応）
-        const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
-        const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
-        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
-        const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
-            colorView,
-            0, 0, 0, 0,
-            "load",
-            resolveTarget
-        );
-        passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
+
+        // 状態が異なる場合は既存のパスを終了して新規作成
+        if (render_pass_encoder) {
+            render_pass_encoder.end();
+            render_pass_encoder = null;
+        }
+
+        if (useStencilPass) {
+            // ステンシル付きレンダーパス（マスク用・MSAA対応）
+            const stencilView = useMsaa && main_attachment.msaaStencil?.view
+                ? main_attachment.msaaStencil.view : main_attachment.stencil!.view;
+
+            const renderPassDescriptor = frame_buffer_manager.createStencilRenderPassDescriptor(
+                colorView,
+                stencilView,
+                "load",
+                "load",
+                resolveTarget
+            );
+            passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
+        } else {
+            // 通常のレンダーパス（MSAA対応）
+            const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
+                colorView,
+                0, 0, 0, 0,
+                "load",
+                resolveTarget
+            );
+            passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
+        }
+
+        $openPassColorView   = colorView;
+        $openPassUseStencil  = useStencilPass;
     }
 
     passEncoder.setPipeline(pipeline);
 
-    if (useStencil) {
+    if (useStencilPass) {
         passEncoder.setStencilReference(maskReference);
     }
 
@@ -169,6 +199,7 @@ export const execute = (
     if (!atlasAttachment) {
         console.error("[WebGPU] Atlas attachment not found");
         passEncoder.end();
+        $openPassColorView = null;
         return null;
     }
 
@@ -179,6 +210,7 @@ export const execute = (
     if (!bindGroupLayout) {
         console.error("[WebGPU] Instanced bind group layout not found");
         passEncoder.end();
+        $openPassColorView = null;
         return null;
     }
 
@@ -224,8 +256,10 @@ export const execute = (
         passEncoder.draw(6, shaderManager.count, 0, 0);
     }
 
-    // レンダーパスを終了
-    passEncoder.end();
+    // レンダーパスは終了せずに開いたまま返却する。
+    // 次の連続バッチが同一状態ならこのパスを再利用し、
+    // 異なる状態や他の描画経路が必要になった時点で呼び出し側が終了する。
+    // (リゾルブはパス終了時に1回だけ行われるためピクセルは同一)
 
     // 注意: Storage Bufferはここで解放しない
     // GPUがまだ描画を実行していないため、同一フレーム内で再利用されると
@@ -235,5 +269,5 @@ export const execute = (
     // インスタンスデータをクリア
     shaderManager.clear();
 
-    return null;
+    return passEncoder;
 };

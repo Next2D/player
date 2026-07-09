@@ -47,10 +47,13 @@ void main() {
 
 export const INSTANCE_TEXTURE = (): string =>
 {
+    // アトラスはTEXTURE_2D_ARRAY。v_add.wはカラー加算値ではなく
+    // アトラスのレイヤー番号(旧実装では常に0だったct7のスロットを転用)。
+    // カラー変換ではw成分を0として扱うため出力は旧実装と同一。
     return `#version 300 es
 precision mediump float;
 
-uniform sampler2D u_texture;
+uniform mediump sampler2DArray u_texture;
 
 in vec4 v_mul;
 in vec4 v_add;
@@ -58,13 +61,13 @@ in vec2 v_coord;
 out vec4 o_color;
 
 void main() {
-    vec4 src = texture(u_texture, v_coord);
+    vec4 src = texture(u_texture, vec3(v_coord, v_add.w));
 
     if (v_mul.x != 1.0 || v_mul.y != 1.0 || v_mul.z != 1.0 || v_mul.w != 1.0
         || v_add.x != 0.0 || v_add.y != 0.0 || v_add.z != 0.0
     ) {
         src.rgb /= max(0.0001, src.a);
-        src = clamp(src * v_mul + v_add, 0.0, 1.0);
+        src = clamp(src * v_mul + vec4(v_add.xyz, 0.0), 0.0, 1.0);
         src.rgb *= src.a;
     }
 

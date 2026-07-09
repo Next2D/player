@@ -61,7 +61,6 @@ export const execute = (
     const ct4 = color_transform[4] / 255;
     const ct5 = color_transform[5] / 255;
     const ct6 = color_transform[6] / 255;
-    const ct7 = 0;
 
     const matrix = $context.$matrix;
     switch ($context.globalCompositeOperation) {
@@ -74,23 +73,21 @@ export const execute = (
         case "erase":
         case "copy":
             {
-                if ($currentBlendMode !== $context.globalCompositeOperation
-                    || $currentAtlasIndex !== node.index
-                ) {
-                    // 異なるフレームバッファになるので、切り替え前にメインバッファに描画を実行
-                    $setActiveAtlasIndex($currentAtlasIndex);
+                // アトラスはTEXTURE_2D_ARRAY化され、レイヤー番号をインスタンス属性で
+                // 渡すため、ページ切替ではバッチを分断しない。ブレンドモード変更時のみflushする。
+                if ($currentBlendMode !== $context.globalCompositeOperation) {
 
                     const currentOperation = $context.globalCompositeOperation;
                     $context.globalCompositeOperation = $currentBlendMode;
-                    $context.newDrawState = true;
                     $context.drawArraysInstanced();
-                    $context.newDrawState = true;
 
                     // ブレンドモードをセット
                     $context.globalCompositeOperation = currentOperation;
                     $setCurrentBlendMode($context.globalCompositeOperation);
+                }
 
-                    // indexをセット
+                // indexをセット(他経路のアタッチメント参照用に維持)
+                if ($currentAtlasIndex !== node.index) {
                     $setCurrentAtlasIndex(node.index);
                     $setActiveAtlasIndex(node.index);
                 }
@@ -98,6 +95,8 @@ export const execute = (
                 // 描画するまで配列に変数を保持
                 const shaderInstancedManager = variantsBlendInstanceShaderService();
 
+                // a_add.w(旧ct7、常に0)をアトラスのレイヤー番号として使用する。
+                // シェーダー側はカラー加算のw成分を0として扱うため出力は不変。
                 renderQueue.pushDisplayObjectBuffer(
                     (node.x + 0.5) / $RENDER_MAX_SIZE, (node.y + 0.5) / $RENDER_MAX_SIZE,
                     (node.w - 1.0) / $RENDER_MAX_SIZE, (node.h - 1.0) / $RENDER_MAX_SIZE,
@@ -105,7 +104,7 @@ export const execute = (
                     matrix[6], matrix[7],
                     matrix[0], matrix[1], matrix[3], matrix[4],
                     ct0, ct1, ct2, ct3,
-                    ct4, ct5, ct6, ct7
+                    ct4, ct5, ct6, node.index
                 );
                 shaderInstancedManager.count++;
             }
@@ -208,7 +207,7 @@ export const execute = (
                 const shaderManager = variantsBlendDrawShaderService($context.globalCompositeOperation, true);
                 shaderManagerSetBlendWithColorTransformUniformService(
                     shaderManager,
-                    ct0, ct1, ct2, ct3, ct4, ct5, ct6, ct7
+                    ct0, ct1, ct2, ct3, ct4, ct5, ct6, 0
                 );
 
                 shaderManagerDrawTextureUseCase(shaderManager);

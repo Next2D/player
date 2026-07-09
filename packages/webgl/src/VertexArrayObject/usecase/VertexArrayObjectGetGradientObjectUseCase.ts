@@ -31,6 +31,11 @@ export const execute = (begin: number, end: number): IVertexArrayObject =>
             $vertexBufferData[2] = begin;
             $vertexBufferData[4] = end;
             $vertexBufferData[6] = end;
+
+            // 必ずグラデーション用のバッファをバインドしてから更新する。
+            // バインドせずに bufferSubData を実行すると、直前まで
+            // ARRAY_BUFFER にバインドされていた塗りメッシュのバッファを破壊する。
+            $gl.bindBuffer($gl.ARRAY_BUFFER, $gradientVertexArrayObject.vertexBuffer);
             $gl.bufferSubData($gl.ARRAY_BUFFER, 0, $vertexBufferData);
         }
     }

@@ -14,6 +14,7 @@ describe("FrameBufferManagerGetTextureFromNodeUseCase.js method test", () =>
                 $gl: {
                     "bindFramebuffer": vi.fn(),
                     "framebufferTexture2D": vi.fn(),
+                    "framebufferTextureLayer": vi.fn(),
                     "blitFramebuffer": vi.fn(),
                     "FRAMEBUFFER": 0,
                     "READ_FRAMEBUFFER": 1,

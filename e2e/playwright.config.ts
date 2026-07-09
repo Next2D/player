@@ -32,7 +32,10 @@ export default defineConfig({
         }
     },
     "use": {
-        "baseURL": "http://localhost:5173",
+        // e2e専用ポート。5173は他プロジェクトのdevサーバーと衝突しやすく、
+        // reuseExistingServer が別サーバーを誤って再利用すると全テストが
+        // タイムアウトするため、専用ポート+strictPortで起動する。
+        "baseURL": "http://localhost:5273",
         "trace": "on-first-retry",
         "video": "on-first-retry"
     },
@@ -71,8 +74,8 @@ export default defineConfig({
         }
     ],
     "webServer": {
-        "command": "npm start",
-        "url": "http://localhost:5173",
+        "command": "npx vite --host --port 5273 --strictPort",
+        "url": "http://localhost:5273",
         "reuseExistingServer": !isCI,
         "timeout": 120000,
         "cwd": ".."

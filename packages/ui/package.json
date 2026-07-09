@@ -25,5 +25,6 @@
   },
   "peerDependencies": {
     "@next2d/events": "file:../events"
-  }
+  },
+  "sideEffects": false
 }

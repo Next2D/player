@@ -15,7 +15,10 @@ import {
     $poolBoundsArray,
     $getBoundsArray,
     $getFloat32Array6,
-    $poolFloat32Array6
+    $poolFloat32Array6,
+    $prepareFilterBuffers,
+    $pushFilterBuffers,
+    $getFilterUpdated
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -50,7 +53,7 @@ export const execute = (
 ): void => {
 
     if (!text_field.visible) {
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -69,7 +72,7 @@ export const execute = (
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -110,7 +113,7 @@ export const execute = (
             if (tMatrix !== matrix) {
                 Matrix.release(tMatrix);
             }
-            renderQueue.push(0);
+            renderQueue.push1(0);
             return;
 
         default:
@@ -129,7 +132,7 @@ export const execute = (
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return;
     }
 
@@ -252,35 +255,36 @@ export const execute = (
     if (!cache || text_field.changed) {
 
         // cache none
-        renderQueue.push(0, +cache);
+        renderQueue.push2(0, +cache);
 
         const buffer = $textEncoder.encode(JSON.stringify(text_field.$textData));
 
-        renderQueue.push(buffer.length);
-        renderQueue.set(buffer);
+        // バイト数をヘッダに書き、本体は4バイト/floatでパックして転送量を1/4にする
+        renderQueue.push1(buffer.length);
+        renderQueue.setUint8(buffer);
 
         // text setting
         switch (text_field.autoSize) {
 
             case "center":
-                renderQueue.push(0);
+                renderQueue.push1(0);
                 break;
 
             case "left":
-                renderQueue.push(1);
+                renderQueue.push1(1);
                 break;
 
             case "none":
-                renderQueue.push(2);
+                renderQueue.push1(2);
                 break;
 
             case "right":
-                renderQueue.push(3);
+                renderQueue.push1(3);
                 break;
 
         }
 
-        renderQueue.push(
+        renderQueue.push19(
             text_field.stopIndex,
             text_field.scrollX,
             text_field.scrollY,
@@ -314,55 +318,32 @@ export const execute = (
             text_field.$cache = $cacheStore.getById(text_field.uniqueKey);
             text_field.$cache.set(text_field.uniqueKey, true);
         }
-        renderQueue.push(1);
+        renderQueue.push1(1);
     }
 
-    renderQueue.push(
+    renderQueue.push1(
         displayObjectBlendToNumberService(text_field.blendMode)
     );
 
     if (text_field.filters?.length) {
 
-        let updated = false;
-        const params = [];
         const bounds = $getBoundsArray(0, 0, 0, 0);
-        for (let idx = 0; idx < text_field.filters.length; idx++) {
+        const paramsLength = $prepareFilterBuffers(text_field.filters, bounds);
 
-            const filter = text_field.filters[idx];
-            if (!filter || !filter.canApplyFilter()) {
-                continue;
-            }
-
-            // フィルターが更新されたかをチェック
-            if (filter.$updated) {
-                updated = true;
-            }
-            filter.$updated = false;
-
-            filter.getBounds(bounds);
-
-            const buffer = filter.toNumberArray();
-
-            for (let idx = 0; idx < buffer.length; idx += 4096) {
-                params.push(...buffer.subarray(idx, idx + 4096));
-            }
-        }
-
-        const useFilfer = params.length > 0;
-        if (useFilfer) {
-            renderQueue.push(
-                +useFilfer, +updated,
+        if (paramsLength > 0) {
+            renderQueue.push7(
+                1, +$getFilterUpdated(),
                 bounds[0], bounds[1], bounds[2], bounds[3],
-                params.length
+                paramsLength
             );
-            renderQueue.set(new Float32Array(params));
+            $pushFilterBuffers(text_field.filters);
         } else {
-            renderQueue.push(0);
+            renderQueue.push1(0);
         }
 
         $poolBoundsArray(bounds);
     } else {
-        renderQueue.push(0);
+        renderQueue.push1(0);
     }
 
     if (tColorTransform !== color_transform) {

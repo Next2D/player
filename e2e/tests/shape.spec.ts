@@ -25,6 +25,33 @@ test.describe("Shape描画テスト", () => {
         });
     });
 
+    test.describe("グラデーション回帰（LUT/キャッシュ）", () => {
+        test("グラデーション網羅（補間・radial・focal・repeat/reflect・多ストップ・ストローク・アルファ）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/gradient-variation.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("gradient-variation.png");
+        });
+
+        test("グラデーション多数 + 再ラスタ（40種の異なるstops、スケール変化後の安定状態）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/gradient-stress.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("gradient-stress.png");
+        });
+
+        // 部分的なratios（0で始まらない/255で終わらない）のpad領域が
+        // 最初/最後のストップ色で塗られることの回帰テスト。
+        // LUTクワッドの描画範囲不足・グラデーション頂点バッファ更新時の
+        // メッシュバッファ破壊（迷い線）を検出する。
+        test("部分ratiosのpad（LUT未描画領域・バッファ破壊の回帰）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/gradient-partial-stops.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("gradient-partial-stops.png");
+        });
+    });
+
     test.describe("Line（線）", () => {
         test("lineStyle - 線のスタイル（太さ、caps、joints）", async ({ page }) => {
             await page.goto("/e2e/pages/shape/line-style.html");

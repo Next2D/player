@@ -18,6 +18,64 @@ const $entries3: GPUBindGroupEntry[] = [
 ];
 
 /**
+ * @description copy/upscale 用の定数uniform(scale=1,1 offset=0,0)の永続バッファ
+ *              Persistent uniform buffer for the constant copy/upscale uniform
+ */
+let $identityUvUniformBuffer: GPUBuffer | null = null;
+
+/**
+ * @description copy/upscale 用の source view キー BindGroup キャッシュ。
+ *              uniform・sampler・layout が全て安定のため view のみが可変。
+ *              BindGroup cache keyed by source view for copy/upscale passes.
+ */
+const $identityCopyBindGroups: WeakMap<GPUTextureView, GPUBindGroup> = new WeakMap();
+
+/**
+ * @description 定数uniformのコピー用BindGroupを取得(なければ生成してキャッシュ)
+ *              Get (or lazily create) the cached copy bind group for a source view.
+ *
+ * @param  {GPUDevice} device
+ * @param  {GPUBindGroupLayout} bind_group_layout
+ * @param  {GPUSampler} sampler
+ * @param  {GPUTextureView} source_view
+ * @return {GPUBindGroup}
+ */
+const $getIdentityCopyBindGroup = (
+    device: GPUDevice,
+    bind_group_layout: GPUBindGroupLayout,
+    sampler: GPUSampler,
+    source_view: GPUTextureView
+): GPUBindGroup => {
+
+    if (!$identityUvUniformBuffer) {
+        $uniform4[0] = 1;
+        $uniform4[1] = 1;
+        $uniform4[2] = 0;
+        $uniform4[3] = 0;
+        $identityUvUniformBuffer = device.createBuffer({
+            "size": $uniform4.byteLength,
+            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+        device.queue.writeBuffer($identityUvUniformBuffer, 0, $uniform4);
+    }
+
+    let bindGroup = $identityCopyBindGroups.get(source_view);
+    if (!bindGroup) {
+        bindGroup = device.createBindGroup({
+            "layout": bind_group_layout,
+            "entries": [
+                { "binding": 0, "resource": { "buffer": $identityUvUniformBuffer } },
+                { "binding": 1, "resource": sampler },
+                { "binding": 2, "resource": source_view }
+            ]
+        });
+        $identityCopyBindGroups.set(source_view, bindGroup);
+    }
+
+    return bindGroup;
+};
+
+/**
  * @description ブラーフィルターを適用
  *              Apply blur filter
  *
@@ -68,8 +126,7 @@ export const execute = (
         device, commandEncoder, frameBufferManager, pipelineManager,
         source_attachment, attachment0, sampler,
         bufferScaleX, bufferScaleY,
-        offsetX * bufferScaleX, offsetY * bufferScaleY,
-        config.bufferManager
+        offsetX * bufferScaleX, offsetY * bufferScaleY
     );
 
     // バッファスケールを考慮したブラー値
@@ -115,8 +172,7 @@ export const execute = (
 
         upscaleTexture(
             device, commandEncoder, frameBufferManager, pipelineManager,
-            resultAttachment, finalAttachment, sampler,
-            config.bufferManager
+            resultAttachment, finalAttachment, sampler
         );
 
         // ピンポンバッファを解放
@@ -148,7 +204,6 @@ export const execute = (
  * @param  {number} buffer_scale_y - Y方向のバッファスケール
  * @param  {number} pixel_offset_x - デスト内でのX方向オフセット（ピクセル単位、スケーリング済み）
  * @param  {number} pixel_offset_y - デスト内でのY方向オフセット（ピクセル単位、スケーリング済み）
- * @param  {IFilterConfig["bufferManager"]} [buffer_manager] - バッファマネージャー
  * @return {void}
  */
 const copyTextureToAttachment = (
@@ -162,8 +217,7 @@ const copyTextureToAttachment = (
     buffer_scale_x: number,
     buffer_scale_y: number,
     pixel_offset_x: number,
-    pixel_offset_y: number,
-    buffer_manager?: IFilterConfig["bufferManager"]
+    pixel_offset_y: number
 ): void => {
     // texture_copy_rgba8を使用し、ビューポートでオフセットを制御
     const pipeline = pipeline_manager.getPipeline("texture_copy_rgba8");
@@ -179,34 +233,11 @@ const copyTextureToAttachment = (
     const scaledSourceHeight = source.height * buffer_scale_y;
 
     // シェーダー: uv = texCoord * scale + offset
-    // ソース全体をサンプリングするので scale = 1, offset = 0
-    const scaleX = 1;
-    const scaleY = 1;
-    const offsetX = 0;
-    const offsetY = 0;
-
-    // ユニフォームバッファ: scale(2) + offset(2)
-    $uniform4[0] = scaleX;
-    $uniform4[1] = scaleY;
-    $uniform4[2] = offsetX;
-    $uniform4[3] = offsetY;
-    const uniformBuffer = buffer_manager
-        ? buffer_manager.acquireAndWriteUniformBuffer($uniform4)
-        : device.createBuffer({
-            "size": $uniform4.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-    if (!buffer_manager) {
-        device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
-    }
-
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
-    $entries3[1].resource = sampler;
-    $entries3[2].resource = source.texture!.view;
-    const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": $entries3
-    });
+    // ソース全体をサンプリングするので scale = 1, offset = 0 (定数)
+    // uniformは永続バッファ、BindGroupはsource viewキーで再利用
+    const bindGroup = $getIdentityCopyBindGroup(
+        device, bindGroupLayout, sampler, source.texture!.view
+    );
 
     const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
         dest.texture!.view, 0, 0, 0, 0, "clear"
@@ -229,7 +260,6 @@ const copyTextureToAttachment = (
 
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
-    // Note: uniformBuffer is not destroyed here - it will be garbage collected after GPU submission
 };
 
 /**
@@ -323,7 +353,6 @@ const applyDirectionalBlur = (
  * @param  {IAttachmentObject} source - ソーステクスチャ
  * @param  {IAttachmentObject} dest - デストテクスチャ
  * @param  {GPUSampler} sampler - サンプラー
- * @param  {IFilterConfig["bufferManager"]} [buffer_manager] - バッファマネージャー
  * @return {void}
  */
 const upscaleTexture = (
@@ -333,8 +362,7 @@ const upscaleTexture = (
     pipeline_manager: IFilterConfig["pipelineManager"],
     source: IAttachmentObject,
     dest: IAttachmentObject,
-    sampler: GPUSampler,
-    buffer_manager?: IFilterConfig["bufferManager"]
+    sampler: GPUSampler
 ): void => {
     // temp_アタッチメントはrgba8unormフォーマットなので、texture_copy_rgba8パイプラインを使用
     const pipeline = pipeline_manager.getPipeline("texture_copy_rgba8");
@@ -348,27 +376,10 @@ const upscaleTexture = (
     // アップスケールではソース全体をデスト全体にマッピング
     // シェーダー: uv = (texCoord - offset) * scale
     // scale = 1, offset = 0 で uv = texCoord となり、ソース全体がデスト全体にマッピングされる
-    $uniform4[0] = 1;
-    $uniform4[1] = 1;
-    $uniform4[2] = 0;
-    $uniform4[3] = 0;
-    const uniformBuffer = buffer_manager
-        ? buffer_manager.acquireAndWriteUniformBuffer($uniform4)
-        : device.createBuffer({
-            "size": $uniform4.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-    if (!buffer_manager) {
-        device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
-    }
-
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
-    $entries3[1].resource = sampler;
-    $entries3[2].resource = source.texture!.view;
-    const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": $entries3
-    });
+    // uniformは永続バッファ、BindGroupはsource viewキーで再利用
+    const bindGroup = $getIdentityCopyBindGroup(
+        device, bindGroupLayout, sampler, source.texture!.view
+    );
 
     const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
         dest.texture!.view, 0, 0, 0, 0, "clear"

@@ -19,6 +19,47 @@ export let $gl: WebGL2RenderingContext;
 export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 {
     $gl = gl;
+
+    // 現在のscissor矩形をJS側で追跡して同期クエリ(getParameter)を排除する。
+    // 初期値のみGLから取得して整合させる。
+    const scissorBox = gl.getParameter(gl.SCISSOR_BOX) as Int32Array | null;
+    if (scissorBox && scissorBox.length >= 4) {
+        $scissorBox[0] = scissorBox[0];
+        $scissorBox[1] = scissorBox[1];
+        $scissorBox[2] = scissorBox[2];
+        $scissorBox[3] = scissorBox[3];
+    }
+};
+
+/**
+ * @description 最後に設定されたscissor矩形(x, y, w, h)
+ *              Last scissor rectangle set via $setScissorBox (x, y, w, h)
+ *
+ * @type {Int32Array}
+ * @private
+ */
+export const $scissorBox: Int32Array = new Int32Array(4);
+
+/**
+ * @description gl.scissorのラッパー。矩形をJS側に保持してGLへの同期問い合わせを不要にする。
+ *              Wrapper for gl.scissor. Tracks the rectangle in JS so that
+ *              synchronous getParameter(SCISSOR_BOX) queries are unnecessary.
+ *
+ * @param  {number} x
+ * @param  {number} y
+ * @param  {number} w
+ * @param  {number} h
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setScissorBox = (x: number, y: number, w: number, h: number): void =>
+{
+    $scissorBox[0] = x;
+    $scissorBox[1] = y;
+    $scissorBox[2] = w;
+    $scissorBox[3] = h;
+    $gl.scissor(x, y, w, h);
 };
 
 export let $context: Context;

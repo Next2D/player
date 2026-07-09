@@ -32,10 +32,11 @@ export const execute = (node: Node): ITextureObject =>
 
     $gl.bindFramebuffer($gl.FRAMEBUFFER, $readBitmapFramebuffer);
 
+    // アトラスはTEXTURE_2D_ARRAYのため、ノードが属するページのレイヤーをアタッチする
     const atlasTextureObject = $getAtlasTextureObject();
-    $gl.framebufferTexture2D(
+    $gl.framebufferTextureLayer(
         $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
-        $gl.TEXTURE_2D, atlasTextureObject.resource, 0
+        atlasTextureObject.resource, 0, node.index
     );
 
     $gl.bindFramebuffer($gl.FRAMEBUFFER, $drawBitmapFramebuffer);

@@ -6,7 +6,8 @@ import {
     $context,
     $gl,
     $enableScissorTest,
-    $disableScissorTest
+    $disableScissorTest,
+    $setScissorBox
 } from "../../WebGLUtil";
 import {
     $drawBitmapFramebuffer,
@@ -67,7 +68,7 @@ export const execute = (
     $gl.bindFramebuffer($gl.DRAW_FRAMEBUFFER, $drawBitmapFramebuffer);
 
     $enableScissorTest();
-    $gl.scissor(
+    $setScissorBox(
         x,
         mainAttachmentObject.height - y - height,
         width + 1,

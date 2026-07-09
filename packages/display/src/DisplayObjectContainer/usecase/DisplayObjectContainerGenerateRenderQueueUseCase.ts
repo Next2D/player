@@ -25,12 +25,25 @@ import {
     $RENDERER_CONTAINER_TYPE,
     $getFloat32Array8,
     $getFloat32Array6,
-    $poolFloat32Array6
+    $poolFloat32Array6,
+    $prepareFilterBuffers,
+    $pushFilterBuffers,
+    $getFilterUpdated
 } from "../../DisplayObjectUtil";
+
 import {
     ColorTransform,
     Matrix
 } from "@next2d/geom";
+
+/**
+ * @description filterレイヤーのスケール取得用の再利用バッファ
+ *              Reusable buffer for filter layer scale retrieval
+ *
+ * @type {Float32Array}
+ * @private
+ */
+const $layerScale: Float32Array = new Float32Array(2);
 
 /**
  * @description renderer workerに渡すコンテナの描画データを生成
@@ -57,7 +70,7 @@ export const execute = <P extends DisplayObjectContainer>(
 ): void => {
 
     if (!display_object_container.visible) {
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -76,7 +89,7 @@ export const execute = <P extends DisplayObjectContainer>(
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -85,7 +98,7 @@ export const execute = <P extends DisplayObjectContainer>(
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -108,15 +121,15 @@ export const execute = <P extends DisplayObjectContainer>(
         if (tMatrix !== matrix) {
             Matrix.release(tMatrix);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
-    renderQueue.push(1, $RENDERER_CONTAINER_TYPE);
+    renderQueue.push2(1, $RENDERER_CONTAINER_TYPE);
 
     // blendMode
     const blendMode = display_object_container.blendMode;
-    renderQueue.push(displayObjectBlendToNumberService(blendMode));
+    renderQueue.push1(displayObjectBlendToNumberService(blendMode));
 
     // cacheAsBitmap: フィルターキャッシュ形式でコンテナ全体をビットマップキャッシュ
     // キャッシュテクスチャは親のスケールを含むサイズで描画し、
@@ -127,6 +140,10 @@ export const execute = <P extends DisplayObjectContainer>(
     // cacheAsBitmap子のテクスチャが親layerに収まる (issue #274 根本対応)。
     const cacheMatrix = display_object_container.cacheAsBitmap;
     if (cacheMatrix) {
+
+        // cacheStoreキー用のinstanceId文字列(遅延メモ化)。uniqueKeyは流用不可
+        const idString = display_object_container.$instanceIdString
+            || (display_object_container.$instanceIdString = `${display_object_container.instanceId}`);
 
         const m = cacheMatrix.rawData;
         const cacheScaleX = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
@@ -157,7 +174,7 @@ export const execute = <P extends DisplayObjectContainer>(
         // 固定プロパティ名で最新のキーのみ保存（古いキーが蓄積されないようにする）
         // レンダラーも最新のfKeyのみ保持するため、キーの一致を保証
         const bitmapCache = $cacheStore.get(
-            `${display_object_container.instanceId}`,
+            idString,
             "bitmapKey"
         ) === bitmapCacheKey;
 
@@ -179,7 +196,7 @@ export const execute = <P extends DisplayObjectContainer>(
             // cacheAsBitmap cache hit: 子要素走査をスキップして高速パス
             // Shapeと同様に親matrixをレンダラーに渡し、描画時にcacheScaleで補正
             const cachedLocalBounds = $cacheStore.get(
-                `${display_object_container.instanceId}`, "bLocalBounds"
+                idString, "bLocalBounds"
             ) as Float32Array | null;
 
             if (cachedLocalBounds) {
@@ -195,7 +212,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 // 合成 scale=1 で layer にちょうど収まるようにする。
                 const hitMatrixScaleX = in_filter_layer ? 1 : cacheScaleX;
                 const hitMatrixScaleY = in_filter_layer ? 1 : cacheScaleY;
-                renderQueue.push(1,
+                renderQueue.push27(1,
                     0, 0, // layerWidth/Height: HIT時は未使用
                     2, 1, display_object_container.instanceId, bitmapCacheKey,
                     cacheFilterBounds[0], cacheFilterBounds[1], cacheFilterBounds[2], cacheFilterBounds[3],
@@ -225,17 +242,18 @@ export const execute = <P extends DisplayObjectContainer>(
         // （親の位置・回転は含まず、スケールのみ反映してテクスチャサイズを画面と一致させる）
 
         // フィルターパラメータを収集
-        const cacheFilterParams: number[] = [];
+        // このパスは $updated を消費しないため、フラグは維持したまま $buffer のみ最新化する
+        let cacheFilterParamsLength = 0;
         if (cacheFilters) {
             for (let idx = 0; idx < cacheFilters.length; idx++) {
                 const filter = cacheFilters[idx];
                 if (!filter || !filter.canApplyFilter()) {
                     continue;
                 }
-                const buffer = filter.toNumberArray();
-                for (let idx = 0; idx < buffer.length; idx += 4096) {
-                    cacheFilterParams.push(...buffer.subarray(idx, idx + 4096));
+                if (filter.$updated || !filter.$buffer) {
+                    filter.$buffer = filter.toNumberArray();
                 }
+                cacheFilterParamsLength += filter.$buffer.length;
             }
         }
 
@@ -261,7 +279,7 @@ export const execute = <P extends DisplayObjectContainer>(
         // HITパスと同じ規則: filter layer 内では cacheScale 乗算を省略
         const missMatrixScaleX = in_filter_layer ? 1 : cacheScaleX;
         const missMatrixScaleY = in_filter_layer ? 1 : cacheScaleY;
-        renderQueue.push(
+        renderQueue.push28(
             1,
             localLayerWidth, localLayerHeight,
             2, 0, display_object_container.instanceId, bitmapCacheKey,
@@ -272,10 +290,10 @@ export const execute = <P extends DisplayObjectContainer>(
             missScreenX, missScreenY,
             tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
             tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
-            cacheFilterParams.length
+            cacheFilterParamsLength
         );
-        if (cacheFilterParams.length > 0) {
-            renderQueue.set(new Float32Array(cacheFilterParams));
+        if (cacheFilterParamsLength > 0 && cacheFilters) {
+            $pushFilterBuffers(cacheFilters);
         }
 
         // 子要素の描画マトリクスをローカル空間に切り替え（親matrixの位置・回転を除外）
@@ -317,7 +335,7 @@ export const execute = <P extends DisplayObjectContainer>(
 
         // HIT時の高速パス用にローカルバウンズをキャッシュ（poolする前に保存）
         $cacheStore.set(
-            `${display_object_container.instanceId}`,
+            idString,
             "bLocalBounds",
             new Float32Array([localLayerBounds[0], localLayerBounds[1], localLayerBounds[2], localLayerBounds[3]])
         );
@@ -326,7 +344,7 @@ export const execute = <P extends DisplayObjectContainer>(
         $poolBoundsArray(cacheFilterBounds);
 
         $cacheStore.set(
-            `${display_object_container.instanceId}`,
+            idString,
             "bitmapKey", bitmapCacheKey
         );
 
@@ -335,41 +353,25 @@ export const execute = <P extends DisplayObjectContainer>(
         // filters
         const filters = display_object_container.filters;
         if (filters) {
+
+            // cacheStoreキー用のinstanceId文字列(遅延メモ化)。uniqueKeyは流用不可
+            const idString = display_object_container.$instanceIdString
+                || (display_object_container.$instanceIdString = `${display_object_container.instanceId}`);
+
             const filterKey = $cacheStore.generateFilterKeys(
                 tMatrix[0], tMatrix[1], tMatrix[2], tMatrix[3]
             );
             const cachedFilterKey = $cacheStore.get(
-                `${display_object_container.instanceId}`,
+                idString,
                 "filterKey"
             );
             const filterCache = cachedFilterKey === filterKey;
 
-            let updated = false;
-            const params = [];
             const bounds = $getBoundsArray(0, 0, 0, 0);
-            for (let idx = 0; idx < filters.length; idx++) {
+            const paramsLength = $prepareFilterBuffers(filters, bounds);
+            let updated = $getFilterUpdated();
 
-                const filter = filters[idx];
-                if (!filter || !filter.canApplyFilter()) {
-                    continue;
-                }
-
-                // フィルターが更新されたかをチェック
-                if (filter.$updated) {
-                    updated = true;
-                }
-                filter.$updated = false;
-
-                filter.getBounds(bounds);
-
-                const buffer = filter.toNumberArray();
-
-                for (let idx = 0; idx < buffer.length; idx += 4096) {
-                    params.push(...buffer.subarray(idx, idx + 4096));
-                }
-            }
-
-            const useFilfer = params.length > 0;
+            const useFilfer = paramsLength > 0;
             if (useFilfer) {
 
                 // 子の変更があった場合は親のフラグが立っているので更新
@@ -384,12 +386,21 @@ export const execute = <P extends DisplayObjectContainer>(
                 // 子孫にcacheAsBitmapを持つ要素があれば、そのスケールに合わせて
                 // filterレイヤーの解像度を引き上げる。これにより親レイヤー内で
                 // 子のcacheScale倍テクスチャが端まで収まる (issue #274 発展対応)。
-                const layerScale = new Float32Array([1, 1]);
-                displayObjectContainerGetLayerScaleUseCase(
-                    display_object_container, layerScale
-                );
-                const layerScaleX = layerScale[0];
-                const layerScaleY = layerScale[1];
+                // サブツリーのscale/構造変化は必ずchangedを立てる(=updatedになる)ため、
+                // 未更新時は前フレームのキャッシュ値を使い全サブツリー再帰をスキップする。
+                let layerScaleX = display_object_container.$layerScaleX;
+                let layerScaleY = display_object_container.$layerScaleY;
+                if (updated || layerScaleX === -1) {
+                    $layerScale[0] = 1;
+                    $layerScale[1] = 1;
+                    displayObjectContainerGetLayerScaleUseCase(
+                        display_object_container, $layerScale
+                    );
+                    layerScaleX = $layerScale[0];
+                    layerScaleY = $layerScale[1];
+                    display_object_container.$layerScaleX = layerScaleX;
+                    display_object_container.$layerScaleY = layerScaleY;
+                }
 
                 const layerWidth  = Math.ceil(Math.abs(layerBounds[2] - layerBounds[0]) * layerScaleX);
                 const layerHeight = Math.ceil(Math.abs(layerBounds[3] - layerBounds[1]) * layerScaleY);
@@ -397,7 +408,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 if (filterCache && !updated) {
 
                     // キャッシュがあって、変更がなければキャッシュを使用
-                    renderQueue.push(1,
+                    renderQueue.push27(1,
                         layerWidth, layerHeight,
                         1, 1, display_object_container.instanceId, filterKey,
                         bounds[0], bounds[1], bounds[2], bounds[3],
@@ -426,7 +437,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 // 不要。push してしまうと、Worker が同フレームで作成した新キャッシュを
                 // 次フレーム冒頭で wipe してしまい、その次の HIT で無描画になる。
 
-                renderQueue.push(
+                renderQueue.push28(
                     1,
                     layerWidth, layerHeight,
                     1, 0, display_object_container.instanceId, filterKey,
@@ -435,9 +446,9 @@ export const execute = <P extends DisplayObjectContainer>(
                     layerScaleX, layerScaleY,
                     tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
                     tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
-                    params.length
+                    paramsLength
                 );
-                renderQueue.set(new Float32Array(params));
+                $pushFilterBuffers(filters);
 
                 // 子に渡すtMatrixは layerScale 倍で scale して、layer 内の
                 // 拡張座標系で描画させる。layer自体は compose時に 1/layerScaleで
@@ -463,13 +474,13 @@ export const execute = <P extends DisplayObjectContainer>(
                 $poolBoundsArray(layerBounds);
 
                 $cacheStore.set(
-                    `${display_object_container.instanceId}`,
+                    idString,
                     "filterKey", filterKey
                 );
 
             } else {
                 if (blendMode === "normal") {
-                    renderQueue.push(0);
+                    renderQueue.push1(0);
                 } else {
 
                     // ブレンドモードのみのLayerモード
@@ -481,7 +492,7 @@ export const execute = <P extends DisplayObjectContainer>(
                     const layerXMin = layerBounds[0];
                     const layerYMin = layerBounds[1];
 
-                    renderQueue.push(
+                    renderQueue.push18(
                         1,
                         Math.ceil(Math.abs(layerBounds[2] - layerXMin)),
                         Math.ceil(Math.abs(layerBounds[3] - layerYMin)),
@@ -514,7 +525,7 @@ export const execute = <P extends DisplayObjectContainer>(
             $poolBoundsArray(bounds);
         } else {
             if (blendMode === "normal") {
-                renderQueue.push(0);
+                renderQueue.push1(0);
             } else {
                 const layerBounds = displayObjectContainerCalcBoundsMatrixUseCase(
                     display_object_container,
@@ -524,7 +535,7 @@ export const execute = <P extends DisplayObjectContainer>(
                 const layerXMin2 = layerBounds[0];
                 const layerYMin2 = layerBounds[1];
 
-                renderQueue.push(
+                renderQueue.push18(
                     1,
                     Math.ceil(Math.abs(layerBounds[2] - layerXMin2)),
                     Math.ceil(Math.abs(layerBounds[3] - layerYMin2)),
@@ -568,11 +579,11 @@ export const execute = <P extends DisplayObjectContainer>(
         );
 
         if (!bounds) {
-            renderQueue.push(0);
+            renderQueue.push1(0);
         } else {
 
             // マスクの描画範囲
-            renderQueue.push(1, bounds[0], bounds[1], bounds[2], bounds[3]);
+            renderQueue.push5(1, bounds[0], bounds[1], bounds[2], bounds[3]);
 
             switch (true) {
 
@@ -597,11 +608,11 @@ export const execute = <P extends DisplayObjectContainer>(
 
         maskDisplayObject.changed = false;
     } else {
-        renderQueue.push(0);
+        renderQueue.push1(0);
     }
 
     // children
-    renderQueue.push(children.length);
+    renderQueue.push1(children.length);
 
     let clipDepth = 0;
     let canRenderMask = true;
@@ -609,11 +620,11 @@ export const execute = <P extends DisplayObjectContainer>(
 
         const child = children[idx] as DisplayObject;
 
-        renderQueue.push(child.placeId, child.clipDepth);
+        renderQueue.push2(child.placeId, child.clipDepth);
 
         // マスクオブジェクトは描画しない（hidden=0）
         if (child.isMask) {
-            renderQueue.push(0);
+            renderQueue.push1(0);
             child.changed = false;
             continue;
         }
@@ -624,7 +635,7 @@ export const execute = <P extends DisplayObjectContainer>(
         }
 
         if (!canRenderMask) {
-            renderQueue.push(0);
+            renderQueue.push1(0);
             child.changed = false;
             continue;
         }
@@ -641,14 +652,14 @@ export const execute = <P extends DisplayObjectContainer>(
             );
 
             canRenderMask = bounds ? true : false;
-            renderQueue.push(+canRenderMask);
+            renderQueue.push1(+canRenderMask);
 
             if (!bounds) {
                 child.changed = false;
                 continue;
             }
 
-            renderQueue.push(bounds[0], bounds[1], bounds[2], bounds[3]);
+            renderQueue.push4(bounds[0], bounds[1], bounds[2], bounds[3]);
             switch (true) {
 
                 case child.isContainerEnabled: // 0x00

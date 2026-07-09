@@ -9,6 +9,18 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
     return {
         ...mod,
         $enableScissorTest: vi.fn(),
+        $setScissorBox: vi.fn((x, y, w, h) => {
+            expect(x).toBe(1);
+            expect(y).toBe(2);
+            if (scissorCallCount === 0) {
+                expect(w).toBe(4);
+                expect(h).toBe(5);
+            } else {
+                expect(w).toBe(3);
+                expect(h).toBe(4);
+            }
+            scissorCallCount++;
+        }),
         $gl: {
             "SCISSOR_TEST": "SCISSOR_TEST",
             "COLOR_BUFFER_BIT": 1,

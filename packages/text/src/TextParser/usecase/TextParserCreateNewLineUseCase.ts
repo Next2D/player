@@ -4,6 +4,7 @@ import type { ITextObject } from "../../interface/ITextObject";
 import { execute as textFormatGenerateFontStyleService } from "../../TextFormat/service/TextFormatGenerateFontStyleService";
 import {
     $context,
+    $setContextFont,
     $setCurrentWidth
 } from "../../TextUtil";
 
@@ -26,7 +27,7 @@ export const execute = (
 
     const line = text_data.lineTable.length;
 
-    $context.font = textFormatGenerateFontStyleService(text_format);
+    $setContextFont(textFormatGenerateFontStyleService(text_format));
     const mesure: TextMetrics = $context.measureText("");
 
     const object: ITextObject = {
