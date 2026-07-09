@@ -6,6 +6,7 @@ import { execute as textFormatGetWidthMarginService } from "../../TextFormat/ser
 import { execute as textFormatGenerateFontStyleService } from "../../TextFormat/service/TextFormatGenerateFontStyleService";
 import {
     $context,
+    $setContextFont,
     $setCurrentWidth,
     $getCurrentWidth
 } from "../../TextUtil";
@@ -32,6 +33,10 @@ export const execute = (
     let line = text_data.lineTable.length - 1;
     const maxWidth = options.width - textFormatGetWidthMarginService(text_format) - 4;
 
+    // 同一TextFormatが連続する間はフォントスタイル文字列の再生成をスキップする
+    let cachedTextFormat: TextFormat | null = null;
+    let cachedFontStyle: string = "";
+
     for (let idx = 0; idx < texts.length; ++idx) {
 
         const textFormat = options.textFormats
@@ -51,7 +56,11 @@ export const execute = (
             "textFormat" : textFormat.toObject()
         };
 
-        $context.font = textFormatGenerateFontStyleService(textFormat);
+        if (cachedTextFormat !== textFormat) {
+            cachedTextFormat = textFormat;
+            cachedFontStyle  = textFormatGenerateFontStyleService(textFormat);
+        }
+        $setContextFont(cachedFontStyle);
         const mesure  = $context.measureText(text || "");
 
         const width = textFormat.letterSpacing
