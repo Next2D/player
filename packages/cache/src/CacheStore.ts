@@ -76,6 +76,21 @@ export class CacheStore
     public readonly $removeIds: number[];
 
     /**
+     * @description キャッシュストアの最大エントリ数(LRU)。0は無制限(デフォルト・従来挙動)。
+     *              上限はメインスレッド側でのみ設定し、evictしたIDは$removeIds経由で
+     *              worker側のGPUリソース(アトラスノード等)も解放される。
+     *              Maximum number of cache entries (LRU). 0 means unlimited
+     *              (default, legacy behavior). Set only on the main thread;
+     *              evicted IDs are propagated to the worker via $removeIds so
+     *              GPU resources (atlas nodes etc.) are released as well.
+     *
+     * @type {number}
+     * @default 0
+     * @public
+     */
+    public $maxStoreSize: number;
+
+    /**
      * @constructor
      */
     constructor ()
@@ -86,6 +101,7 @@ export class CacheStore
         this.$timerId     = null;
         this.$removeIds   = [];
         this.$removeCache = false;
+        this.$maxStoreSize = 0;
     }
 
     /**
@@ -209,7 +225,15 @@ export class CacheStore
      */
     getById (id: string): Map<string, any>
     {
-        return this._$store.get(id);
+        const data = this._$store.get(id);
+
+        // LRU: 上限が設定されている場合、参照したIDを最新に更新する
+        if (data && this.$maxStoreSize > 0) {
+            this._$store.delete(id);
+            this._$store.set(id, data);
+        }
+
+        return data;
     }
 
     /**
@@ -224,7 +248,7 @@ export class CacheStore
      */
     get (unique_key: string, key: string): any
     {
-        return cacheStoreGetService(this._$store, this._$trash, unique_key, key);
+        return cacheStoreGetService(this, this._$store, this._$trash, unique_key, key);
     }
 
     /**

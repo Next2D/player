@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>pad test</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #333333; }</style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 300, 60);
+        const { Shape } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        // A: 全域 GREEN→GREEN (共有LUTをGREENで満たす)
+        const a = new Shape();
+        const ma = new Matrix();
+        ma.createGradientBox(200, 100, 0, 20, 20);
+        a.graphics.beginGradientFill("linear", [0x00FF00, 0x00FF00], [1, 1], [0, 255], ma)
+            .drawRect(20, 20, 200, 100).endFill();
+        root.addChild(a);
+
+        // B: ratios [128, 255] の RED→BLUE。左半分(pad)は本来 RED であるべき。
+        // stale LUT バグがあると左半分に A の GREEN が混入する。
+        const b = new Shape();
+        const mb = new Matrix();
+        mb.createGradientBox(200, 100, 0, 20, 150);
+        b.graphics.beginGradientFill("linear", [0xFF0000, 0x0000FF], [1, 1], [128, 255], mb)
+            .drawRect(20, 150, 200, 100).endFill();
+        root.addChild(b);
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

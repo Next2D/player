@@ -25,6 +25,22 @@ test.describe("Shape描画テスト", () => {
         });
     });
 
+    test.describe("グラデーション回帰（LUT/キャッシュ）", () => {
+        test("グラデーション網羅（補間・radial・focal・repeat/reflect・多ストップ・ストローク・アルファ）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/gradient-variation.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("gradient-variation.png");
+        });
+
+        test("グラデーション多数 + 再ラスタ（40種の異なるstops、スケール変化後の安定状態）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/gradient-stress.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("gradient-stress.png");
+        });
+    });
+
     test.describe("Line（線）", () => {
         test("lineStyle - 線のスタイル（太さ、caps、joints）", async ({ page }) => {
             await page.goto("/e2e/pages/shape/line-style.html");

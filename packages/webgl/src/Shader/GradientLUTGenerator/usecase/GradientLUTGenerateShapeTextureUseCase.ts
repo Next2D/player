@@ -16,12 +16,8 @@ import {
     $getAdaptiveResolution,
     $getGradientLUTGeneratorMaxLength,
     $rgbIdentityTable,
-    $rgbToLinearTable,
-    $getShapeLUTFromCache,
-    $setShapeLUTToCache
+    $rgbToLinearTable
 } from "../../GradientLUTGenerator";
-import { execute as textureManagerGetTextureUseCase } from "../../../TextureManager/usecase/TextureManagerGetTextureUseCase";
-import { $gl } from "../../../WebGLUtil";
 
 /**
  * @description グラデーションのテクスチャを生成します。
@@ -39,14 +35,6 @@ import { $gl } from "../../../WebGLUtil";
  */
 export const execute = (stops: number[], interpolation: number): ITextureObject =>
 {
-    // stops+interpolation が一致するLUTはピクセルが同一のため、
-    // キャッシュヒット時は生成描画(FBO切替+drawArrays)を丸ごとスキップする
-    const lutKey = `${interpolation}_${stops.join(",")}`;
-    const cachedTextureObject = $getShapeLUTFromCache(lutKey);
-    if (cachedTextureObject) {
-        return cachedTextureObject;
-    }
-
     const currentAttachment = $context.currentAttachmentObject;
 
     // JS側で追跡しているscissor矩形を退避（getParameterの同期クエリを回避）
@@ -91,13 +79,6 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     }
     blendResetService();
 
-    // 生成したLUTを専用テクスチャへ複製してキャッシュする。
-    // gradientアタッチメントがREADフレームバッファにバインドされたまま
-    // 全域(resolution×1)をコピーするため、内容は共有テクスチャと完全一致。
-    const lutTextureObject = textureManagerGetTextureUseCase(resolution, 1);
-    $gl.copyTexSubImage2D($gl.TEXTURE_2D, 0, 0, 0, 0, 0, resolution, 1);
-    $setShapeLUTToCache(lutKey, lutTextureObject);
-
     if (currentAttachment) {
         $context.bind(currentAttachment);
     }
@@ -106,5 +87,5 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     $enableScissorTest();
     $setScissorBox(scissorX, scissorY, scissorW, scissorH);
 
-    return lutTextureObject;
+    return gradientAttachmentObject.texture as NonNullable<ITextureObject>;
 };

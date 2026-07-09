@@ -271,6 +271,11 @@ class Player
         if (options.bgColor) {
             stage.backgroundColor = options.bgColor;
         }
+
+        // キャッシュストアのLRU上限(opt-in)。メインスレッド側でのみ設定する
+        if (options.cacheStoreLimit && options.cacheStoreLimit > 0) {
+            $cacheStore.$maxStoreSize = options.cacheStoreLimit;
+        }
     }
 }
 

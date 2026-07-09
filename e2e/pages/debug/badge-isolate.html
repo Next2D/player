@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>badge isolate</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #87CEEB; }</style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 800, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { Matrix } = next2d.geom;
+
+        const params = new URLSearchParams(location.search);
+        const parts = (params.get("parts") || "shadow,outer,inner,dots,faceFill,faceStroke,title").split(",");
+        const scale = Number(params.get("scale") || 4);
+
+        const container = new Sprite();
+        container.x = 100;
+        container.y = 100;
+        container.scaleX = scale;
+        container.scaleY = scale;
+        root.addChild(container);
+
+        if (parts.includes("shadow")) {
+            const shadow = new Shape();
+            shadow.graphics
+                .beginFill(0x000000, 0.2)
+                .drawCircle(49.2441, 48.995, 48.995)
+                .endFill();
+            container.addChild(shadow);
+        }
+
+        const matrixOuter = new Matrix();
+        matrixOuter.createGradientBox(94.40032, 93.92293, Math.PI / 2, 2.04388, 0.518372);
+        const matrixInner = new Matrix();
+        matrixInner.createGradientBox(88.68945, 88.24082, Math.PI / 2, 4.89935, 3.35938);
+        const matrixFace = new Matrix();
+        matrixFace.createGradientBox(88.68945, 88.24082, Math.PI / 2, 4.89935, 3.35938);
+        const matrixStroke = new Matrix();
+        matrixStroke.createGradientBox(88.68945, 88.24082, Math.PI / 2, 4.89935, 3.35938);
+
+        if (parts.includes("outer")) {
+            const outer = new Shape();
+            outer.graphics
+                .beginGradientFill("linear", [0x267390, 0x267390], [1, 1], [0, 255], matrixOuter)
+                .moveTo(49.2441, 0.518372)
+                .cubicCurveTo(23.1743, 0.518372, 2.04388, 21.5419, 2.04388, 47.4798)
+                .cubicCurveTo(2.04388, 73.4178, 23.1743, 94.4413, 49.2441, 94.4413)
+                .cubicCurveTo(75.3139, 94.4413, 96.4442, 73.4178, 96.4442, 47.4798)
+                .cubicCurveTo(96.4442, 21.5419, 75.3139, 0.518372, 49.2441, 0.518372)
+                .endFill();
+            container.addChild(outer);
+        }
+
+        if (parts.includes("inner")) {
+            const inner = new Shape();
+            inner.graphics
+                .beginGradientFill("linear", [0x267390, 0x14A597], [1, 1], [105, 255], matrixInner)
+                .moveTo(49.2441, 91.6002)
+                .cubicCurveTo(73.735, 91.6002, 93.5888, 71.8469, 93.5888, 47.4798)
+                .cubicCurveTo(93.5888, 23.1128, 73.735, 3.35938, 49.2441, 3.35938)
+                .cubicCurveTo(24.7532, 3.35938, 4.89935, 23.1128, 4.89935, 47.4798)
+                .cubicCurveTo(4.89935, 71.8469, 24.7532, 91.6002, 49.2441, 91.6002)
+                .endFill();
+            container.addChild(inner);
+        }
+
+        if (parts.includes("dots")) {
+            const dotMask = new Shape();
+            dotMask.graphics
+                .beginFill(0xFFFFFF)
+                .drawCircle(49.3543, 47.1309, 37.166)
+                .endFill();
+
+            const dotLayer = new Sprite();
+            dotLayer.alpha = 0.4;
+            dotLayer.mask = dotMask;
+
+            const rows = [
+                { "y": 58.3355, "xs": [16.8222, 27.1018, 37.3714, 47.6511, 57.9207, 68.1903, 78.4699, 88.7396], "r": 3.136 },
+                { "y": 53.2316, "xs": [11.6923, 21.962, 32.2316, 42.5112, 52.7808, 63.0605, 73.3301, 83.6098], "r": 2.715 },
+                { "y": 48.1178, "xs": [16.8222, 27.1018, 37.3714, 47.6511, 57.9207, 68.1903, 78.4699, 88.7396], "r": 2.284 },
+                { "y": 43.0139, "xs": [11.6923, 21.9619, 32.2316, 42.5112, 52.7808, 63.0605, 73.3301, 83.6098], "r": 1.853 },
+                { "y": 37.9001, "xs": [16.8221, 27.1018, 37.3714, 47.651, 57.9207, 68.1903, 78.4699], "r": 1.4225 },
+                { "y": 32.7863, "xs": [11.6923, 21.962, 32.2316, 42.5112, 52.7808, 63.0605, 73.3301, 83.6098], "r": 1.002 },
+                { "y": 27.6725, "xs": [16.8221, 27.1018, 37.3714, 47.651, 57.9207, 68.1903, 78.47], "r": 0.501 },
+                { "y": 63.4493, "xs": [11.6923, 21.962, 32.2316, 42.5112, 52.7808, 63.0605, 73.3301, 83.6098], "r": 3.55 },
+                { "y": 68.5631, "xs": [16.8222, 27.1018, 37.3714, 47.6511, 57.9207, 68.1903, 78.4699, 88.7396], "r": 3.997 },
+                { "y": 73.677, "xs": [11.6923, 21.962, 32.2316, 42.5112, 52.7808, 63.0605, 73.3301, 83.6098], "r": 4.8248 },
+                { "y": 78.7908, "xs": [16.8222, 27.1018, 37.3714, 47.6511, 57.9207, 68.1903, 78.4699, 88.7396], "r": 5.278 },
+                { "y": 83.9046, "xs": [11.6923, 21.962, 32.2316, 42.5112, 52.7808, 63.0605, 73.3301, 83.6098], "r": 6.02 },
+                { "y": 89.0184, "xs": [16.8222, 27.1018, 37.3714, 47.6511, 57.9207, 68.1903, 78.4699, 88.7396], "r": 6.82 },
+                { "y": 94.1322, "xs": [11.6923, 21.962, 32.2316, 42.5112, 52.7808, 63.0605, 73.3301, 83.6098], "r": 7.64 }
+            ];
+
+            const dots = new Shape();
+            dots.graphics.beginFill(0x15BAA6);
+            for (const row of rows) {
+                for (const x of row.xs) {
+                    dots.graphics.drawCircle(x, row.y, row.r);
+                }
+            }
+            dots.graphics.endFill();
+            dotLayer.addChild(dots);
+
+            container.addChild(dotLayer);
+            container.addChild(dotMask);
+        }
+
+        if (parts.includes("solidInner")) {
+            const solid = new Shape();
+            solid.graphics
+                .beginFill(0xFF0000)
+                .moveTo(49.2441, 91.6002)
+                .cubicCurveTo(73.735, 91.6002, 93.5888, 71.8469, 93.5888, 47.4798)
+                .cubicCurveTo(93.5888, 23.1128, 73.735, 3.35938, 49.2441, 3.35938)
+                .cubicCurveTo(24.7532, 3.35938, 4.89935, 23.1128, 4.89935, 47.4798)
+                .cubicCurveTo(4.89935, 71.8469, 24.7532, 91.6002, 49.2441, 91.6002)
+                .endFill();
+            container.addChild(solid);
+        }
+
+        if (parts.includes("solidInnerCW")) {
+            // 同じ円を時計回り(CW)で描画
+            const solidCW = new Shape();
+            solidCW.graphics
+                .beginFill(0x0000FF)
+                .moveTo(49.2441, 91.6002)
+                .cubicCurveTo(24.7532, 91.6002, 4.89935, 71.8469, 4.89935, 47.4798)
+                .cubicCurveTo(4.89935, 23.1128, 24.7532, 3.35938, 49.2441, 3.35938)
+                .cubicCurveTo(73.735, 3.35938, 93.5888, 23.1128, 93.5888, 47.4798)
+                .cubicCurveTo(93.5888, 71.8469, 73.735, 91.6002, 49.2441, 91.6002)
+                .endFill();
+            container.addChild(solidCW);
+        }
+
+        if (parts.includes("quadCCW")) {
+            // CCW を quadratic (curveTo) で: cubic変換の問題かの切り分け
+            const q = new Shape();
+            const k = 0.5522847498 * 44.34;
+            const cx = 49.2441, cy = 47.4798, r = 44.1;
+            q.graphics
+                .beginFill(0x00AA00)
+                .moveTo(cx, cy + r)
+                .curveTo(cx + r, cy + r, cx + r, cy)
+                .curveTo(cx + r, cy - r, cx, cy - r)
+                .curveTo(cx - r, cy - r, cx - r, cy)
+                .curveTo(cx - r, cy + r, cx, cy + r)
+                .endFill();
+            container.addChild(q);
+        }
+
+        if (parts.includes("faceFill") || parts.includes("faceStroke")) {
+            const face = new Shape();
+            let g = face.graphics;
+            if (parts.includes("faceFill")) {
+                g = g.beginGradientFill("linear", [0x41CCBC, 0x267390], [1, 1], [0, 255], matrixFace)
+                    .moveTo(49.2441, 7.34676)
+                    .cubicCurveTo(71.4866, 7.34676, 89.5812, 25.3498, 89.5812, 47.4798)
+                    .cubicCurveTo(89.5812, 69.6098, 71.4866, 87.6129, 49.2441, 87.6129)
+                    .cubicCurveTo(27.0016, 87.6129, 8.90701, 69.6098, 8.90701, 47.4798)
+                    .cubicCurveTo(8.90701, 25.3498, 27.0016, 7.34676, 49.2441, 7.34676)
+                    .moveTo(49.2441, 3.35938)
+                    .cubicCurveTo(24.7473, 3.35938, 4.89935, 23.1169, 4.89935, 47.4798)
+                    .cubicCurveTo(4.89935, 71.8428, 24.7573, 91.6002, 49.2441, 91.6002)
+                    .cubicCurveTo(73.7309, 91.6002, 93.5888, 71.8428, 93.5888, 47.4798)
+                    .cubicCurveTo(93.5888, 23.1169, 73.7409, 3.35938, 49.2441, 3.35938)
+                    .endFill();
+            }
+            if (parts.includes("faceStroke")) {
+                g = g.lineStyle(3, 0x000000, 1, "none", "round")
+                    .lineGradientStyle("linear", [0xF5E7BE, 0xF4E5B9, 0xE08A00, 0xE08A00], [1, 1, 1, 1], [0, 125, 133, 255], matrixStroke)
+                    .moveTo(49.2441, 91.6002)
+                    .cubicCurveTo(73.735, 91.6002, 93.5888, 71.8469, 93.5888, 47.4798)
+                    .cubicCurveTo(93.5888, 23.1128, 73.735, 3.35938, 49.2441, 3.35938)
+                    .cubicCurveTo(24.7532, 3.35938, 4.89935, 23.1128, 4.89935, 47.4798)
+                    .cubicCurveTo(4.89935, 71.8469, 24.7532, 91.6002, 49.2441, 91.6002)
+                    .endLine();
+            }
+            container.addChild(face);
+        }
+
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

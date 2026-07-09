@@ -50,4 +50,27 @@ export const execute = (
 
     // set cache
     data.set(key, value);
+
+    // LRU: 上限が設定されている場合(メインスレッドのopt-in)、
+    // 触れたIDを最新に更新し、超過分を古い順にevictする。
+    // evictは既存のタイマー削除と同じ経路(removeById + $removeIds)で
+    // worker側のGPUリソースも解放される。上限0(デフォルト)では従来挙動のまま。
+    if (cache_store.$maxStoreSize > 0) {
+
+        data_store.delete(unique_key);
+        data_store.set(unique_key, data);
+
+        while (data_store.size > cache_store.$maxStoreSize) {
+
+            const oldestId = data_store.keys().next().value as string;
+
+            // 触れたばかりのIDは削除しない(上限1未満の設定に対する安全弁)
+            if (oldestId === unique_key) {
+                break;
+            }
+
+            cache_store.removeById(oldestId);
+            cache_store.$removeIds.push(+oldestId);
+        }
+    }
 };

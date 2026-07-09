@@ -75,4 +75,38 @@ describe("CacheStore trash flow integration", () =>
 
         vi.useRealTimers();
     });
+
+    it("LRU: 上限超過で最も古いIDがevictされ$removeIdsへ通知される", () =>
+    {
+        const store = new CacheStore();
+        store.$maxStoreSize = 2;
+
+        store.set("100", "0", true);
+        store.set("200", "0", true);
+
+        // "100" を参照して最新化
+        expect(store.get("100", "0")).toBe(true);
+
+        // 追加で "200" が最古になり evict される
+        store.set("300", "0", true);
+
+        expect(store.has("100")).toBe(true);
+        expect(store.has("200")).toBe(false);
+        expect(store.has("300")).toBe(true);
+        expect(store.$removeIds).toContain(200);
+    });
+
+    it("LRU: 上限0(デフォルト)ではevictされない", () =>
+    {
+        const store = new CacheStore();
+
+        for (let idx = 1; idx <= 10; ++idx) {
+            store.set(`${idx}`, "0", true);
+        }
+
+        for (let idx = 1; idx <= 10; ++idx) {
+            expect(store.has(`${idx}`)).toBe(true);
+        }
+        expect(store.$removeIds.length).toBe(0);
+    });
 });
