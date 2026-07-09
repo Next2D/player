@@ -32,5 +32,6 @@
     "@next2d/events": "file:../events",
     "@next2d/filters": "file:../filters",
     "@next2d/render-queue": "file:../render-queue"
-  }
+  },
+  "sideEffects": false
 }

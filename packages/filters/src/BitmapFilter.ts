@@ -26,12 +26,23 @@ export class BitmapFilter
     public $updated: boolean;
 
     /**
+     * @description toNumberArray() の結果のキャッシュ。$updated が true になったら無効化される。
+     *              Cache of the toNumberArray() result. Invalidated when $updated is set to true.
+     *
+     * @type {Float32Array | null}
+     * @default null
+     * @public
+     */
+    public $buffer: Float32Array | null;
+
+    /**
      * @constructor
      * @public
      */
     constructor ()
     {
         this.$updated = true;
+        this.$buffer  = null;
     }
 
     /**

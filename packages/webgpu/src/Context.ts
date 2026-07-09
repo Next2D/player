@@ -19,7 +19,7 @@ import {
     $getAtlasAttachmentObject,
     $getAtlasAttachmentObjectByIndex
 } from "./AtlasManager";
-import { addDisplayObjectToInstanceArray, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
+import { addDisplayObjectToInstanceArray, getInstancedShaderManager, getComplexBlendQueue } from "./Blend/BlendInstancedManager";
 import { execute as maskBeginMaskService } from "./Mask/service/MaskBeginMaskService";
 import { execute as maskSetMaskBoundsService } from "./Mask/service/MaskSetMaskBoundsService";
 import { execute as maskEndMaskService } from "./Mask/service/MaskEndMaskService";
@@ -52,7 +52,9 @@ import {
 } from "./FillTexturePool";
 import {
     $setFilterGradientLUTDevice,
-    $clearFilterGradientAttachment
+    $clearFilterGradientAttachment,
+    $cleanupFilterLUTCache,
+    $clearFilterLUTCache
 } from "./Filter/FilterGradientLUTCache";
 
 // Context services
@@ -123,6 +125,12 @@ const $ctUniform8 = new Float32Array(8);
  *              Pre-allocated uniform for atlas node copy with Y-flip
  */
 const $atlasNodeCopyUniform = new Float32Array([1, -1, 0, 1]);
+
+// copyTempToAtlasNode() 用 Static BindGroup キャッシュ
+// uniformは定数、samplerはキャッシュ済みのため、source viewのみが可変。
+// viewをキーにBindGroupを再利用する(present()と同型)。
+let $atlasNodeCopyUniformBuffer: GPUBuffer | null = null;
+const $atlasNodeCopyBindGroups: WeakMap<GPUTextureView, GPUBindGroup> = new WeakMap();
 
 /**
  * @description fill() 用 uniform プリアロケート (color + matrix = 16 floats = 64 bytes)
@@ -244,6 +252,16 @@ export class Context
     private commandEncoder: GPUCommandEncoder | null = null;
     /** @description レンダーパスエンコーダー / Render pass encoder */
     private renderPassEncoder: GPURenderPassEncoder | null = null;
+
+    /**
+     * @description 現在openなrenderPassEncoderがインスタンスバッチ用パスかどうか。
+     *              インスタンスパスは連続バッチ間で再利用されるが、fill/clip等の
+     *              ステンシル前提のパスとは互換性がないため、他経路では必ず閉じる。
+     *              Whether the currently open render pass belongs to instanced
+     *              batching. Such passes are reused across consecutive batches
+     *              but are incompatible with stencil-based fill/clip passes.
+     */
+    private renderPassIsInstanced: boolean = false;
 
     /** @description メインキャンバステクスチャ（最終表示用、フレームごとに1回取得） / Main canvas texture (for final display, acquired once per frame) */
     private mainTexture: GPUTexture | null = null;
@@ -407,8 +425,9 @@ export class Context
         this.textureManager = new TextureManager(device);
         this.frameBufferManager = new FrameBufferManager(device, preferred_format);
         this.pipelineManager = new PipelineManager(device, preferred_format);
-        // 遅延パイプライン群を即座に先行作成（初回アクセス時のレイテンシ解消）
-        this.pipelineManager.preloadLazyGroups();
+        // 遅延パイプライン群はバックグラウンドで順次warm up（起動ブロック解消）。
+        // warm up前に必要になったパイプラインは getPipeline() が同期生成する。
+        this.pipelineManager.warmupLazyGroupsAsync();
 
         // グラデーションLUT共有アタッチメントにGPUDeviceを設定
         $setGradientLUTDevice(device);
@@ -526,6 +545,7 @@ export class Context
 
         // 背景クリア用のレンダーパスを開始して即座に終了
         this.renderPassEncoder = this.commandEncoder!.beginRenderPass($bgDescriptor);
+        this.renderPassIsInstanced = false;
         this.renderPassEncoder.end();
         this.renderPassEncoder = null;
     }
@@ -610,6 +630,7 @@ export class Context
             $clearGradientAttachmentObjects();
             $clearLUTCache();
             $clearFilterGradientAttachment();
+            $clearFilterLUTCache();
             // アトラスのパッキングデータをリセット（WebGL版と同じ）
             $resetAtlas();
             // FrameBufferManagerのアトラステクスチャを再作成（古いコンテンツをクリア）
@@ -886,11 +907,17 @@ export class Context
         this.ensureCommandEncoder();
 
         // 既存のレンダーパスがある場合はearlyリターン（ノード領域クリアのみ確認）
+        // ただしインスタンスバッチ用パスはステンシル構成が異なるため引き継がず閉じる
         if (this.renderPassEncoder) {
-            if (this.currentRenderTarget) {
-                this.ensureNodeAreaCleared();
+            if (!this.renderPassIsInstanced) {
+                if (this.currentRenderTarget) {
+                    this.ensureNodeAreaCleared();
+                }
+                return;
             }
-            return;
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
         }
 
         // レンダーパスがない場合のみ新規作成
@@ -921,6 +948,7 @@ export class Context
                     resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
             } else if (!this.currentRenderTarget && ($isMaskTestEnabled() || $isMaskDrawing()) && this.$mainAttachmentObject?.stencil?.view) {
                 // マスク描画時またはマスクテスト有効時のメインアタッチメントへの描画（ステンシル付き）
                 // マスク描画時: ステンシルバッファにマスク形状を書き込む
@@ -940,6 +968,7 @@ export class Context
                     mainResolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
                 // マスクテスト時はステンシル参照値を設定
                 if ($isMaskTestEnabled()) {
                     this.renderPassEncoder.setStencilReference($getMaskStencilReference());
@@ -965,6 +994,7 @@ export class Context
                         mainResolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 } else {
                     // ステンシルなし（フォールバック）
                     const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
@@ -974,6 +1004,7 @@ export class Context
                         mainResolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 }
             } else {
                 const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
@@ -983,6 +1014,7 @@ export class Context
                     resolveTarget
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
             }
         }
 
@@ -1564,6 +1596,13 @@ export class Context
             return;
         }
 
+        // インスタンスバッチ用パスはステンシル構成が異なるため引き継がず閉じる
+        if (this.renderPassEncoder && this.renderPassIsInstanced) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
+        }
+
         // レンダーパスがない場合は作成
         if (!this.renderPassEncoder) {
             this.ensureCommandEncoder();
@@ -1585,6 +1624,7 @@ export class Context
                     "load"
                 );
                 this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                this.renderPassIsInstanced = false;
             } else {
                 return;
             }
@@ -1717,6 +1757,7 @@ export class Context
                         resolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 } else {
                     const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
                         colorView,
@@ -1725,6 +1766,7 @@ export class Context
                         resolveTarget
                     );
                     this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+                    this.renderPassIsInstanced = false;
                 }
 
                 this.nodeRenderPassAtlasIndex = node.index;
@@ -1915,7 +1957,9 @@ export class Context
         }
 
         // 既存のレンダーパスを終了（アトラスパス統合をリセット）
-        if (this.renderPassEncoder) {
+        // ただし自前のインスタンスバッチ用パスは、状態が一致すればusecase側で再利用する
+        // (パス終了ごとの全画面MSAAリゾルブとロード/ストア往復を削減)
+        if (this.renderPassEncoder && !this.renderPassIsInstanced) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
@@ -1932,6 +1976,7 @@ export class Context
 
         if (this.useOptimizedInstancing) {
             // 最適化版: Storage Buffer + Indirect Drawing
+            const previousPass = this.renderPassEncoder;
             this.renderPassEncoder = contextDrawIndirectUseCase(
                 this.device,
                 this.commandEncoder!,
@@ -1941,9 +1986,15 @@ export class Context
                 this.frameBufferManager,
                 this.textureManager,
                 this.pipelineManager,
-                true, // useIndirect
-                true  // useStorageBuffer
+                // インスタンス数はCPU側で確定しているため間接描画は不要。
+                // indirectバッファ生成+writeBufferのバッチ毎オーバーヘッドを避けて直接draw()する。
+                false, // useIndirect
+                true,  // useStorageBuffer
+                this.renderPassIsInstanced
             );
+            // count===0で未変更返却の場合はフラグ維持、新規/再利用パスならinstanced扱い
+            this.renderPassIsInstanced = this.renderPassEncoder !== null
+                && (this.renderPassEncoder !== previousPass || this.renderPassIsInstanced);
         } else {
             // 従来版: 毎フレームVertex Buffer新規生成
             this.renderPassEncoder = contextDrawArraysInstancedUseCase(
@@ -1956,6 +2007,7 @@ export class Context
                 this.textureManager,
                 this.pipelineManager
             );
+            this.renderPassIsInstanced = false;
         }
 
         // 複雑なブレンドモードの処理
@@ -1970,6 +2022,19 @@ export class Context
      */
     private processComplexBlendQueue (): void
     {
+        // キューが空なら何もしない(開いたままのインスタンスパスも維持できる)
+        if (!getComplexBlendQueue().length) {
+            return;
+        }
+
+        // 複雑ブレンドはリゾルブ済みのメインテクスチャを読むため、
+        // 開いているレンダーパスを終了してリゾルブを確定させる
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
+        }
+
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
@@ -2671,20 +2736,36 @@ export class Context
         // アトラスのShape描画はFillVertexのyFlipSign=1.0によりY反転で格納されるため、
         // cacheAsBitmapのコピーも同じ規則に合わせてY反転する
         // UV.y = texCoord.y * scaleY + offsetY = texCoord.y * (-1) + 1 = 1 - texCoord.y
-        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer($atlasNodeCopyUniform);
+        // uniformは定数のため永続バッファに一度だけ書き込み、BindGroupはsource view毎に再利用
+        if (!$atlasNodeCopyUniformBuffer) {
+            $atlasNodeCopyUniformBuffer = this.device.createBuffer({
+                "size": $atlasNodeCopyUniform.byteLength,
+                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+            this.device.queue.writeBuffer(
+                $atlasNodeCopyUniformBuffer, 0,
+                $atlasNodeCopyUniform.buffer,
+                $atlasNodeCopyUniform.byteOffset,
+                $atlasNodeCopyUniform.byteLength
+            );
+        }
 
-        // サンプラーとソーステクスチャ（MSAAリゾルブ済みのテクスチャ）
-        const sampler = this.textureManager.createSampler("container_atlas_copy", false);
         const srcView = temp_attachment.texture.view;
 
-        const bindGroup = this.device.createBindGroup({
-            "layout": bindGroupLayout,
-            "entries": [
-                { "binding": 0, "resource": { "buffer": uniformBuffer } },
-                { "binding": 1, "resource": sampler },
-                { "binding": 2, "resource": srcView }
-            ]
-        });
+        let bindGroup = $atlasNodeCopyBindGroups.get(srcView);
+        if (!bindGroup) {
+            // サンプラーとソーステクスチャ（MSAAリゾルブ済みのテクスチャ）
+            const sampler = this.textureManager.createSampler("container_atlas_copy", false);
+            bindGroup = this.device.createBindGroup({
+                "layout": bindGroupLayout,
+                "entries": [
+                    { "binding": 0, "resource": { "buffer": $atlasNodeCopyUniformBuffer } },
+                    { "binding": 1, "resource": sampler },
+                    { "binding": 2, "resource": srcView }
+                ]
+            });
+            $atlasNodeCopyBindGroups.set(srcView, bindGroup);
+        }
 
         // アトラスのノード領域にレンダーパスを作成
         const colorView = useMsaa ? atlas.msaaTexture!.view : atlas.texture.view;
@@ -3033,6 +3114,7 @@ export class Context
 
         // Gradient LUTキャッシュのTTL超過エントリを解放
         $cleanupLUTCache();
+        $cleanupFilterLUTCache();
 
         // Dynamic Uniform BindGroupをリセット（バッファオフセットがリセットされるため）
         this.fillDynamicBindGroup = null;
@@ -3390,6 +3472,7 @@ export class Context
                 stencilLoadOp  // 最初のマスク: クリア、ネスト: 保持
             );
             this.renderPassEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            this.renderPassIsInstanced = false;
 
             // ビューポートサイズを更新
             this.viewportWidth = this.$mainAttachmentObject.width;

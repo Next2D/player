@@ -31,6 +31,7 @@ vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
         },
         $enableScissorTest: vi.fn(),
         $disableScissorTest: vi.fn(),
+        $setScissorBox: vi.fn(),
         $context: {
             currentAttachmentObject: mockAttachment,
             $mainAttachmentObject: mockAttachment,

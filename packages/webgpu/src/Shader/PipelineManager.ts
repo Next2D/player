@@ -209,6 +209,32 @@ export class PipelineManager
     }
 
     /**
+     * @description 遅延初期化グループをバックグラウンドで順次warm upする。
+     *              1グループ=1マクロタスクに分割して起動処理・初回フレームをブロックしない。
+     *              warm up前に必要になった場合は getPipeline() の遅延初期化が同期生成する
+     *              (ensureLazyGroup は初期化済みグループをスキップするため二重生成しない)。
+     *              Warm up lazy pipeline groups in the background, one group per
+     *              macrotask, so startup and the first frame are not blocked.
+     *              Pipelines needed earlier are created on demand by getPipeline().
+     */
+    warmupLazyGroupsAsync(): void
+    {
+        const groups = ["texture_copy", "blur_filter", "filter", "complex_blend", "bitmap_sync"];
+
+        let idx = 0;
+        const next = (): void =>
+        {
+            if (idx >= groups.length) {
+                return ;
+            }
+            this.ensureLazyGroup(groups[idx++]);
+            setTimeout(next, 0);
+        };
+
+        setTimeout(next, 0);
+    }
+
+    /**
      * @description 塗りつぶし描画用パイプラインを作成する（RGBA/BGRA/ステンシル対応）
      *              Create fill render pipelines (RGBA, BGRA, and stencil variants)
      */

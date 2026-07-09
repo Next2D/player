@@ -25,6 +25,8 @@ export const execute = (width: number, height: number): ITextureObject =>
         "width": width,
         "height": height,
         "area": width * height,
-        "smooth": false
+        "smooth": false,
+        "dirty": false,
+        "pooled": false
     };
 };

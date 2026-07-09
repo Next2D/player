@@ -41,7 +41,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
     // cache uniqueKey
     const uniqueKey = `${render_queue[index++]}`;
-    const cacheKey  = render_queue[index++];
+    const cacheKey  = `${render_queue[index++]}`;
 
     // text state (bit 0 = changed, bit 1 = cacheAsBitmap)
     const changedFlag = render_queue[index++];
@@ -52,7 +52,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const yScale = render_queue[index++];
 
     // フィルターキャッシュ用のユニークキー（instanceId）
-    const filterKey = `${render_queue[index++]}`;
+    // 文字列化はフィルター使用時のみ行う
+    const filterKeyNumber = render_queue[index++];
 
     let node: Node;
     const hasCache = render_queue[index++];
@@ -64,21 +65,28 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const hasNode = Boolean(render_queue[index++]);
 
         if (hasNode) {
-            node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
+            node = $cacheStore.get(uniqueKey, cacheKey) as Node;
         } else {
             // TextFieldResetUseCase 等で Main 側のみ wipe された場合、
             // Worker には旧 Node が残っているため、新規作成前に解放してアトラスリーク防止
-            const oldNode = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node | null;
+            const oldNode = $cacheStore.get(uniqueKey, cacheKey) as Node | null;
             if (oldNode) {
                 $context.removeNode(oldNode);
             }
             node = $context.createNode(width, height);
-            $cacheStore.set(uniqueKey, `${cacheKey}`, node);
+            $cacheStore.set(uniqueKey, cacheKey, node);
         }
 
         const length = render_queue[index++];
-        const buffer = new Uint8Array(render_queue.subarray(index, index + length));
-        index += length;
+
+        // テキストバイト列は4バイト/floatでパックされている
+        // (TextFieldGenerateRenderQueueUseCase参照)。lengthはバイト数。
+        const buffer = new Uint8Array(
+            render_queue.buffer,
+            render_queue.byteOffset + index * 4,
+            length
+        );
+        index += Math.ceil(length / 4);
 
         let autoSize: ITextFieldAutoSize = "none";
         switch (render_queue[index++]) {
@@ -157,7 +165,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         }
 
     } else {
-        node = $cacheStore.get(uniqueKey, `${cacheKey}`) as Node;
+        node = $cacheStore.get(uniqueKey, cacheKey) as Node;
         if (!node) {
             return index;
         }
@@ -179,7 +187,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
         $context.applyFilter(
-            node, filterKey, Boolean(Math.max(+changed, +updated)),
+            node, `${filterKeyNumber}`, Boolean(Math.max(+changed, +updated)),
             width, height, false,
             matrix, colorTransform, displayObjectGetBlendModeService(blendMode),
             filterBounds, params

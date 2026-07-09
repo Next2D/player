@@ -8,7 +8,7 @@ const mockAttachmentObject = {
     "height": 1
 };
 
-let mockScissorBox = [0, 0, 0, 0];
+const mockScissorBox = vi.hoisted(() => new Int32Array(4));
 let currentAttachment: any = null;
 let scissorTestEnabled = false;
 let currentScissor = [0, 0, 0, 0];
@@ -25,6 +25,23 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) =>
         $gl: {
             "SCISSOR_TEST": "SCISSOR_TEST",
             "SCISSOR_BOX": "SCISSOR_BOX",
+            "TEXTURE0": "TEXTURE0",
+            "TEXTURE_2D": "TEXTURE_2D",
+            "TEXTURE_WRAP_S": "TEXTURE_WRAP_S",
+            "TEXTURE_WRAP_T": "TEXTURE_WRAP_T",
+            "TEXTURE_MIN_FILTER": "TEXTURE_MIN_FILTER",
+            "TEXTURE_MAG_FILTER": "TEXTURE_MAG_FILTER",
+            "CLAMP_TO_EDGE": "CLAMP_TO_EDGE",
+            "LINEAR": "LINEAR",
+            "NEAREST": "NEAREST",
+            "RGBA8": "RGBA8",
+            "createTexture": vi.fn(() => ({})),
+            "deleteTexture": vi.fn(),
+            "activeTexture": vi.fn(),
+            "bindTexture": vi.fn(),
+            "texParameteri": vi.fn(),
+            "texStorage2D": vi.fn(),
+            "copyTexSubImage2D": vi.fn(),
             "getParameter": vi.fn((param) =>
             {
                 if (param === "SCISSOR_BOX") {
@@ -57,6 +74,12 @@ vi.mock("../../../WebGLUtil.ts", async (importOriginal) =>
         {
             disableCalls.push("SCISSOR_TEST");
             scissorTestEnabled = false;
+        }),
+        $scissorBox: mockScissorBox,
+        $setScissorBox: vi.fn((x, y, w, h) =>
+        {
+            currentScissor = [x, y, w, h];
+            scissorCalls.push([x, y, w, h]);
         }),
         $context: {
             get currentAttachmentObject() {
@@ -108,12 +131,14 @@ vi.mock("./GradientLUTGeneratorFillTextureUseCase.ts", () => ({
 }));
 
 import { execute } from "./GradientLUTGenerateShapeTextureUseCase";
+import { $clearShapeLUTCache } from "../../GradientLUTGenerator";
 
 describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
 {
     beforeEach(() =>
     {
         vi.clearAllMocks();
+        $clearShapeLUTCache();
         scissorTestEnabled = false;
         currentScissor = [0, 0, 0, 0];
         bindCallCount = 0;
@@ -124,7 +149,7 @@ describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
 
     it("test case - linear interpolation with single stop segment", () =>
     {
-        mockScissorBox = [10, 20, 100, 50];
+        mockScissorBox.set([10, 20, 100, 50]);
         currentAttachment = mockAttachmentObject;
 
         // RGB linear interpolation (interpolation = 0)
@@ -140,15 +165,20 @@ describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
         expect(scissorTestEnabled).toBe(true);
 
         // シザーボックスが復元されたことを確認
-        expect(currentScissor).toEqual(mockScissorBox);
+        expect(currentScissor).toEqual([...mockScissorBox]);
 
-        // 結果のテクスチャが返されることを確認
-        expect(result).toBe("mockTexture");
+        // 専用のLUTテクスチャ(resolution x 1)が返されることを確認
+        expect(result.width).toBe(512);
+        expect(result.height).toBe(1);
+
+        // 同一stopsでの再実行はキャッシュヒットし、同一テクスチャを返す
+        const cachedResult = execute(stops, interpolation);
+        expect(cachedResult).toBe(result);
     });
 
     it("test case - RGB interpolation with multiple stop segments", () =>
     {
-        mockScissorBox = [0, 0, 512, 1];
+        mockScissorBox.set([0, 0, 512, 1]);
         currentAttachment = null;
 
         // RGB interpolation (interpolation = 1)
@@ -162,12 +192,13 @@ describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
 
         const result = execute(stops, interpolation);
 
-        expect(result).toBe("mockTexture");
+        expect(result.width).toBe(512);
+        expect(result.height).toBe(1);
     });
 
     it("test case - no current attachment (null case)", () =>
     {
-        mockScissorBox = [5, 10, 200, 100];
+        mockScissorBox.set([5, 10, 200, 100]);
         currentAttachment = null;
 
         const stops = [0, 255, 0, 0, 255, 255, 0, 255, 0, 255];
@@ -177,12 +208,13 @@ describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
 
         // currentAttachment が null なので、bind は1回だけ呼ばれる（gradientAttachmentObject のみ）
         expect(bindCallCount).toBe(1);
-        expect(result).toBe("mockTexture");
+        expect(result.width).toBe(512);
+        expect(result.height).toBe(1);
     });
 
     it("test case - verifies scissor test is properly restored", () =>
     {
-        mockScissorBox = [15, 25, 150, 75];
+        mockScissorBox.set([15, 25, 150, 75]);
         currentAttachment = mockAttachmentObject;
 
         const stops = [0, 255, 0, 0, 255, 255, 0, 255, 0, 255];
@@ -196,6 +228,6 @@ describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
 
         // シザーボックスが元の値で復元されることを確認
         const lastScissorCall = scissorCalls[scissorCalls.length - 1];
-        expect(lastScissorCall).toEqual(mockScissorBox);
+        expect(lastScissorCall).toEqual([...mockScissorBox]);
     });
 });

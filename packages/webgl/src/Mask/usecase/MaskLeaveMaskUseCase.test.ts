@@ -105,6 +105,13 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                 $enableScissorTest: vi.fn(),
                 $disableScissorTest: vi.fn(),
                 $disableStencilTest: vi.fn(),
+                $setScissorBox: vi.fn((x, y, width, height) =>
+                {
+                    expect(x).toBe(10);
+                    expect(y).toBe(60);
+                    expect(width).toBe(20);
+                    expect(height).toBe(20);
+                }),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;
@@ -272,6 +279,7 @@ describe("MaskLeaveMaskUseCase.js method test", () =>
                 $enableScissorTest: vi.fn(),
                 $disableScissorTest: vi.fn(),
                 $disableStencilTest: vi.fn(),
+                $setScissorBox: vi.fn(),
                 "$context": {
                     get currentAttachmentObject() {
                         return $currentAttachment;

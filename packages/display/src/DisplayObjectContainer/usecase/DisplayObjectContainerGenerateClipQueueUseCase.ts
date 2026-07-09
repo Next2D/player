@@ -27,7 +27,7 @@ export const execute = <P extends DisplayObjectContainer>(
         : matrix;
 
     const children = display_object_container.children;
-    renderQueue.push($RENDERER_CONTAINER_TYPE, children.length);
+    renderQueue.push2($RENDERER_CONTAINER_TYPE, children.length);
 
     for (let idx = 0; idx < children.length; idx++) {
 

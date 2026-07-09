@@ -27,17 +27,20 @@ export const execute = (): void =>
     $gl.bindBuffer($gl.ARRAY_BUFFER, $attributeWebGLBuffer);
 
     if (renderQueue.buffer.length > $attributeBufferLength) {
-
         $attributeBufferLength = renderQueue.buffer.length;
-
-        // STREAM_DRAW: 毎フレーム更新されるデータに最適
-        // STREAM_DRAW: Optimal for data updated every frame
-        $gl.bufferData(
-            $gl.ARRAY_BUFFER,
-            $attributeBufferLength * 4, // renderQueue.buffer.byteLength
-            $gl.STREAM_DRAW
-        );
     }
+
+    // バッファオーファニング: 直前のdrawArraysInstancedが参照中の可能性がある領域を
+    // 上書きするとドライバが暗黙の同期(ストール)を挿入するため、毎回新しいストレージを
+    // 確保してから書き込む。STREAM_DRAW: 毎フレーム更新されるデータに最適。
+    // Buffer orphaning: overwriting a region that the previous drawArraysInstanced
+    // may still be reading can cause an implicit driver sync (stall), so allocate
+    // fresh storage before each upload. STREAM_DRAW: optimal for per-frame data.
+    $gl.bufferData(
+        $gl.ARRAY_BUFFER,
+        $attributeBufferLength * 4, // renderQueue.buffer.byteLength
+        $gl.STREAM_DRAW
+    );
 
     $gl.bufferSubData(
         $gl.ARRAY_BUFFER, 0,

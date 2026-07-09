@@ -12,7 +12,8 @@ import {
     $gl,
     $context,
     $enableScissorTest,
-    $disableScissorTest
+    $disableScissorTest,
+    $setScissorBox
 } from "../../WebGLUtil";
 import {
     $fillBufferIndexes,
@@ -48,7 +49,7 @@ export const execute = (): void =>
     const width  = Math.ceil(Math.abs(xMax - xMin));
     const height = Math.ceil(Math.abs(yMax - yMin));
     $enableScissorTest();
-    $gl.scissor(
+    $setScissorBox(
         xMin,
         currentAttachmentObject.height - yMin - height,
         width,

@@ -74,6 +74,28 @@ export class DisplayObjectContainer extends InteractiveObject
     public $container: IParent<any>[] | null;
 
     /**
+     * @description filterレイヤーのサブツリースケールのキャッシュ(x)。-1は未計算。
+     *              サブツリーのscale/構造変化は必ずchangedを立てるため、
+     *              フィルターキャッシュHIT時(未更新時)は前フレーム値を再利用できる。
+     *              Cached filter-layer subtree scale (x). -1 means not computed.
+     *
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public $layerScaleX: number;
+
+    /**
+     * @description filterレイヤーのサブツリースケールのキャッシュ(y)。-1は未計算。
+     *              Cached filter-layer subtree scale (y). -1 means not computed.
+     *
+     * @type {number}
+     * @default -1
+     * @public
+     */
+    public $layerScaleY: number;
+
+    /**
      * @description コンテナの機能を所持しているかを返却
      *              Returns whether the display object has container functionality.
      *
@@ -100,7 +122,9 @@ export class DisplayObjectContainer extends InteractiveObject
         this._$children = $getArray();
 
         // protected
-        this.$container = null;
+        this.$container  = null;
+        this.$layerScaleX = -1;
+        this.$layerScaleY = -1;
     }
 
     /**

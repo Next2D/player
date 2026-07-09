@@ -5,4 +5,6 @@ export interface ITextureObject {
     height: number;
     area: number;
     smooth: boolean;
+    dirty: boolean;
+    pooled: boolean;
 }

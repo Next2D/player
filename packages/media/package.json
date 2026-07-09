@@ -28,5 +28,6 @@
     "@next2d/net": "file:../net",
     "@next2d/display": "file:../display",
     "@next2d/geom": "file:../geom"
-  }
+  },
+  "sideEffects": false
 }

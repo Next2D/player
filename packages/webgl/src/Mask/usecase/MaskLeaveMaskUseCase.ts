@@ -13,7 +13,8 @@ import {
     $poolFloat32Array4,
     $enableScissorTest,
     $disableScissorTest,
-    $disableStencilTest
+    $disableStencilTest,
+    $setScissorBox
 } from "../../WebGLUtil";
 
 /**
@@ -46,7 +47,7 @@ export const execute = (): void =>
     const width  = Math.ceil(Math.abs(xMax - xMin));
     const height = Math.ceil(Math.abs(yMax - yMin));
     $enableScissorTest();
-    $gl.scissor(
+    $setScissorBox(
         xMin,
         currentAttachmentObject.height - yMin - height,
         width,

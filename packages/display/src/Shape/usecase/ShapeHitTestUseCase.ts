@@ -64,6 +64,33 @@ export const execute = (
         $poolFloat32Array6(scaledMatrix);
     }
 
+    // AABB早期リターン: ポインタをローカル座標へ逆変換し、
+    // バウンディングボックスの外ならパス再生とisPointInPathをスキップする。
+    // 描画コマンドがある場合はgraphicsのbounds(ストローク幅込み)、
+    // 無い場合はフォールバック矩形(0,0)-(width,height)と同じ範囲で判定するため結果は不変。
+    const det = tMatrix[0] * tMatrix[3] - tMatrix[1] * tMatrix[2];
+    if (det) {
+        const dx = hit_object.x - tMatrix[4];
+        const dy = hit_object.y - tMatrix[5];
+        const localX = (tMatrix[3] * dx - tMatrix[2] * dy) / det;
+        const localY = (tMatrix[0] * dy - tMatrix[1] * dx) / det;
+
+        const hasCommands = graphics.buffer.length > 0;
+        const boundsXMin = hasCommands ? graphics.xMin : 0;
+        const boundsYMin = hasCommands ? graphics.yMin : 0;
+        const boundsXMax = hasCommands ? graphics.xMax : width;
+        const boundsYMax = hasCommands ? graphics.yMax : height;
+
+        if (localX < boundsXMin || localX > boundsXMax
+            || localY < boundsYMin || localY > boundsYMax
+        ) {
+            if (tMatrix !== matrix) {
+                Matrix.release(tMatrix);
+            }
+            return false;
+        }
+    }
+
     hit_context.beginPath();
     hit_context.setTransform(
         tMatrix[0], tMatrix[1], tMatrix[2],

@@ -3,6 +3,10 @@ import type { IFilterConfig } from "../../interface/IFilterConfig";
 import { $offset } from "../FilterOffset";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
 import { generateFilterGradientLUT } from "../../Gradient/GradientLUTGenerator";
+import {
+    $getFilterLUTFromCache,
+    $putFilterLUTToCache
+} from "../FilterGradientLUTCache";
 import { DEG_TO_RAD } from "../FilterUtil";
 
 /**
@@ -179,19 +183,27 @@ export const execute = (
     // queue.writeTextureはcommandEncoder外で即座に実行されるため、
     // 同一フレーム内の複数GradientBevelFilter適用時に最後の書き込みで上書きされる。
     // 各呼び出しで専用テクスチャを作成してこのタイミング問題を回避する。
-    const lutData = generateFilterGradientLUT(ratios, colors, alphas);
-    const lutTexture = device.createTexture({
-        "size": { "width": 256, "height": 1 },
-        "format": "rgba8unorm",
-        "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-    });
-    device.queue.writeTexture(
-        { "texture": lutTexture },
-        lutData.buffer,
-        { "bytesPerRow": 256 * 4, "offset": lutData.byteOffset },
-        { "width": 256, "height": 1 }
-    );
-    const lutView = lutTexture.createView();
+    // stopsキーのキャッシュを参照し、同一グラデーションのLUT再生成を回避する
+    // (キー毎に専用テクスチャのため、同一フレーム内の複数フィルター適用でも上書きされない)
+    let lutEntry = $getFilterLUTFromCache(ratios, colors, alphas);
+    if (!lutEntry) {
+        const lutData = generateFilterGradientLUT(ratios, colors, alphas);
+        const lutTexture = device.createTexture({
+            "size": { "width": 256, "height": 1 },
+            "format": "rgba8unorm",
+            "usage": GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        });
+        device.queue.writeTexture(
+            { "texture": lutTexture },
+            lutData.buffer,
+            { "bytesPerRow": 256 * 4, "offset": lutData.byteOffset },
+            { "width": 256, "height": 1 }
+        );
+        lutEntry = $putFilterLUTToCache(
+            ratios, colors, alphas, lutTexture, lutTexture.createView()
+        );
+    }
+    const lutView = lutEntry.view;
 
     // ===== Step 5: UV変換パラメータ計算 =====
     // WebGL版と同じ: uv = v_coord * scale - offset
@@ -270,8 +282,6 @@ export const execute = (
     passEncoder.draw(6, 1, 0, 0);
     passEncoder.end();
 
-    // クリーンアップ（lutTextureはsubmit後に遅延破棄）
-    config.frameTextures.push(lutTexture);
     frameBufferManager.releaseTemporaryAttachment(blurAttachment);
 
     // WebGL版と同じオフセット更新

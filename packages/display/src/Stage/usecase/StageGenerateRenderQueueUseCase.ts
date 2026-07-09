@@ -33,7 +33,7 @@ export const execute = <D extends DisplayObject> (
     renderer_height: number
 ): void => {
 
-    renderQueue.push(stage.backgroundColor);
+    renderQueue.push1(stage.backgroundColor);
 
     switch (true) {
 

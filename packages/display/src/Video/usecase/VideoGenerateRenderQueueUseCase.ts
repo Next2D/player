@@ -12,7 +12,10 @@ import {
     $getArray,
     $poolBoundsArray,
     $poolArray,
-    $getBoundsArray
+    $getBoundsArray,
+    $prepareFilterBuffers,
+    $pushFilterBuffers,
+    $getFilterUpdated
 } from "../../DisplayObjectUtil";
 import {
     ColorTransform,
@@ -47,7 +50,7 @@ export const execute = (
         || !video.$offscreenCanvas
         || !video.loaded
     ) {
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -66,7 +69,7 @@ export const execute = (
         if (tColorTransform !== color_transform) {
             ColorTransform.release(tColorTransform);
         }
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return ;
     }
 
@@ -108,7 +111,7 @@ export const execute = (
                 Matrix.release(tMatrix);
             }
 
-            renderQueue.push(0);
+            renderQueue.push1(0);
             return;
 
         default:
@@ -128,7 +131,7 @@ export const execute = (
             Matrix.release(tMatrix);
         }
 
-        renderQueue.push(0);
+        renderQueue.push1(0);
         return;
     }
 
@@ -173,7 +176,7 @@ export const execute = (
     if (!cache || video.changed) {
 
         // cache, node
-        renderQueue.push(0, +cache);
+        renderQueue.push2(0, +cache);
 
         const context = video.$context;
         if (context) {
@@ -209,55 +212,32 @@ export const execute = (
             video.$cache = $cacheStore.getById(video.uniqueKey);
             video.$cache.set(video.uniqueKey, true);
         }
-        renderQueue.push(1);
+        renderQueue.push1(1);
     }
 
-    renderQueue.push(
+    renderQueue.push1(
         displayObjectBlendToNumberService(video.blendMode)
     );
 
     if (video.filters?.length) {
 
-        let updated = false;
-        const params = [];
         const bounds = $getBoundsArray(0, 0, 0, 0);
-        for (let idx = 0; idx < video.filters.length; idx++) {
+        const paramsLength = $prepareFilterBuffers(video.filters, bounds);
 
-            const filter = video.filters[idx];
-            if (!filter || !filter.canApplyFilter()) {
-                continue;
-            }
-
-            // フィルターが更新されたかをチェック
-            if (filter.$updated) {
-                updated = true;
-            }
-            filter.$updated = false;
-
-            filter.getBounds(bounds);
-
-            const buffer = filter.toNumberArray();
-
-            for (let idx = 0; idx < buffer.length; idx += 4096) {
-                params.push(...buffer.subarray(idx, idx + 4096));
-            }
-        }
-
-        const useFilfer = params.length > 0;
-        if (useFilfer) {
-            renderQueue.push(
-                +useFilfer, +updated,
+        if (paramsLength > 0) {
+            renderQueue.push7(
+                1, +$getFilterUpdated(),
                 bounds[0], bounds[1], bounds[2], bounds[3],
-                params.length
+                paramsLength
             );
-            renderQueue.set(new Float32Array(params));
+            $pushFilterBuffers(video.filters);
         } else {
-            renderQueue.push(0);
+            renderQueue.push1(0);
         }
 
         $poolBoundsArray(bounds);
     } else {
-        renderQueue.push(0);
+        renderQueue.push1(0);
     }
 
     if (tColorTransform !== color_transform) {

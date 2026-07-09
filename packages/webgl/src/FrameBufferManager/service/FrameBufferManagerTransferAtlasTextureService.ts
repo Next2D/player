@@ -6,7 +6,8 @@ import {
     $gl,
     $context,
     $enableScissorTest,
-    $disableScissorTest
+    $disableScissorTest,
+    $setScissorBox
 } from "../../WebGLUtil";
 import {
     $atlasFrameBuffer,
@@ -42,7 +43,7 @@ export const execute = (): void =>
     const bounds = $getActiveTransferBounds(atlasIdx);
 
     $enableScissorTest();
-    $gl.scissor(
+    $setScissorBox(
         bounds[0], bounds[1],
         bounds[2] - bounds[0], bounds[3] - bounds[1]
     );

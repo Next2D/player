@@ -5,6 +5,7 @@ import { execute as frameBufferManagerReleaseTemporaryAttachmentUseCase } from "
 import { execute as frameBufferManagerCreateRenderPassDescriptorService } from "./FrameBufferManager/service/FrameBufferManagerCreateRenderPassDescriptorService";
 import { execute as frameBufferManagerCreateStencilRenderPassDescriptorService } from "./FrameBufferManager/service/FrameBufferManagerCreateStencilRenderPassDescriptorService";
 import { TexturePool } from "./TexturePool";
+import { $getOrCreateView } from "./FillTexturePool";
 
 /**
  * @description フレームバッファとアタッチメントの管理クラス
@@ -195,8 +196,10 @@ export class FrameBufferManager
                       GPUTextureUsage.COPY_DST |
                       GPUTextureUsage.STORAGE_BINDING;
 
+        // プールから再利用したGPUTextureのviewはWeakMapでキャッシュして再生成を避ける。
+        // view identityが安定することで、viewをキーにしたBindGroupキャッシュも有効になる。
         const gpuTexture = this.texturePool.acquire(width, height, "rgba8unorm", usage);
-        const textureView = gpuTexture.createView();
+        const textureView = $getOrCreateView(gpuTexture);
 
         const texture: ITextureObject = {
             "id": this.idCounter.textureId++,

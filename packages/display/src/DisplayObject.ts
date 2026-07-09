@@ -80,6 +80,18 @@ export class DisplayObject extends EventDispatcher
     public readonly instanceId: number;
 
     /**
+     * @description instanceId の文字列キャッシュ(cacheStoreキー用、遅延生成)。
+     *              uniqueKey とは別物(uniqueKey はフィルターキャッシュ判定に使われるため流用不可)。
+     *              Lazily built string cache of instanceId for cacheStore keys.
+     *              Distinct from uniqueKey (which drives filter-cache decisions).
+     *
+     * @type {string}
+     * @default ""
+     * @public
+     */
+    public $instanceIdString: string;
+
+    /**
      * @description DisplayObject の生成元ID
      *              Source ID of DisplayObject
      *
@@ -464,6 +476,7 @@ export class DisplayObject extends EventDispatcher
         this.instanceId    = $getInstanceId();
         this.dictionaryId  = -1;
         this.uniqueKey     = "";
+        this.$instanceIdString = "";
 
         // 各小クラスの機能を所持しているか
         this.isSprite           = false;

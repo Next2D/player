@@ -1,7 +1,8 @@
 import {
     $gl,
     $enableScissorTest,
-    $disableScissorTest
+    $disableScissorTest,
+    $setScissorBox
 } from "../../WebGLUtil";
 
 /**
@@ -20,7 +21,7 @@ export const execute = (x: number, y: number, w: number, h: number): void =>
 {
     // 指定範囲をクリア
     $enableScissorTest();
-    $gl.scissor(x, y, w, h);
+    $setScissorBox(x, y, w, h);
     $gl.clear($gl.COLOR_BUFFER_BIT | $gl.STENCIL_BUFFER_BIT);
     $disableScissorTest();
 };

@@ -1,6 +1,9 @@
 import type { ITextureObject } from "../../interface/ITextureObject";
 import { $gl } from "../../WebGLUtil";
-import { $boundTextures } from "../../TextureManager";
+import {
+    $boundTextures,
+    $releaseTextureToPool
+} from "../../TextureManager";
 
 /**
  * @description TextureObjectをオブジェクトプールに保管、サイズオーバー時は削除します。
@@ -18,5 +21,8 @@ export const execute = (texture_object: ITextureObject): void =>
             $boundTextures[idx] = null;
         }
     }
-    $gl.deleteTexture(texture_object.resource);
+
+    if (!$releaseTextureToPool(texture_object)) {
+        $gl.deleteTexture(texture_object.resource);
+    }
 };
