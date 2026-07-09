@@ -1,5 +1,4 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
-import type { ITextureObject } from "./interface/ITextureObject";
 
 export const $objectPool: IAttachmentObject[] = [];
 
@@ -20,19 +19,12 @@ export const $setDrawFrameBuffer = (gl: WebGL2RenderingContext): void =>
 export let $atlasFrameBuffer: WebGLFramebuffer | null = null;
 
 export const $setAtlasFrameBuffer = (
-    gl: WebGL2RenderingContext,
-    texture_object: ITextureObject
+    gl: WebGL2RenderingContext
 ): void => {
 
+    // アトラスはTEXTURE_2D_ARRAYになったため、カラーアタッチメントは
+    // 解決(blit)時に framebufferTextureLayer で対象レイヤーを都度アタッチする
     $atlasFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, $atlasFrameBuffer);
-
-    gl.framebufferTexture2D(
-        gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-        gl.TEXTURE_2D, texture_object.resource, 0
-    );
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, $atlasFrameBuffer);
 };
 

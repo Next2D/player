@@ -25,7 +25,8 @@ export default defineConfig({
         "environment": "jsdom",
         "setupFiles": [
             "test.setup.ts",
-            "vitest-webgl-canvas-mock"
+            "vitest-webgl-canvas-mock",
+            "test.setup.webgl.ts"
         ],
         "pool": "threads",
         "include": ["packages/**/*.test.ts"]

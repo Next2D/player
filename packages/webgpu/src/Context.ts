@@ -59,6 +59,7 @@ import {
 
 // Context services
 import { execute as contextFillWithStencilService } from "./Context/service/ContextFillWithStencilService";
+import { execute as frameBufferManagerResolveAttachmentService } from "./FrameBufferManager/service/FrameBufferManagerResolveAttachmentService";
 import { execute as contextFillWithStencilMainService } from "./Context/service/ContextFillWithStencilMainService";
 import { execute as contextFillSimpleService } from "./Context/service/ContextFillSimpleService";
 
@@ -525,8 +526,11 @@ export class Context
         $bgColorAttachment.view = clearUseMsaa
             ? this.$mainAttachmentObject.msaaTexture!.view
             : this.$mainAttachmentObject.texture.view;
-        $bgColorAttachment.resolveTarget = clearUseMsaa
-            ? this.$mainAttachmentObject.texture.view : undefined;
+        // リゾルブ遅延: クリアも書き込みパスとして扱い、読み手直前にまとめて解決する
+        $bgColorAttachment.resolveTarget = undefined;
+        if (clearUseMsaa) {
+            this.$mainAttachmentObject.msaaDirty = true;
+        }
         $bgClearValue.r = this.$clearColorR;
         $bgClearValue.g = this.$clearColorG;
         $bgClearValue.b = this.$clearColorB;
@@ -958,7 +962,11 @@ export class Context
                 const mainStencilView = mainUseMsaa && this.$mainAttachmentObject.msaaStencil?.view
                     ? this.$mainAttachmentObject.msaaStencil.view
                     : this.$mainAttachmentObject.stencil.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+                // リゾルブ遅延: 書き込みパスでは解決しない
+                const mainResolveTarget = null;
+                if (mainUseMsaa) {
+                    this.$mainAttachmentObject.msaaDirty = true;
+                }
 
                 const renderPassDescriptor = this.frameBufferManager.createStencilRenderPassDescriptor(
                     mainColorView,
@@ -978,7 +986,11 @@ export class Context
                 // 2パスステンシルフィルを使用するため、常にステンシル付きレンダーパスを作成
                 const mainUseMsaa = this.$mainAttachmentObject.msaa && this.$mainAttachmentObject.msaaTexture?.view;
                 const mainColorView = mainUseMsaa ? this.$mainAttachmentObject.msaaTexture!.view : this.$mainAttachmentObject.texture!.view;
-                const mainResolveTarget = mainUseMsaa ? this.$mainAttachmentObject.texture!.view : null;
+                // リゾルブ遅延: 書き込みパスでは解決しない
+                const mainResolveTarget = null;
+                if (mainUseMsaa) {
+                    this.$mainAttachmentObject.msaaDirty = true;
+                }
 
                 if (this.$mainAttachmentObject.stencil?.view) {
                     // ステンシル付きレンダーパス（2パスステンシルフィル用）
@@ -1949,6 +1961,44 @@ export class Context
      *
      * @return {void}
      */
+    /**
+     * @description メインアタッチメントのMSAAテクスチャに未リゾルブの描き込みがあれば、
+     *              リゾルブ専用パス(描画なし・load/store+resolveTarget)で1回だけ解決する。
+     *              書き込みパスはresolveTargetを持たないため、リゾルブは
+     *              「リゾルブ済みテクスチャを読む直前」のここに集約される。
+     *              Resolve the main attachment's MSAA texture once via a
+     *              resolve-only pass when it has unresolved drawing. Write
+     *              passes carry no resolveTarget, so resolution happens only
+     *              right before the resolved texture is read.
+     *
+     * @return {void}
+     */
+    private resolveMainAttachment (): void
+    {
+        const mainAttachment = this.$mainAttachmentObject;
+        if (!mainAttachment
+            || !mainAttachment.msaaDirty
+            || !mainAttachment.msaa
+            || !mainAttachment.msaaTexture?.view
+            || !mainAttachment.texture?.view
+        ) {
+            return ;
+        }
+
+        // 開いているパスがあれば終了(以降のリゾルブ専用パスと並行できないため)
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
+        }
+
+        this.ensureCommandEncoder();
+
+        frameBufferManagerResolveAttachmentService(
+            this.commandEncoder!, this.frameBufferManager, mainAttachment
+        );
+    }
+
     drawArraysInstanced (): void
     {
         // フレームが開始されていない場合は開始
@@ -2028,12 +2078,13 @@ export class Context
         }
 
         // 複雑ブレンドはリゾルブ済みのメインテクスチャを読むため、
-        // 開いているレンダーパスを終了してリゾルブを確定させる
+        // 開いているレンダーパスを終了し、未リゾルブ分を解決する
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
             this.renderPassIsInstanced = false;
         }
+        this.resolveMainAttachment();
 
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
@@ -2194,6 +2245,8 @@ export class Context
         // フレームエンコーダーを使用してMSAAテクスチャに描画
         this.ensureCommandEncoder();
         $msaaColorAttachment.view = attachment.msaaTexture!.view;
+        // アトラスへの書き込みは従来通りパス終了時に解決する
+        // (アトラスの解決済みテクスチャはインスタンス描画が毎バッチ参照するため遅延できない)
         $msaaColorAttachment.resolveTarget = attachment.texture!.view;
 
         const stencilView = attachment.msaaStencil?.view;
@@ -2333,6 +2386,8 @@ export class Context
         // フレームエンコーダーを使用してMSAAテクスチャに描画
         this.ensureCommandEncoder();
         $msaaColorAttachment.view = attachment.msaaTexture!.view;
+        // アトラスへの書き込みは従来通りパス終了時に解決する
+        // (アトラスの解決済みテクスチャはインスタンス描画が毎バッチ参照するため遅延できない)
         $msaaColorAttachment.resolveTarget = attachment.texture!.view;
 
         const stencilView = attachment.msaaStencil?.view;
@@ -2683,7 +2738,7 @@ export class Context
     {
         this.drawArraysInstanced();
 
-        // 既存のレンダーパスを終了（temp FBOのMSAAリゾルブが実行される）
+        // 既存のレンダーパスを終了
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
@@ -2696,6 +2751,11 @@ export class Context
 
         // mainを復元
         this.$mainAttachmentObject = this.$containerLayerStack.pop() as IAttachmentObject;
+
+        // リゾルブ遅延: temp FBO(メインのMSAA設定を継承)の未リゾルブ分を解決してからコピー
+        frameBufferManagerResolveAttachmentService(
+            this.commandEncoder!, this.frameBufferManager, tempAttachment
+        );
 
         // temp FBO → アトラスノードへコピー
         this.copyTempToAtlasNode(tempAttachment, node);
@@ -2931,9 +2991,12 @@ export class Context
         });
 
         const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
-        const resolveTarget = useMsaa ? mainAttachment.texture.view : null;
+        // リゾルブ遅延: 書き込みパスでは解決しない
+        if (useMsaa) {
+            mainAttachment.msaaDirty = true;
+        }
         const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-            colorView, 0, 0, 0, 0, "load", resolveTarget
+            colorView, 0, 0, 0, 0, "load", null
         );
 
         const vpX = Math.max(0, drawX);
@@ -3256,6 +3319,9 @@ export class Context
             return;
         }
 
+        // present はリゾルブ済みテクスチャをサンプリングするため、未リゾルブ分を解決
+        this.resolveMainAttachment();
+
         // Static BindGroup キャッシュ: mainAttachment.texture.viewが同じ間は再利用
         const currentView = this.$mainAttachmentObject.texture.view;
         if (!$presentBindGroup || $presentBindGroupView !== currentView) {
@@ -3312,7 +3378,11 @@ export class Context
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
         }
+
+        // リゾルブ済みテクスチャを読むため、未リゾルブ分を解決
+        this.resolveMainAttachment();
 
         // GPUバッファにピクセルデータを読み込み
         const bytesPerPixel = 4;

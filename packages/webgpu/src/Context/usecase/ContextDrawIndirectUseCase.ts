@@ -110,7 +110,12 @@ export const execute = (
     // レンダーパスを作成(前回のインスタンスパスと状態が一致すれば再利用)
     const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
     const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
-    const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
+
+    // リゾルブ遅延: 書き込みパスでは解決せず、読み手直前にまとめて解決する
+    const resolveTarget = null;
+    if (useMsaa) {
+        main_attachment.msaaDirty = true;
+    }
     const useStencilPass = Boolean(useStencil);
 
     let passEncoder: GPURenderPassEncoder;

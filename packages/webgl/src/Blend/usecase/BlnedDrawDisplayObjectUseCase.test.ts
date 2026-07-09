@@ -204,7 +204,15 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         execute(mockNode, 0, 0, 100, 100, mockColorTransform);
 
-        expect($context.drawArraysInstanced).toHaveBeenCalled();
+        // TEXTURE_2D_ARRAY化により、ページ切替ではバッチを分断(flush)しない
+        expect($context.drawArraysInstanced).not.toHaveBeenCalled();
+
+        // indexの更新は維持される
+        expect(AtlasManagerModule.$setCurrentAtlasIndex).toHaveBeenCalledWith(0);
+        expect(AtlasManagerModule.$setActiveAtlasIndex).toHaveBeenCalledWith(0);
+
+        // インスタンスはバッチに追加される
+        expect(renderQueue.pushDisplayObjectBuffer).toHaveBeenCalled();
     });
 
     it("should handle multiply blend mode with complex processing", () => {

@@ -62,6 +62,11 @@ export interface IAttachmentObject
      */
     msaaTexture: ITextureObject | null;
     /**
+     * @description MSAAテクスチャに未リゾルブの描き込みがあるか(リゾルブ遅延用)。
+     *              Whether the MSAA texture has unresolved drawing (deferred resolve).
+     */
+    msaaDirty?: boolean;
+    /**
      * @description MSAAステンシルテクスチャ（sampleCount > 1 の場合に使用）
      *              MSAA stencil texture (used when sampleCount > 1)
      */

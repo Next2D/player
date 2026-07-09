@@ -15,6 +15,7 @@ import { execute as filterApplyGradientBevelFilterUseCase } from "../../Filter/G
 import { execute as filterApplyGradientGlowFilterUseCase } from "../../Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase";
 import { execute as filterApplyDisplacementMapFilterUseCase } from "../../Filter/DisplacementMapFilter/FilterApplyDisplacementMapFilterUseCase";
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
+import { execute as frameBufferManagerResolveAttachmentService } from "../../FrameBufferManager/service/FrameBufferManagerResolveAttachmentService";
 
 /**
  * @description ユニフォームデータの事前確保配列（4要素）
@@ -303,7 +304,11 @@ const $drawFilterResultToMain = (
         });
 
         const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture.view;
-        const resolveTarget = useMsaa ? main_attachment.texture.view : null;
+        const resolveTarget = null;
+        if (useMsaa) {
+            // リゾルブ遅延: 書き込みパスでは解決しない
+            main_attachment.msaaDirty = true;
+        }
         const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
             colorView, 0, 0, 0, 0, "load", resolveTarget
         );
@@ -333,6 +338,11 @@ const $drawFilterResultToMain = (
     } else {
 
         // 複雑なブレンドモード
+        // メインのリゾルブ済みテクスチャを読むため、未リゾルブ分を先に解決する
+        frameBufferManagerResolveAttachmentService(
+            config.commandEncoder, config.frameBufferManager, main_attachment
+        );
+
         const dstAttachment = $copyRegionToFilterAttachment(
             config, main_attachment, drawX, drawY, drawWidth, drawHeight
         );
@@ -387,7 +397,11 @@ const $drawFilterResultToMain = (
             });
 
             const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture.view;
-            const resolveTarget = useMsaa ? main_attachment.texture.view : null;
+            const resolveTarget = null;
+            if (useMsaa) {
+            // リゾルブ遅延: 書き込みパスでは解決しない
+                main_attachment.msaaDirty = true;
+            }
             const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
                 colorView, 0, 0, 0, 0, "load", resolveTarget
             );
@@ -680,6 +694,12 @@ export const execute = (
     _layer_scale_x: number = 1,
     _layer_scale_y: number = 1
 ): void => {
+
+    // コンテナレイヤーはメインのMSAA設定を継承するため、
+    // レイヤーのリゾルブ済みテクスチャを読む前に未リゾルブ分を解決する
+    frameBufferManagerResolveAttachmentService(
+        config.commandEncoder, config.frameBufferManager, temp_attachment
+    );
 
     if (use_filter && matrix && filter_bounds && params) {
 

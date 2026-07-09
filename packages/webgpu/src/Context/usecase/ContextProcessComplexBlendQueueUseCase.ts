@@ -6,6 +6,7 @@ import type { PipelineManager } from "../../Shader/PipelineManager";
 import { getComplexBlendQueue, clearComplexBlendQueue } from "../../Blend/BlendInstancedManager";
 import { execute as blendApplyComplexBlendUseCase } from "../../Blend/usecase/BlendApplyComplexBlendUseCase";
 import { $getAtlasAttachmentObject } from "../../AtlasManager";
+import { execute as frameBufferManagerResolveAttachmentService } from "../../FrameBufferManager/service/FrameBufferManagerResolveAttachmentService";
 
 // プリアロケート配列
 /**
@@ -168,7 +169,11 @@ const $drawToMainAttachment = (
     });
 
     const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
-    const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
+    // リゾルブ遅延: 書き込みパスでは解決しない
+    const resolveTarget = null;
+    if (useMsaa) {
+        main_attachment.msaaDirty = true;
+    }
     const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
         colorView,
         0, 0, 0, 0,
@@ -349,6 +354,9 @@ export const execute = (
         }
 
         // 2. デスティネーションテクスチャを作成（メインからレンダーパスでコピー）
+        // メインのリゾルブ済みテクスチャを読むため、未リゾルブ分を先に解決する
+        frameBufferManagerResolveAttachmentService(command_encoder, frame_buffer_manager, main_attachment);
+
         const dstAttachment = frame_buffer_manager.createTemporaryAttachment(blendWidth, blendHeight);
 
         $copyTextureRegionViaRenderPass(

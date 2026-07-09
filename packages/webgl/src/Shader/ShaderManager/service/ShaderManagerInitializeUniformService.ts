@@ -29,7 +29,9 @@ export const execute = (
 
         // WebGLの仕様でuniformのint型のデフォルト値は0に設定されるため、
         // sampler2D（size=1）の値の更新は不要
-        if (info.type === $gl.SAMPLER_2D && info.size === 1 && !atlas) {
+        if ((info.type === $gl.SAMPLER_2D || info.type === $gl.SAMPLER_2D_ARRAY)
+            && info.size === 1 && !atlas
+        ) {
             continue;
         }
 
@@ -52,7 +54,9 @@ export const execute = (
 
             // uniformの値の設定は、programに保持されるため、
             // sampler2Dは一度だけ設定するようにする
+            // アトラスはTEXTURE_2D_ARRAY(テクスチャユニット3固定)としてサンプリング
             case $gl.SAMPLER_2D:
+            case $gl.SAMPLER_2D_ARRAY:
                 data.method = atlas
                     ? $gl.uniform1i.bind($gl,location, 3)
                     : $gl.uniform1iv.bind($gl, location);

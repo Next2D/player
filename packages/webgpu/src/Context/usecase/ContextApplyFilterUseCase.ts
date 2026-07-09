@@ -319,7 +319,11 @@ const $drawBlendResultToMain = (
     // メインアタッチメントへの描画（loadで既存内容を保持）
     // MSAA有効時はmsaaTextureに描画してtexture.viewにresolve
     const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture.view;
-    const resolveTarget = useMsaa ? main_attachment.texture.view : null;
+    // リゾルブ遅延: 書き込みパスでは解決しない
+    const resolveTarget = null;
+    if (useMsaa) {
+        main_attachment.msaaDirty = true;
+    }
     const renderPassDescriptor = config.frameBufferManager.createRenderPassDescriptor(
         colorView,
         0, 0, 0, 0,

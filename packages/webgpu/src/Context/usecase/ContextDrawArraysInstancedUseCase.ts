@@ -115,7 +115,11 @@ export const execute = (
         const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
         const stencilView = useMsaa && main_attachment.msaaStencil?.view
             ? main_attachment.msaaStencil.view : main_attachment.stencil!.view;
-        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
+        const resolveTarget = null;
+        if (useMsaa) {
+            // リゾルブ遅延: 書き込みパスでは解決しない
+            main_attachment.msaaDirty = true;
+        }
 
         const renderPassDescriptor = frame_buffer_manager.createStencilRenderPassDescriptor(
             colorView,
@@ -129,7 +133,11 @@ export const execute = (
         // 通常のレンダーパス（MSAA対応）
         const useMsaa = main_attachment.msaa && main_attachment.msaaTexture?.view;
         const colorView = useMsaa ? main_attachment.msaaTexture!.view : main_attachment.texture!.view;
-        const resolveTarget = useMsaa ? main_attachment.texture!.view : null;
+        const resolveTarget = null;
+        if (useMsaa) {
+            // リゾルブ遅延: 書き込みパスでは解決しない
+            main_attachment.msaaDirty = true;
+        }
         const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
             colorView,
             0, 0, 0, 0,
