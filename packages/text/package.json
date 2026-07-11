@@ -29,6 +29,5 @@
     "@next2d/events": "file:../events",
     "@next2d/ui": "file:../ui",
     "@next2d/cache": "file:../cache"
-  },
-  "sideEffects": false
+  }
 }
