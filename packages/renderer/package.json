@@ -28,6 +28,5 @@
     "@next2d/webgpu": "file:../webgpu",
     "@next2d/cache": "file:../cache",
     "@next2d/texture-packer": "file:../texture-packer"
-  },
-  "sideEffects": false
+  }
 }
