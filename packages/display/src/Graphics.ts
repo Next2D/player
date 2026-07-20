@@ -13,6 +13,7 @@ import { execute as graphicsDrawEllipseService } from "./Graphics/service/Graphi
 import { execute as graphicsDrawRectService } from "./Graphics/service/GraphicsDrawRectService";
 import { execute as graphicsDrawRoundRectService } from "./Graphics/service/GraphicsDrawRoundRectService";
 import { execute as graphicsToNumberArrayService } from "./Graphics/service/GraphicsToNumberArrayService";
+import { execute as graphicsInvalidateOwnerCacheUseCase } from "./Graphics/usecase/GraphicsInvalidateOwnerCacheUseCase";
 import {
     $getArray,
     $poolArray,
@@ -702,6 +703,11 @@ export class Graphics
         this.$recodes = null;
         this._$fills   = null;
         this._$lines   = null;
+
+        this.isConfirmed = false;
+
+        // 所有DisplayObjectの描画キャッシュを破棄して再描画を画面に反映させる
+        graphicsInvalidateOwnerCacheUseCase(this);
 
         return this;
     }
