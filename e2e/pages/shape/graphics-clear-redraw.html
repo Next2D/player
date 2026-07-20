@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Next2D E2E - Graphics Clear Redraw</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>
+        body { margin: 0; padding: 0; background: #333333; }
+    </style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(600, 300, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { GlowFilter } = next2d.filters;
+
+        // 一度画面にレンダーされてキャッシュ済みのShapeに対して
+        // clear() + 再描画した結果が反映されることの回帰テスト。
+        // バグ時はuniqueKey/cacheStoreが無効化されず旧テクスチャが表示され続ける。
+
+        // Shape1: 赤い四角 → (レンダー後) clear + 青い円
+        const shape1 = new Shape();
+        shape1.graphics.beginFill(0xFF0000, 1).drawRect(0, 0, 100, 80).endFill();
+        shape1.x = 20; shape1.y = 20;
+        root.addChild(shape1);
+
+        // Shape2: 黄色い四角 → (レンダー後) clearのみ（消えるはず）
+        const shape2 = new Shape();
+        shape2.graphics.beginFill(0xFFFF00, 1).drawRect(0, 0, 100, 80).endFill();
+        shape2.x = 180; shape2.y = 20;
+        root.addChild(shape2);
+
+        // Shape3: 白い横長四角 → (レンダー後) clear + サイズ違いのシアン四角
+        const shape3 = new Shape();
+        shape3.graphics.beginFill(0xFFFFFF, 1).drawRect(0, 0, 150, 30).endFill();
+        shape3.x = 340; shape3.y = 20;
+        root.addChild(shape3);
+
+        // Shape4: filter付き親Sprite内のShape → (レンダー後) clear + 再描画。
+        // changedの親伝搬が無いとfilterキャッシュが旧描画のまま残る。
+        const sprite = new Sprite();
+        sprite.filters = [new GlowFilter(0x00FFFF, 1, 8, 8, 2, 1)];
+        const shape4 = new Shape();
+        shape4.graphics.beginFill(0xFF00FF, 1).drawRect(0, 0, 80, 80).endFill();
+        sprite.addChild(shape4);
+        sprite.x = 20; sprite.y = 140;
+        root.addChild(sprite);
+
+        let frame = 0;
+        let redrawn = false;
+        const onEnterFrame = () => {
+            frame++;
+
+            // 初期描画をキャッシュに乗せるため10フレーム表示してからclear+再描画
+            if (frame === 10 && !redrawn) {
+                redrawn = true;
+
+                shape1.graphics.clear();
+                shape1.graphics.beginFill(0x0000FF, 1).drawCircle(50, 40, 40).endFill();
+
+                shape2.graphics.clear();
+
+                shape3.graphics.clear();
+                shape3.graphics.beginFill(0x00FFFF, 1).drawRect(0, 0, 80, 80).endFill();
+
+                shape4.graphics.clear();
+                shape4.graphics.beginFill(0x00FF00, 1).drawCircle(40, 40, 35).endFill();
+
+                return ;
+            }
+
+            // 再描画後の安定を待ってからスナップショット許可
+            if (frame >= 20) {
+                root.removeEventListener("enterFrame", onEnterFrame);
+                window.__E2E_RENDER_COMPLETE__ = true;
+            }
+        };
+        root.addEventListener("enterFrame", onEnterFrame);
+    });
+</script>
+</body>
+</html>

@@ -135,6 +135,15 @@ test.describe("Shape描画テスト", () => {
             await expect(page).toHaveScreenshot("graphics-clear.png");
         });
 
+        // 一度レンダーされたShapeへのclear()+再描画が画面に反映されることの回帰テスト。
+        // uniqueKey/cacheStore/filterキャッシュが無効化されないと旧描画が表示され続ける。
+        test("clear() - レンダー済みShapeのクリア+再描画（キャッシュ無効化の回帰）", async ({ page }) => {
+            await page.goto("/e2e/pages/shape/graphics-clear-redraw.html");
+            await waitForCanvas(page);
+
+            await expect(page).toHaveScreenshot("graphics-clear-redraw.png");
+        });
+
         test("copyFrom() - Graphicsのコピー", async ({ page }) => {
             await page.goto("/e2e/pages/shape/graphics-clone.html");
             await waitForCanvas(page);
