@@ -196,10 +196,14 @@ export class TextField extends InteractiveObject
 
     /**
      * @description ユーザーがテキストフィールドに入力できる文字のセットを指定します。
+     *              空文字列の場合は制限されません。"a-z" のような範囲指定、"^" による除外指定、
+     *              "\\" によるエスケープに対応します。
      *              Indicates the set of characters that a user can enter into the text field.
+     *              If it is an empty string, no restriction is applied. Supports range
+     *              specification such as "a-z", exclusion by "^", and escaping by "\\".
      *
      * @member {string}
-     * @default null
+     * @default ""
      * @public
      */
     public restrict: string;

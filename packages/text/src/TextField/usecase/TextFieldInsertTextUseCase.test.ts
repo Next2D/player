@@ -96,9 +96,57 @@ describe("TextFieldInsertTextUseCase.js test", () =>
         textField.text = "Test";
         textField.focusIndex = 2;
         textField.selectIndex = 4;
-        
+
         execute(textField, "X");
-        
+
         expect(textField.selectIndex).toBe(-1);
+    });
+
+    it("execute test case11 - restrict filters denied characters", () =>
+    {
+        const textField = new TextField();
+        textField.restrict = "0-9";
+        textField.text = "";
+        textField.focusIndex = 1;
+
+        execute(textField, "a1b2c3");
+
+        expect(textField.text).toBe("123");
+    });
+
+    it("execute test case12 - restrict blocks all characters", () =>
+    {
+        const textField = new TextField();
+        textField.restrict = "0-9";
+        textField.text = "";
+        textField.focusIndex = 1;
+
+        execute(textField, "abc");
+
+        expect(textField.text).toBe("");
+    });
+
+    it("execute test case13 - maxChars truncates input", () =>
+    {
+        const textField = new TextField();
+        textField.maxChars = 3;
+        textField.text = "";
+        textField.focusIndex = 1;
+
+        execute(textField, "abcdef");
+
+        expect(textField.text).toBe("abc");
+    });
+
+    it("execute test case14 - maxChars blocks input at limit", () =>
+    {
+        const textField = new TextField();
+        textField.maxChars = 4;
+        textField.text = "Test";
+        textField.focusIndex = 3;
+
+        execute(textField, "X");
+
+        expect(textField.text).toBe("Test");
     });
 });
