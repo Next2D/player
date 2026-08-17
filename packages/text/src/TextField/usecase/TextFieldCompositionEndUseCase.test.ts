@@ -111,10 +111,50 @@ describe("TextFieldCompositionEndUseCase.js test", () =>
         textField.text = "Test";
         textField.compositionStartIndex = 1;
         textField.compositionEndIndex = 3;
-        
+
         expect(() => {
             execute(textField);
             execute(textField);
         }).not.toThrow();
+    });
+
+    it("execute test case11 - restrict removes denied composition text", () =>
+    {
+        const textField = new TextField();
+        textField.restrict = "0-9";
+        textField.text = "123あい";
+        textField.compositionStartIndex = 4;
+        textField.compositionEndIndex = 6;
+
+        execute(textField);
+
+        expect(textField.text).toBe("123");
+        expect(textField.compositionStartIndex).toBe(-1);
+        expect(textField.compositionEndIndex).toBe(-1);
+    });
+
+    it("execute test case12 - maxChars truncates composition text", () =>
+    {
+        const textField = new TextField();
+        textField.maxChars = 5;
+        textField.text = "Testあい";
+        textField.compositionStartIndex = 5;
+        textField.compositionEndIndex = 7;
+
+        execute(textField);
+
+        expect(textField.text).toBe("Testあ");
+    });
+
+    it("execute test case13 - keeps composition text when no restriction", () =>
+    {
+        const textField = new TextField();
+        textField.text = "Testあい";
+        textField.compositionStartIndex = 5;
+        textField.compositionEndIndex = 7;
+
+        execute(textField);
+
+        expect(textField.text).toBe("Testあい");
     });
 });

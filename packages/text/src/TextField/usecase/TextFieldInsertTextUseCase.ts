@@ -3,6 +3,8 @@ import { TextFormat } from "../../TextFormat";
 import { $textArea } from "../../TextUtil";
 import { execute as textFieldDeleteTextUseCase } from "../../TextField/usecase/TextFieldDeleteTextUseCase";
 import { execute as textFieldGetTextDataUseCase } from "../../TextField/usecase/TextFieldGetTextDataUseCase";
+import { execute as textFieldGetRestrictTextsService } from "../service/TextFieldGetRestrictTextsService";
+import { execute as textFieldGetMaxCharsTextsService } from "../service/TextFieldGetMaxCharsTextsService";
 
 /**
  * @description TextField にテキストを挿入します。
@@ -22,8 +24,22 @@ export const execute = (text_field: TextField, texts: string): void =>
         return ;
     }
 
+    texts = textFieldGetRestrictTextsService(text_field, texts);
+    if (!texts) {
+        $textArea.value = "";
+        return ;
+    }
+
     if (text_field.selectIndex > -1) {
         textFieldDeleteTextUseCase(text_field);
+    }
+
+    texts = textFieldGetMaxCharsTextsService(
+        text_field, texts, text_field.text.length
+    );
+    if (!texts) {
+        $textArea.value = "";
+        return ;
     }
 
     const textData = textFieldGetTextDataUseCase(text_field);
