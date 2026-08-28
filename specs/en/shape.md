@@ -43,6 +43,21 @@ classDiagram
 | Performance | Lightweight | Slightly heavier |
 | Use case | Static backgrounds, decorations | Buttons, containers |
 
+## Loading Images (Recommended)
+
+Recommended APIs when using images (bitmaps) with Shape:
+
+| Use case | Recommended API | Notes |
+|----------|-----------------|-------|
+| Load a single image | `shape.load(url)` | Asynchronously loads an image from the specified URL and generates Graphics |
+| Draw an image repeatedly (tiling) | `graphics.beginBitmapFill(bitmapData, matrix?, repeat?, smooth?)` | Pass `repeat: true` to draw repeatedly as a tile |
+| Fill with an image | `graphics.beginBitmapFill(bitmapData, ...)` | Fill shapes such as rectangles and circles with a bitmap |
+
+- **`load()` is recommended when loading an Image with Shape**
+- **`beginBitmapFill` should be used when drawing an Image repeatedly or using it as a fill**
+
+See [Bitmap Fill](#bitmap-fill) for a usage example.
+
 ## Usage Examples
 
 ### Basic Drawing
@@ -228,11 +243,54 @@ stage.addChild(frontShape);
 2. **Minimize drawing**: Only draw once if content doesn't change frequently
 3. **Use clear()**: Always call clear() when dynamically redrawing
 4. **Cache complex shapes**: Cache drawing with cacheAsBitmap property
+5. **Loading Images**: Use `load()` for a single image, and `beginBitmapFill` for repeated drawing or fills
 
 ```javascript
 // Cache complex shapes as bitmap
 const { Matrix } = next2d.geom;
 shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+```
+
+### Path Caching in graphics
+
+Shape's `graphics` **generates a cache key from path information**. As a result, even if you create a new `Shape()`, a Shape that has the same graphics information (path information) is drawn from the cache.
+
+```typescript
+// Same path information → cache is reused (no GPU load)
+const shape1 = new Shape();
+shape1.graphics.beginFill(0xFF0000).drawCircle(0, 0, 50).endFill();
+
+const shape2 = new Shape();
+shape2.graphics.beginFill(0xFF0000).drawCircle(0, 0, 50).endFill(); // cache hit
+```
+
+**Property changes that keep the cache valid:**
+
+Color, opacity, x/y position, and rotation (`alpha`, `x`, `y`, `rotation`) can be changed while reusing the cache, so the rendering load is very small.
+
+```typescript
+// These can be changed while keeping the cache (low load)
+shape.alpha = 0.5;
+shape.x = 100;
+shape.y = 200;
+shape.rotation = 45;
+```
+
+**Cache strategy when using scale:**
+
+When using `scaleX` / `scaleY`, **set `cacheAsBitmap` at the maximum size the object will be displayed at**, and display that cache scaled down. This keeps the rendering load low.
+
+```typescript
+const { Shape } = next2d.display;
+const { Matrix } = next2d.geom;
+
+const shape = new Shape();
+shape.graphics.beginFill(0x3498db).drawRect(0, 0, 100, 100).endFill();
+
+// Cache at the maximum size (2x) and adjust with scale
+shape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0); // cache at 2x quality
+shape.scaleX = 0.5; // display the cache scaled down (no rendering load)
+shape.scaleY = 0.5;
 ```
 
 ## Graphics Class

@@ -43,6 +43,21 @@ classDiagram
 | 性能 | 轻量级 | 稍重 |
 | 使用场景 | 静态背景、装饰 | 按钮、容器 |
 
+## 图像加载（推荐）
+
+Shape 中使用图像（位图）时的推荐 API：
+
+| 用途 | 推荐 API | 备注 |
+|------|----------|------|
+| 加载单个图像 | `shape.load(url)` | 从指定 URL 异步加载图像并生成 Graphics |
+| 重复绘制图像（平铺） | `graphics.beginBitmapFill(bitmapData, matrix?, repeat?, smooth?)` | `repeat: true` 时以平铺方式重复绘制 |
+| 用图像填充 | `graphics.beginBitmapFill(bitmapData, ...)` | 用位图填充矩形、圆形等图形 |
+
+- **Shape 加载 Image 时推荐使用 `load()`**
+- **重复绘制 Image 或用作填充时使用 `beginBitmapFill`**
+
+使用示例请参考「[位图填充](#位图填充)」。
+
 ## 使用示例
 
 ### 基本绘制
@@ -228,11 +243,54 @@ stage.addChild(frontShape);
 2. **最小化绘制**：如果内容不经常更改，只绘制一次
 3. **使用 clear()**：动态重绘时始终调用 clear()
 4. **缓存复杂形状**：使用 cacheAsBitmap 属性缓存绘制
+5. **图像加载**：单个图像使用 `load()`，重复绘制或填充使用 `beginBitmapFill`
 
 ```javascript
 // 将复杂形状缓存为位图
 const { Matrix } = next2d.geom;
 shape.cacheAsBitmap = new Matrix(1, 0, 0, 1, 0, 0);
+```
+
+### graphics 的路径缓存
+
+Shape 的 `graphics` 会**根据路径信息生成缓存键**。因此，即使 `new Shape()`，拥有相同 graphics 信息（路径信息）的 Shape 也会从缓存中绘制。
+
+```typescript
+// 相同的路径信息 → 缓存被复用（无 GPU 负载）
+const shape1 = new Shape();
+shape1.graphics.beginFill(0xFF0000).drawCircle(0, 0, 50).endFill();
+
+const shape2 = new Shape();
+shape2.graphics.beginFill(0xFF0000).drawCircle(0, 0, 50).endFill(); // 缓存命中
+```
+
+**缓存有效的属性更改：**
+
+颜色、透明度、x/y 坐标、旋转（`alpha`、`x`、`y`、`rotation`）可以在复用缓存的同时更改，因此渲染负载非常小。
+
+```typescript
+// 这些可以在保持缓存的同时更改（低负载）
+shape.alpha = 0.5;
+shape.x = 100;
+shape.y = 200;
+shape.rotation = 45;
+```
+
+**使用 scale 时的缓存策略：**
+
+使用 `scaleX` / `scaleY` 时，**按最终显示的最大尺寸设置 `cacheAsBitmap`**，并通过 scale 缩小显示该缓存，从而降低渲染负载。
+
+```typescript
+const { Shape } = next2d.display;
+const { Matrix } = next2d.geom;
+
+const shape = new Shape();
+shape.graphics.beginFill(0x3498db).drawRect(0, 0, 100, 100).endFill();
+
+// 按最大尺寸（2倍）缓存并用 scale 调整
+shape.cacheAsBitmap = new Matrix(2, 0, 0, 2, 0, 0); // 以 2 倍质量缓存
+shape.scaleX = 0.5; // 缩小缓存显示（无渲染负载）
+shape.scaleY = 0.5;
 ```
 
 ## Graphics 类

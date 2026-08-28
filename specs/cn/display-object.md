@@ -261,6 +261,42 @@ sprite.cacheAsBitmap = null;
 - 当 `stage.rendererScale` 更改时，缓存会自动失效
 - 同时设置 `filter` 和 `cacheAsBitmap` 时，`cacheAsBitmap` 优先
 
+## 类判定（namespace）
+
+判定类的种类时不要使用 `constructor.name`。生产构建中，类名会因 minify 而改变。
+
+请改用 `namespace` 属性（实例用・static 用）。
+
+```typescript
+const { Stage, Sprite } = next2d.display;
+
+// ❌ NG: 类名会因 minify 改变，构建后判定会失效
+if (displayObject.constructor.name === "Stage") { /* ... */ }
+
+// ✅ OK: 用实例的 namespace 判定
+if (displayObject.namespace === "next2d.display.Stage") { /* ... */ }
+
+// ✅ OK: 与 static 的 namespace 比较还能防止拼写错误
+if (displayObject.namespace === Stage.namespace) { /* ... */ }
+
+// ✅ OK: 也可使用 isStage 标志（Stage 独有的 readonly 属性）
+if (displayObject.isStage) { /* ... */ }
+```
+
+**拥有 namespace 的主要类：**
+
+| 类 | namespace 的值 |
+|----|----------------|
+| `Stage` | `"next2d.display.Stage"` |
+| `Sprite` | `"next2d.display.Sprite"` |
+| `MovieClip` | `"next2d.display.MovieClip"` |
+| `Shape` | `"next2d.display.Shape"` |
+| `Loader` | `"next2d.display.Loader"` |
+| `TextField` | `"next2d.display.TextField"` |
+| `Video` | `"next2d.media.Video"` |
+
+**补充：** 包含继承在内的功能判定请使用 `isStage` / `isSprite` / `isShape` / `isText` / `isVideo` / `isContainerEnabled` / `isTimelineEnabled` 等各标志。`namespace` 用于完全一致的类判定。
+
 ## 相关
 
 - [MovieClip](/cn/reference/player/movie-clip)
