@@ -261,6 +261,42 @@ sprite.cacheAsBitmap = null;
 - `stage.rendererScale`が変更されるとキャッシュが自動的に無効化されます
 - `filter`と`cacheAsBitmap`を同時に設定した場合、`cacheAsBitmap`が優先されます
 
+## クラス判定（namespace）
+
+クラスの種類を判定する際に `constructor.name` を使用してはいけません。プロダクションビルドでは minify によってクラス名が変わるためです。
+
+代わりに `namespace` プロパティ（インスタンス用・static用）を使用します。
+
+```typescript
+const { Stage, Sprite } = next2d.display;
+
+// ❌ NG: minify でクラス名が変わるため、ビルド後に判定が壊れる
+if (displayObject.constructor.name === "Stage") { /* ... */ }
+
+// ✅ OK: インスタンスの namespace で判定
+if (displayObject.namespace === "next2d.display.Stage") { /* ... */ }
+
+// ✅ OK: static の namespace と比較するとタイポも防げる
+if (displayObject.namespace === Stage.namespace) { /* ... */ }
+
+// ✅ OK: isStage フラグも使用可能（Stage のみが持つ readonly プロパティ）
+if (displayObject.isStage) { /* ... */ }
+```
+
+**namespace を持つ主なクラス:**
+
+| クラス | namespace の値 |
+|--------|----------------|
+| `Stage` | `"next2d.display.Stage"` |
+| `Sprite` | `"next2d.display.Sprite"` |
+| `MovieClip` | `"next2d.display.MovieClip"` |
+| `Shape` | `"next2d.display.Shape"` |
+| `Loader` | `"next2d.display.Loader"` |
+| `TextField` | `"next2d.display.TextField"` |
+| `Video` | `"next2d.media.Video"` |
+
+**補足:** 継承を含めた機能判定には `isStage` / `isSprite` / `isShape` / `isText` / `isVideo` / `isContainerEnabled` / `isTimelineEnabled` の各フラグを使用します。`namespace` は完全一致のクラス判定に使用します。
+
 ## 関連項目
 
 - [MovieClip](/ja/reference/player/movie-clip)

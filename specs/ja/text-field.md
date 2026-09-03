@@ -332,6 +332,41 @@ textField.replaceText("Next2D", 6, 11);
 stage.addChild(textField);
 ```
 
+### RPGゲーム風台詞アニメーション（stopIndex）
+
+`stopIndex` を使うと、テキストを先頭から順番に表示するタイプライター効果を実現できます。
+RPGゲームの台詞ウィンドウのような演出に適しています。
+`stopIndex` のデフォルト値は `-1`（全文字を表示）で、`0` にすると文字が非表示になります。
+
+```typescript
+const { TextField } = next2d.text;
+const { Tween, Job } = next2d.ui;
+
+const textField = new TextField();
+textField.width = 300;
+textField.height = 80;
+textField.multiline = true;
+textField.wordWrap = true;
+textField.text = "勇者よ、魔王を倒してくれ！世界の命運はそなたにかかっている。";
+
+stage.addChild(textField);
+
+// stopIndex を 0 → text.length まで 5秒かけてアニメーション（0.5秒の遅延あり）
+const job = Tween.add(
+    textField,
+    { stopIndex: 0 },
+    { stopIndex: textField.text.length },
+    0.5,
+    5
+);
+
+job.addEventListener(Job.COMPLETE, () => {
+    console.log("台詞表示完了");
+});
+
+job.start();
+```
+
 ## イベント
 
 | イベント | 説明 |

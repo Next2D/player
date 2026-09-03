@@ -261,6 +261,42 @@ sprite.cacheAsBitmap = null;
 - Cache is automatically invalidated when `stage.rendererScale` changes
 - When both `filter` and `cacheAsBitmap` are set, `cacheAsBitmap` takes priority
 
+## Class Identification (namespace)
+
+Do not use `constructor.name` to identify the class. In production builds, class names change due to minification.
+
+Instead, use the `namespace` property (instance and static).
+
+```typescript
+const { Stage, Sprite } = next2d.display;
+
+// ❌ NG: class names change with minification, so identification breaks after the build
+if (displayObject.constructor.name === "Stage") { /* ... */ }
+
+// ✅ OK: identify by the instance's namespace
+if (displayObject.namespace === "next2d.display.Stage") { /* ... */ }
+
+// ✅ OK: comparing with the static namespace also prevents typos
+if (displayObject.namespace === Stage.namespace) { /* ... */ }
+
+// ✅ OK: the isStage flag can also be used (a readonly property that only Stage has)
+if (displayObject.isStage) { /* ... */ }
+```
+
+**Main classes that have namespace:**
+
+| Class | namespace value |
+|-------|-----------------|
+| `Stage` | `"next2d.display.Stage"` |
+| `Sprite` | `"next2d.display.Sprite"` |
+| `MovieClip` | `"next2d.display.MovieClip"` |
+| `Shape` | `"next2d.display.Shape"` |
+| `Loader` | `"next2d.display.Loader"` |
+| `TextField` | `"next2d.display.TextField"` |
+| `Video` | `"next2d.media.Video"` |
+
+**Note:** For capability checks that include inheritance, use the `isStage` / `isSprite` / `isShape` / `isText` / `isVideo` / `isContainerEnabled` / `isTimelineEnabled` flags. Use `namespace` for exact class matching.
+
 ## Related
 
 - [MovieClip](/en/reference/player/movie-clip)

@@ -330,6 +330,41 @@ textField.replaceText("Next2D", 6, 11);
 stage.addChild(textField);
 ```
 
+### RPG 游戏风格对话动画（stopIndex）
+
+使用 `stopIndex` 可以实现从开头按顺序显示文本的打字机效果。
+适用于 RPG 游戏对话框之类的演出。
+`stopIndex` 的默认值为 `-1`（显示全部文字），设置为 `0` 时文字不可见。
+
+```typescript
+const { TextField } = next2d.text;
+const { Tween, Job } = next2d.ui;
+
+const textField = new TextField();
+textField.width = 300;
+textField.height = 80;
+textField.multiline = true;
+textField.wordWrap = true;
+textField.text = "勇者啊，请去打倒魔王吧！世界的命运就托付给你了。";
+
+stage.addChild(textField);
+
+// 将 stopIndex 从 0 → text.length 用 5 秒进行动画（含 0.5 秒延迟）
+const job = Tween.add(
+    textField,
+    { stopIndex: 0 },
+    { stopIndex: textField.text.length },
+    0.5,
+    5
+);
+
+job.addEventListener(Job.COMPLETE, () => {
+    console.log("台词显示完成");
+});
+
+job.start();
+```
+
 ## 事件
 
 | 事件 | 说明 |

@@ -330,6 +330,41 @@ textField.replaceText("Next2D", 6, 11);
 stage.addChild(textField);
 ```
 
+### RPG-Style Dialogue Animation (stopIndex)
+
+Using `stopIndex` lets you implement a typewriter effect that displays text from the beginning in order.
+It is suitable for effects such as the dialogue window in an RPG game.
+The default value of `stopIndex` is `-1` (display all characters), and setting it to `0` hides the characters.
+
+```typescript
+const { TextField } = next2d.text;
+const { Tween, Job } = next2d.ui;
+
+const textField = new TextField();
+textField.width = 300;
+textField.height = 80;
+textField.multiline = true;
+textField.wordWrap = true;
+textField.text = "Hero, please defeat the Demon King! The fate of the world rests with you.";
+
+stage.addChild(textField);
+
+// Animate stopIndex from 0 → text.length over 5 seconds (with a 0.5 second delay)
+const job = Tween.add(
+    textField,
+    { stopIndex: 0 },
+    { stopIndex: textField.text.length },
+    0.5,
+    5
+);
+
+job.addEventListener(Job.COMPLETE, () => {
+    console.log("Dialogue display complete");
+});
+
+job.start();
+```
+
 ## Events
 
 | Event | Description |
