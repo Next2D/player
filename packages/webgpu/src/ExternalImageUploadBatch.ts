@@ -1,3 +1,11 @@
+interface IExternalImageCopy {
+    destination: GPUTexture;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 /**
  * Packs canvas snapshots before uploading them. Each flush submits copies to
  * distinct, frame-owned destination textures before the renderer submits draws.
@@ -10,7 +18,7 @@ export class ExternalImageUploadBatch
     private canvas: OffscreenCanvas | null = null;
     private context: OffscreenCanvasRenderingContext2D | null = null;
     private texture: GPUTexture | null = null;
-    private encoder: GPUCommandEncoder | null = null;
+    private readonly copies: IExternalImageCopy[] = [];
     private x = 0;
     private y = 0;
     private rowHeight = 0;
@@ -47,15 +55,9 @@ export class ExternalImageUploadBatch
                 "usage": 0x13
             });
         }
-        if (!this.encoder) {
-            this.encoder = this.device.createCommandEncoder();
-        }
         // Integer, unscaled copy onto a cleared, disjoint region.
         this.context.drawImage(source, this.x, this.y);
-        this.encoder.copyTextureToTexture(
-            { "texture": this.texture, "origin": [this.x, this.y] },
-            { "texture": destination }, { width, height }
-        );
+        this.copies.push({ destination, "x": this.x, "y": this.y, width, height });
         this.x += width;
         this.usedWidth = Math.max(this.usedWidth, this.x);
         this.rowHeight = Math.max(this.rowHeight, height);
@@ -64,7 +66,7 @@ export class ExternalImageUploadBatch
 
     flush (): void
     {
-        if (!this.encoder || !this.canvas || !this.texture) {
+        if (!this.copies.length || !this.canvas || !this.texture) {
             return;
         }
         this.device.queue.copyExternalImageToTexture(
@@ -72,10 +74,19 @@ export class ExternalImageUploadBatch
             { "texture": this.texture, "premultipliedAlpha": true },
             { "width": this.usedWidth, "height": this.y + this.rowHeight }
         );
+        // Record copies only after the external upload. On WebKit, recording
+        // against a staging texture before its first upload can copy blank pixels.
+        const encoder = this.device.createCommandEncoder();
+        for (const copy of this.copies) {
+            encoder.copyTextureToTexture(
+                { "texture": this.texture, "origin": [copy.x, copy.y] },
+                { "texture": copy.destination }, { "width": copy.width, "height": copy.height }
+            );
+        }
         // Submit before reusing staging storage; these destinations remain owned
         // by the frame until its later rendering submission.
-        this.device.queue.submit([this.encoder.finish()]);
-        this.encoder = null;
+        this.device.queue.submit([encoder.finish()]);
+        this.copies.length = 0;
         this.canvas.width = this.size;
         this.x = this.y = this.rowHeight = this.usedWidth = 0;
     }
@@ -83,7 +94,7 @@ export class ExternalImageUploadBatch
     /** Discard pending copies when resize discards the corresponding draw frame. */
     dispose (): void
     {
-        this.encoder = null;
+        this.copies.length = 0;
         this.texture?.destroy();
         this.texture = null;
         this.canvas = null;

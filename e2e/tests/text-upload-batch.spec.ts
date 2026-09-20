@@ -12,5 +12,10 @@ test("batched text uploads preserve exact GPU pixels across rollover and source 
     expect(result.externalCopies).toBeGreaterThan(1);
     expect(result.externalCopies).toBeLessThan(48);
     expect(result.painted).toBeGreaterThan(0);
-    for (const row of result.results) expect(row.maxDelta).toBe(0);
+    expect(result.results[0].expectedPainted).toBeGreaterThan(0);
+    expect(result.results[24].expectedPainted).toBeGreaterThan(0);
+    for (const row of result.results) {
+        expect(row.maxDelta).toBe(0);
+        expect(row.actualPainted).toBe(row.expectedPainted);
+    }
 });

@@ -19,6 +19,11 @@ try {
     const pairs = [];
     let scratch = null;
     for (let i = 0; i < 48; i++) {
+        // Exercise a fresh staging texture again after resize-style disposal.
+        if (i === 24) {
+            batch.flush();
+            batch.dispose();
+        }
         // Large entries force row and page rollover; mixed sizes leave padding.
         const width = i % 12 === 0 ? 900 : i % 4 < 2 ? 128 : 96;
         const height = i % 12 === 0 ? 700 : i % 3 ? 48 : 64;
@@ -35,7 +40,8 @@ try {
             focusVisible: Boolean(i & 2), thickness: i & 4 ? 1 : 0, thicknessColor: 0x00AA55,
             wordWrap: false, background: Boolean(i & 1), backgroundColor: 0xAABBCC,
             border: Boolean(i & 2), borderColor: 0x772299, defaultColor: 0, defaultSize: 16 };
-        scratch = draw(i % 11 ? data : null, setting, 1 + (i % 2) * 0.25, 1, scratch);
+        // The first upload must contain text, not just transparent pixels.
+        scratch = draw((i + 1) % 11 ? data : null, setting, 1 + (i % 2) * 0.25, 1, scratch);
         const descriptor = { size: [width, height], format: "rgba8unorm", usage: 0x13 };
         const expected = device.createTexture(descriptor);
         const actual = device.createTexture(descriptor);
@@ -61,15 +67,18 @@ try {
         device.queue.submit([encoder.finish()]);
         await buffer.mapAsync(1);
         const pixels = new Uint8Array(buffer.getMappedRange());
-        let maxDelta = 0, differentChannels = 0;
+        let maxDelta = 0, differentChannels = 0, expectedPainted = 0, actualPainted = 0;
         for (let y = 0; y < height; y++) for (let x = 0; x < width * 4; x++) {
             const offset = y * bytesPerRow + x;
             const delta = Math.abs(pixels[offset] - pixels[bytes + offset]);
             maxDelta = Math.max(maxDelta, delta);
             if (delta) differentChannels++;
-            if (x % 4 === 3 && pixels[offset]) painted++;
+            if (x % 4 === 3) {
+                if (pixels[offset]) { painted++; expectedPainted++; }
+                if (pixels[bytes + offset]) actualPainted++;
+            }
         }
-        results.push({ width, height, maxDelta, differentChannels });
+        results.push({ width, height, maxDelta, differentChannels, expectedPainted, actualPainted });
         buffer.unmap(); buffer.destroy(); pair.expected.destroy(); pair.actual.destroy();
     }
     const validationError = await device.popErrorScope();
