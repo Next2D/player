@@ -5,66 +5,71 @@ import {
     $setMaskDrawing
 } from "../../Mask";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        "$gl": {
+            "enable": vi.fn(),
+            "STENCIL_TEST": "STENCIL_TEST",
+        },
+        $enableStencilTest: vi.fn(),
+        $disableStencilTest: vi.fn(),
+        "$context": {
+            get currentAttachmentObject() {
+                return null;
+            }
+        }
+    }
+});
+
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        "$gl": {
+            "disable": vi.fn(),
+            "enable": vi.fn(),
+            "STENCIL_TEST": "STENCIL_TEST",
+            "SCISSOR_TEST": "SCISSOR_TEST",
+        },
+        $enableStencilTest: vi.fn(),
+        $disableStencilTest: vi.fn(),
+        $disableScissorTest: vi.fn(),
+        "$context": {
+            get currentAttachmentObject() {
+                return null;
+            }
+        }
+    }
+});
+
+
 describe("MaskBindUseCase.js method test", () =>
 {
     it("test case1", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                "$gl": {
-                    "enable": vi.fn(),
-                    "STENCIL_TEST": "STENCIL_TEST",
-                },
-                $enableStencilTest: vi.fn(),
-                $disableStencilTest: vi.fn(),
-                "$context": {
-                    get currentAttachmentObject() {
-                        return null;
-                    }
-                }
-            }
-        });
+
 
         $setMaskDrawing(false);
         expect($isMaskDrawing()).toBe(false);
 
         execute(true);
         expect($isMaskDrawing()).toBe(true);
-        
+
     });
 
     it("test case2", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                "$gl": {
-                    "disable": vi.fn(),
-                    "enable": vi.fn(),
-                    "STENCIL_TEST": "STENCIL_TEST",
-                    "SCISSOR_TEST": "SCISSOR_TEST",
-                },
-                $enableStencilTest: vi.fn(),
-                $disableStencilTest: vi.fn(),
-                $disableScissorTest: vi.fn(),
-                "$context": {
-                    get currentAttachmentObject() {
-                        return null;
-                    }
-                }
-            }
-        });
+
 
         $setMaskDrawing(true);
         expect($isMaskDrawing()).toBe(true);
 
         execute(false);
         expect($isMaskDrawing()).toBe(false);
-        
+
     });
 });

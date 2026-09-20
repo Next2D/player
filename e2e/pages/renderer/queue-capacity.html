@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>body { margin: 0; background: #182030; }</style>
+<script>
+const flow = window.__QUEUE_FLOW__ = { sent: 0, ack: 0, pending: 0, maxPending: 0, startupMaxPending: 0, rows: [], allocations: [], trims: [], captures: 0, resizes: 0 };
+const workers = new WeakSet();
+const post = Worker.prototype.postMessage;
+Worker.prototype.postMessage = function (message, ...args) {
+    if (!workers.has(this)) {
+        workers.add(this);
+        this.addEventListener("message", ({ data }) => {
+            if (data.message === "renderFlowControl") flow.initialized = data.enabled;
+            if (data.message === "render") { flow.ack++; flow.pending--; }
+        });
+    }
+    if (message.command === "render" || message.command === "capture") {
+        flow.rows.push({ command: message.command, step: flow.step ?? 0, used: message.length * 4, capacity: message.buffer.buffer.byteLength });
+    }
+    if (message.command === "resize") flow.resizes++;
+    const result = Reflect.apply(post, this, [message, ...args]);
+    if (message.command === "render") {
+        flow.sent++; flow.pending++;
+        if (flow.ready) flow.maxPending = Math.max(flow.maxPending, flow.pending);
+        else flow.startupMaxPending = Math.max(flow.startupMaxPending, flow.pending);
+    }
+    return result;
+};
+</script>
+<script defer type="module" src="/src/index.ts"></script>
+</head><body>
+<script type="module">
+import { renderQueue } from "/packages/render-queue/src/RenderQueue.ts";
+import { execute as capture } from "/packages/core/src/Player/service/PlayerTransferCanvasPostMessageService.ts";
+import { $renderMatrix } from "/packages/core/src/CoreUtil.ts";
+for (const method of ["resize", "_resizeForAppend"]) {
+    const resize = renderQueue[method];
+    if (!resize) continue;
+    renderQueue[method] = function (length) {
+        const from = this.buffer.byteLength;
+        resize.call(this, length);
+        flow.allocations.push({ step: flow.step ?? 0, method, from, to: this.buffer.byteLength });
+    };
+}
+if (renderQueue.trim) {
+    const trim = renderQueue.trim;
+    renderQueue.trim = function () {
+        const from = this.buffer.byteLength;
+        trim.call(this);
+        if (this.buffer.byteLength !== from) flow.trims.push({ step: flow.step ?? 0, from, to: this.buffer.byteLength });
+    };
+}
+window.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const group = new next2d.display.Sprite(); root.addChild(group);
+        const fields = [];
+        for (let i = 0; i < 2000; i++) {
+            const field = new next2d.text.TextField();
+            const format = field.defaultTextFormat;
+            format.size = 10; format.color = 0xFFFFFF;
+            field.defaultTextFormat = format;
+            field.autoSize = "left"; field.text = `T${i % 8}`;
+            field.x = i % 50 * 17; field.y = Math.floor(i / 50) * 13;
+            group.addChild(field); fields.push(field);
+        }
+        const raf = () => new Promise(requestAnimationFrame);
+        const drain = async minimum => {
+            for (let i = 0; i < 1200; i++) {
+                await raf();
+                if (flow.initialized && flow.sent >= minimum && !flow.pending) return;
+            }
+            throw new Error("Queue did not drain");
+        };
+        await drain(1);
+        flow.ready = true;
+        window.__runQueuePhase = async (start, end) => {
+            for (let step = start; step <= end; step++) {
+                flow.step = step;
+                const minimum = flow.sent + 1;
+                if (step === 122 || step === 244) {
+                    for (let i = 0; i < fields.length; i++) fields[i].text = `${step === 122 ? "A" : "B"}${i % 8}`;
+                }
+                group.x = Math.sin(step * 0.03) * 5;
+                await drain(minimum);
+                if (step === 500) {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = next2d.display.stage.rendererWidth;
+                    canvas.height = next2d.display.stage.rendererHeight;
+                    await capture(root, $renderMatrix, new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]), canvas);
+                    flow.captureImage = canvas.toDataURL("image/png");
+                    flow.captures++;
+                }
+            }
+            for (let i = 0; i < 4; i++) await raf();
+        };
+    } catch (error) { flow.error = String(error); }
+});
+</script></body></html>

@@ -2,20 +2,23 @@ import { execute } from "./StencilBufferObjectAcquireObjectUseCase";
 import { describe, expect, it, vi } from "vitest";
 import { $objectPool } from "../../StencilBufferObject";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "createRenderbuffer": vi.fn(() => { return  "createRenderbuffer" })
+        }
+    }
+});
+
+
 describe("StencilBufferObjectAcquireObjectUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "createRenderbuffer": vi.fn(() => { return  "createRenderbuffer" })
-                }
-            }
-        });
+
 
         // new
         $objectPool.length = 0;

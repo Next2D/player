@@ -23,7 +23,7 @@ import {
  * @type {number}
  * @private
  */
-const $MAX_VALUE: number = Number.MAX_VALUE;
+const $MAX_VALUE: number = Infinity;
 
 /**
  * @description 未解決(dirty)の全アトラスページを、配列テクスチャの各レイヤーへ解決します。

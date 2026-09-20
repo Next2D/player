@@ -1,0 +1,12 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Extended filter uniform regression</title>
+<script type="module">
+import { compareFilterUniform } from "./filter-uniform.js";
+try {
+    const container = new URLSearchParams(location.search).has("container");
+    window.__FILTER_UNIFORM_RESULT__ = await compareFilterUniform({ extended: true, container });
+} catch (error) {
+    window.__FILTER_UNIFORM_RESULT__ = { error: String(error.stack || error) };
+}
+</script>

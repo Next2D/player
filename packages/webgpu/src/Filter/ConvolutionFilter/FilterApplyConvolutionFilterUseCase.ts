@@ -1,5 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
+import { execute as filterAllocateUniformBindingService } from "../service/FilterAllocateUniformBindingService";
 import { ShaderSource } from "../../Shader/ShaderSource";
 import { intToStraightRGBA } from "../FilterUtil";
 
@@ -158,18 +159,12 @@ export const execute = (
         uniformData[8 + i] = paddedMatrix[i];
     }
 
-    const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireAndWriteUniformBuffer(uniformData)
-        : device.createBuffer({
-            "size": uniformData.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-    if (!config.bufferManager) {
-        device.queue.writeBuffer(uniformBuffer, 0, uniformData);
-    }
+    const uniformBinding = filterAllocateUniformBindingService(
+        device, uniformData, config.bufferManager
+    );
 
     // バインドグループを作成
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[0].resource = uniformBinding;
     $entries3[1].resource = sampler;
     $entries3[2].resource = source_attachment.texture!.view;
     const bindGroup = device.createBindGroup({

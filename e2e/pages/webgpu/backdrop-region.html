@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Backdrop region regression</title></head>
+<body><script type="module">
+import { compareBackdropPaths } from "./backdrop-region.js";
+window.__BACKDROP_RESULT__ = await compareBackdropPaths().catch(error => ({ error: String(error) }));
+</script></body></html>

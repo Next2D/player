@@ -2,20 +2,23 @@ import { execute } from "./TextureManagerReleaseTextureObjectUseCase";
 import { $acquirePooledTexture } from "../../TextureManager";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "deleteTexture": vi.fn((object) => { return object.delete = true; })
+        }
+    }
+});
+
+
 describe("TextureManagerReleaseTextureObjectUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "deleteTexture": vi.fn((object) => { return object.delete = true; })
-                }
-            }
-        });
+
 
         const createTextureObject = (width: number, height: number) => ({
             "id": 0,

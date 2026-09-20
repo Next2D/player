@@ -76,6 +76,7 @@ export const execute = async <D extends DisplayObject> (
         }
 
         // update buffer
+        renderQueue.trim();
         $message.buffer  = renderQueue.buffer;
         $message.width   = transferred_canvas.width;
         $message.height  = transferred_canvas.height;

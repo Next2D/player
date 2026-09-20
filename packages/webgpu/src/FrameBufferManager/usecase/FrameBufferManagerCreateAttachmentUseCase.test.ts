@@ -33,6 +33,15 @@ describe("FrameBufferManagerCreateAttachmentUseCase", () =>
 
     describe("attachment creation", () =>
     {
+        it.each(["main", "atlas_0"])("only makes main MSAA color sampleable: %s", name =>
+        {
+            const device = createMockDevice();
+            execute(device, "bgra8unorm", new Map(), name, 32, 32, true, false,
+                { "nextId": 1, "textureId": 1, "stencilId": 1 });
+            const msaa = vi.mocked(device.createTexture).mock.calls[1][0];
+            expect(msaa.usage & GPUTextureUsage.TEXTURE_BINDING).toBe(name === "main" ? GPUTextureUsage.TEXTURE_BINDING : 0);
+        });
+
         it("should create attachment with correct width", () =>
         {
             const device = createMockDevice();

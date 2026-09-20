@@ -1,5 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
+import { execute as filterAllocateUniformBindingService } from "../service/FilterAllocateUniformBindingService";
 import { ShaderSource } from "../../Shader/ShaderSource";
 import { intToPremultipliedRGBA } from "../FilterUtil";
 
@@ -7,6 +8,8 @@ import { intToPremultipliedRGBA } from "../FilterUtil";
  * @description プリアロケートされたFloat32Array (サイズ12: 最大48バイト)
  */
 const $uniform12 = new Float32Array(12);
+// Reuse the 32-byte prefix for modes without substituteColor.
+const $uniform8 = $uniform12.subarray(0, 8);
 
 /**
  * @description プリアロケートされたBindGroupEntry配列 (バインディング4つ)
@@ -178,7 +181,6 @@ export const execute = (
 
     // ユニフォームバッファを作成
     const needsSubstituteColor = mode === 1;
-    const uniformSize = needsSubstituteColor ? 48 : 32;
 
     // uvToStScale
     $uniform12[0] = baseWidth / bitmap_width;
@@ -205,18 +207,12 @@ export const execute = (
         $uniform12[11] = a;
     }
 
-    const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform12, uniformSize)
-        : device.createBuffer({
-            "size": uniformSize,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-    if (!config.bufferManager) {
-        device.queue.writeBuffer(uniformBuffer, 0, $uniform12, 0, uniformSize / 4);
-    }
+    const uniformBinding = filterAllocateUniformBindingService(
+        device, needsSubstituteColor ? $uniform12 : $uniform8, config.bufferManager
+    );
 
     // バインドグループを作成
-    ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries4[0].resource = uniformBinding;
     $entries4[1].resource = sampler;
     $entries4[2].resource = source_attachment.texture!.view;
     $entries4[3].resource = mapTexture.createView();

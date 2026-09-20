@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; background: #333333; }</style>
+</head>
+<body>
+<script type="module">
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(800, 600, 60);
+        const { TextField } = next2d.text;
+        const { Matrix, ColorTransform } = next2d.geom;
+        const { BlurFilter } = next2d.filters;
+        const fields = [];
+        for (let i = 0; i < 8; i++) {
+            const field = new TextField();
+            const format = field.defaultTextFormat;
+            format.size = 16;
+            format.color = 0xF0D080;
+            field.defaultTextFormat = format;
+            field.autoSize = "left";
+            field.text = `Raster ${i}`;
+            field.x = 40 + (i % 2) * 360;
+            field.y = 40 + Math.floor(i / 2) * 130;
+            field.background = true;
+            field.backgroundColor = 0x334455;
+            if (i & 1) field.cacheAsBitmap = new Matrix();
+            if (i & 2) field.filters = [new BlurFilter(2, 2, 1)];
+            if (i & 4) field.blendMode = "multiply";
+            field.colorTransform = new ColorTransform(0.8, 1, 0.6, 0.8, 16, 0, 32, 8);
+            root.addChild(field);
+            fields.push(field);
+        }
+        window.__rasterStep = step => {
+            for (const [i, field] of fields.entries()) {
+                if (step === 1) { field.x += 8; field.rotation = 15; }
+                if (step === 2 || step === 4) field.scaleX = 1.5;
+                if (step === 3) { field.scaleX = 1; field.backgroundColor = 0x556677; }
+                if (step === 5) { field.text = `Changed ${i}`; field.border = true; }
+                if (step === 6) field.stopIndex = 3;
+            }
+        };
+        window.__forceRaster = () => {
+            for (const field of fields) {
+                const color = field.backgroundColor;
+                field.backgroundColor = color ^ 1;
+                field.backgroundColor = color;
+            }
+        };
+        window.__E2E_RENDER_COMPLETE__ = true;
+    });
+</script>
+</body>
+</html>

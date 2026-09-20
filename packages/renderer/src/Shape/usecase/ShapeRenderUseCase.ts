@@ -16,14 +16,23 @@ import { $context } from "../../RendererUtil";
  */
 export const execute = (render_queue: Float32Array, index: number): number =>
 {
-    const matrix = render_queue.subarray(index, index + 6);
-    index += 6;
+    // フィルター以外はスカラーで読むことでShape毎の一時ビュー生成を避ける。
+    // Only filters need a matrix view; ordinary drawing reads scalar values.
+    const matrixIndex = index;
+    const a = render_queue[index++];
+    const b = render_queue[index++];
+    const c = render_queue[index++];
+    const d = render_queue[index++];
+    const e = render_queue[index++];
+    const f = render_queue[index++];
 
-    const colorTransform = render_queue.subarray(index, index + 8);
+    const colorTransformIndex = index;
     index += 8;
 
-    const bounds = render_queue.subarray(index, index + 4);
-    index += 4;
+    const boundsXMin = render_queue[index++];
+    const boundsYMin = render_queue[index++];
+    const boundsXMax = render_queue[index++];
+    const boundsYMax = render_queue[index++];
 
     // baseBounds
     const xMin = render_queue[index++];
@@ -195,8 +204,10 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const length = render_queue[index++];
         const params = render_queue.subarray(index, index + length);
 
-        const width  = Math.ceil(Math.abs(bounds[2] - bounds[0]));
-        const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
+        const width  = Math.ceil(Math.abs(boundsXMax - boundsXMin));
+        const height = Math.ceil(Math.abs(boundsYMax - boundsYMin));
+        const matrix = render_queue.subarray(matrixIndex, matrixIndex + 6);
+        const colorTransform = render_queue.subarray(colorTransformIndex, colorTransformIndex + 8);
 
         $context.applyFilter(
             node, `${filterKeyNumber}`, updated,
@@ -210,44 +221,43 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         return index;
     }
 
-    $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
+    $context.globalAlpha = Math.min(Math.max(0,
+        render_queue[colorTransformIndex + 3] + render_queue[colorTransformIndex + 7] / 255), 1);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
 
     if (isBitmap && !isGridEnabled) {
         $context.setTransform(
-            matrix[0], matrix[1],
-            matrix[2], matrix[3],
-            matrix[4], matrix[5]
+            a, b, c, d, e, f
         );
 
         $context.drawDisplayObject(
             node,
-            bounds[0], bounds[1], bounds[2], bounds[3],
-            colorTransform
+            boundsXMin, boundsYMin, boundsXMax, boundsYMax,
+            render_queue, colorTransformIndex
         );
     } else if (isCacheAsBitmap) {
 
         // cacheAsBitmap: Bitmapと同様の描画パスで、cacheScaleを補正
         // baseBounds原点(xMin,yMin)のスクリーン座標をtranslationに反映
-        const screenX = matrix[0] * xMin + matrix[2] * yMin + matrix[4];
-        const screenY = matrix[1] * xMin + matrix[3] * yMin + matrix[5];
+        const screenX = a * xMin + c * yMin + e;
+        const screenY = b * xMin + d * yMin + f;
 
         $context.setTransform(
-            matrix[0] / xScale, matrix[1] / xScale,
-            matrix[2] / yScale, matrix[3] / yScale,
+            a / xScale, b / xScale,
+            c / yScale, d / yScale,
             screenX, screenY
         );
 
         $context.drawDisplayObject(
             node,
-            bounds[0], bounds[1], bounds[2], bounds[3],
-            colorTransform
+            boundsXMin, boundsYMin, boundsXMax, boundsYMax,
+            render_queue, colorTransformIndex
         );
     } else {
 
-        const radianX = Math.atan2(matrix[1], matrix[0]);
-        const radianY = Math.atan2(-matrix[2], matrix[3]);
+        const radianX = Math.atan2(b, a);
+        const radianY = Math.atan2(-c, d);
         if (radianX || radianY) {
 
             const tx = xMin * xScale;
@@ -255,19 +265,21 @@ export const execute = (render_queue: Float32Array, index: number): number =>
 
             const cosX = Math.cos(radianX);
             const sinX = Math.sin(radianX);
-            const cosY = Math.cos(radianY);
-            const sinY = Math.sin(radianY);
+            // 両軸の角度が完全一致する場合だけ再利用し、せん断や符号付きゼロを保つ。
+            const sameAngle = Object.is(radianX, radianY);
+            const cosY = sameAngle ? cosX : Math.cos(radianY);
+            const sinY = sameAngle ? sinX : Math.sin(radianY);
 
             $context.setTransform(
                 cosX, sinX, -sinY, cosY,
-                tx * cosX - ty * sinY + matrix[4],
-                tx * sinX + ty * cosY + matrix[5]
+                tx * cosX - ty * sinY + e,
+                tx * sinX + ty * cosY + f
             );
 
         } else {
 
             $context.setTransform(1, 0, 0, 1,
-                bounds[0], bounds[1]
+                boundsXMin, boundsYMin
             );
 
         }
@@ -275,8 +287,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         // 描画範囲をinstanced arrayに設定
         $context.drawDisplayObject(
             node,
-            bounds[0], bounds[1], bounds[2], bounds[3],
-            colorTransform
+            boundsXMin, boundsYMin, boundsXMax, boundsYMax,
+            render_queue, colorTransformIndex
         );
 
     }

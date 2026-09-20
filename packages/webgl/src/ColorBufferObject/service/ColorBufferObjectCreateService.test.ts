@@ -1,20 +1,23 @@
 import { execute } from "./ColorBufferObjectCreateService";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "createRenderbuffer": vi.fn(() => { return  "createRenderbuffer" })
+        }
+    }
+});
+
+
 describe("ColorBufferObjectCreateService.js method test", () =>
 {
     it("test case", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "createRenderbuffer": vi.fn(() => { return  "createRenderbuffer" })
-                }
-            }
-        });
+
 
         const colorBufferObject = execute();
         expect(colorBufferObject.resource).toBe("createRenderbuffer");

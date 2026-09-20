@@ -2,6 +2,7 @@ import type { Node } from "@next2d/texture-packer";
 import type { ITextFieldAutoSize } from "../../interface/ITextFieldAutoSize";
 import type { ITextSetting } from "../../interface/ITextSetting";
 import { $cacheStore } from "@next2d/cache";
+import { decodeTextData } from "@next2d/render-queue";
 import { execute as displayObjectGetBlendModeService } from "../../DisplayObject/service/DisplayObjectGetBlendModeService";
 import { execute as textFieldDrawOffscreenCanvasUseCase } from "./TextFieldDrawOffscreenCanvasUseCase";
 import { $context } from "../../RendererUtil";
@@ -11,6 +12,10 @@ import { $context } from "../../RendererUtil";
  * @private
  */
 const $textDecoder: TextDecoder = new TextDecoder();
+
+// drawElement consumes the canvas image synchronously on both backends.
+// Keep at most one small scratch canvas; large rasters are not retained.
+let $textCanvas: OffscreenCanvas | null = null;
 
 /**
  * @description TextFieldの描画を実行します。
@@ -27,7 +32,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     const matrix = render_queue.subarray(index, index + 6);
     index += 6;
 
-    const colorTransform = render_queue.subarray(index, index + 8);
+    const colorTransformIndex = index;
     index += 8;
 
     const bounds = render_queue.subarray(index, index + 4);
@@ -68,12 +73,18 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             node = $cacheStore.get(uniqueKey, cacheKey) as Node;
         } else {
             // TextFieldResetUseCase 等で Main 側のみ wipe された場合、
-            // Worker には旧 Node が残っているため、新規作成前に解放してアトラスリーク防止
+            // Worker の旧 Node は同寸法なら保持し、寸法変更時は解放して作り直す
             const oldNode = $cacheStore.get(uniqueKey, cacheKey) as Node | null;
-            if (oldNode) {
-                $context.removeNode(oldNode);
+            if (oldNode && oldNode.w === width && oldNode.h === height
+                && $context.reuseNode(oldNode)
+            ) {
+                node = oldNode;
+            } else {
+                if (oldNode) {
+                    $context.removeNode(oldNode);
+                }
+                node = $context.createNode(width, height);
             }
-            node = $context.createNode(width, height);
             $cacheStore.set(uniqueKey, cacheKey, node);
         }
 
@@ -135,33 +146,36 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         };
 
         const canvas = textFieldDrawOffscreenCanvasUseCase(
-            JSON.parse($textDecoder.decode(buffer)),
+            decodeTextData($textDecoder.decode(buffer)),
             textSetting,
-            xScale, yScale
+            xScale, yScale, $textCanvas
         );
+        $textCanvas = width * height <= 1024 * 1024 ? canvas : null;
 
-        // fixed logic
-        const currentAttachment = $context.currentAttachmentObject;
-        const atlasAttachment = $context.atlasAttachmentObject;
-        if (atlasAttachment) {
-            $context.bind(atlasAttachment as any);
-        }
+        if (!("queueTextElement" in $context) || !$context.queueTextElement(node, canvas)) {
+            // fixed logic
+            const currentAttachment = $context.currentAttachmentObject;
+            const atlasAttachment = $context.atlasAttachmentObject;
+            if (atlasAttachment) {
+                $context.bind(atlasAttachment as any);
+            }
 
-        $context.reset();
-        $context.beginNodeRendering(node);
+            $context.reset();
+            $context.beginNodeRendering(node);
 
-        const offsetY = atlasAttachment ? atlasAttachment.height - node.y - height : 0;
-        $context.setTransform(1, 0, 0, 1,
-            node.x,
-            offsetY
-        );
+            const offsetY = atlasAttachment ? atlasAttachment.height - node.y - height : 0;
+            $context.setTransform(1, 0, 0, 1,
+                node.x,
+                offsetY
+            );
 
-        $context.drawElement(node, canvas);
+            $context.drawElement(node, canvas);
 
-        $context.endNodeRendering();
+            $context.endNodeRendering();
 
-        if (currentAttachment) {
-            $context.bind(currentAttachment as any);
+            if (currentAttachment) {
+                $context.bind(currentAttachment as any);
+            }
         }
 
     } else {
@@ -186,6 +200,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         const width  = Math.ceil(Math.abs(bounds[2] - bounds[0]));
         const height = Math.ceil(Math.abs(bounds[3] - bounds[1]));
 
+        const colorTransform = render_queue.subarray(colorTransformIndex, colorTransformIndex + 8);
         $context.applyFilter(
             node, `${filterKeyNumber}`, Boolean(Math.max(+changed, +updated)),
             width, height, false,
@@ -198,7 +213,8 @@ export const execute = (render_queue: Float32Array, index: number): number =>
         return index;
     }
 
-    $context.globalAlpha = Math.min(Math.max(0, colorTransform[3] + colorTransform[7] / 255), 1);
+    $context.globalAlpha = Math.min(Math.max(0,
+        render_queue[colorTransformIndex + 3] + render_queue[colorTransformIndex + 7] / 255), 1);
     $context.imageSmoothingEnabled = true;
     $context.globalCompositeOperation = displayObjectGetBlendModeService(blendMode);
 
@@ -249,7 +265,7 @@ export const execute = (render_queue: Float32Array, index: number): number =>
     $context.drawDisplayObject(
         node,
         bounds[0], bounds[1], bounds[2], bounds[3],
-        colorTransform
+        render_queue, colorTransformIndex
     );
 
     return index;

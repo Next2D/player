@@ -1,4 +1,6 @@
 import type { DisplayObject } from "@next2d/display";
+import type { TextField } from "../../TextField";
+import { $getNextTextRasterRevision } from "../../TextUtil";
 
 /**
  * @description DisplayObjectの更新フラグを立てる
@@ -12,6 +14,10 @@ import type { DisplayObject } from "@next2d/display";
 export const execute = <D extends DisplayObject>(display_object: D): void =>
 {
     display_object.changed = true;
+
+    if (display_object.isText) {
+        (display_object as unknown as TextField).$rasterRevision = $getNextTextRasterRevision();
+    }
 
     const parent = display_object.parent as unknown as D;
     if (parent && !parent.changed) {

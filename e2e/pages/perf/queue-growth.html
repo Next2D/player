@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>Next2D Queue Growth Diagnostic</title>
+<style>body { margin: 0; background: #182030; }</style>
+<script defer type="module" src="/src/index.ts"></script>
+</head><body>
+<script type="module">
+import { runBenchmark } from "./harness.js";
+window.addEventListener("DOMContentLoaded", async () => {
+    const root = await next2d.createRootMovieClip(900, 560, 60);
+    const shape = new next2d.display.Shape(); root.addChild(shape);
+    const pathMode = new URLSearchParams(location.search).get("kind") === "path";
+    const sizes = pathMode ? [64, 512, 2048, 8192] : [64, 256, 512, 1024];
+    const pixels = pathMode ? [] : sizes.map(size => {
+        const bytes = new Uint8Array(size * size * 4);
+        for (let i = 0; i < bytes.length; i += 4) {
+            bytes[i] = i / 4 % size % 256;
+            bytes[i + 1] = Math.floor(i / 4 / size) % 256;
+            bytes[i + 2] = 160; bytes[i + 3] = 255;
+        }
+        return bytes;
+    });
+    await runBenchmark(frame => {
+        const phase = Math.min(3, Math.floor(frame / 12));
+        const size = sizes[phase];
+        if (pathMode) {
+            shape.graphics.clear();
+            shape.graphics.lineStyle(1, 0x80FFFF + frame);
+            shape.graphics.moveTo(20, 280);
+            for (let i = 1; i <= size; i++) {
+                shape.graphics.lineTo(20 + i / size * 800, 280 + Math.sin(i / size * Math.PI * 12) * 180);
+            }
+        } else {
+            shape.setBitmapBuffer(size, size, pixels[phase]);
+            shape.scaleX = shape.scaleY = Math.min(1, 500 / size);
+        }
+    }, { warmup: 0, frames: 48 });
+});
+</script></body></html>

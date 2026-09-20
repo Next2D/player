@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>body { margin: 0; background: #182030; }</style>
+<script>
+const flow = window.__FLOW__ = {
+    initialized: false, enabled: false, pending: 0, maxPending: 0, sent: 0, ack: 0,
+    updates: 0, updatesWhilePending: 0, enterFrames: 0
+};
+const workers = new WeakSet();
+const post = Worker.prototype.postMessage;
+Worker.prototype.postMessage = function (message, ...args) {
+    if (!workers.has(this)) {
+        workers.add(this);
+        this.addEventListener("message", ({ data }) => {
+            if (data.message === "renderFlowControl") {
+                flow.initialized = true; flow.enabled = data.enabled;
+            }
+            if (data.message === "render") { flow.ack++; flow.pending--; }
+        });
+    }
+    const result = Reflect.apply(post, this, [message, ...args]);
+    if (message.command === "render") {
+        flow.sent++; flow.pending++;
+        if (flow.ready) flow.maxPending = Math.max(flow.maxPending, flow.pending);
+    }
+    return result;
+};
+</script>
+<script defer type="module" src="/src/index.ts"></script>
+</head><body>
+<script type="module">
+window.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { Shape, Sprite } = next2d.display;
+        const { BlurFilter } = next2d.filters;
+        const { Matrix } = next2d.geom;
+        const shapes = [], fields = [];
+        const layer = new Sprite(); root.addChild(layer);
+        const mask = new Shape();
+        mask.graphics.beginFill(0xFFFFFF).drawRoundRect(10, 10, 870, 530, 20).endFill();
+        root.addChild(mask); layer.mask = mask;
+        for (let i = 0; i < 360; i++) {
+            const shape = new Shape();
+            shape.graphics.beginFill((i * 7919 & 0xFFFFFF) | 0x202020, 0.7).drawCircle(0, 0, 28).endFill();
+            shape.blendMode = ["normal", "multiply", "overlay"][i % 3];
+            layer.addChild(shape); shapes.push(shape);
+        }
+        for (let i = 0; i < 400; i++) {
+            const field = new next2d.text.TextField();
+            field.autoSize = "left";
+            field.x = i % 20 * 45; field.y = Math.floor(i / 20) * 27;
+            const format = field.defaultTextFormat;
+            format.color = 0xFFFFFF;
+            field.defaultTextFormat = format;
+            if (i % 40 === 0) field.cacheAsBitmap = new Matrix();
+            if (i % 50 === 0) field.filters = [new BlurFilter(2, 2, 1)];
+            layer.addChild(field); fields.push(field);
+        }
+        const apply = frame => {
+            for (let i = 0; i < shapes.length; i++) {
+                shapes[i].x = 30 + (i * 37 + frame * 11) % 840;
+                shapes[i].y = 30 + (i * 23 + frame * 7) % 500;
+                shapes[i].rotation = frame % 19;
+            }
+            for (let i = 0; i < fields.length; i++) fields[i].text = `${frame}:${i}`;
+            // Exercise the changing container filter/mask/cache path too.
+            layer.filters = [new BlurFilter(2 + frame % 3, 2, 1)];
+            mask.x = frame % 4;
+        };
+        apply(0);
+        const raf = () => new Promise(requestAnimationFrame);
+        const drain = async minimum => {
+            for (let count = 0; count < 1200; count++) {
+                await raf();
+                if (flow.initialized && flow.sent >= minimum && flow.pending === 0) return;
+            }
+            throw new Error("Flow did not initialize/drain");
+        };
+        await drain(1);
+        next2d.display.stage.addEventListener(next2d.events.Event.ENTER_FRAME, () => flow.enterFrames++);
+        flow.ready = true;
+        window.__startFlow = async serialized => {
+            try {
+                for (let frame = 1; frame <= 45; frame++) {
+                    await raf();
+                    if (flow.pending) flow.updatesWhilePending++;
+                    const minimum = flow.sent + 1;
+                    apply(frame);
+                    flow.updates++;
+                    if (serialized) await drain(minimum);
+                }
+                // A distinct final state must survive any pending prior request.
+                flow.finalMinimumSent = flow.sent + 1;
+                apply(99);
+                await drain(flow.finalMinimumSent);
+                // ACK is not presentation. Allow later RAFs before taking screenshots.
+                for (let i = 0; i < 4; i++) await raf();
+                flow.done = true;
+            } catch (error) { flow.error = String(error); }
+        };
+    } catch (error) { flow.error = String(error); }
+});
+</script></body></html>

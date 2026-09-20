@@ -11,18 +11,20 @@ import {
     $isMaskTestEnabled,
     $getMaskStencilReference
 } from "../../Mask";
-import { $getAtlasAttachmentObject } from "../../AtlasManager";
+import { $getAtlasAttachmentObjectByIndex, $getCurrentAtlasIndex } from "../../AtlasManager";
 
 /**
  * @description キャッシュ済みバインドグループ
  *              Cached bind group
  */
-let $cachedBindGroup: GPUBindGroup | null = null;
+let $bindGroupCache: WeakMap<GPUTextureView, GPUBindGroup> = new WeakMap();
 /**
- * @description キャッシュ済みアトラステクスチャビュー
- *              Cached atlas texture view
+ * @description BindGroupキャッシュの整合性を保つ固定リソース
+ *              Stable resources guarding bind group cache validity
  */
-let $cachedAtlasView: GPUTextureView | null = null;
+let $cachedDevice: GPUDevice | null = null;
+let $cachedSampler: GPUSampler | null = null;
+let $cachedLayout: GPUBindGroupLayout | null = null;
 
 /**
  * @description 開いたまま返却したインスタンスパスの作成時状態。
@@ -47,6 +49,8 @@ let $openPassUseStencil: boolean = false;
  * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
  * @param {boolean} use_indirect Indirect描画使用フラグ / Whether to use indirect drawing
  * @param {boolean} use_storage_buffer StorageBuffer使用フラグ / Whether to use storage buffer
+ * @param {boolean} render_pass_is_instanced 連続バッチのパスを再利用するか / Whether the pass belongs to an instance batch
+ * @param {boolean} use_instance_buffer フレーム単位の一括転送を使用するか / Whether to stage batches for a single frame upload
  * @return {GPURenderPassEncoder | null} レンダーパスエンコーダまたはnull / Render pass encoder or null
  */
 export const execute = (
@@ -60,7 +64,8 @@ export const execute = (
     pipeline_manager: PipelineManager,
     use_indirect: boolean = true,
     use_storage_buffer: boolean = true,
-    render_pass_is_instanced: boolean = false
+    render_pass_is_instanced: boolean = false,
+    use_instance_buffer: boolean = false
 ): GPURenderPassEncoder | null => {
     const shaderManager = getInstancedShaderManager();
 
@@ -180,7 +185,11 @@ export const execute = (
 
     // インスタンスバッファを作成または取得
     let instanceBuffer: GPUBuffer;
-    if (use_storage_buffer) {
+    let instanceOffset = 0;
+    if (use_instance_buffer) {
+        instanceOffset = buffer_manager.instanceBuffer.allocate(instanceData);
+        instanceBuffer = buffer_manager.instanceBuffer.getBuffer();
+    } else if (use_storage_buffer) {
         // Storage Buffer最適化: プールから再利用してメモリアロケーション削減
         // Storage BufferはVERTEXフラグ付きで作成されているため、setVertexBufferで使用可能
         instanceBuffer = buffer_manager.acquireStorageBuffer(instanceData.byteLength);
@@ -194,8 +203,9 @@ export const execute = (
     const vertexBuffer = buffer_manager.getUnitRectBuffer();
 
     // アトラステクスチャをバインド（複数アトラス対応）
-    // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
-    const atlasAttachment = $getAtlasAttachmentObject() || frame_buffer_manager.getAttachment("atlas");
+    // 確保・転送先ではなく、描画キューに積まれたページを参照する。
+    const atlasAttachment = $getAtlasAttachmentObjectByIndex($getCurrentAtlasIndex())
+        || frame_buffer_manager.getAttachment("atlas");
     if (!atlasAttachment) {
         console.error("[WebGPU] Atlas attachment not found");
         passEncoder.end();
@@ -214,10 +224,18 @@ export const execute = (
         return null;
     }
 
-    // BindGroupキャッシュ: アトラスのテクスチャビューが同じなら再利用
+    // ページを交互に参照しても再利用できるよう、viewごとに保持する。
+    // デバイス・sampler・layoutの変更時は古いキャッシュを無効化する。
     const atlasView = atlasAttachment.texture!.view;
-    if (!$cachedBindGroup || $cachedAtlasView !== atlasView) {
-        $cachedBindGroup = device.createBindGroup({
+    if ($cachedDevice !== device || $cachedSampler !== sampler || $cachedLayout !== bindGroupLayout) {
+        $bindGroupCache = new WeakMap();
+        $cachedDevice = device;
+        $cachedSampler = sampler;
+        $cachedLayout = bindGroupLayout;
+    }
+    let bindGroup = $bindGroupCache.get(atlasView);
+    if (!bindGroup) {
+        bindGroup = device.createBindGroup({
             "layout": bindGroupLayout,
             "entries": [
                 {
@@ -230,13 +248,13 @@ export const execute = (
                 }
             ]
         });
-        $cachedAtlasView = atlasView;
+        $bindGroupCache.set(atlasView, bindGroup);
     }
 
     // 描画
     passEncoder.setVertexBuffer(0, vertexBuffer);
-    passEncoder.setVertexBuffer(1, instanceBuffer);
-    passEncoder.setBindGroup(0, $cachedBindGroup);
+    passEncoder.setVertexBuffer(1, instanceBuffer, instanceOffset, instanceData.byteLength);
+    passEncoder.setBindGroup(0, bindGroup);
 
     if (use_indirect) {
         // Indirect Drawing: CPU-GPU間のオーバーヘッドを削減

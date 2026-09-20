@@ -2,31 +2,34 @@ import { execute } from "./VertexArrayObjectCreateGradientVertexArrayObjectUseCa
 import { describe, expect, it, vi } from "vitest";
 import { $vertexBufferData } from "../../VertexArrayObject";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "createVertexArray": vi.fn(() => { return "createVertexArray" }),
+            "createBuffer": vi.fn(() => { return "createBuffer" }),
+            "bindVertexArray": vi.fn(() => { return "bindVertexArray" }),
+            "bindBuffer": vi.fn(() => { return "bindBuffer" }),
+            "enableVertexAttribArray": vi.fn(() => { return "enableVertexAttribArray" }),
+            "vertexAttribPointer": vi.fn(() => { return "vertexAttribPointer" }),
+            "bufferData": vi.fn(() => { return "bufferData" }),
+            "bufferSubData": vi.fn(() => { return "bufferSubData" }),
+        },
+        $context: {
+            "$fillStyle": new Float32Array([0, 0, 0, 1]),
+            "$matrix": new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+        }
+    }
+});
+
+
 describe("VertexArrayObjectCreateGradientVertexArrayObjectUseCase.js method test", () =>
 {
     it("test case", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "createVertexArray": vi.fn(() => { return "createVertexArray" }),
-                    "createBuffer": vi.fn(() => { return "createBuffer" }),
-                    "bindVertexArray": vi.fn(() => { return "bindVertexArray" }),
-                    "bindBuffer": vi.fn(() => { return "bindBuffer" }),
-                    "enableVertexAttribArray": vi.fn(() => { return "enableVertexAttribArray" }),
-                    "vertexAttribPointer": vi.fn(() => { return "vertexAttribPointer" }),
-                    "bufferData": vi.fn(() => { return "bufferData" }),
-                    "bufferSubData": vi.fn(() => { return "bufferSubData" }),
-                },
-                $context: {
-                    "$fillStyle": new Float32Array([0, 0, 0, 1]),
-                    "$matrix": new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
-                }
-            }
-        });
+
 
         // new Float32Array([0, 0, 0, 1, 1, 0, 1, 1])
         $vertexBufferData[0] = 0;

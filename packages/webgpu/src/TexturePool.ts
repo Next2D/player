@@ -1,4 +1,4 @@
-import type { ITexturePoolBuckets } from "./interface/IPooledTexture";
+import type { IPooledTexture, ITexturePoolBuckets } from "./interface/IPooledTexture";
 import { execute as texturePoolAcquireUseCase } from "./TexturePool/usecase/TexturePoolAcquireUseCase";
 import { execute as texturePoolReleaseService } from "./TexturePool/service/TexturePoolReleaseService";
 import { execute as texturePoolCleanupService } from "./TexturePool/service/TexturePoolCleanupService";
@@ -40,6 +40,7 @@ export class TexturePool
      * @type {ITexturePoolBuckets}
      */
     private buckets: ITexturePoolBuckets;
+    private entries: WeakMap<GPUTexture, IPooledTexture>;
 
     /**
      * @description 現在のフレーム番号
@@ -65,6 +66,7 @@ export class TexturePool
     {
         this.device = device;
         this.buckets = new Map();
+        this.entries = new WeakMap();
         this.currentFrame = 0;
         this.totalCount = [0];
     }
@@ -80,7 +82,7 @@ export class TexturePool
 
         // 定期的にプールをクリーンアップ（LRU回収）
         if (this.currentFrame % 60 === 0) {
-            texturePoolCleanupService(this.buckets, this.currentFrame, $CACHE_CLEANUP_THRESHOLD, this.totalCount);
+            texturePoolCleanupService(this.buckets, this.currentFrame, $CACHE_CLEANUP_THRESHOLD, this.totalCount, this.entries);
         }
     }
 
@@ -110,7 +112,8 @@ export class TexturePool
             usage,
             this.currentFrame,
             $MAX_POOL_SIZE,
-            this.totalCount
+            this.totalCount,
+            this.entries
         );
     }
 
@@ -122,7 +125,7 @@ export class TexturePool
      */
     release(texture: GPUTexture): void
     {
-        texturePoolReleaseService(this.buckets, texture, this.currentFrame);
+        texturePoolReleaseService(this.buckets, texture, this.currentFrame, this.entries);
     }
 
     /**
@@ -138,6 +141,7 @@ export class TexturePool
             }
         }
         this.buckets.clear();
+        this.entries = new WeakMap();
         this.totalCount[0] = 0;
     }
 }

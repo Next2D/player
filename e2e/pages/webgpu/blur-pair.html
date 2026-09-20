@@ -1,0 +1,98 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Paired blur precision audit</title>
+<script type="module">
+import { ShaderSource } from "/packages/webgpu/src/Shader/ShaderSource.ts";
+import { PipelineManager } from "/packages/webgpu/src/Shader/PipelineManager.ts";
+import { experimentalPairedBlurFragment } from "/e2e/fixtures/ExperimentalPairedBlurFragment.js";
+
+try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) throw Error("WebGPU unavailable");
+    const device = await adapter.requestDevice();
+    const errors = [];
+    device.addEventListener("uncapturederror", event => errors.push(event.error.message));
+    device.pushErrorScope("validation");
+    const manager = new PipelineManager(device, "rgba8unorm");
+    const vertex = device.createShaderModule({ code: ShaderSource.getBlurFilterVertexShader() });
+    const sampler = device.createSampler({ minFilter: "linear", magFilter: "linear" });
+    const uniform = device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    const results = [];
+    const control = new URLSearchParams(location.search).has("control");
+    const shaders = [];
+    for (let radius = 1; radius <= 16; radius++) {
+        const reference = manager.getPipeline(`blur_filter_${radius}`);
+        const layout = manager.getBindGroupLayout("blur_filter");
+        if (!reference || !layout) throw Error("Blur pipeline unavailable");
+        const fragment = control ? ShaderSource.getBlurFilterFragmentShader(radius) : experimentalPairedBlurFragment(radius);
+        shaders.push({ radius, source: fragment, staticTextureSamples: (fragment.match(/textureSample\(/g) || []).length });
+        const current = device.createRenderPipeline({ layout: device.createPipelineLayout({ bindGroupLayouts: [layout] }),
+            vertex: { module: vertex, entryPoint: "main" },
+            fragment: { module: device.createShaderModule({ code: fragment }), entryPoint: "main",
+                targets: [{ format: "rgba8unorm", blend: {
+                    color: { srcFactor: "one", dstFactor: "zero", operation: "add" },
+                    alpha: { srcFactor: "one", dstFactor: "zero", operation: "add" }
+                } }] }, primitive: { topology: "triangle-list", cullMode: "none" } });
+        for (const [width, height] of [[1, 1], [7, 5], [8, 8], [31, 19], [64, 32]])
+        for (const horizontal of [false, true])
+        for (const fraction of [0, 0.001, 0.125, 0.333, 0.5, 0.999, 1]) {
+            const input = device.createTexture({ size: [width, height], format: "rgba8unorm",
+                usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST });
+            const data = new Uint8Array(width * height * 4);
+            for (let i = 0; i < width * height; i++) {
+                const a = [255, 0, 1, 64, 128, 254][i % 6];
+                data.set([(i * 37 + 1) % (a + 1), (i * 17 + 3) % (a + 1), a >> 1, a], i * 4);
+            }
+            device.queue.writeTexture({ texture: input }, data, { bytesPerRow: width * 4 }, [width, height]);
+            device.queue.writeBuffer(uniform, 0, new Float32Array([
+                horizontal ? 1 / width : 0, horizontal ? 0 : 1 / height, fraction, 1 + 2 * (radius - 1 + fraction)
+            ]));
+            const binding = device.createBindGroup({ layout, entries: [
+                { binding: 0, resource: { buffer: uniform } }, { binding: 1, resource: sampler },
+                { binding: 2, resource: input.createView() }
+            ] });
+            const stride = Math.ceil(width * 4 / 256) * 256;
+            const outputs = [], textures = [], buffers = [];
+            const encoder = device.createCommandEncoder();
+            for (const pipeline of [reference, current]) {
+                const output = device.createTexture({ size: [width, height], format: "rgba8unorm",
+                    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
+                textures.push(output);
+                const pass = encoder.beginRenderPass({ colorAttachments: [{ view: output.createView(),
+                    loadOp: "clear", storeOp: "store", clearValue: [0.5, 0.5, 0.5, 1] }] });
+                pass.setPipeline(pipeline); pass.setBindGroup(0, binding); pass.draw(6); pass.end();
+                const buffer = device.createBuffer({ size: stride * height, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
+                buffers.push(buffer);
+                encoder.copyTextureToBuffer({ texture: output }, { buffer, bytesPerRow: stride }, [width, height]);
+            }
+            device.queue.submit([encoder.finish()]);
+            for (const buffer of buffers) {
+                await buffer.mapAsync(GPUMapMode.READ);
+                const mapped = new Uint8Array(buffer.getMappedRange());
+                const pixels = new Uint8Array(width * height * 4);
+                for (let y = 0; y < height; y++) pixels.set(mapped.subarray(y * stride, y * stride + width * 4), y * width * 4);
+                outputs.push(pixels); buffer.unmap(); buffer.destroy();
+            }
+            let maxDelta = 0, changed = 0, interiorChanged = 0;
+            let firstDifference = null;
+            for (let i = 0; i < outputs[0].length; i++) {
+                const delta = Math.abs(outputs[0][i] - outputs[1][i]);
+                maxDelta = Math.max(maxDelta, delta);
+                if (delta) {
+                    changed++;
+                    const pixel = Math.floor(i / 4), x = pixel % width, y = Math.floor(pixel / width);
+                    if (horizontal ? x >= radius && x < width - radius : y >= radius && y < height - radius) interiorChanged++;
+                    firstDifference ||= { x, y, channel: i % 4, reference: outputs[0][i], candidate: outputs[1][i] };
+                }
+            }
+            results.push({ radius, width, height, horizontal, fraction, maxDelta, changed, interiorChanged, firstDifference,
+                nonzero: outputs[0].some(value => value !== 0) });
+            for (const texture of textures) texture.destroy(); input.destroy();
+        }
+    }
+    const validation = await device.popErrorScope();
+    if (validation) errors.push(validation.message);
+    uniform.destroy();
+    window.__BLUR_PAIR__ = { results, errors, shaders, control, userAgent: navigator.userAgent, adapter: adapter.info ? { vendor: adapter.info.vendor, architecture: adapter.info.architecture, device: adapter.info.device, description: adapter.info.description } : null };
+} catch (error) { window.__BLUR_PAIR__ = { error: String(error.stack || error) }; }
+</script>

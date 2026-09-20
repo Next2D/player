@@ -12,6 +12,7 @@ import { $intToRGBA } from "../../RendererUtil";
  * @param  {object} text_setting
  * @param  {number} x_scale
  * @param  {number} y_scale
+ * @param  {OffscreenCanvas | null} reusable_canvas - Caller-owned scratch, consumed before the next call
  * @return {OffscreenCanvas}
  * @method
  * @protected
@@ -20,14 +21,26 @@ export const execute = (
     text_data: ITextData | null,
     text_setting: ITextSetting,
     x_scale: number,
-    y_scale: number
+    y_scale: number,
+    reusable_canvas: OffscreenCanvas | null = null
 ): OffscreenCanvas => {
 
-    const canvas = new OffscreenCanvas(
-        text_setting.width, text_setting.height
-    );
+    let canvas = reusable_canvas;
+    if (canvas) {
+        // Even an unchanged width resets pixels, paths, clipping and drawing state.
+        canvas.width = text_setting.width;
+        if (canvas.height !== text_setting.height) {
+            canvas.height = text_setting.height;
+        }
+    } else {
+        canvas = new OffscreenCanvas(text_setting.width, text_setting.height);
+    }
 
-    const context = canvas.getContext("2d");
+    let context = canvas.getContext("2d");
+    if (reusable_canvas && (!context || context.isContextLost?.())) {
+        canvas = new OffscreenCanvas(text_setting.width, text_setting.height);
+        context = canvas.getContext("2d");
+    }
     if (!context) {
         return canvas;
     }
@@ -183,6 +196,10 @@ export const execute = (
     let offsetAlign   = 0;
     let verticalAlign = 0;
 
+    let previousFillColor: number | undefined;
+    let fillStyle = "";
+    let fontStyle = "";
+
     let skip = false;
     let currentIndex = -1;
     for (let idx = 0; idx < text_data.textTable.length; ++idx) {
@@ -226,8 +243,13 @@ export const execute = (
         }
 
         // color setting
-        const color = $intToRGBA(textFormat.color || 0);
-        context.fillStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
+        const fillColor = textFormat.color || 0;
+        if (fillColor !== previousFillColor) {
+            const color = $intToRGBA(fillColor);
+            fillStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
+            context.fillStyle = fillStyle;
+            previousFillColor = fillColor;
+        }
 
         // focus line
         if (text_setting.focusVisible
@@ -260,7 +282,7 @@ export const execute = (
                 y += text_data.heightTable[idx];
             }
 
-            context.strokeStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
+            context.strokeStyle = fillStyle;
             context.beginPath();
             context.moveTo(x, y);
             context.lineTo(x, y - h);
@@ -300,7 +322,11 @@ export const execute = (
             case "text":
                 {
                     context.beginPath();
-                    context.font = textFieldGenerateFontStyleService(textFormat);
+                    const nextFontStyle = textFieldGenerateFontStyleService(textFormat);
+                    if (nextFontStyle !== fontStyle) {
+                        context.font = nextFontStyle;
+                        fontStyle = nextFontStyle;
+                    }
 
                     const x = offsetWidth  + offsetAlign;
                     const y = offsetHeight + verticalAlign;
@@ -310,7 +336,6 @@ export const execute = (
                         context.lineWidth   = lineWidth;
                         context.strokeStyle = `rgba(${color.R},${color.G},${color.B},${color.A})`;
 
-                        context.beginPath();
                         context.moveTo(x, y + 2);
                         context.lineTo(x + textObject.w, y + 2);
                         context.stroke();

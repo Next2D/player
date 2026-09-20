@@ -88,10 +88,10 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
  * @description カラー変換フラグメントシェーダー（乗算・加算カラー適用）
  *              Color transform fragment shader with multiply and add color application
  *
- * @type {string}
- * @constant
+ * @param {boolean} quantize - 中間RGBA8出力の量子化を再現する / Reproduce intermediate RGBA8 quantization
+ * @return {string}
  */
-export const ColorTransformFragment = /* wgsl */`
+const $createColorTransformFragment = (quantize: boolean): string => /* wgsl */`
 ${WgslVertexOutput}
 
 struct ColorTransformUniforms {
@@ -111,9 +111,17 @@ fn main(input: VertexOutput) -> @location(0) vec4<f32> {
     color = clamp(color * ct.mul + ct.add, vec4<f32>(0.0), vec4<f32>(1.0));
     color = vec4<f32>(color.rgb * color.a, color.a);
 
-    return color;
+    return ${quantize ? "unpack4x8unorm(pack4x8unorm(color))" : "color"};
 }
 `;
+
+export const ColorTransformFragment = $createColorTransformFragment(false);
+
+/**
+ * @description 等倍キャッシュ出力専用。色変換の中間RGBA8テクスチャへの保存・再読込を再現する。
+ *              Cached 1:1 output only: reproduce the intermediate RGBA8 store/load before blending.
+ */
+export const CachedColorTransformFragment = $createColorTransformFragment(true);
 
 /**
  * @description Y軸反転付きカラー変換フラグメントシェーダー

@@ -1,6 +1,65 @@
 import { execute } from "./TextureManagerCreateFromCanvasUseCase";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "createTexture": vi.fn(() => { return "createTexture" }),
+            "activeTexture": vi.fn(() => { return "activeTexture" }),
+            "bindTexture": vi.fn(() => { return "bindTexture" }),
+            "texParameteri": vi.fn(() => { return "texParameteri" }),
+            "texStorage2D": vi.fn(() => { return "texStorage2D" }),
+            "texSubImage2D": vi.fn(() => { return "texSubImage2D" }),
+            "TEXTURE_2D": 3553,
+            "RGBA": 6408,
+            "UNSIGNED_BYTE": 5121,
+        }
+    }
+});
+
+vi.mock("./TextureManagerGetTextureUseCase.ts", () => ({
+    execute: vi.fn((width: number, height: number) => ({
+        width,
+        height,
+        area: width * height,
+        resource: "mockTexture",
+        smooth: false
+    }))
+}));
+
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "createTexture": vi.fn(() => { return "createTexture" }),
+            "activeTexture": vi.fn(() => { return "activeTexture" }),
+            "bindTexture": vi.fn(() => { return "bindTexture" }),
+            "texParameteri": vi.fn(() => { return "texParameteri" }),
+            "texStorage2D": vi.fn(() => { return "texStorage2D" }),
+            "texSubImage2D": vi.fn(() => { return "texSubImage2D" }),
+            "TEXTURE_2D": 3553,
+            "RGBA": 6408,
+            "UNSIGNED_BYTE": 5121,
+        }
+    }
+});
+
+vi.mock("./TextureManagerGetTextureUseCase.ts", () => ({
+    execute: vi.fn((width: number, height: number, smooth: boolean) => ({
+        width,
+        height,
+        area: width * height,
+        resource: "mockTexture",
+        smooth
+    }))
+}));
+
+
 describe("TextureManagerCreateFromCanvasUseCase.js method test", () =>
 {
     beforeEach(() =>
@@ -18,34 +77,9 @@ describe("TextureManagerCreateFromCanvasUseCase.js method test", () =>
             smooth: false
         };
 
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "createTexture": vi.fn(() => { return "createTexture" }),
-                    "activeTexture": vi.fn(() => { return "activeTexture" }),
-                    "bindTexture": vi.fn(() => { return "bindTexture" }),
-                    "texParameteri": vi.fn(() => { return "texParameteri" }),
-                    "texStorage2D": vi.fn(() => { return "texStorage2D" }),
-                    "texSubImage2D": vi.fn(() => { return "texSubImage2D" }),
-                    "TEXTURE_2D": 3553,
-                    "RGBA": 6408,
-                    "UNSIGNED_BYTE": 5121,
-                }
-            }
-        });
 
-        vi.mock("./TextureManagerGetTextureUseCase.ts", () => ({
-            execute: vi.fn((width: number, height: number) => ({
-                width,
-                height,
-                area: width * height,
-                resource: "mockTexture",
-                smooth: false
-            }))
-        }));
+
+
 
         const mockCanvas = {
             width: 320,
@@ -59,34 +93,9 @@ describe("TextureManagerCreateFromCanvasUseCase.js method test", () =>
 
     it("test case with smooth parameter", async () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "createTexture": vi.fn(() => { return "createTexture" }),
-                    "activeTexture": vi.fn(() => { return "activeTexture" }),
-                    "bindTexture": vi.fn(() => { return "bindTexture" }),
-                    "texParameteri": vi.fn(() => { return "texParameteri" }),
-                    "texStorage2D": vi.fn(() => { return "texStorage2D" }),
-                    "texSubImage2D": vi.fn(() => { return "texSubImage2D" }),
-                    "TEXTURE_2D": 3553,
-                    "RGBA": 6408,
-                    "UNSIGNED_BYTE": 5121,
-                }
-            }
-        });
 
-        vi.mock("./TextureManagerGetTextureUseCase.ts", () => ({
-            execute: vi.fn((width: number, height: number, smooth: boolean) => ({
-                width,
-                height,
-                area: width * height,
-                resource: "mockTexture",
-                smooth
-            }))
-        }));
+
+
 
         const mockCanvas = {
             width: 100,

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/>
+<script>
+    const flow = window.__FLOW__ = { enabled: false, pending: 0, maxPending: 0, sent: 0, ack: 0, updates: 0 };
+    const workers = new WeakSet();
+    const post = Worker.prototype.postMessage;
+    Worker.prototype.postMessage = function (message, ...args) {
+        if (!workers.has(this)) {
+            workers.add(this);
+            this.addEventListener("message", ({ data }) => {
+                if (data.message === "renderFlowControl") flow.enabled = data.enabled;
+                if (data.message === "render") { flow.ack++; flow.pending--; }
+            });
+        }
+        if (message.command === "render") {
+            flow.sent++; flow.pending++;
+            if (flow.enabled) flow.maxPending = Math.max(flow.maxPending, flow.pending);
+        }
+        return Reflect.apply(post, this, [message, ...args]);
+    };
+</script>
+<script defer type="module" src="/src/index.ts"></script>
+</head><body>
+<script type="module">
+window.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const fields = [];
+        for (let i = 0; i < 800; i++) {
+            const field = new next2d.text.TextField();
+            field.autoSize = "left"; field.x = i % 20 * 45; field.y = Math.floor(i / 20) * 14;
+            field.text = "start"; root.addChild(field); fields.push(field);
+        }
+        // Real RAF updates: unlike the benchmark, these do not wait for worker ACKs.
+        for (let frame = 0; frame < 45; frame++) {
+            await new Promise(requestAnimationFrame);
+            for (let i = 0; i < fields.length; i++) fields[i].text = `${frame}:${i}`;
+            window.__FLOW__.updates++;
+        }
+        fields[0].text = "FINAL";
+        window.__FLOW__.finalMinimumSent = window.__FLOW__.sent + 1;
+        window.__FLOW__.updated = true;
+    } catch (error) { window.__FLOW__.error = String(error); }
+});
+</script></body></html>

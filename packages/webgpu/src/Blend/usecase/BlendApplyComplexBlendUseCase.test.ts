@@ -79,7 +79,7 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
         const mockBufferManager = {
             "acquireUniformBuffer": vi.fn(() => mockBuffer),
-            "acquireAndWriteUniformBuffer": vi.fn(() => mockBuffer)
+            "allocateUniformBinding": vi.fn(() => ({ "buffer": mockBuffer, "offset": 256, "size": 48 }))
         };
 
         return {
@@ -100,6 +100,38 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
     describe("output size", () =>
     {
+        it("binds multisampled backdrop to its own compatible layout", () =>
+        {
+            const source = createMockAttachment(81, 63);
+            const backdrop = createMockAttachment(800, 600);
+            const config = createMockConfig();
+            const view = {} as GPUTextureView;
+            execute(source, backdrop, "overlay", new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]), config, [3, 5], view);
+            expect(config.pipelineManager.getPipeline).toHaveBeenCalledWith("complex_blend_region_msaa");
+            expect(config.pipelineManager.getBindGroupLayout).toHaveBeenCalledWith("complex_blend_msaa");
+            expect(config.frameBufferManager.createTemporaryAttachment).toHaveBeenCalledWith(81, 63);
+            const entries = Array.from(vi.mocked(config.device.createBindGroup).mock.calls[0][0].entries);
+            expect(entries[2].resource).toBe(view);
+            expect(entries[3].resource).toBe(source.texture!.view);
+        });
+
+        it("reads a region of the full backdrop and keeps the output source-sized", () =>
+        {
+            const source = createMockAttachment(81, 63);
+            const backdrop = createMockAttachment(800, 600);
+            const config = createMockConfig();
+            const colors = new Float32Array([1, 1, 1, 0.5, 0, 0, 0, 0]);
+            execute(source, backdrop, "overlay", colors, config, [799, 598]);
+            expect(config.frameBufferManager.createTemporaryAttachment).toHaveBeenCalledWith(81, 63);
+            expect(config.pipelineManager.getPipeline).toHaveBeenCalledWith("complex_blend_region");
+            const data = vi.mocked(config.bufferManager!.allocateUniformBinding).mock.calls[0][0];
+            expect(Array.from(data.slice(8, 12))).toEqual([4, 799, 598, 0]);
+            const entries = Array.from(vi.mocked(config.device.createBindGroup).mock.calls[0][0].entries);
+            expect(entries[2].resource).toBe(backdrop.texture!.view);
+            execute(source, backdrop, "overlay", colors, config);
+            expect(Array.from(data.slice(9, 12))).toEqual([0, 0, 0]);
+        });
+
         it("should use max width of source and destination", () =>
         {
             const srcAttachment = createMockAttachment(200, 256);
@@ -185,7 +217,12 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
             execute(srcAttachment, dstAttachment, "multiply", colorTransform, config);
 
-            expect(config.bufferManager.acquireAndWriteUniformBuffer).toHaveBeenCalled();
+            expect(config.bufferManager.allocateUniformBinding).toHaveBeenCalled();
+            expect(config.device.queue.writeBuffer).not.toHaveBeenCalled();
+            const entries = vi.mocked(config.device.createBindGroup).mock.calls[0][0].entries;
+            expect(Array.from(entries)[0].resource).toEqual({
+                "buffer": { "label": "mockBuffer" }, "offset": 256, "size": 48
+            });
         });
 
         it("should write color transform to buffer", () =>
@@ -197,12 +234,28 @@ describe("BlendApplyComplexBlendUseCase", () =>
 
             execute(srcAttachment, dstAttachment, "multiply", colorTransform, config);
 
-            expect(config.bufferManager.acquireAndWriteUniformBuffer).toHaveBeenCalled();
+            expect(config.bufferManager.allocateUniformBinding).toHaveBeenCalled();
         });
     });
 
     describe("bind group", () =>
     {
+        it("resets the binding offset for the standalone fallback", () =>
+        {
+            const source = createMockAttachment(256, 256);
+            const target = createMockAttachment(256, 256);
+            const colors = new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]);
+            execute(source, target, "multiply", colors, createMockConfig());
+            const config = createMockConfig();
+            const { bufferManager: _manager, ...withoutManager } = config;
+            execute(source, target, "multiply", colors, withoutManager as IFilterConfig);
+            expect(config.device.queue.writeBuffer).toHaveBeenCalledOnce();
+            const entries = vi.mocked(config.device.createBindGroup).mock.calls[0][0].entries;
+            expect(Array.from(entries)[0].resource).toEqual({
+                "buffer": { "label": "mockBuffer" }, "offset": 0, "size": 48
+            });
+        });
+
         it("should request complex_blend bind group layout", () =>
         {
             const srcAttachment = createMockAttachment(256, 256);

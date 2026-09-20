@@ -19,6 +19,8 @@
 
         const rand = createRandom(12345);
         const COUNT = 30000;
+        const alternatingKeys = new URLSearchParams(location.search).has("alternatingKeys");
+        const sheared = new URLSearchParams(location.search).has("sheared");
         const COLORS = [
             0xFF5252, 0xFF9800, 0xFFEB3B, 0x4CAF50, 0x00BCD4,
             0x2196F3, 0x9C27B0, 0xE91E63, 0x8BC34A, 0x607D8B
@@ -35,6 +37,12 @@
         for (let i = 0; i < COUNT; i++) {
             const s = new Shape();
             s.graphics.copyFrom(templates[i % COLORS.length].graphics);
+            if (alternatingKeys) {
+                s.scaleX = s.scaleY = 1 + (i % 4) * 0.1;
+            }
+            if (sheared) {
+                s.matrix = new next2d.geom.Matrix(1, 0.25, -0.5, 1);
+            }
             s.x = rand() * 900;
             s.y = rand() * 560;
             items.push({

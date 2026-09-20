@@ -5,20 +5,32 @@ import { $objectPool } from "../../FrameBufferManager";
 import { $objectPool as $stencilBufferObjectPool } from "../../StencilBufferObject";
 import { $objectPool as $colorBufferObjectPool } from "../../ColorBufferObject";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "deleteTexture": vi.fn(() => { return "deleteTexture" })
+        }
+    }
+});
+
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "deleteTexture": vi.fn(() => { return "deleteTexture" }),
+        }
+    }
+});
+
 describe("FrameBufferManagerReleaseAttachmentObjectUseCase.js method test", () =>
 {
     it("test case1", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "deleteTexture": vi.fn(() => { return "deleteTexture" })
-                }
-            }
-        });
 
         const attachmentObject: IAttachmentObject = {
             "id": 0,
@@ -63,16 +75,6 @@ describe("FrameBufferManagerReleaseAttachmentObjectUseCase.js method test", () =
 
     it("test case2", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "deleteTexture": vi.fn(() => { return "deleteTexture" }),
-                }
-            }
-        });
 
         const colorBufferObject = {
             "resource": "createRenderbuffer",

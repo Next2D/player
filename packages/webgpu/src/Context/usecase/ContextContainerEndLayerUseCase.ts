@@ -104,11 +104,11 @@ const $applyColorTransform = (
     $uniform8[5] = color_transform[5];
     $uniform8[6] = color_transform[6];
     $uniform8[7] = 0;
-    const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($uniform8);
+    const uniformBinding = config.bufferManager.allocateUniformBinding($uniform8);
 
     const sampler = config.textureManager.createSampler("container_ct_sampler", false);
 
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[0].resource = uniformBinding;
     $entries3[1].resource = sampler;
     $entries3[2].resource = attachment.texture.view;
     const bindGroup = config.device.createBindGroup({
@@ -170,10 +170,10 @@ const $copyRegionToFilterAttachment = (
     $uniform4[1] = scaleY;
     $uniform4[2] = offsetX;
     $uniform4[3] = offsetY;
-    const uniformBuffer = config.bufferManager.acquireAndWriteUniformBuffer($uniform4);
+    const uniformBinding = config.bufferManager.allocateUniformBinding($uniform4);
 
     const sampler = config.textureManager.createSampler("container_copy_sampler", false);
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[0].resource = uniformBinding;
     $entries3[1].resource = sampler;
     $entries3[2].resource = src_attachment.texture.view;
     const bindGroup = config.device.createBindGroup({
@@ -293,9 +293,9 @@ const $drawFilterResultToMain = (
         $uniform4[1] = uvScaleY;
         $uniform4[2] = uvOffsetX;
         $uniform4[3] = uvOffsetY;
-        const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniform4);
+        const uniformBinding = buffer_manager.allocateUniformBinding($uniform4);
 
-        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+        $entries3[0].resource = uniformBinding;
         $entries3[1].resource = sampler;
         $entries3[2].resource = filter_attachment.texture.view;
         const bindGroup = config.device.createBindGroup({
@@ -384,11 +384,11 @@ const $drawFilterResultToMain = (
             $uniform8[5] = main_attachment.height;
             $uniform8[6] = 0;
             $uniform8[7] = 0;
-            const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniform8);
+            const uniformBinding = buffer_manager.allocateUniformBinding($uniform8);
 
             const sampler = config.textureManager.createSampler("container_blend_output_sampler", false);
 
-            ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+            $entries3[0].resource = uniformBinding;
             $entries3[1].resource = sampler;
             $entries3[2].resource = blendedAttachment.texture.view;
             const bindGroup = config.device.createBindGroup({

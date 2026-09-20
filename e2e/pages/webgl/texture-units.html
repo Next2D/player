@@ -1,0 +1,92 @@
+<!doctype html><meta charset="utf-8"><title>Texture unit transition parity</title>
+<canvas width="8" height="8"></canvas>
+<script type="module">
+import { execute as old0 } from '/packages/webgl/src/TextureManager/usecase/TextureManagerBind0UseCase.ts';
+import { execute as old01 } from '/packages/webgl/src/TextureManager/usecase/TextureManagerBind01UseCase.ts';
+import { execute as old02 } from '/packages/webgl/src/TextureManager/usecase/TextureManagerBind02UseCase.ts';
+import { execute as now0 } from '/e2e/fixtures/ExperimentalTextureBind0.ts';
+import { execute as now01 } from '/e2e/fixtures/ExperimentalTextureBind01.ts';
+import { execute as now02 } from '/e2e/fixtures/ExperimentalTextureBind02.ts';
+import { $setWebGL2RenderingContext } from '/packages/webgl/src/WebGLUtil.ts';
+import { $boundTextures, $setActiveTextureUnit, $activeTextureUnit } from '/packages/webgl/src/TextureManager.ts';
+window.__RESULT__ = null;
+try {
+    const gl = document.querySelector('canvas').getContext('webgl2', { antialias: false });
+    if (!gl) throw new Error('WebGL2 unavailable');
+    $setWebGL2RenderingContext(gl);
+    const textures = Array.from({ length: 7 }, (_, id) => {
+        const resource = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, resource);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([20+id*20,40+id*12,30+id*10,255]));
+        return { id, resource, width: 1, height: 1, area: 1, smooth: false, dirty: false, pooled: false };
+    });
+    const compile = (type, source) => {
+        const shader = gl.createShader(type); gl.shaderSource(shader, source); gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
+        return shader;
+    };
+    const vertex = compile(gl.VERTEX_SHADER, `#version 300 es
+        void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));gl_Position=vec4(p*2.-1.,0.,1.);}`);
+    const programs = ['0','01','02'].map(mode => {
+        const program = gl.createProgram();
+        const fragment = compile(gl.FRAGMENT_SHADER, `#version 300 es
+            precision highp float; uniform sampler2D t0; ${mode==='0'?'':'uniform sampler2D t1;'} out vec4 color;
+            void main(){color=texture(t0,vec2(.5))*.5${mode==='0'?'':'+texture(t1,vec2(.5))*.5'};}`);
+        gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+        gl.useProgram(program); gl.uniform1i(gl.getUniformLocation(program, 't0'), 0);
+        if (mode !== '0') gl.uniform1i(gl.getUniformLocation(program, 't1'), mode==='01'?1:2);
+        gl.deleteShader(fragment); return program;
+    });
+    let switches = 0; const activeTexture = gl.activeTexture.bind(gl);
+    gl.activeTexture = unit => { switches++; activeTexture(unit); };
+    const rows = [];
+    for (let mode = 0; mode < 3; mode++) for (let mask = 0; mask < 8; mask++)
+    for (const active of [-1,0,1,2,3]) for (const smooth of [false,true]) for (const stale of [false,true]) {
+        const outputs = [];
+        for (let variant = 0; variant < 2; variant++) {
+            for (const texture of textures) {
+                gl.bindTexture(gl.TEXTURE_2D, texture.resource);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                texture.smooth = false;
+            }
+            for (let unit = 0; unit < 4; unit++) {
+                gl.activeTexture(gl.TEXTURE0 + unit);
+                const bound = unit===3 || mask & (1<<unit);
+                gl.bindTexture(gl.TEXTURE_2D, bound || stale ? textures[unit].resource : null);
+                if (unit < 3) $boundTextures[unit] = bound ? textures[unit] : null;
+            }
+            gl.activeTexture(gl.TEXTURE0 + (active<0?3:active));
+            $setActiveTextureUnit(active<0?-1:gl.TEXTURE0+active);
+            switches = 0;
+            const bind = (variant ? [now0,now01,now02] : [old0,old01,old02])[mode];
+            for (let repeat = 0; repeat < 2; repeat++) {
+                if (mode===0) bind(textures[4], smooth);
+                else bind(textures[4], textures[mode===1?5:6], smooth);
+            }
+            const count = switches;
+            if ($activeTextureUnit!==gl.TEXTURE0 || gl.getParameter(gl.ACTIVE_TEXTURE)!==gl.TEXTURE0) throw new Error('Final active texture is not unit 0');
+            // The caller can immediately mutate unit 0 without another activeTexture call.
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.useProgram(programs[mode]); gl.drawArrays(gl.TRIANGLES,0,3);
+            const pixels = new Uint8Array(8*8*4); gl.readPixels(0,0,8,8,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+            const boundIds = [];
+            for (let unit = 0; unit < 4; unit++) {
+                gl.activeTexture(gl.TEXTURE0+unit);
+                const resource = gl.getParameter(gl.TEXTURE_BINDING_2D);
+                boundIds.push(resource===null?-1:textures.findIndex(t=>t.resource===resource));
+            }
+            if (gl.getError()!==gl.NO_ERROR) throw new Error('WebGL validation error');
+            outputs.push({ pixels, count, boundIds, logical: $boundTextures.map(t=>t?.id??-1) });
+        }
+        let maxDelta = 0;
+        for (let i = 0; i < outputs[0].pixels.length; i++) maxDelta=Math.max(maxDelta,Math.abs(outputs[0].pixels[i]-outputs[1].pixels[i]));
+        if (JSON.stringify(outputs[0].boundIds)!==JSON.stringify(outputs[1].boundIds) || JSON.stringify(outputs[0].logical)!==JSON.stringify(outputs[1].logical)) throw new Error('Binding state mismatch');
+        rows.push({ mode, mask, active, smooth, stale, maxDelta, nonzero: outputs[0].pixels.some(x=>x!==0), switches: outputs.map(x=>x.count) });
+    }
+    window.__RESULT__ = { rows };
+    for(const texture of textures) gl.deleteTexture(texture.resource);
+    for(const program of programs) gl.deleteProgram(program);
+    gl.deleteShader(vertex);
+} catch(error) { window.__RESULT__ = { error: String(error.stack || error) }; }
+</script>

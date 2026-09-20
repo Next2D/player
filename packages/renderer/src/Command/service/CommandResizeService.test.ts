@@ -6,34 +6,28 @@ import {
 } from "../../RendererUtil";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("../../RendererUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../RendererUtil.ts")>();
+    return {
+        ...mod,
+        $canvas: {
+            "width": vi.fn((width: number) => { expect(width).toBe(500); }),
+            "height": vi.fn((height: number) => { expect(height).toBe(600); })
+        },
+        $context: {
+            "resize": vi.fn((width: number, height: number) => {
+                expect(width).toBe(500);
+                expect(height).toBe(600);
+            })
+        }
+    };
+});
+
 describe("CommandResizeService.js test", () =>
 {
     it("execute test", () =>
     {
-        vi.mock("../../RendererUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../RendererUtil.ts")>();
-            return {
-                ...mod,
-                $canvas: {
-                    "width": vi.fn((width) =>
-                    {
-                        expect(width).toBe(500);
-                    }),
-                    "height": vi.fn((height) =>
-                    {
-                        expect(height).toBe(600);
-                    })
-                },
-                $context: {
-                    "resize": vi.fn((width, height) =>
-                    {
-                        expect(width).toBe(500);
-                        expect(height).toBe(600);
-                    })
-                }
-            }
-        });
         const spyResetFunction = vi.spyOn($cacheStore, "reset");
         
         expect($getRendererWidth()).toBe(0);

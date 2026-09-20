@@ -1,4 +1,4 @@
-import type { ITexturePoolBuckets } from "../../interface/IPooledTexture";
+import type { IPooledTexture, ITexturePoolBuckets } from "../../interface/IPooledTexture";
 
 /**
  * @description 古いプールエントリをクリーンアップ（バケットMap版 LRU回収）
@@ -16,7 +16,8 @@ export const execute = (
     buckets: ITexturePoolBuckets,
     current_frame: number,
     threshold: number,
-    total_count: number[]
+    total_count: number[],
+    entries?: WeakMap<GPUTexture, IPooledTexture>
 ): void => {
     const frameThreshold = current_frame - threshold;
 
@@ -25,6 +26,7 @@ export const execute = (
             const entry = bucket[i];
             if (!entry.inUse && entry.lastUsedFrame < frameThreshold) {
                 entry.texture.destroy();
+                entries?.delete(entry.texture);
                 bucket.splice(i, 1);
                 total_count[0]--;
             }

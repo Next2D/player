@@ -31,7 +31,8 @@ vi.mock("../../Mask", () => ({
 }));
 
 vi.mock("../../AtlasManager", () => ({
-    "$getAtlasAttachmentObject": vi.fn(() => ({
+    "$getCurrentAtlasIndex": vi.fn(() => 0),
+    "$getAtlasAttachmentObjectByIndex": vi.fn(() => ({
         "texture": {
             "resource": { "label": "atlasTexture" },
             "view": { "label": "atlasTextureView" }
@@ -41,6 +42,10 @@ vi.mock("../../AtlasManager", () => ({
 
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
 import * as BlendModule from "../../Blend";
+import { $getAtlasAttachmentObjectByIndex, $getCurrentAtlasIndex } from "../../AtlasManager";
+import { InstanceBufferAllocator } from "../../InstanceBufferAllocator";
+
+vi.stubGlobal("GPUBufferUsage", { "VERTEX": 32, "COPY_DST": 8 });
 
 describe("ContextDrawIndirectUseCase", () =>
 {
@@ -134,6 +139,28 @@ describe("ContextDrawIndirectUseCase", () =>
             "getBindGroupLayout": vi.fn(() => hasLayout ? { "label": "mockLayout" } : null)
         } as unknown as PipelineManager;
     };
+
+    it("samples the queued atlas page after another page becomes active", () =>
+    {
+        const device = createMockDevice();
+        const encoder = createMockCommandEncoder();
+        const queuedPage = createMockAttachment();
+        const activePage = createMockAttachment();
+        vi.mocked($getCurrentAtlasIndex).mockReturnValueOnce(3);
+        vi.mocked($getAtlasAttachmentObjectByIndex).mockImplementationOnce(index =>
+            index === 3 ? queuedPage : activePage);
+
+        execute(device, encoder, null, createMockAttachment(),
+            createMockBufferManager(), createMockFrameBufferManager(),
+            createMockTextureManager(), createMockPipelineManager(), false, false);
+
+        expect($getAtlasAttachmentObjectByIndex).toHaveBeenCalledWith(3);
+        expect(device.createBindGroup).toHaveBeenCalledWith(expect.objectContaining({
+            "entries": expect.arrayContaining([
+                { "binding": 1, "resource": queuedPage.texture!.view }
+            ])
+        }));
+    });
 
     beforeEach(() =>
     {
@@ -236,6 +263,75 @@ describe("ContextDrawIndirectUseCase", () =>
             // acquireVertexBufferはサイズとデータを引数に取る
             expect(bufferManager.acquireVertexBuffer).toHaveBeenCalled();
         });
+    });
+
+    it("reuses the render pass and bind groups when atlas pages alternate", () =>
+    {
+        const device = createMockDevice();
+        const encoder = createMockCommandEncoder();
+        const attachment = createMockAttachment();
+        const buffers = createMockBufferManager();
+        const frameBuffers = createMockFrameBufferManager();
+        const textures = createMockTextureManager();
+        const pipelines = createMockPipelineManager();
+        const sampler = {} as GPUSampler;
+        const layout = {} as GPUBindGroupLayout;
+        vi.mocked(textures.createSampler).mockReturnValue(sampler);
+        vi.mocked(pipelines.getBindGroupLayout).mockReturnValue(layout);
+        const pages = [createMockAttachment(), createMockAttachment()];
+        let pass: GPURenderPassEncoder | null = null;
+
+        for (const index of [0, 1, 0, 1]) {
+            vi.mocked($getAtlasAttachmentObjectByIndex).mockReturnValue(pages[index]);
+            pass = execute(device, encoder, pass, attachment, buffers,
+                frameBuffers, textures, pipelines, false, false, pass !== null);
+        }
+
+        expect(encoder.beginRenderPass).toHaveBeenCalledTimes(1);
+        expect(encoder._mockPassEncoder.end).not.toHaveBeenCalled();
+        expect(device.createBindGroup).toHaveBeenCalledTimes(2);
+        expect(buffers.acquireVertexBuffer).toHaveBeenCalledTimes(4);
+        expect(buffers.acquireStorageBuffer).not.toHaveBeenCalled();
+        expect(encoder._mockPassEncoder.draw).toHaveBeenCalledTimes(4);
+
+        // 同じviewでもlayoutまたはsamplerが変われば再作成する。
+        vi.mocked(pipelines.getBindGroupLayout).mockReturnValue({} as GPUBindGroupLayout);
+        execute(device, encoder, pass, attachment, buffers,
+            frameBuffers, textures, pipelines, false, false, true);
+        expect(device.createBindGroup).toHaveBeenCalledTimes(3);
+        vi.mocked(textures.createSampler).mockReturnValue({} as GPUSampler);
+        execute(device, encoder, pass, attachment, buffers,
+            frameBuffers, textures, pipelines, false, false, true);
+        expect(device.createBindGroup).toHaveBeenCalledTimes(4);
+    });
+
+    it("binds distinct ranges for batches sharing the frame instance buffer", () =>
+    {
+        const device = createMockDevice();
+        Object.assign(device, {
+            "createBuffer": vi.fn(() => ({ "size": 65536 })),
+            "queue": { "writeBuffer": vi.fn() }
+        });
+        const encoder = createMockCommandEncoder();
+        const attachment = createMockAttachment();
+        const buffers = createMockBufferManager();
+        const allocator = new InstanceBufferAllocator(device);
+        Object.defineProperty(buffers, "instanceBuffer", { "value": allocator });
+        const frameBuffers = createMockFrameBufferManager();
+        const textures = createMockTextureManager();
+        const pipelines = createMockPipelineManager();
+        const pass = execute(device, encoder, null, attachment, buffers,
+            frameBuffers, textures, pipelines, false, false, false, true);
+        execute(device, encoder, pass, attachment, buffers,
+            frameBuffers, textures, pipelines, false, false, true, true);
+
+        expect(encoder._mockPassEncoder.setVertexBuffer).toHaveBeenCalledWith(1, allocator.getBuffer(), 0, 200);
+        expect(encoder._mockPassEncoder.setVertexBuffer).toHaveBeenCalledWith(1, allocator.getBuffer(), 200, 200);
+        expect(buffers.acquireVertexBuffer).not.toHaveBeenCalled();
+        expect(buffers.acquireStorageBuffer).not.toHaveBeenCalled();
+        expect(device.queue.writeBuffer).not.toHaveBeenCalled();
+        allocator.flush();
+        expect(device.queue.writeBuffer).toHaveBeenCalledOnce();
     });
 
     describe("indirect drawing", () =>

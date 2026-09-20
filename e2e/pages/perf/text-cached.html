@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Next2D Perf - Cached Text</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #000000; }</style>
+</head>
+<body>
+<script type="module">
+    import { runBenchmark, createRandom } from "./harness.js";
+
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { TextField } = next2d.text;
+        const { Sprite } = next2d.display;
+        const group = new Sprite();
+        group.x = 450;
+        group.y = 280;
+        root.addChild(group);
+        const random = createRandom(45678);
+        const fields = [];
+        const burstPeriod = Number(new URLSearchParams(location.search).get("burstPeriod"));
+        for (let i = 0; i < 2000; i++) {
+            const field = new TextField();
+            const format = field.defaultTextFormat;
+            format.size = 10;
+            format.color = 0xFFFFFF;
+            field.defaultTextFormat = format;
+            field.autoSize = "left";
+            field.text = `T${i % 8}`;
+            field.x = -390 + random() * 760;
+            field.y = -210 + random() * 400;
+            field.rotation = random() * 360;
+            group.addChild(field);
+            fields.push(field);
+        }
+
+        // Moving each TextField marks its text cache changed. Move only the
+        // parent so children retain their raster cache after initialization.
+        await runBenchmark(frame => {
+            if (burstPeriod > 0 && frame % burstPeriod === 0) {
+                const letter = String.fromCharCode(65 + Math.floor(frame / burstPeriod) % 26);
+                for (let i = 0; i < fields.length; i++) fields[i].text = `${letter}${i % 8}`;
+            }
+            group.x = 450 + Math.sin(frame * 0.03) * 12;
+            group.y = 280 + Math.cos(frame * 0.03) * 12;
+            group.rotation = Math.sin(frame * 0.02) * 3;
+        });
+    });
+</script>
+</body>
+</html>

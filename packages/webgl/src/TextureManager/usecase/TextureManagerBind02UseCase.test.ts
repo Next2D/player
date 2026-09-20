@@ -7,26 +7,26 @@ import {
 } from "../../TextureManager";
 import type { ITextureObject } from "../../interface/ITextureObject";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "activeTexture": vi.fn(() => { return "activeTexture" }),
+            "bindTexture": vi.fn(() => { return "bindTexture" }),
+            "texParameteri": vi.fn(() => { return "bindTexture" }),
+            "TEXTURE0": 0,
+            "TEXTURE1": 1,
+            "TEXTURE2": 2
+        }
+    }
+});
+
 describe("TextureManagerBind02UseCase.js method test", () =>
 {
     it("test case", async () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "activeTexture": vi.fn(() => { return "activeTexture" }),
-                    "bindTexture": vi.fn(() => { return "bindTexture" }),
-                    "texParameteri": vi.fn(() => { return "bindTexture" }),
-                    "TEXTURE0": 0,
-                    "TEXTURE1": 1,
-                    "TEXTURE2": 2
-                }
-            }
-        });
-
         const textureObject0 = {
             "id": 2,
             "resource": {} as WebGLTexture,

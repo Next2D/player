@@ -73,7 +73,8 @@ export const execute = (
             "size": { width, height },
             "format": textureFormat,
             "sampleCount": sampleCount,
-            "usage": GPUTextureUsage.RENDER_ATTACHMENT
+            "usage": GPUTextureUsage.RENDER_ATTACHMENT |
+                (name === "main" ? GPUTextureUsage.TEXTURE_BINDING : 0)
         });
         const msaaTextureView = msaaGpuTexture.createView();
 

@@ -30,6 +30,14 @@ const $BLEND_PREMULTIPLIED_ALPHA: GPUBlendState = {
     }
 };
 
+// Shared by ordinary output and the fused cached ColorTransform output.
+const $FILTER_OUTPUT_BLEND_VARIANTS: [string, GPUBlendState][] = [
+    ["filter_output_add", { "color": { "srcFactor": "one", "dstFactor": "one", "operation": "add" }, "alpha": { "srcFactor": "one", "dstFactor": "one", "operation": "add" } }],
+    ["filter_output_screen", { "color": { "srcFactor": "one", "dstFactor": "one-minus-src", "operation": "add" }, "alpha": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" } }],
+    ["filter_output_alpha", { "color": { "srcFactor": "zero", "dstFactor": "src-alpha", "operation": "add" }, "alpha": { "srcFactor": "zero", "dstFactor": "src-alpha", "operation": "add" } }],
+    ["filter_output_erase", { "color": { "srcFactor": "zero", "dstFactor": "one-minus-src-alpha", "operation": "add" }, "alpha": { "srcFactor": "zero", "dstFactor": "one-minus-src-alpha", "operation": "add" } }]
+];
+
 /**
  * @description WebGPUレンダーパイプラインの管理クラス。パイプラインとバインドグループレイアウトの生成・キャッシュを行う
  *              Manager class for WebGPU render pipelines. Creates, caches, and manages pipelines and bind group layouts
@@ -147,6 +155,8 @@ export class PipelineManager
         ["filter_output_msaa", "texture_copy"], ["filter_output_add_msaa", "texture_copy"],
         ["filter_output_screen_msaa", "texture_copy"], ["filter_output_alpha_msaa", "texture_copy"],
         ["filter_output_erase_msaa", "texture_copy"],
+        ...["", "_add", "_screen", "_alpha", "_erase"].flatMap((suffix) =>
+            ["", "_msaa"].map((msaa) => [`cached_ct${suffix}${msaa}`, "cached_ct"] as [string, string])),
         ["filter_output_masked", "texture_copy"], ["filter_output_masked_msaa", "texture_copy"],
         ["positioned_texture", "texture_copy"], ["positioned_texture_rgba", "texture_copy"],
         ["bitmap_render_msaa", "texture_copy"], ["bitmap_render", "texture_copy"],
@@ -157,6 +167,9 @@ export class PipelineManager
         ["bevel_filter", "filter"], ["gradient_glow_filter", "filter"],
         ["gradient_bevel_filter", "filter"],
         ["complex_blend", "complex_blend"],
+        ["complex_blend_region", "complex_blend"],
+        ["complex_blend_region_msaa", "complex_blend"],
+        ["complex_blend_msaa", "complex_blend"],
         ["complex_blend_copy", "complex_blend"],
         ["complex_blend_scale", "complex_blend"], ["complex_blend_output", "complex_blend"],
         ["complex_blend_output_msaa", "complex_blend"],
@@ -184,6 +197,9 @@ export class PipelineManager
             case "texture_copy":
                 this.createTextureCopyPipeline();
                 break;
+            case "cached_ct":
+                this.createCachedColorTransformPipelines();
+                break;
             case "bitmap_sync":
                 this.createBitmapSyncPipeline();
                 break;
@@ -202,7 +218,7 @@ export class PipelineManager
      */
     preloadLazyGroups(): void
     {
-        const groups = ["blur_filter", "texture_copy", "bitmap_sync", "filter", "complex_blend"];
+        const groups = ["blur_filter", "texture_copy", "bitmap_sync", "filter", "complex_blend", "cached_ct"];
         for (const group of groups) {
             this.ensureLazyGroup(group);
         }
@@ -2294,12 +2310,7 @@ export class PipelineManager
         this.pipelines.set("filter_output", this.createFullscreenQuadPipeline(
             pipelineLayout, vertexShaderModule, filterOutputShaderModule, this.format, BLEND_ALPHA
         ));
-        const filterOutputBlendVariants: [string, GPUBlendState][] = [
-            ["filter_output_add", { "color": { "srcFactor": "one", "dstFactor": "one", "operation": "add" }, "alpha": { "srcFactor": "one", "dstFactor": "one", "operation": "add" } }],
-            ["filter_output_screen", { "color": { "srcFactor": "one", "dstFactor": "one-minus-src", "operation": "add" }, "alpha": { "srcFactor": "one", "dstFactor": "one-minus-src-alpha", "operation": "add" } }],
-            ["filter_output_alpha", { "color": { "srcFactor": "zero", "dstFactor": "src-alpha", "operation": "add" }, "alpha": { "srcFactor": "zero", "dstFactor": "src-alpha", "operation": "add" } }],
-            ["filter_output_erase", { "color": { "srcFactor": "zero", "dstFactor": "one-minus-src-alpha", "operation": "add" }, "alpha": { "srcFactor": "zero", "dstFactor": "one-minus-src-alpha", "operation": "add" } }]
-        ];
+        const filterOutputBlendVariants = $FILTER_OUTPUT_BLEND_VARIANTS;
 
         for (const [name, blend] of filterOutputBlendVariants) {
             this.pipelines.set(name, this.createFullscreenQuadPipeline(
@@ -2352,6 +2363,34 @@ export class PipelineManager
         }
         this.createPositionedTexturePipeline();
         this.createTextureScalePipeline();
+    }
+
+    /**
+     * @description キャッシュ色変換の初回使用時だけ専用パイプラインを作成する
+     *              Create fused cached CT pipelines only on first use
+     */
+    private createCachedColorTransformPipelines(): void
+    {
+        const bindGroupLayout = this.getBindGroupLayout("texture_copy")!;
+        const pipelineLayout = this.device.createPipelineLayout({ "bindGroupLayouts": [bindGroupLayout] });
+        const vertexShaderModule = this.getOrCreateShaderModule("blurFilterVertex", ShaderSource.getBlurFilterVertexShader());
+        const fragmentShaderModule = this.getOrCreateShaderModule(
+            "cachedColorTransformFragment", ShaderSource.getCachedColorTransformFragmentShader()
+        );
+        const variants: [string, GPUBlendState][] = [
+            ["filter_output", $BLEND_PREMULTIPLIED_ALPHA], ...$FILTER_OUTPUT_BLEND_VARIANTS
+        ];
+        for (const [name, blend] of variants) {
+            const cachedName = name.replace("filter_output", "cached_ct");
+            this.pipelines.set(cachedName, this.createFullscreenQuadPipeline(
+                pipelineLayout, vertexShaderModule, fragmentShaderModule, this.format, blend
+            ));
+            if (this.sampleCount > 1) {
+                this.pipelines.set(`${cachedName}_msaa`, this.createFullscreenQuadPipeline(
+                    pipelineLayout, vertexShaderModule, fragmentShaderModule, this.format, blend, this.sampleCount
+                ));
+            }
+        }
     }
 
     /**
@@ -2819,6 +2858,33 @@ export class PipelineManager
         });
 
         this.pipelines.set("complex_blend", pipeline);
+        const regionFragment = this.getOrCreateShaderModule(
+            "complexBlendRegionFragment", ShaderSource.getUnifiedComplexBlendFragmentShader(true)
+        );
+        this.pipelines.set("complex_blend_region", this.createFullscreenQuadPipeline(
+            pipelineLayout, vertexShaderModule, regionFragment, "rgba8unorm", {
+                "color": { "srcFactor": "one", "dstFactor": "zero", "operation": "add" },
+                "alpha": { "srcFactor": "one", "dstFactor": "zero", "operation": "add" }
+            }
+        ));
+        const msaaLayout = this.device.createBindGroupLayout({ "entries": [
+            { "binding": 0, "visibility": GPUShaderStage.FRAGMENT, "buffer": { "type": "uniform" } },
+            { "binding": 1, "visibility": GPUShaderStage.FRAGMENT, "sampler": {} },
+            { "binding": 2, "visibility": GPUShaderStage.FRAGMENT,
+                "texture": { "multisampled": true, "sampleType": "unfilterable-float" } },
+            { "binding": 3, "visibility": GPUShaderStage.FRAGMENT, "texture": {} }
+        ] });
+        this.bindGroupLayouts.set("complex_blend_msaa", msaaLayout);
+        const msaaPipelineLayout = this.device.createPipelineLayout({ "bindGroupLayouts": [msaaLayout] });
+        const msaaFragment = this.getOrCreateShaderModule(
+            "complexBlendRegionMsaaFragment", ShaderSource.getUnifiedComplexBlendFragmentShader(true, true)
+        );
+        this.pipelines.set("complex_blend_region_msaa", this.createFullscreenQuadPipeline(
+            msaaPipelineLayout, vertexShaderModule, msaaFragment, "rgba8unorm", {
+                "color": { "srcFactor": "one", "dstFactor": "zero", "operation": "add" },
+                "alpha": { "srcFactor": "one", "dstFactor": "zero", "operation": "add" }
+            }
+        ));
         this.createComplexBlendCopyPipeline();
         this.createComplexBlendOutputPipeline();
     }

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Sound backend integration</title></head>
+<body>
+<button id="play">Play</button>
+<script type="module">
+import { Sound, SoundMixer, $getAudioContext } from "/packages/media/src/index.ts";
+import { URLRequest } from "/packages/net/src/index.ts";
+const context = $getAudioContext();
+const fixture = window.soundTest = {
+    Sound, SoundMixer, URLRequest, context,
+    sound: null, graphs: [], decodes: 0, buffers: 0, completions: 0
+};
+const createMedia = context.createMediaElementSource.bind(context);
+context.createMediaElementSource = (element) => {
+    const source = createMedia(element);
+    const graph = { element, source, gain: null };
+    fixture.graphs.push(graph);
+    const connect = source.connect.bind(source);
+    source.connect = (target, ...args) => {
+        if (target instanceof GainNode) graph.gain = target;
+        return connect(target, ...args);
+    };
+    return source;
+};
+const decode = context.decodeAudioData.bind(context);
+context.decodeAudioData = (...args) => { fixture.decodes++; return decode(...args); };
+const createBuffer = context.createBufferSource.bind(context);
+context.createBufferSource = (...args) => { fixture.buffers++; return createBuffer(...args); };
+document.querySelector("#play").onclick = () => {
+    // The old buffer backend still relies on the player's gesture boot; emulate it here.
+    void context.resume();
+    fixture.sound?.play();
+};
+</script>
+</body>
+</html>

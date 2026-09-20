@@ -1,0 +1,88 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Blur preparation copy regression</title>
+<script type="module">
+import { execute as current } from "/e2e/fixtures/ExperimentalBlurFilter.ts";
+import { execute as reference } from "/packages/webgpu/src/Filter/BlurFilter/FilterApplyBlurFilterUseCase.ts";
+import { FrameBufferManager } from "/packages/webgpu/src/FrameBufferManager.ts";
+import { BufferManager } from "/packages/webgpu/src/BufferManager.ts";
+import { TextureManager } from "/packages/webgpu/src/TextureManager.ts";
+import { PipelineManager } from "/packages/webgpu/src/Shader/PipelineManager.ts";
+import { $offset } from "/packages/webgpu/src/Filter/FilterOffset.ts";
+
+try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) throw Error("WebGPU unavailable");
+    const device = await adapter.requestDevice();
+    const errors = [];
+    device.addEventListener("uncapturederror", event => errors.push(event.error.message));
+    device.pushErrorScope("validation");
+    const pipelineManager = new PipelineManager(device, "rgba8unorm");
+    const textureManager = new TextureManager(device);
+    const results = [];
+    for (const format of ["rgba8unorm", "bgra8unorm"])
+    for (const [width, height] of [[1, 1], [7, 5], [31, 19]])
+    for (const [blurX, blurY] of [[0, 0], [2, 3], [15.5, 16], [17, 2], [2, 65], [129, 5]])
+    for (const quality of [1, 3]) {
+        const outputs = [];
+        const counts = [];
+        const offsets = [];
+        const sourceTexture = device.createTexture({ size: [width, height], format,
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
+        const data = new Uint8Array(width * height * 4);
+        for (let i = 0; i < width * height; i++) {
+            const alpha = [0, 1, 64, 128, 254, 255][i % 6];
+            data.set([(i * 37 + 1) % (alpha + 1), (i * 17 + 3) % (alpha + 1), alpha >> 1, alpha], i * 4);
+        }
+        device.queue.writeTexture({ texture: sourceTexture }, data, { bytesPerRow: width * 4 }, [width, height]);
+        const source = { width, height, texture: { resource: sourceTexture, view: sourceTexture.createView() } };
+        for (const apply of [reference, current]) {
+            const frameBufferManager = new FrameBufferManager(device, "rgba8unorm");
+            const allocate = frameBufferManager.createTemporaryAttachment.bind(frameBufferManager);
+            frameBufferManager.createTemporaryAttachment = (w, h) => {
+                const attachment = allocate(w, h);
+                // Dirty contents model pooled textures; padding must be cleared in both paths.
+                device.queue.writeTexture({ texture: attachment.texture.resource },
+                    new Uint8Array(w * h * 4).fill(173), { bytesPerRow: w * 4 }, [w, h]);
+                return attachment;
+            };
+            const bufferManager = new BufferManager(device);
+            const commandEncoder = device.createCommandEncoder();
+            let copies = 0;
+            const copy = commandEncoder.copyTextureToTexture.bind(commandEncoder);
+            commandEncoder.copyTextureToTexture = (...args) => { copies++; return copy(...args); };
+            $offset.x = 0; $offset.y = 0;
+            const result = apply(source, new Float32Array([1, 0, 0, 1, 0, 0]), blurX, blurY, quality, 1,
+                { device, commandEncoder, frameBufferManager, bufferManager, pipelineManager, textureManager });
+            offsets.push([$offset.x, $offset.y]);
+            const stride = Math.ceil(result.width * 4 / 256) * 256;
+            const readback = device.createBuffer({ size: stride * result.height,
+                usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
+            commandEncoder.copyTextureToBuffer({ texture: result.texture.resource },
+                { buffer: readback, bytesPerRow: stride }, [result.width, result.height]);
+            bufferManager.dynamicUniform.flush();
+            device.queue.submit([commandEncoder.finish()]);
+            await readback.mapAsync(GPUMapMode.READ);
+            const mapped = new Uint8Array(readback.getMappedRange());
+            const pixels = new Uint8Array(result.width * result.height * 4);
+            for (let y = 0; y < result.height; y++) pixels.set(mapped.subarray(y * stride, y * stride + result.width * 4), y * result.width * 4);
+            outputs.push(pixels); counts.push(copies);
+            readback.unmap(); readback.destroy();
+            frameBufferManager.dispose(); bufferManager.dispose();
+        }
+        sourceTexture.destroy();
+        if (outputs[0].length !== outputs[1].length || JSON.stringify(offsets[0]) !== JSON.stringify(offsets[1])) throw Error("Dimensions/offset changed");
+        let maxDelta = 0, changed = 0;
+        for (let i = 0; i < outputs[0].length; i++) {
+            const delta = Math.abs(outputs[0][i] - outputs[1][i]);
+            maxDelta = Math.max(maxDelta, delta); if (delta) changed++;
+        }
+        results.push({ format, width, height, blurX, blurY, quality, maxDelta, changed, copies: counts,
+            expectedCopies: format === "rgba8unorm" && blurX <= 16 && blurY <= 16 ? 1 : 0 });
+    }
+    await device.queue.onSubmittedWorkDone();
+    const validation = await device.popErrorScope();
+    if (validation) errors.push(validation.message);
+    window.__BLUR_COPY__ = { results, errors };
+} catch (error) { window.__BLUR_COPY__ = { error: String(error.stack || error) }; }
+</script>

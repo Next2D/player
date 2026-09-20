@@ -17,6 +17,54 @@ const $entries3: GPUBindGroupEntry[] = [
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
 
+interface IBlurBindingCache {
+    device: GPUDevice;
+    layout: GPUBindGroupLayout;
+    sampler: GPUSampler;
+    buffer: GPUBuffer;
+    size: number | undefined;
+    groups: Map<number, GPUBindGroup>;
+}
+
+// Only the latest buffer/layout/sampler combination is kept for each live view.
+// Static offsets remain distinct; cap churn when the frame's allocation order changes.
+const $blurBindingCache = new WeakMap<GPUTextureView, IBlurBindingCache>();
+
+const $getBlurBindGroup = (
+    device: GPUDevice,
+    layout: GPUBindGroupLayout,
+    sampler: GPUSampler,
+    view: GPUTextureView,
+    binding: GPUBufferBinding,
+    cacheable: boolean
+): GPUBindGroup => {
+    let cache: IBlurBindingCache | undefined;
+    const offset = binding.offset ?? 0;
+    if (cacheable) {
+        cache = $blurBindingCache.get(view);
+        if (!cache || cache.device !== device || cache.layout !== layout
+            || cache.sampler !== sampler || cache.buffer !== binding.buffer || cache.size !== binding.size) {
+            cache = { device, layout, sampler, "buffer": binding.buffer, "size": binding.size, "groups": new Map() };
+            $blurBindingCache.set(view, cache);
+        }
+        const existing = cache.groups.get(offset);
+        if (existing) {
+            return existing;
+        }
+    }
+    $entries3[0].resource = binding;
+    $entries3[1].resource = sampler;
+    $entries3[2].resource = view;
+    const group = device.createBindGroup({ layout, "entries": $entries3 });
+    if (cache) {
+        if (cache.groups.size >= 64) {
+            cache.groups.clear();
+        }
+        cache.groups.set(offset, group);
+    }
+    return group;
+};
+
 /**
  * @description copy/upscale 用の定数uniform(scale=1,1 offset=0,0)の永続バッファ
  *              Persistent uniform buffer for the constant copy/upscale uniform
@@ -312,23 +360,21 @@ const applyDirectionalBlur = (
     $uniform4[1] = offsetY;
     $uniform4[2] = fraction;
     $uniform4[3] = samples;
-    const uniformBuffer = buffer_manager
-        ? buffer_manager.acquireAndWriteUniformBuffer($uniform4)
-        : device.createBuffer({
+    let uniformBinding: GPUBufferBinding;
+    if (buffer_manager) {
+        uniformBinding = buffer_manager.allocateUniformBinding($uniform4);
+    } else {
+        const uniformBuffer = device.createBuffer({
             "size": $uniform4.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    if (!buffer_manager) {
         device.queue.writeBuffer(uniformBuffer, 0, $uniform4);
+        uniformBinding = { "buffer": uniformBuffer, "offset": 0, "size": $uniform4.byteLength };
     }
 
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
-    $entries3[1].resource = sampler;
-    $entries3[2].resource = source.texture!.view;
-    const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": $entries3
-    });
+    const bindGroup = $getBlurBindGroup(
+        device, bindGroupLayout, sampler, source.texture!.view, uniformBinding, !!buffer_manager
+    );
 
     const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
         dest.texture!.view, 0, 0, 0, 0, "clear"

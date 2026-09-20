@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { PipelineManager } from "./PipelineManager";
 
 // Mock GPUShaderStage
 const GPUShaderStage = {
@@ -10,6 +11,7 @@ const GPUShaderStage = {
 
 describe("PipelineManager", () =>
 {
+    afterEach(() => vi.unstubAllGlobals());
     // Create a mock implementation for testing without the actual class
     class MockPipelineManager
     {
@@ -87,6 +89,39 @@ describe("PipelineManager", () =>
     beforeEach(() =>
     {
         vi.clearAllMocks();
+    });
+
+    it("lazily creates cached CT variants with the original output blend and sample state", () =>
+    {
+        const device = createMockDevice();
+        vi.stubGlobal("GPUColorWrite", { "ALL": 15 });
+        const descriptors = new Map<GPURenderPipeline, GPURenderPipelineDescriptor>();
+        vi.mocked(device.createRenderPipeline).mockImplementation(descriptor =>
+        {
+            const pipeline = {} as GPURenderPipeline;
+            descriptors.set(pipeline, descriptor);
+            return pipeline;
+        });
+        const manager = new PipelineManager(device, "bgra8unorm");
+        manager.getPipeline("filter_output");
+        expect(vi.mocked(device.createShaderModule).mock.calls.some(([descriptor]) =>
+            descriptor.code.includes("pack4x8unorm"))).toBe(false);
+        const initialCount = descriptors.size;
+        manager.getPipeline("cached_ct");
+        expect(descriptors.size - initialCount).toBe(10);
+        for (const suffix of ["", "_add", "_screen", "_alpha", "_erase"]) {
+            for (const msaa of ["", "_msaa"]) {
+                const fused = manager.getPipeline(`cached_ct${suffix}${msaa}`)!;
+                const descriptor = descriptors.get(fused)!;
+                const original = descriptors.get(manager.getPipeline(`filter_output${suffix}${msaa}`)!)!;
+                const target = Array.from(descriptor.fragment!.targets)[0]!;
+                expect(target.format).toBe("bgra8unorm");
+                expect(descriptor.multisample?.count ?? 1).toBe(msaa ? 4 : 1);
+                expect(target.blend).toEqual(Array.from(original.fragment!.targets)[0]!.blend);
+                expect(manager.getPipeline(`cached_ct${suffix}${msaa}`)).toBe(fused);
+            }
+        }
+        expect(descriptors.size - initialCount).toBe(10);
     });
 
     describe("constructor", () =>

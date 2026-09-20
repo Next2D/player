@@ -5,12 +5,16 @@ import { execute as commandRenderUseCase } from "./Command/usecase/CommandRender
 import { execute as commandRemoveCacheService } from "./Command/service/CommandRemoveCacheService";
 import { execute as commandCaptureUseCase } from "./Command/usecase/CommandCaptureUseCase";
 import { $cacheStore } from "@next2d/cache";
+import { $context } from "./RendererUtil";
+import { RenderFrameLimiter } from "./RenderFrameLimiter";
 
 /**
  * @class
  */
 export class CommandController
 {
+    private readonly frameLimiter = new RenderFrameLimiter(2);
+
     /**
      * @description workerの実行状態
      *              Execution status of worker
@@ -68,6 +72,12 @@ export class CommandController
                     );
 
                     // 描画完了したらメインスレッドにbufferを返却する
+                    if ("getRenderCompletion" in $context) {
+                        const capacity = this.frameLimiter.track($context.getRenderCompletion());
+                        if (capacity) {
+                            await capacity;
+                        }
+                    }
                     globalThis.postMessage({
                         "message": "render",
                         "buffer": object.buffer
@@ -88,6 +98,12 @@ export class CommandController
                         object.canvas as OffscreenCanvas,
                         object.devicePixelRatio as number
                     );
+                    globalThis.postMessage({
+                        "message": "renderFlowControl",
+                        // Both backends must bound Main -> Worker render requests.
+                        // Both backends additionally wait for GPU frame capacity above.
+                        "enabled": true
+                    });
                     break;
 
                 case "removeCache":

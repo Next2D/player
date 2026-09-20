@@ -1,0 +1,112 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Composite filter binding reuse regression</title>
+<script type="module">
+import { execute as referenceGlow } from "/packages/webgpu/src/Filter/GlowFilter/FilterApplyGlowFilterUseCase.ts";
+import { execute as currentGlow } from "/e2e/fixtures/ExperimentalCompositeGlow.ts";
+import { execute as referenceDropShadow } from "/packages/webgpu/src/Filter/DropShadowFilter/FilterApplyDropShadowFilterUseCase.ts";
+import { execute as currentDropShadow } from "/e2e/fixtures/ExperimentalCompositeDropShadow.ts";
+import { execute as referenceBevel } from "/packages/webgpu/src/Filter/BevelFilter/FilterApplyBevelFilterUseCase.ts";
+import { execute as currentBevel } from "/e2e/fixtures/ExperimentalCompositeBevel.ts";
+import { execute as referenceGradientGlow } from "/packages/webgpu/src/Filter/GradientGlowFilter/FilterApplyGradientGlowFilterUseCase.ts";
+import { execute as currentGradientGlow } from "/e2e/fixtures/ExperimentalCompositeGradientGlow.ts";
+import { execute as referenceGradientBevel } from "/packages/webgpu/src/Filter/GradientBevelFilter/FilterApplyGradientBevelFilterUseCase.ts";
+import { execute as currentGradientBevel } from "/e2e/fixtures/ExperimentalCompositeGradientBevel.ts";
+import { $offset } from "/packages/webgpu/src/Filter/FilterOffset.ts";
+import { FrameBufferManager } from "/packages/webgpu/src/FrameBufferManager.ts";
+import { BufferManager, DynamicUniformAllocator } from "/packages/webgpu/src/BufferManager.ts";
+import { TextureManager } from "/packages/webgpu/src/TextureManager.ts";
+import { PipelineManager } from "/packages/webgpu/src/Shader/PipelineManager.ts";
+try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) throw Error("WebGPU unavailable");
+    const device = await adapter.requestDevice();
+    const errors = [], results = [];
+    device.addEventListener("uncapturederror", e => errors.push(e.error.message));
+    device.pushErrorScope("validation");
+    const originalCreate = device.createBindGroup.bind(device);
+    let created = 0;
+    device.createBindGroup = descriptor => { created++; return originalCreate(descriptor); };
+    for (const [name, reference, current] of [
+        ["Glow", referenceGlow, currentGlow],
+        ["DropShadow", referenceDropShadow, currentDropShadow],
+        ["Bevel", referenceBevel, currentBevel],
+        ["GradientGlow", referenceGradientGlow, currentGradientGlow],
+        ["GradientBevel", referenceGradientBevel, currentGradientBevel]
+    ]) {
+    const variants = [];
+    for (const apply of [reference, current]) {
+        const fb = new FrameBufferManager(device, "rgba8unorm");
+        const bm = new BufferManager(device);
+        bm.dynamicUniform.dispose();
+        bm.dynamicUniform = new DynamicUniformAllocator(device, 256);
+        let tm = new TextureManager(device), pm = new PipelineManager(device, "rgba8unorm");
+        const input = device.createTexture({ size: [17, 13], format: "rgba8unorm",
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC });
+        const source = { width: 17, height: 13, texture: { resource: input, view: input.createView() } };
+        const allocate = fb.createTemporaryAttachment.bind(fb);
+        let freshViews = false;
+        fb.createTemporaryAttachment = (w, h) => {
+            const a = allocate(w, h);
+            if (freshViews) a.texture.view = a.texture.resource.createView();
+            return a;
+        };
+        const rows = [];
+        for (let frame = 0; frame < 24; frame++) {
+            if (frame === 8) {
+                bm.dynamicUniform.dispose();
+                bm.dynamicUniform = new DynamicUniformAllocator(device, 4096);
+            }
+            freshViews = frame === 10;
+            if (frame === 12) tm = new TextureManager(device);
+            if (frame === 16) pm = new PipelineManager(device, "rgba8unorm");
+            const data = new Uint8Array(17 * 13 * 4);
+            for (let i = 0; i < 17 * 13; i++) {
+                const a = [0, 1, 64, 128, 254, 255][(i + frame) % 6];
+                data.set([(i * 17 + frame) % (a + 1), a >> 1, (i * 7 + frame) % (a + 1), a], i * 4);
+            }
+            device.queue.writeTexture({ texture: input }, data, { bytesPerRow: 68 }, [17, 13]);
+            // Different prefixes exercise both multiple static offsets and return to old offsets.
+            for (let i = 0; i < frame % 2; i++) bm.allocateUniformBinding(new Float32Array([7, 8, 9, 10]));
+            const encoder = device.createCommandEncoder();
+            created = 0;
+            // Small changes stay within the same padding dimensions but update the kernel weights.
+            $offset.x = 0; $offset.y = 0;
+            const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
+            const config = { device, commandEncoder: encoder, frameBufferManager: fb, bufferManager: bm, pipelineManager: pm, textureManager: tm };
+            const colors = new Float32Array([0, frame < 14 ? 0x4499ff : 0xff8844, 0xffffff]);
+            const alphas = new Float32Array([0, 0.7, 1]), ratios = new Float32Array([0, 128, 255]);
+            const strength = 1 + frame % 2 * 0.1;
+            let result;
+            if (name === "Glow") result = apply(source, matrix, 0x44aaff, 0.7, 3, 2.5, strength, 3, false, false, 1, config);
+            else if (name === "DropShadow") result = apply(source, matrix, 2, 35, 0x44aaff, 0.7, 3, 2.5, strength, 3, false, false, false, 1, config);
+            else if (name === "Bevel") result = apply(source, matrix, 2, 35, 0xffffff, 0.8, 0x112244, 0.7, 3, 2.5, strength, 3, 2, false, 1, config);
+            else result = apply(source, matrix, 2, 35, colors, alphas, ratios, 3, 2.5, strength, 3, 2, false, 1, config);
+            const groups = created, stride = Math.ceil(result.width * 4 / 256) * 256;
+            const rb = device.createBuffer({ size: stride * result.height, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
+            encoder.copyTextureToBuffer({ texture: result.texture.resource }, { buffer: rb, bytesPerRow: stride }, [result.width, result.height]);
+            bm.dynamicUniform.flush();
+            device.queue.submit([encoder.finish()]);
+            await rb.mapAsync(GPUMapMode.READ);
+            const mapped = new Uint8Array(rb.getMappedRange()), pixels = new Uint8Array(result.width * result.height * 4);
+            for (let y = 0; y < result.height; y++) pixels.set(mapped.subarray(y * stride, y * stride + result.width * 4), y * result.width * 4);
+            rows.push({ frame, groups, width: result.width, height: result.height, pixels });
+            rb.unmap(); rb.destroy();
+            fb.releaseTemporaryAttachment(result); fb.flushPendingReleases(); bm.clearFrameBuffers();
+        }
+        variants.push(rows); input.destroy(); fb.dispose(); bm.dispose();
+    }
+    results.push(...variants[0].map((before, i) => {
+        const after = variants[1][i];
+        if (before.width !== after.width || before.height !== after.height) throw Error("Dimensions changed");
+        let maxDelta = 0;
+        for (let k = 0; k < before.pixels.length; k++) maxDelta = Math.max(maxDelta, Math.abs(before.pixels[k] - after.pixels[k]));
+        return { name, frame: i, maxDelta, groups: [before.groups, after.groups], nonzero: before.pixels.some(x => x !== 0) };
+    }));
+    }
+    const validation = await device.popErrorScope();
+    if (validation) errors.push(validation.message);
+    device.destroy();
+    window.__COMPOSITE_BINDING__ = { results, errors };
+} catch (e) { window.__COMPOSITE_BINDING__ = { error: String(e.stack || e) }; }
+</script>

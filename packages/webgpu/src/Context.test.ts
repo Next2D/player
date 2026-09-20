@@ -1,5 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Context } from "./Context";
+import { Node } from "@next2d/texture-packer";
+import { getComplexBlendQueue, getInstancedShaderManager } from "./Blend/BlendInstancedManager";
+import { $cacheStore } from "@next2d/cache";
+import type { IAttachmentObject } from "./interface/IAttachmentObject";
+import type { IBlendMode } from "./interface/IBlendMode";
+import type { FrameBufferManager } from "./FrameBufferManager";
+import type { BufferManager } from "./BufferManager";
+import type { PipelineManager } from "./Shader/PipelineManager";
+import type { ExternalImageUploadBatch } from "./ExternalImageUploadBatch";
 
 // Mock WebGPU globals
 const mockTexture = {
@@ -37,6 +46,7 @@ const mockCommandEncoder = {
 };
 
 const mockQueue = {
+    onSubmittedWorkDone: vi.fn().mockResolvedValue(undefined),
     submit: vi.fn(),
     writeBuffer: vi.fn(),
     writeTexture: vi.fn()
@@ -125,8 +135,277 @@ describe("Context", () =>
         );
     });
 
+    it("exposes completion of the submitted GPU queue", async () => {
+        await context.getRenderCompletion();
+        expect(mockQueue.onSubmittedWorkDone).toHaveBeenCalledTimes(1);
+        mockQueue.onSubmittedWorkDone.mockRejectedValueOnce(new Error("lost"));
+        await expect(context.getRenderCompletion()).rejects.toThrow("lost");
+    });
+
+    it("flushes staged images before submitting frame draws", () => {
+        const flush = vi.fn();
+        context["externalImageUploadBatch"] = { flush } as unknown as ExternalImageUploadBatch;
+        context.beginFrame();
+        context.endFrame();
+        expect(flush).toHaveBeenCalledTimes(1);
+        expect(flush.mock.invocationCallOrder[0]).toBeLessThan(mockQueue.submit.mock.invocationCallOrder[0]);
+    });
+
+    describe("cached filter output pass", () =>
+    {
+        afterEach(() =>
+        {
+            vi.restoreAllMocks();
+            mockCommandEncoder.beginRenderPass.mockReturnValue(mockRenderPassEncoder);
+            getInstancedShaderManager().count = 0;
+            getComplexBlendQueue().length = 0;
+        });
+
+        const setup = () =>
+        {
+            const internals = context as unknown as {
+                frameStarted: boolean;
+                commandEncoder: GPUCommandEncoder;
+                renderPassEncoder: GPURenderPassEncoder | null;
+                cachedFilterPass: GPURenderPassEncoder | null;
+                cachedFilterPassColorView: GPUTextureView | null;
+                renderPassIsInstanced: boolean;
+                frameBufferManager: FrameBufferManager;
+                bufferManager: BufferManager;
+                pipelineManager: PipelineManager;
+                ensureFillRenderPass(): void;
+                resolveMainAttachment(): void;
+            };
+            internals.frameStarted = true;
+            internals.commandEncoder = mockCommandEncoder as unknown as GPUCommandEncoder;
+            context.$mainAttachmentObject = {
+                "width": 64, "height": 48, "texture": { "view": {} },
+                "msaa": true, "msaaTexture": { "view": {} }, "stencil": { "view": {} },
+                "msaaStencil": { "view": {} }
+            } as IAttachmentObject;
+            const cached = { "width": 16, "height": 12, "texture": { "view": {}, "width": 16, "height": 12 } } as IAttachmentObject;
+            $cacheStore.set("cached-pass-test", "fKey", "valid");
+            $cacheStore.set("cached-pass-test", "fTexture", cached);
+            vi.spyOn(internals.pipelineManager, "getPipeline").mockReturnValue({} as GPURenderPipeline);
+            vi.spyOn(internals.pipelineManager, "getBindGroupLayout").mockReturnValue({} as GPUBindGroupLayout);
+            vi.spyOn(internals.frameBufferManager, "createTemporaryAttachment").mockReturnValue(cached);
+            vi.spyOn(internals.frameBufferManager, "releaseTemporaryAttachment").mockImplementation(() => {});
+            const passes: typeof mockRenderPassEncoder[] = [];
+            vi.spyOn(mockCommandEncoder, "beginRenderPass").mockImplementation(() =>
+            {
+                const pass = { ...mockRenderPassEncoder, "end": vi.fn() };
+                passes.push(pass);
+                return pass;
+            });
+            getInstancedShaderManager().count = 0;
+            getComplexBlendQueue().length = 0;
+            return { internals, passes, cached };
+        };
+        const draw = (mode: IBlendMode = "normal", alpha = 1, x = 3) => context.containerDrawCachedFilter(
+            mode, new Float32Array([1, 0, 0, 1, x, 4]),
+            new Float32Array([1, 1, 1, alpha, 0, 0, 0, 0]),
+            new Float32Array([0, 0, 16, 12]), "cached-pass-test", "valid"
+        );
+
+        it("keeps one pass across blend changes, closing before submit", () =>
+        {
+            const { internals, passes } = setup();
+            draw(); draw("add"); draw("screen");
+            expect(passes).toHaveLength(1);
+            expect(passes[0].end).not.toHaveBeenCalled();
+            expect(internals.renderPassIsInstanced).toBe(false);
+            context.endFrame();
+            expect(passes[0].end).toHaveBeenCalledOnce();
+            expect(internals.cachedFilterPass).toBeNull();
+            expect(internals.cachedFilterPassColorView).toBeNull();
+            expect(mockQueue.submit).toHaveBeenCalled();
+        });
+
+        it("fuses CT and identity output without a temporary attachment", () =>
+        {
+            const { internals, passes } = setup();
+            draw(); draw("normal", 0.5); draw("screen", 0.7); draw();
+            expect(passes).toHaveLength(1);
+            expect(passes[0].end).not.toHaveBeenCalled();
+            expect(internals.frameBufferManager.createTemporaryAttachment).not.toHaveBeenCalled();
+            expect(internals.pipelineManager.getPipeline).toHaveBeenCalledWith("cached_ct_msaa");
+            expect(internals.pipelineManager.getPipeline).toHaveBeenCalledWith("cached_ct_screen_msaa");
+        });
+
+        it("reuses identity bindings across blends but invalidates on source view replacement", () =>
+        {
+            const { internals, cached } = setup();
+            const getBuffer = vi.spyOn(internals.bufferManager, "getIdentityUVBuffer");
+            mockDevice.createBindGroup.mockClear();
+            draw(); draw("add"); draw("screen");
+            expect(mockDevice.createBindGroup).toHaveBeenCalledOnce();
+            expect(getBuffer).toHaveBeenCalledOnce();
+            context.drawArraysInstanced();
+            draw();
+            expect(mockDevice.createBindGroup).toHaveBeenCalledOnce();
+            cached.texture!.view = {} as GPUTextureView;
+            draw();
+            expect(mockDevice.createBindGroup).toHaveBeenCalledTimes(2);
+        });
+
+        it("keeps CT uniforms independent and does not reuse identity bindings for CT", () =>
+        {
+            const { internals } = setup();
+            const allocate = vi.spyOn(internals.bufferManager, "acquireAndWriteUniformBuffer");
+            mockDevice.createBindGroup.mockClear();
+            draw("normal", 0.3); draw("screen", 0.7); draw(); draw("add");
+            expect(allocate).toHaveBeenCalledTimes(2);
+            expect(allocate.mock.calls[0][0].byteLength).toBe(32);
+            expect(mockDevice.createBindGroup).toHaveBeenCalledTimes(3);
+            const entries = mockDevice.createBindGroup.mock.calls[2][0].entries;
+            expect(Array.from(entries)[0].resource).toMatchObject({ "offset": 0, "size": 16 });
+        });
+
+        it.each(["missing pipeline", "non-1:1 texture"])("retains the two-pass CT fallback for %s", reason =>
+        {
+            const { internals, passes, cached } = setup();
+            if (reason === "missing pipeline") {
+                vi.mocked(internals.pipelineManager.getPipeline).mockImplementation(name =>
+                    name.startsWith("cached_ct") ? undefined : {} as GPURenderPipeline);
+            } else {
+                cached.texture!.width = 32;
+            }
+            draw(); draw("normal", 0.5); draw();
+            expect(passes).toHaveLength(3);
+            expect(passes[0].end).toHaveBeenCalledOnce();
+            expect(passes[1].end).toHaveBeenCalledOnce();
+            expect(passes[2].end).not.toHaveBeenCalled();
+            expect(internals.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalledOnce();
+        });
+
+        it("ends at an explicit ordinary-draw flush even with an empty queue", () =>
+        {
+            const { passes } = setup();
+            draw(); context.drawArraysInstanced(); draw();
+            expect(passes).toHaveLength(2);
+            expect(passes[0].end).toHaveBeenCalledOnce();
+        });
+
+        it.each(["ordinary", "complex"])("flushes pending %s draws before continuing cached output", kind =>
+        {
+            const { internals, passes } = setup();
+            draw();
+            if (kind === "ordinary") getInstancedShaderManager().count = 1;
+            else getComplexBlendQueue().push({} as ReturnType<typeof getComplexBlendQueue>[number]);
+            const flush = vi.spyOn(context, "drawArraysInstanced").mockImplementation(() =>
+            {
+                internals.renderPassEncoder!.end();
+                internals.renderPassEncoder = null;
+                getInstancedShaderManager().count = 0;
+                getComplexBlendQueue().length = 0;
+            });
+            draw();
+            expect(flush).toHaveBeenCalledOnce();
+            expect(passes).toHaveLength(2);
+            expect(passes[0].end).toHaveBeenCalledOnce();
+        });
+
+        it("ends on target binding changes and does not reuse an ended pass", () =>
+        {
+            const { passes } = setup();
+            draw();
+            context.bind({ "width": 32, "height": 32, "texture": { "view": {} } } as IAttachmentObject);
+            expect(passes[0].end).toHaveBeenCalledOnce();
+            draw();
+            expect(passes).toHaveLength(2);
+        });
+
+        it("does not reuse cached output for a fill pass", () =>
+        {
+            const { internals, passes } = setup();
+            draw(); internals.ensureFillRenderPass();
+            expect(passes[0].end).toHaveBeenCalledOnce();
+            expect(passes).toHaveLength(2);
+            draw();
+            expect(passes[1].end).toHaveBeenCalledOnce();
+            expect(passes).toHaveLength(3);
+        });
+
+        it("does not reuse cached output for a clip pass", () =>
+        {
+            const { passes } = setup();
+            draw();
+            context.beginPath(); context.moveTo(0, 0); context.lineTo(10, 0);
+            context.lineTo(10, 10); context.closePath(); context.clip();
+            expect(passes[0].end).toHaveBeenCalledOnce();
+            expect(passes).toHaveLength(2);
+        });
+
+        it("closes output before MSAA resolve and only resolves once", () =>
+        {
+            const { internals, passes } = setup();
+            draw(); draw(); internals.resolveMainAttachment(); internals.resolveMainAttachment();
+            expect(passes).toHaveLength(2);
+            expect(passes[0].end).toHaveBeenCalledOnce();
+            expect(passes[1].end).toHaveBeenCalledOnce();
+            expect(context.$mainAttachmentObject!.msaaDirty).toBe(false);
+        });
+
+        it("keeps an existing pass valid across offscreen draws and cache misses", () =>
+        {
+            const { passes } = setup();
+            draw(); draw("normal", 1, 100); draw();
+            $cacheStore.set("cached-pass-test", "fKey", "stale"); draw();
+            expect(passes).toHaveLength(1);
+            expect(passes[0].end).not.toHaveBeenCalled();
+        });
+
+        it("changes passes when the main view changes without an explicit bind", () =>
+        {
+            const { passes } = setup();
+            draw();
+            context.$mainAttachmentObject!.msaaTexture!.view = {} as GPUTextureView;
+            draw();
+            expect(passes).toHaveLength(2);
+            expect(passes[0].end).toHaveBeenCalledOnce();
+        });
+
+        it("ends cached output before beginning a mask", () =>
+        {
+            const { passes } = setup();
+            draw(); context.beginMask();
+            expect(passes[0].end).toHaveBeenCalledOnce();
+            expect(passes).toHaveLength(2);
+            context.endMask();
+        });
+
+        it("drops cached pass references when resize discards the frame", () =>
+        {
+            const { internals } = setup();
+            draw(); context.resize(80, 64, false);
+            expect(internals.cachedFilterPass).toBeNull();
+            expect(internals.cachedFilterPassColorView).toBeNull();
+            expect(internals.renderPassEncoder).toBeNull();
+        });
+    });
+
     describe("constructor", () =>
     {
+        it("leaves backdrop resolve selection to the complex blend usecase", () =>
+        {
+            const internals = context as unknown as {
+                processComplexBlendQueue(): void;
+                resolveMainAttachment(): void;
+            };
+            const resolve = vi.spyOn(internals, "resolveMainAttachment");
+            getComplexBlendQueue().push({
+                "node": new Node(0, 0, 0, 1, 1),
+                "x_min": 0, "y_min": 0, "x_max": 1, "y_max": 1,
+                "color_transform": new Float32Array(8), "matrix": new Float32Array(9),
+                "blend_mode": "overlay", "viewport_width": 1, "viewport_height": 1,
+                "render_max_size": 1, "global_alpha": 1
+            });
+            internals.processComplexBlendQueue();
+            expect(resolve).not.toHaveBeenCalled();
+            expect(getComplexBlendQueue()).toHaveLength(0);
+            resolve.mockRestore();
+        });
+
         it("should initialize with default values", () =>
         {
             expect(context).toBeDefined();
@@ -472,7 +751,7 @@ describe("Context", () =>
 
     describe("drawPixels", () =>
     {
-        it("should clear node area and end render pass before writing texture", () =>
+        it.each([false, true])("ends pass before writing texture, clearing only atlas output (cached=%s)", cached =>
         {
             const mockAttachment = {
                 "texture": {
@@ -505,6 +784,8 @@ describe("Context", () =>
             expect(context["renderPassEncoder"]).not.toBeNull();
             expect(context["nodeAreaCleared"]).toBe(false);
 
+            if (cached) context["cachedFilterPass"] = context["renderPassEncoder"];
+
             // Clear mocks
             mockRenderPassEncoder.end.mockClear();
             mockRenderPassEncoder.draw.mockClear();
@@ -512,10 +793,12 @@ describe("Context", () =>
             mockQueue.writeTexture.mockClear();
 
             // Call drawPixels
+            const clearNode = vi.spyOn(context as unknown as { ensureNodeAreaCleared(): void }, "ensureNodeAreaCleared");
             context.drawPixels(mockNode as any, mockPixels);
 
             // Verify node area was cleared (draw(6) for quad)
-            expect(mockRenderPassEncoder.draw).toHaveBeenCalledWith(6);
+            if (cached) expect(clearNode).not.toHaveBeenCalled();
+            else expect(mockRenderPassEncoder.draw).toHaveBeenCalledWith(6);
 
             // Verify render pass was ended after clearing
             expect(mockRenderPassEncoder.end).toHaveBeenCalled();
@@ -529,7 +812,51 @@ describe("Context", () =>
 
     describe("drawElement", () =>
     {
-        it("should clear node area and end render pass before copying external image", () =>
+        it.each([[false, false], [false, true], [true, false], [true, true]])(
+            "shares node clear and image draws until flush (msaa=%s, nextAtlas=%s)", (msaa, nextAtlas) =>
+        {
+            const attachment = {
+                "texture": { "view": {}, "resource": mockTexture },
+                "stencil": { "view": {} },
+                "msaaTexture": { "view": {} },
+                "msaaStencil": { "view": {} },
+                "width": 4096, "height": 4096, msaa
+            };
+            vi.spyOn(context["frameBufferManager"], "getAttachment").mockReturnValue(attachment);
+            vi.spyOn(context["pipelineManager"], "getPipeline").mockReturnValue({} as GPURenderPipeline);
+            vi.spyOn(context["pipelineManager"], "getBindGroupLayout").mockReturnValue({} as GPUBindGroupLayout);
+            mockQueue.copyExternalImageToTexture = vi.fn();
+            const first = { "index": 0, "x": 4, "y": 5, "w": 10, "h": 12 } as Node;
+            const second = { "index": nextAtlas ? 1 : 0, "x": 30, "y": 50, "w": 8, "h": 9 } as Node;
+            context.beginFrame();
+            mockCommandEncoder.beginRenderPass.mockClear();
+            mockRenderPassEncoder.end.mockClear();
+            mockRenderPassEncoder.draw.mockClear();
+            mockRenderPassEncoder.setScissorRect.mockClear();
+            for (const node of [first, second]) {
+                context.beginNodeRendering(node);
+                context.drawElement(node, { "width": node.w, "height": node.h } as ImageBitmap, true);
+                context.endNodeRendering();
+            }
+            expect(mockCommandEncoder.beginRenderPass).toHaveBeenCalledTimes(nextAtlas ? 2 : 1);
+            expect(mockRenderPassEncoder.end).toHaveBeenCalledTimes(nextAtlas ? 1 : 0);
+            expect(mockRenderPassEncoder.draw).toHaveBeenCalledTimes(4);
+            expect(mockRenderPassEncoder.setScissorRect).toHaveBeenCalledWith(4, 5, 11, 13);
+            expect(mockRenderPassEncoder.setScissorRect).toHaveBeenCalledWith(30, 50, 9, 10);
+            expect(mockRenderPassEncoder.setScissorRect).toHaveBeenLastCalledWith(30, 50, 8, 9);
+            expect(mockQueue.copyExternalImageToTexture).toHaveBeenCalledTimes(2);
+            expect(mockQueue.copyExternalImageToTexture).toHaveBeenCalledWith(
+                expect.objectContaining({ "flipY": true }),
+                expect.objectContaining({ "premultipliedAlpha": true }),
+                { "width": 8, "height": 9 }
+            );
+            expect(context["pooledRenderTextures"]).toHaveLength(2);
+            context.drawArraysInstanced();
+            expect(mockRenderPassEncoder.end).toHaveBeenCalledTimes(nextAtlas ? 2 : 1);
+            expect(context["renderPassEncoder"]).toBeNull();
+        });
+
+        it.each([false, true])("ends pass before copying an image, clearing only atlas output (cached=%s)", cached =>
         {
             const mockAttachment = {
                 "texture": {
@@ -565,16 +892,20 @@ describe("Context", () =>
             expect(context["renderPassEncoder"]).not.toBeNull();
             expect(context["nodeAreaCleared"]).toBe(false);
 
+            if (cached) context["cachedFilterPass"] = context["renderPassEncoder"];
+
             // Clear mocks
             mockRenderPassEncoder.end.mockClear();
             mockRenderPassEncoder.draw.mockClear();
             mockQueue.submit.mockClear();
 
             // Call drawElement
+            const clearNode = vi.spyOn(context as unknown as { ensureNodeAreaCleared(): void }, "ensureNodeAreaCleared");
             context.drawElement(mockNode as any, mockImageBitmap);
 
             // Verify node area was cleared (draw(6) for quad)
-            expect(mockRenderPassEncoder.draw).toHaveBeenCalledWith(6);
+            if (cached) expect(clearNode).not.toHaveBeenCalled();
+            else expect(mockRenderPassEncoder.draw).toHaveBeenCalledWith(6);
 
             // Verify render pass was ended after clearing
             expect(mockRenderPassEncoder.end).toHaveBeenCalled();
@@ -588,6 +919,17 @@ describe("Context", () =>
 
     describe("resize と reconfigure フロー", () =>
     {
+        it("allocates atlas pages only when requested after resize", () =>
+        {
+            const createAttachment = vi.spyOn(context["frameBufferManager"], "createAttachment");
+            context.resize(800, 600);
+            expect(createAttachment.mock.calls.map(call => call[0])).toEqual(["main"]);
+
+            const atlas = context.atlasAttachmentObject;
+            expect(atlas).toBeDefined();
+            expect(createAttachment.mock.calls.map(call => call[0])).toEqual(["main", "atlas_0"]);
+        });
+
         it("resize()後に$needsReconfigureがtrueになること", () =>
         {
             context.resize(800, 600);
