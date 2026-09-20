@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Next2D Perf - Text Motion</title>
+    <script defer type="module" src="/src/index.ts"></script>
+    <style>body { margin: 0; padding: 0; background: #000000; }</style>
+</head>
+<body>
+<script type="module">
+    import { runBenchmark, createRandom } from "./harness.js";
+    window.addEventListener("DOMContentLoaded", async () => {
+        const root = await next2d.createRootMovieClip(900, 560, 60);
+        const { TextField } = next2d.text;
+        const random = createRandom(56789);
+        const fields = [];
+        const updates = new URLSearchParams(location.search).has("updates");
+        for (let i = 0; i < 32; i++) {
+            const field = new TextField();
+            const format = field.defaultTextFormat;
+            format.size = 10;
+            format.color = 0xFFFFFF;
+            field.defaultTextFormat = format;
+            field.autoSize = "left";
+            field.text = `T${i}`;
+            const x = 50 + (i % 16) * 50;
+            const y = 50 + Math.floor(i / 16) * 60;
+            const phase = random() * Math.PI * 2;
+            field.x = x;
+            field.y = y;
+            root.addChild(field);
+            fields.push({ field, x, y, phase });
+        }
+        await runBenchmark(frame => {
+            for (const [i, { field, x, y, phase }] of fields.entries()) {
+                if (updates) {
+                    field.text = `#${i}:${frame}`;
+                } else {
+                    field.x = x + Math.sin(frame * 0.03 + phase) * 10;
+                    field.y = y + Math.cos(frame * 0.03 + phase) * 10;
+                    field.rotation = (frame + phase * 30) % 360;
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

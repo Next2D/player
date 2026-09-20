@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><script defer type="module" src="/src/index.ts"></script></head><body>
+<script type="module">
+import { encodeTextData, decodeTextData } from "/packages/render-queue/src/TextDataCodec.ts";
+import { execute as clearBlinking } from "/packages/text/src/TextField/service/TextFieldBlinkingClearTimeoutService.ts";
+import { $textArea } from "/packages/text/src/TextUtil.ts";
+window.addEventListener("DOMContentLoaded", async () => {
+    const root = await next2d.createRootMovieClip(400, 200, 60);
+    const field = new next2d.text.TextField();
+    field.type = "input";
+    field.autoSize = "left";
+    const format = field.defaultTextFormat;
+    format.size = 24;
+    format.color = 0xFFFFFF;
+    field.defaultTextFormat = format;
+    field.text = "ab";
+    field.x = field.y = 40;
+    root.addChild(field);
+    field.focus = true;
+    clearBlinking();
+    field.focusIndex = 2;
+    window.__compose = phase => {
+        if (phase === "update") {
+            $textArea.dispatchEvent(new CompositionEvent("compositionstart"));
+            $textArea.dispatchEvent(new CompositionEvent("compositionupdate", { data: "漢" }));
+        } else {
+            $textArea.dispatchEvent(new CompositionEvent("compositionend", { data: "漢" }));
+        }
+        clearBlinking();
+        const source = JSON.parse(JSON.stringify(field.$textData));
+        const decoded = decodeTextData(encodeTextData(field.$textData));
+        return {
+            text: field.text, source, decoded,
+            characters: field.$textData.textTable.filter(object => object.mode === "text")
+                .map(object => ({ text: object.text, underline: Boolean(object.textFormat.underline) }))
+        };
+    };
+    window.__E2E_RENDER_COMPLETE__ = true;
+});
+</script></body></html>

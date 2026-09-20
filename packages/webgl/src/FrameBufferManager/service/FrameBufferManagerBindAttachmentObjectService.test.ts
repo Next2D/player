@@ -13,29 +13,49 @@ import {
 import { execute } from "./FrameBufferManagerBindAttachmentObjectService";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "TEXTURE0": 0,
+            "TEXTURE1": 1,
+            "TEXTURE2": 2,
+            "bindTexture": vi.fn(() => { return "bindTexture" }),
+            "activeTexture": vi.fn(() => { return "activeTexture" }),
+            "bindFramebuffer": vi.fn(() => { return "bindFramebuffer" }),
+            "bindRenderbuffer": vi.fn(() => { return "bindRenderbuffer" }),
+            "framebufferTexture2D": vi.fn(() => { return "framebufferTexture2D" }),
+            "framebufferRenderbuffer": vi.fn(() => { return "framebufferRenderbuffer" }),
+            "texParameteri": vi.fn(() => { return "texParameteri" }),
+        }
+    }
+});
+
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "TEXTURE0": 0,
+            "TEXTURE1": 1,
+            "TEXTURE2": 2,
+            "bindTexture": vi.fn(() => { return "bindTexture" }),
+            "activeTexture": vi.fn(() => { return "activeTexture" }),
+            "bindFramebuffer": vi.fn(() => { return "bindFramebuffer" }),
+            "bindRenderbuffer": vi.fn(() => { return "bindRenderbuffer" }),
+            "framebufferTexture2D": vi.fn(() => { return "framebufferTexture2D" }),
+            "framebufferRenderbuffer": vi.fn(() => { return "framebufferRenderbuffer" }),
+        }
+    }
+});
+
 describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
 {
     it("test case1", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "TEXTURE0": 0,
-                    "TEXTURE1": 1,
-                    "TEXTURE2": 2,
-                    "bindTexture": vi.fn(() => { return "bindTexture" }),
-                    "activeTexture": vi.fn(() => { return "activeTexture" }),
-                    "bindFramebuffer": vi.fn(() => { return "bindFramebuffer" }),
-                    "bindRenderbuffer": vi.fn(() => { return "bindRenderbuffer" }),
-                    "framebufferTexture2D": vi.fn(() => { return "framebufferTexture2D" }),
-                    "framebufferRenderbuffer": vi.fn(() => { return "framebufferRenderbuffer" }),
-                    "texParameteri": vi.fn(() => { return "texParameteri" }),
-                }
-            }
-        });
 
         const attachmentObject: IAttachmentObject = {
             "id": 0,
@@ -79,25 +99,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
 
     it("test case2", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "TEXTURE0": 0,
-                    "TEXTURE1": 1,
-                    "TEXTURE2": 2,
-                    "bindTexture": vi.fn(() => { return "bindTexture" }),
-                    "activeTexture": vi.fn(() => { return "activeTexture" }),
-                    "bindFramebuffer": vi.fn(() => { return "bindFramebuffer" }),
-                    "bindRenderbuffer": vi.fn(() => { return "bindRenderbuffer" }),
-                    "framebufferTexture2D": vi.fn(() => { return "framebufferTexture2D" }),
-                    "framebufferRenderbuffer": vi.fn(() => { return "framebufferRenderbuffer" }),
-                }
-            }
-        });
-    
+
         const colorBufferObject: IColorBufferObject = {
             "resource": {} as WebGLRenderbuffer,
             "stencil": {
@@ -125,7 +127,7 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
             "texture": null,
             "stencil": colorBufferObject.stencil
         };
-    
+
         $setFramebufferBound(false);
         expect($isFramebufferBound).toBe(false);
         $setCurrentAttachment(null);

@@ -1,8 +1,10 @@
+import { queueTextUpload, flushTextUploads, flushTextUploadsForNode, disposeTextUploads } from "./TextUploadBatch";
+import { execute as contextGetRenderCompletionService } from "./Context/service/ContextGetRenderCompletionService";
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
 import type { ITextureObject } from "./interface/ITextureObject";
-import type { Node } from "@next2d/texture-packer";
+import type { Node, TexturePacker } from "@next2d/texture-packer";
 import { execute as beginPath } from "./PathCommand/service/PathCommandBeginPathService";
 import { execute as moveTo } from "./PathCommand/usecase/PathCommandMoveToUseCase";
 import { execute as lineTo } from "./PathCommand/usecase/PathCommandLineToUseCase";
@@ -59,7 +61,9 @@ import {
     $getAtlasAttachmentObject,
     $clearTransferBounds,
     $getAtlasTextureObject,
-    $setAtlasPageDirty
+    $setAtlasPageDirty,
+    $rootNodes,
+    $setActiveAtlasIndex
 } from "./AtlasManager";
 import {
     $setReadFrameBuffer,
@@ -80,6 +84,8 @@ import {
 
 export class Context
 {
+    private readonly _nodeRoots = new WeakMap<Node, TexturePacker>();
+
     public readonly $stack: Float32Array[];
     public readonly $matrix: Float32Array;
     public $clearColorR: number;
@@ -107,6 +113,7 @@ export class Context
         device_pixel_ratio: number = 1
     ) {
 
+        disposeTextUploads();
         $setWebGL2RenderingContext(gl);
         $setRenderMaxSize(gl.getParameter(gl.MAX_TEXTURE_SIZE));
         $setSamples(samples);
@@ -188,6 +195,7 @@ export class Context
 
     fillBackgroundColor (): void
     {
+        flushTextUploads();
         contextFillBackgroundColorService(
             this.$clearColorR,
             this.$clearColorG,
@@ -198,17 +206,25 @@ export class Context
 
     resize (width: number, height: number, cache_clear: boolean = true): void
     {
+        disposeTextUploads();
         contextResizeUseCase(this, width, height, cache_clear);
     }
 
     clearRect (x: number, y: number, w: number, h: number): void
     {
+        flushTextUploads();
         contextClearRectUseCase(x, y, w, h);
     }
 
     bind (attachment_object: IAttachmentObject): void
     {
+        flushTextUploads();
         contextBindUseCase(this, attachment_object);
+    }
+
+    queueTextElement (node: Node, canvas: OffscreenCanvas): boolean
+    {
+        return queueTextUpload(node, canvas);
     }
 
     save (): void
@@ -237,6 +253,7 @@ export class Context
 
     reset (): void
     {
+        flushTextUploads();
         contextResetService(this);
     }
 
@@ -297,6 +314,7 @@ export class Context
 
     fill (): void
     {
+        flushTextUploads();
         contextFillUseCase("fill");
     }
 
@@ -308,6 +326,7 @@ export class Context
         interpolation: number,
         focal: number
     ): void {
+        flushTextUploads();
         contextGradientFillUseCase(
             type, stops, matrix,
             spread, interpolation, focal
@@ -322,6 +341,7 @@ export class Context
         repeat: boolean,
         smooth: boolean
     ): void {
+        flushTextUploads();
         contextBitmapFillUseCase(
             pixels, matrix, width, height, repeat, smooth
         );
@@ -329,6 +349,7 @@ export class Context
 
     stroke (): void
     {
+        flushTextUploads();
         contextStrokeUseCase();
     }
 
@@ -340,6 +361,7 @@ export class Context
         interpolation: number,
         focal: number
     ): void {
+        flushTextUploads();
         contextGradientStrokeUseCase(
             type, stops, matrix,
             spread, interpolation, focal
@@ -354,6 +376,7 @@ export class Context
         repeat: boolean,
         smooth: boolean
     ): void {
+        flushTextUploads();
         contextBitmapStrokeUseCase(
             pixels, matrix, width, height, repeat, smooth
         );
@@ -361,6 +384,7 @@ export class Context
 
     clip (): void
     {
+        flushTextUploads();
         contextClipUseCase();
     }
 
@@ -376,12 +400,28 @@ export class Context
 
     createNode (width: number, height: number): Node
     {
-        return atlasManagerCreateNodeService(width, height);
+        const node = atlasManagerCreateNodeService(width, height);
+        this._nodeRoots.set(node, $rootNodes[node.index]);
+        return node;
+    }
+
+    /** Select the page of a live cached node without reallocating its rectangle. */
+    reuseNode (node: Node): boolean
+    {
+        const root = this._nodeRoots.get(node);
+        if (!root || root !== $rootNodes[node.index] || !node.used) {
+            return false;
+        }
+        flushTextUploadsForNode(node);
+        $setActiveAtlasIndex(node.index);
+        return true;
     }
 
     removeNode (node: Node): void
     {
+        flushTextUploadsForNode(node);
         atlasManagerRemoveNodeService(node);
+        this._nodeRoots.delete(node);
     }
 
     /**
@@ -402,7 +442,9 @@ export class Context
             return ;
         }
         if ("w" in value) {
+            flushTextUploadsForNode(value as Node);
             atlasManagerRemoveNodeService(value as Node);
+            this._nodeRoots.delete(value as Node);
         } else if ("resource" in value) {
             textureManagerReleaseTextureObjectUseCase(value as ITextureObject);
         }
@@ -410,6 +452,7 @@ export class Context
 
     beginNodeRendering (node: Node): void
     {
+        flushTextUploads();
         this.newDrawState = true;
 
         // このページには未解決の描き込みがある(次回の解決対象)
@@ -421,11 +464,13 @@ export class Context
 
     endNodeRendering (): void
     {
+        flushTextUploads();
         contextEndNodeRenderingService();
     }
 
     drawFill (): void
     {
+        flushTextUploads();
         contextDrawFillUseCase();
     }
 
@@ -435,16 +480,18 @@ export class Context
         y_min: number,
         x_max: number,
         y_max: number,
-        color_transform: Float32Array
+        color_transform: Float32Array,
+        color_transform_offset: number = 0
     ): void {
         contextUpdateTransferBoundsService(node);
         blnedDrawDisplayObjectUseCase(
-            node, x_min, y_min, x_max, y_max, color_transform
+            node, x_min, y_min, x_max, y_max, color_transform, color_transform_offset
         );
     }
 
     drawArraysInstanced (): void
     {
+        flushTextUploads();
         blnedDrawArraysInstancedUseCase();
     }
 
@@ -455,21 +502,25 @@ export class Context
 
     transferMainCanvas (): void
     {
+        flushTextUploads();
         frameBufferManagerTransferMainCanvasService();
     }
 
     drawPixels (node: Node, pixels: Uint8Array): void
     {
+        flushTextUploads();
         contextDrawPixelsUseCase(node, pixels);
     }
 
     drawElement (node: Node, element: OffscreenCanvas | ImageBitmap, _flipY: boolean = false): void
     {
+        flushTextUploads();
         contextDrawElementUseCase(node, element);
     }
 
     beginMask (): void
     {
+        flushTextUploads();
         maskBeginMaskService();
     }
 
@@ -479,11 +530,13 @@ export class Context
         x_max: number,
         y_max: number
     ): void {
+        flushTextUploads();
         maskSetMaskBoundsService(x_min, y_min, x_max, y_max);
     }
 
     endMask (): void
     {
+        flushTextUploads();
         maskEndMaskService();
     }
 
@@ -582,6 +635,13 @@ export class Context
 
     async createImageBitmap (width: number, height: number): Promise<ImageBitmap>
     {
+        flushTextUploads();
         return await contextCreateImageBitmapService(width, height);
     }
+    getRenderCompletion (): Promise<void>
+    {
+        flushTextUploads();
+        return contextGetRenderCompletionService();
+    }
+
 }

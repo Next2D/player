@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Local MSAA resolve regression</title></head>
+<body><script type="module">
+import { compareBackdropPaths } from "./backdrop-region.js";
+try {
+    const rgba = await compareBackdropPaths({ localResolve: true });
+    const bgra = await compareBackdropPaths({ localResolve: true, backdropFormat: "bgra8unorm" });
+    window.__BACKDROP_RESULT__ = { cases: rgba.cases + bgra.cases, maxDelta: Math.max(rgba.maxDelta, bgra.maxDelta), rgba, bgra };
+} catch (error) {
+    window.__BACKDROP_RESULT__ = { error: String(error) };
+}
+</script></body></html>

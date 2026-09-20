@@ -2,22 +2,25 @@ import { execute } from "./MeshFillGenerateService";
 import { $setViewportSize } from "../../WebGLUtil.ts";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        "$context": {
+            "$fillStyle": new Float32Array([0, 0, 0, 1]),
+            "$matrix": new Float32Array([1, 0, 0, 1, 0, 0, 0, 0, 1]),
+        }
+    }
+});
+
+
 describe("MeshFillGenerateService.js method test", () =>
 {
     it("test case", async () =>
     {
 
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                "$context": {
-                    "$fillStyle": new Float32Array([0, 0, 0, 1]),
-                    "$matrix": new Float32Array([1, 0, 0, 1, 0, 0, 0, 0, 1]),
-                }
-            }
-        });
+
 
         $setViewportSize(10, 10);
         const vertices = [

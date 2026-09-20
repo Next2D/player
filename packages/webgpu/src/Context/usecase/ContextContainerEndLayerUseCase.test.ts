@@ -84,6 +84,7 @@ describe("ContextContainerEndLayerUseCase.js test", () => {
             "beginRenderPass": vi.fn(() => mockPassEncoder)
         },
         "bufferManager": {
+            "allocateUniformBinding": vi.fn((data: Float32Array) => ({ "buffer": {}, "offset": 256, "size": data.byteLength })),
             "acquireAndWriteUniformBuffer": vi.fn(() => ({}))
         },
         "frameBufferManager": {
@@ -105,6 +106,7 @@ describe("ContextContainerEndLayerUseCase.js test", () => {
     }) as any;
 
     const createMockBufferManager = () => ({
+        "allocateUniformBinding": vi.fn((data: Float32Array) => ({ "buffer": {}, "offset": 256, "size": data.byteLength })),
         "acquireAndWriteUniformBuffer": vi.fn(() => ({}))
     }) as any;
 
@@ -176,6 +178,12 @@ describe("ContextContainerEndLayerUseCase.js test", () => {
     {
         const config = createMockConfig();
         const bufferManager = createMockBufferManager();
+        const bindings: GPUBufferBinding[] = [];
+        config.device.createBindGroup.mockImplementation((descriptor: GPUBindGroupDescriptor) =>
+        {
+            bindings.push({ ...Array.from(descriptor.entries)[0].resource as GPUBufferBinding });
+            return {} as GPUBindGroup;
+        });
 
         const matrix = new Float32Array([1, 0, 0, 1, 10, 20]);
         // Non-identity color transform
@@ -196,6 +204,11 @@ describe("ContextContainerEndLayerUseCase.js test", () => {
         );
 
         // Should apply color transform (extra createTemporaryAttachment call)
+        expect(bindings.map(binding => [binding.offset, binding.size])).toEqual([
+            [256, 16], [256, 32], [256, 16]
+        ]);
+        expect(config.bufferManager.acquireAndWriteUniformBuffer).not.toHaveBeenCalled();
+        expect(bufferManager.acquireAndWriteUniformBuffer).not.toHaveBeenCalled();
         expect(config.frameBufferManager.createTemporaryAttachment).toHaveBeenCalled();
         expect(config.frameBufferManager.releaseTemporaryAttachment).toHaveBeenCalled();
     });

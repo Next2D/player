@@ -28,6 +28,10 @@ import {
     Matrix
 } from "@next2d/geom";
 
+// 同期的な境界計算の直後に4値をローカルへ取り出す。プールには返却しない。
+// Copy all four values immediately after the synchronous calculation; never pool this buffer.
+const $shapeBounds: Float32Array = new Float32Array(4);
+
 /**
  * @description renderer workerに渡すShapeの描画データを生成
  *              Generate drawing data of Shape to pass to renderer
@@ -92,14 +96,13 @@ export const execute = (
     const bounds = displayObjectCalcBoundsMatrixService(
         graphics.xMin, graphics.yMin,
         graphics.xMax, graphics.yMax,
-        tMatrix
+        tMatrix, $shapeBounds
     );
 
     let xMin = bounds[0];
     let yMin = bounds[1];
     let xMax = bounds[2];
     let yMax = bounds[3];
-    $poolBoundsArray(bounds);
 
     const width  = Math.ceil(Math.abs(xMax - xMin));
     const height = Math.ceil(Math.abs(yMax - yMin));
@@ -235,22 +238,70 @@ export const execute = (
         ? 0
         : shape.cacheKey;
 
-    // rennder on
-    renderQueue.pushShapeBuffer(
-        1, $RENDERER_SHAPE_TYPE,
-        tMatrix[0] * cacheScaleX, tMatrix[1] * cacheScaleX,
-        tMatrix[2] * cacheScaleY, tMatrix[3] * cacheScaleY,
-        tMatrix[4], tMatrix[5],
-        tColorTransform[0], tColorTransform[1], tColorTransform[2], tColorTransform[3],
-        tColorTransform[4], tColorTransform[5], tColorTransform[6], tColorTransform[7],
-        xMin, yMin, xMax, yMax,
-        graphics.xMin, graphics.yMin,
-        graphics.xMax, graphics.yMax,
-        +isGridEnabled, +isDrawable, shape.isBitmap ? 1 : cacheMatrix ? 2 : 0,
-        +shape.uniqueKey, cacheKey,
-        renderXScale, renderYScale,
-        shape.instanceId // フィルターキャッシュ用のユニークキー
-    );
+    // 引数の評価順を維持し、getterから再入する前に行列・色を保存する。
+    // Preserve argument evaluation order; snapshot transforms before getters can re-enter.
+    const a = tMatrix[0] * cacheScaleX;
+    const b = tMatrix[1] * cacheScaleX;
+    const c = tMatrix[2] * cacheScaleY;
+    const d = tMatrix[3] * cacheScaleY;
+    const tx = tMatrix[4];
+    const ty = tMatrix[5];
+    const redMultiplier = tColorTransform[0];
+    const greenMultiplier = tColorTransform[1];
+    const blueMultiplier = tColorTransform[2];
+    const alphaMultiplier = tColorTransform[3];
+    const redOffset = tColorTransform[4];
+    const greenOffset = tColorTransform[5];
+    const blueOffset = tColorTransform[6];
+    const alphaOffset = tColorTransform[7];
+    const graphicsXMin = graphics.xMin;
+    const graphicsYMin = graphics.yMin;
+    const graphicsXMax = graphics.xMax;
+    const graphicsYMax = graphics.yMax;
+    const bitmapMode = shape.isBitmap ? 1 : cacheMatrix ? 2 : 0;
+    const uniqueKey = +shape.uniqueKey;
+    const instanceId = shape.instanceId;
+
+    // 32引数の呼び出しを省き、同じ32要素のレコードへ直接書き込む。
+    // Write the same 32-float record without the 32-argument call.
+    if (renderQueue.buffer.length < renderQueue.offset + 32) {
+        renderQueue.resize(32);
+    }
+    const queueBuffer = renderQueue.buffer;
+    const queueOffset = renderQueue.offset;
+    queueBuffer[queueOffset] = 1;
+    queueBuffer[queueOffset + 1] = $RENDERER_SHAPE_TYPE;
+    queueBuffer[queueOffset + 2] = a;
+    queueBuffer[queueOffset + 3] = b;
+    queueBuffer[queueOffset + 4] = c;
+    queueBuffer[queueOffset + 5] = d;
+    queueBuffer[queueOffset + 6] = tx;
+    queueBuffer[queueOffset + 7] = ty;
+    queueBuffer[queueOffset + 8] = redMultiplier;
+    queueBuffer[queueOffset + 9] = greenMultiplier;
+    queueBuffer[queueOffset + 10] = blueMultiplier;
+    queueBuffer[queueOffset + 11] = alphaMultiplier;
+    queueBuffer[queueOffset + 12] = redOffset;
+    queueBuffer[queueOffset + 13] = greenOffset;
+    queueBuffer[queueOffset + 14] = blueOffset;
+    queueBuffer[queueOffset + 15] = alphaOffset;
+    queueBuffer[queueOffset + 16] = xMin;
+    queueBuffer[queueOffset + 17] = yMin;
+    queueBuffer[queueOffset + 18] = xMax;
+    queueBuffer[queueOffset + 19] = yMax;
+    queueBuffer[queueOffset + 20] = graphicsXMin;
+    queueBuffer[queueOffset + 21] = graphicsYMin;
+    queueBuffer[queueOffset + 22] = graphicsXMax;
+    queueBuffer[queueOffset + 23] = graphicsYMax;
+    queueBuffer[queueOffset + 24] = +isGridEnabled;
+    queueBuffer[queueOffset + 25] = +isDrawable;
+    queueBuffer[queueOffset + 26] = bitmapMode;
+    queueBuffer[queueOffset + 27] = uniqueKey;
+    queueBuffer[queueOffset + 28] = cacheKey;
+    queueBuffer[queueOffset + 29] = renderXScale;
+    queueBuffer[queueOffset + 30] = renderYScale;
+    queueBuffer[queueOffset + 31] = instanceId;
+    renderQueue.offset = queueOffset + 32;
 
     if (shape.$cache && !shape.$cache.has(shape.uniqueKey)) {
         shape.$cache = null;

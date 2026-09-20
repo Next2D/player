@@ -60,8 +60,11 @@ export const execute = <D extends DisplayObject>(display_object: D, rotation: nu
         matrix.b = scaleX * sinX;
         matrix.a = Math.abs(sinX) === 1 ? 0 : scaleX * cosX;
 
-        const sinY = Math.sin(radianY);
-        const cosY = Math.cos(radianY);
+        // 角度が完全一致する場合だけ再利用する。符号付きゼロも区別する。
+        // Reuse only for identical angles, including the sign of zero.
+        const sameRadian = Object.is(radianY, radianX);
+        const sinY = sameRadian ? sinX : Math.sin(radianY);
+        const cosY = sameRadian ? cosX : Math.cos(radianY);
         matrix.c = -scaleY * sinY;
         matrix.d = Math.abs(sinY) === 1 ? 0 : scaleY * cosY;
     }

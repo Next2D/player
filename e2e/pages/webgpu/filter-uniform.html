@@ -1,0 +1,11 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Filter uniform arena regression</title>
+<script type="module">
+import { compareFilterUniform } from "./filter-uniform.js";
+try {
+    window.__FILTER_UNIFORM_RESULT__ = await compareFilterUniform();
+} catch (error) {
+    window.__FILTER_UNIFORM_RESULT__ = { error: String(error.stack || error) };
+}
+</script>

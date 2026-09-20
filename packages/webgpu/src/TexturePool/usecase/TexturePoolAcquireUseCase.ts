@@ -40,7 +40,8 @@ export const execute = (
     usage: GPUTextureUsageFlags,
     current_frame: number,
     max_pool_size: number,
-    total_count: number[]
+    total_count: number[],
+    entries?: WeakMap<GPUTexture, IPooledTexture>
 ): GPUTexture => {
     const key = buildKey(width, height, format);
 
@@ -77,6 +78,7 @@ export const execute = (
         if (oldestIdx >= 0) {
             const bEntries = buckets.get(oldestKey)!;
             bEntries[oldestIdx].texture.destroy();
+            entries?.delete(bEntries[oldestIdx].texture);
             bEntries.splice(oldestIdx, 1);
             if (bEntries.length === 0) {
                 buckets.delete(oldestKey);
@@ -100,6 +102,7 @@ export const execute = (
         "lastUsedFrame": current_frame,
         "inUse": true
     };
+    entries?.set(texture, entry);
 
     if (bucket) {
         bucket.push(entry);

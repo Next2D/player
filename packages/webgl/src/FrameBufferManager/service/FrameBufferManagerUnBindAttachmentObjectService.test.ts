@@ -8,20 +8,21 @@ import {
     $setFramebufferBound
 } from "../../FrameBufferManager.ts";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "bindFramebuffer": vi.fn(() => { return "bindFramebuffer" }),
+        }
+    }
+});
+
 describe("FrameBufferManagerUnBindAttachmentObjectService.js method test", () =>
 {
     it("test case1", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "bindFramebuffer": vi.fn(() => { return "bindFramebuffer" }),
-                }
-            }
-        });
 
         const attachmentObject = {
             "width": 100,

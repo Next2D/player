@@ -64,10 +64,10 @@ export const clearComplexBlendQueue = (): void =>
 
 /**
  * @description インスタンスシェーダーマネージャーのキャッシュ
- *              Cache map for instanced shader managers
- * @type {Map<string, ShaderInstancedManager>}
+ *              Shared instanced shader manager
+ * @type {ShaderInstancedManager | null}
  */
-const $shaderManagers = new Map<string, ShaderInstancedManager>();
+let $shaderManager: ShaderInstancedManager | null = null;
 
 /**
  * @description インスタンスシェーダーマネージャーを取得（なければ生成）
@@ -76,11 +76,10 @@ const $shaderManagers = new Map<string, ShaderInstancedManager>();
  */
 export const getInstancedShaderManager = (): ShaderInstancedManager =>
 {
-    const key = "blend_instanced";
-    if (!$shaderManagers.has(key)) {
-        $shaderManagers.set(key, new ShaderInstancedManager());
+    if (!$shaderManager) {
+        $shaderManager = new ShaderInstancedManager();
     }
-    return $shaderManagers.get(key)!;
+    return $shaderManager;
 };
 
 /**
@@ -98,6 +97,7 @@ export const getInstancedShaderManager = (): ShaderInstancedManager =>
  * @param {number} viewport_height - ビューポート高さ / Viewport height
  * @param {number} render_max_size - レンダーテクスチャ最大サイズ / Render texture max size
  * @param {number} global_alpha - グローバルアルファ値 / Global alpha value
+ * @param {number} color_transform_offset - 要素単位の開始位置 / Start offset in elements
  * @return {void}
  */
 export const addDisplayObjectToInstanceArray = (
@@ -112,17 +112,18 @@ export const addDisplayObjectToInstanceArray = (
     viewport_width: number,
     viewport_height: number,
     render_max_size: number,
-    global_alpha: number
+    global_alpha: number,
+    color_transform_offset: number = 0
 ): void => {
 
     // WebGL版と同じ: mulColor.a には globalAlpha を使用
-    const ct0 = color_transform[0];
-    const ct1 = color_transform[1];
-    const ct2 = color_transform[2];
+    const ct0 = color_transform[color_transform_offset];
+    const ct1 = color_transform[color_transform_offset + 1];
+    const ct2 = color_transform[color_transform_offset + 2];
     const ct3 = global_alpha; // WebGL: $context.globalAlpha
-    const ct4 = color_transform[4] / 255;
-    const ct5 = color_transform[5] / 255;
-    const ct6 = color_transform[6] / 255;
+    const ct4 = color_transform[color_transform_offset + 4] / 255;
+    const ct5 = color_transform[color_transform_offset + 5] / 255;
+    const ct6 = color_transform[color_transform_offset + 6] / 255;
     const ct7 = 0;
 
     if ($SIMPLE_BLEND_MODES.has(blend_mode)) {
@@ -170,7 +171,10 @@ export const addDisplayObjectToInstanceArray = (
 
         // キューに追加して後で処理（プールからFloat32Arrayを再利用）
         const ct = $ct8Pool.length > 0 ? $ct8Pool.pop()! : new Float32Array(8);
-        ct.set(color_transform);
+        // 遅延描画は元キューを保持せず、8要素だけを専用配列へコピーする。
+        ct.set(color_transform_offset === 0 && color_transform.length === 8
+            ? color_transform
+            : color_transform.subarray(color_transform_offset, color_transform_offset + 8));
         const m = $m9Pool.length > 0 ? $m9Pool.pop()! : new Float32Array(9);
         m.set(matrix);
         $complexBlendQueue.push({

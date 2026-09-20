@@ -10,11 +10,6 @@ import { execute as frameBufferManagerResolveAttachmentService } from "../../Fra
 
 // プリアロケート配列
 /**
- * @description ユニフォームデータの事前確保配列（4要素）
- *              Pre-allocated uniform data array (4 elements)
- */
-const $uniform4 = new Float32Array(4);
-/**
  * @description ユニフォームデータの事前確保配列（6要素）
  *              Pre-allocated uniform data array (6 elements)
  */
@@ -40,77 +35,6 @@ const $entries3: GPUBindGroupEntry[] = [
     { "binding": 1, "resource": null as unknown as GPUSampler },
     { "binding": 2, "resource": null as unknown as GPUTextureView }
 ];
-
-/**
- * @description レンダーパスを使用してテクスチャ領域をコピーする
- *              Copies a texture region via render pass
- * @param {GPUDevice} device GPUデバイス / GPU device
- * @param {GPUCommandEncoder} command_encoder コマンドエンコーダ / Command encoder
- * @param {GPUTextureView} src_view ソーステクスチャビュー / Source texture view
- * @param {IAttachmentObject} dst_attachment デスティネーションアタッチメント / Destination attachment
- * @param {number} src_x ソースX座標 / Source X coordinate
- * @param {number} src_y ソースY座標 / Source Y coordinate
- * @param {number} src_width ソース幅 / Source width
- * @param {number} src_height ソース高さ / Source height
- * @param {number} copy_width コピー幅 / Copy width
- * @param {number} copy_height コピー高さ / Copy height
- * @param {FrameBufferManager} frame_buffer_manager フレームバッファマネージャ / Frame buffer manager
- * @param {TextureManager} texture_manager テクスチャマネージャ / Texture manager
- * @param {PipelineManager} pipeline_manager パイプラインマネージャ / Pipeline manager
- * @param {BufferManager} buffer_manager バッファマネージャ / Buffer manager
- * @return {void}
- */
-const $copyTextureRegionViaRenderPass = (
-    device: GPUDevice,
-    command_encoder: GPUCommandEncoder,
-    src_view: GPUTextureView,
-    dst_attachment: IAttachmentObject,
-    src_x: number,
-    src_y: number,
-    src_width: number,
-    src_height: number,
-    copy_width: number,
-    copy_height: number,
-    frame_buffer_manager: FrameBufferManager,
-    texture_manager: TextureManager,
-    pipeline_manager: PipelineManager,
-    buffer_manager: BufferManager
-): void => {
-    const pipeline = pipeline_manager.getPipeline("complex_blend_copy");
-    const bindGroupLayout = pipeline_manager.getBindGroupLayout("texture_copy");
-
-    if (!pipeline || !bindGroupLayout) {
-        return;
-    }
-
-    $uniform4[0] = copy_width / src_width;
-    $uniform4[1] = copy_height / src_height;
-    $uniform4[2] = src_x / src_width;
-    $uniform4[3] = src_y / src_height;
-    const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniform4);
-
-    const sampler = texture_manager.createSampler("complex_blend_copy_sampler", false);
-
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
-    $entries3[1].resource = sampler;
-    $entries3[2].resource = src_view;
-    const bindGroup = device.createBindGroup({
-        "layout": bindGroupLayout,
-        "entries": $entries3
-    });
-
-    const renderPassDescriptor = frame_buffer_manager.createRenderPassDescriptor(
-        dst_attachment.texture!.view,
-        0, 0, 0, 0,
-        "clear"
-    );
-
-    const passEncoder = command_encoder.beginRenderPass(renderPassDescriptor);
-    passEncoder.setPipeline(pipeline);
-    passEncoder.setBindGroup(0, bindGroup);
-    passEncoder.draw(6, 1, 0, 0);
-    passEncoder.end();
-};
 
 /**
  * @description ブレンド結果をメインアタッチメントに描画する
@@ -156,11 +80,11 @@ const $drawToMainAttachment = (
     $uniform8[5] = main_attachment.height;
     $uniform8[6] = 0;
     $uniform8[7] = 0;
-    const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniform8);
+    const uniformBinding = buffer_manager.allocateUniformBinding($uniform8);
 
     const sampler = texture_manager.createSampler("complex_blend_output_sampler", false);
 
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[0].resource = uniformBinding;
     $entries3[1].resource = sampler;
     $entries3[2].resource = src_attachment.texture!.view;
     const bindGroup = device.createBindGroup({
@@ -301,10 +225,10 @@ export const execute = (
                 $uniform12[9] = blendHeight;
                 $uniform12[10] = 0;
                 $uniform12[11] = 0;
-                const uniformBuffer = buffer_manager.acquireAndWriteUniformBuffer($uniform12, 48);
+                const uniformBinding = buffer_manager.allocateUniformBinding($uniform12);
 
                 const sampler = texture_manager.createSampler("scale_sampler", true);
-                ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+                $entries3[0].resource = uniformBinding;
                 $entries3[1].resource = sampler;
                 $entries3[2].resource = originalAttachment.texture!.view;
                 const bindGroup = device.createBindGroup({
@@ -353,28 +277,18 @@ export const execute = (
             );
         }
 
-        // 2. デスティネーションテクスチャを作成（メインからレンダーパスでコピー）
-        // メインのリゾルブ済みテクスチャを読むため、未リゾルブ分を先に解決する
-        frameBufferManagerResolveAttachmentService(command_encoder, frame_buffer_manager, main_attachment);
-
-        const dstAttachment = frame_buffer_manager.createTemporaryAttachment(blendWidth, blendHeight);
-
-        $copyTextureRegionViaRenderPass(
-            device,
-            command_encoder,
-            main_attachment.texture.view,
-            dstAttachment,
-            dstX,
-            dstY,
-            main_attachment.width,
-            main_attachment.height,
-            blendWidth,
-            blendHeight,
-            frame_buffer_manager,
-            texture_manager,
-            pipeline_manager,
-            buffer_manager
-        );
+        // 2. 4x UNORM8背景は必要な領域だけを合成シェーダー内で解決する。
+        // 解決済みテクスチャ自体は更新しないため、msaaDirtyは維持する。
+        const msaa = main_attachment.msaaTexture;
+        const resource = msaa?.resource;
+        const useMsaaBackdrop = main_attachment.msaa && main_attachment.msaaDirty
+            && !!msaa?.view
+            && resource?.sampleCount === 4
+            && (resource.usage & GPUTextureUsage.TEXTURE_BINDING) !== 0
+            && (resource.format === "rgba8unorm" || resource.format === "bgra8unorm");
+        if (!useMsaaBackdrop) {
+            frameBufferManagerResolveAttachmentService(command_encoder, frame_buffer_manager, main_attachment);
+        }
 
         // 3. カラートランスフォームを準備（add値は生値）
         $uniform8[0] = color_transform[0];
@@ -389,7 +303,7 @@ export const execute = (
         // 4. 複雑なブレンドを適用
         const blendedAttachment = blendApplyComplexBlendUseCase(
             srcAttachment,
-            dstAttachment,
+            main_attachment,
             blend_mode,
             $uniform8,
             {
@@ -400,7 +314,9 @@ export const execute = (
                 "pipelineManager": pipeline_manager,
                 "textureManager": texture_manager,
                 "frameTextures": []
-            }
+            },
+            [dstX, dstY],
+            useMsaaBackdrop ? msaa!.view : undefined
         );
 
         // 5. 結果をメインアタッチメントに描画
@@ -419,7 +335,6 @@ export const execute = (
 
         // 6. 一時テクスチャを解放
         frame_buffer_manager.releaseTemporaryAttachment(srcAttachment);
-        frame_buffer_manager.releaseTemporaryAttachment(dstAttachment);
         frame_buffer_manager.releaseTemporaryAttachment(blendedAttachment);
     }
 

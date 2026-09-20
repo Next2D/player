@@ -6,22 +6,25 @@ import {
     $setActiveTextureUnit
 } from "../../TextureManager";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "activeTexture": vi.fn(() => { return "activeTexture" }),
+            "bindTexture": vi.fn(() => { return "bindTexture" }),
+            "texParameteri": vi.fn(() => { return "texParameteri" }),
+        }
+    }
+});
+
+
 describe("TextureManagerBindService.js method test", () =>
 {
     it("test case", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "activeTexture": vi.fn(() => { return "activeTexture" }),
-                    "bindTexture": vi.fn(() => { return "bindTexture" }),
-                    "texParameteri": vi.fn(() => { return "texParameteri" }),
-                }
-            }
-        });
+
 
         const textureObject = {
             "resource": {} as WebGLTexture,

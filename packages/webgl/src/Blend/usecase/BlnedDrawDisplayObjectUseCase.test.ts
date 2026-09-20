@@ -5,6 +5,7 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import * as BlendModule from "../../Blend";
 import * as AtlasManagerModule from "../../AtlasManager";
 import { renderQueue } from "@next2d/render-queue";
+import { execute as setColorUniform } from "../../Shader/ShaderManager/service/ShaderManagerSetBlendWithColorTransformUniformService";
 
 vi.mock("../../Blend", async (importOriginal) => {
     const mod = await importOriginal<typeof import("../../Blend")>();
@@ -265,6 +266,30 @@ describe("BlnedDrawDisplayObjectUseCase method test", () => {
 
         expect($context.drawArraysInstanced).toHaveBeenCalled();
     });
+
+    it.each(["normal", "layer", "add", "screen", "alpha", "erase", "copy", "multiply"])(
+        "matches a standalone transform for sliced input with an element offset (%s)", mode =>
+        {
+            const colors = new Float32Array([0.5, -0, 1.25, 0.75, -32, 128, 300, 64]);
+            const storage = new Float32Array(40).fill(999);
+            const source = storage.subarray(5);
+            source.set(colors, 9);
+            $context.globalCompositeOperation = mode;
+            $context.globalAlpha = 0.375;
+            vi.mocked(setColorUniform).mockClear();
+            execute(mockNode, 0, 0, 100, 100, colors);
+            const expected = mode === "multiply"
+                ? [...vi.mocked(setColorUniform).mock.calls[0]].slice(1)
+                : [...vi.mocked(renderQueue.pushDisplayObjectBuffer).mock.calls[0]];
+            const subarray = vi.spyOn(source, "subarray");
+            execute(mockNode, 0, 0, 100, 100, source, 9);
+            const actual = mode === "multiply"
+                ? vi.mocked(setColorUniform).mock.calls[1].slice(1)
+                : vi.mocked(renderQueue.pushDisplayObjectBuffer).mock.calls[1];
+            expect(actual).toEqual(expected);
+            expect(subarray).not.toHaveBeenCalled();
+        }
+    );
 
     it("should handle different node dimensions", () => {
         mockNode.w = 200;

@@ -20,6 +20,7 @@ vi.mock("../../RendererWorker", () => ({
 
 vi.mock("@next2d/render-queue", () => ({
     renderQueue: {
+        trim: vi.fn(),
         offset: 0,
         buffer: new Float32Array(1024)
     }

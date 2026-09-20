@@ -104,6 +104,34 @@ describe("FilterApplyDisplacementMapFilterUseCase", () =>
 
     describe("basic displacement map execution", () =>
     {
+        it.each([0, 1, 2, 3])("uses the exact uniform size for mode %i with arena and fallback", mode =>
+        {
+            const config = createMockConfig();
+            const binding = { "buffer": {} as GPUBuffer, "offset": 512, "size": mode === 1 ? 48 : 32 };
+            const allocate = vi.fn((data: Float32Array) =>
+            {
+                expect(data.byteLength).toBe(binding.size);
+                return binding;
+            });
+            config.bufferManager = { "allocateUniformBinding": allocate } as NonNullable<IFilterConfig["bufferManager"]>;
+            const bindings: GPUBufferBinding[] = [];
+            vi.mocked(config.device.createBindGroup).mockImplementation(descriptor =>
+            {
+                bindings.push({ ...Array.from(descriptor.entries)[0].resource as GPUBufferBinding });
+                return {} as GPUBindGroup;
+            });
+            const run = () => execute(createMockAttachment(), new Float32Array([1, 0, 0, 1, 0, 0]),
+                new Uint8Array(64 * 64 * 4), 64, 64, 0, 0, 1, 2, 10, 10, mode, 0x446688, 0.6, 1, config);
+            run();
+            expect(bindings[0]).toEqual(binding);
+            expect(config.device.queue.writeBuffer).not.toHaveBeenCalled();
+            config.bufferManager = undefined;
+            run();
+            expect(bindings[1].offset).toBe(0);
+            expect(bindings[1].size).toBe(binding.size);
+            expect(config.device.queue.writeBuffer).toHaveBeenCalled();
+        });
+
         it("should create output attachment with same dimensions", () =>
         {
             const sourceAttachment = createMockAttachment(200, 150);

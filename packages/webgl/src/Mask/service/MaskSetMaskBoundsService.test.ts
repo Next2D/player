@@ -7,51 +7,54 @@ import {
 } from "../../FrameBufferManager.ts";
 import { $clipBounds } from "../../Mask";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "createTexture": vi.fn(() => { return "createTexture" }),
+            "activeTexture": vi.fn(() => { return "activeTexture" }),
+            "bindTexture": vi.fn(() => { return "bindTexture" }),
+            "texParameteri": vi.fn(() => { return "texParameteri" }),
+            "texStorage2D": vi.fn(() => { return "texStorage2D" }),
+            "createRenderbuffer": vi.fn(() => { return "createRenderbuffer" }),
+            "bindRenderbuffer": vi.fn(() => { return "bindRenderbuffer" }),
+            "renderbufferStorage": vi.fn(() => { return "renderbufferStorage" }),
+            "enable": vi.fn((cap) => {
+                expect(cap).toBe("SCISSOR_TEST");
+            }),
+            "scissor": vi.fn((x, y, width, height) =>
+            {
+                expect(x).toBe(10);
+                expect(y).toBe(60);
+                expect(width).toBe(20);
+                expect(height).toBe(20);
+            }),
+            "SCISSOR_TEST": "SCISSOR_TEST",
+        },
+        $enableScissorTest: vi.fn(),
+        $setScissorBox: vi.fn((x, y, width, height) =>
+        {
+            expect(x).toBe(10);
+            expect(y).toBe(60);
+            expect(width).toBe(20);
+            expect(height).toBe(20);
+        }),
+        "$context": {
+            get currentAttachmentObject() {
+                return $currentAttachment;
+            }
+        }
+    }
+});
+
+
 describe("MaskSetMaskBoundsService.js method test", () =>
 {
     it("test case", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "createTexture": vi.fn(() => { return "createTexture" }),
-                    "activeTexture": vi.fn(() => { return "activeTexture" }),
-                    "bindTexture": vi.fn(() => { return "bindTexture" }),
-                    "texParameteri": vi.fn(() => { return "texParameteri" }),
-                    "texStorage2D": vi.fn(() => { return "texStorage2D" }),
-                    "createRenderbuffer": vi.fn(() => { return "createRenderbuffer" }),
-                    "bindRenderbuffer": vi.fn(() => { return "bindRenderbuffer" }),
-                    "renderbufferStorage": vi.fn(() => { return "renderbufferStorage" }),
-                    "enable": vi.fn((cap) => {
-                        expect(cap).toBe("SCISSOR_TEST");
-                    }),
-                    "scissor": vi.fn((x, y, width, height) =>
-                    {
-                        expect(x).toBe(10);
-                        expect(y).toBe(60);
-                        expect(width).toBe(20);
-                        expect(height).toBe(20);
-                    }),
-                    "SCISSOR_TEST": "SCISSOR_TEST",
-                },
-                $enableScissorTest: vi.fn(),
-                $setScissorBox: vi.fn((x, y, width, height) =>
-                {
-                    expect(x).toBe(10);
-                    expect(y).toBe(60);
-                    expect(width).toBe(20);
-                    expect(height).toBe(20);
-                }),
-                "$context": {
-                    get currentAttachmentObject() {
-                        return $currentAttachment;
-                    }
-                }
-            }
-        });
+
 
         const attachmentObject = {
             "width": 100,

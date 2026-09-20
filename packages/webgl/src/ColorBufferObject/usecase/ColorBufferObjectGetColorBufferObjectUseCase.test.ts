@@ -2,21 +2,24 @@ import { execute } from "./ColorBufferObjectGetColorBufferObjectUseCase";
 import { describe, expect, it, vi } from "vitest";
 import { $objectPool } from "../../ColorBufferObject";
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        $gl: {
+            "bindRenderbuffer": vi.fn(() => { return  "bindRenderbuffer" }),
+            "renderbufferStorageMultisample": vi.fn(() => { return  "renderbufferStorageMultisample" }),
+        }
+    }
+});
+
+
 describe("ColorBufferObjectGetColorBufferObjectUseCase.js method test", () =>
 {
     it("test case", () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) => 
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                $gl: {
-                    "bindRenderbuffer": vi.fn(() => { return  "bindRenderbuffer" }),
-                    "renderbufferStorageMultisample": vi.fn(() => { return  "renderbufferStorageMultisample" }),
-                }
-            }
-        });
+
 
         // new
         $objectPool.length = 0;

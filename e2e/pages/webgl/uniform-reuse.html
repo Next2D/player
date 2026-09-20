@@ -1,0 +1,76 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>WebGL uniform reuse</title></head><body>
+<canvas id="canvas" width="17" height="13"></canvas>
+<script type="module">
+import { execute as reference } from '/packages/webgl/src/Shader/ShaderManager/service/ShaderManagerBindUniformService.ts';
+import { execute as inline } from '/e2e/fixtures/ExperimentalWebGLUniformInline.ts';
+import { execute as weak } from '/e2e/fixtures/ExperimentalWebGLUniformWeak.ts';
+const candidate = new URLSearchParams(location.search).has('weak') ? weak : inline;
+
+window.__RESULT__ = null;
+try {
+    const gl = document.querySelector('canvas').getContext('webgl2', { antialias: false });
+    if (!gl) throw new Error('WebGL2 unavailable');
+    const compile = (type, source) => {
+        const shader = gl.createShader(type); gl.shaderSource(shader, source); gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(shader));
+        return shader;
+    };
+    const vertex = compile(gl.VERTEX_SHADER, `#version 300 es
+        void main() { vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2)); gl_Position=vec4(p*2.-1.,0.,1.); }`);
+    const fragment = compile(gl.FRAGMENT_SHADER, `#version 300 es
+        precision highp float; precision highp int;
+        uniform vec4 u_float[4]; uniform ivec4 u_int[2]; out vec4 color;
+        void main() { vec4 v=u_float[0]+u_float[1]*0.3+u_float[2]*0.2+u_float[3]*0.1;
+          v+=vec4(u_int[0]+u_int[1])*0.01;
+          color=vec4(fract(v.rgb+gl_FragCoord.xyx*0.013),0.8); }`);
+    const counts = [0, 0];
+    const programs = [];
+    const make = variant => {
+        const program = gl.createProgram(); programs.push(program);
+        gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+        const map = new Map();
+        for (const [name, array, method] of [['u_float', new Float32Array(16), 'uniform4fv'], ['u_int', new Int32Array(8), 'uniform4iv']]) {
+            const location = gl.getUniformLocation(program, name);
+            if (!location) throw new Error('Missing uniform');
+            map.set(name, { array, assign: -1, method: values => { counts[variant]++; gl[method](location, values); } });
+        }
+        return { program, map };
+    };
+    const states = [[make(0), make(0)], [make(1), make(1)]];
+    const rows = [];
+    for (let frame = 0; frame < 64; frame++) {
+        if (frame === 32) { states[0][1] = make(0); states[1][1] = make(1); }
+        const results = [];
+        for (let variant = 0; variant < 2; variant++) {
+            const state = states[variant][frame % 2];
+            const float = state.map.get('u_float'); const integer = state.map.get('u_int');
+            // Repeated values, changes in all slots, array replacement, and program switching.
+            const step = Math.floor(frame / 8);
+            for (let i = 0; i < 16; i++) float.array[i] = ((step + i + frame % 2) % 13) / 17;
+            for (let i = 0; i < 8; i++) integer.array[i] = (step + i) % 7 - 3;
+            if (frame === 16 || frame === 17) float.array = float.array.slice();
+            if (frame === 24 || frame === 25) {
+                const oldMethod = integer.method;
+                integer.method = values => oldMethod(values);
+            }
+            if (frame === 40 || frame === 41) integer.assign = 2;
+            if (frame === 44 || frame === 45) integer.assign = -1;
+            gl.useProgram(state.program);
+            (variant ? candidate : reference)(state.map);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            const pixels = new Uint8Array(17 * 13 * 4);
+            gl.readPixels(0, 0, 17, 13, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            const error = gl.getError(); if (error !== gl.NO_ERROR) throw new Error(`GL error ${error}`);
+            results.push(pixels);
+        }
+        let maxDelta = 0;
+        for (let i = 0; i < results[0].length; i++) maxDelta = Math.max(maxDelta, Math.abs(results[0][i] - results[1][i]));
+        rows.push({ frame, maxDelta, nonzero: results[0].some(value => value !== 0) });
+    }
+    window.__RESULT__ = { rows, counts, renderer: gl.getParameter(gl.RENDERER) };
+    for (const program of programs) gl.deleteProgram(program);
+    gl.deleteShader(vertex); gl.deleteShader(fragment);
+} catch (error) { window.__RESULT__ = { error: String(error.stack || error) }; }
+</script></body></html>

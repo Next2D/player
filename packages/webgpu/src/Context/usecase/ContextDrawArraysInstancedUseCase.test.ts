@@ -31,7 +31,8 @@ vi.mock("../../Mask", () => ({
 }));
 
 vi.mock("../../AtlasManager", () => ({
-    "$getAtlasAttachmentObject": vi.fn(() => ({
+    "$getCurrentAtlasIndex": vi.fn(() => 0),
+    "$getAtlasAttachmentObjectByIndex": vi.fn(() => ({
         "texture": {
             "resource": { "label": "atlasTexture" },
             "view": { "label": "atlasTextureView" }
@@ -42,7 +43,7 @@ vi.mock("../../AtlasManager", () => ({
 import { getInstancedShaderManager } from "../../Blend/BlendInstancedManager";
 import * as BlendModule from "../../Blend";
 import { $isMaskTestEnabled } from "../../Mask";
-import { $getAtlasAttachmentObject } from "../../AtlasManager";
+import { $getAtlasAttachmentObjectByIndex, $getCurrentAtlasIndex } from "../../AtlasManager";
 
 describe("ContextDrawArraysInstancedUseCase", () =>
 {
@@ -132,6 +133,28 @@ describe("ContextDrawArraysInstancedUseCase", () =>
             "getBindGroupLayout": vi.fn(() => hasLayout ? { "label": "mockLayout" } : null)
         } as unknown as PipelineManager;
     };
+
+    it("samples the queued atlas page after another page becomes active", () =>
+    {
+        const device = createMockDevice();
+        const encoder = createMockCommandEncoder();
+        const queuedPage = createMockAttachment();
+        const activePage = createMockAttachment();
+        vi.mocked($getCurrentAtlasIndex).mockReturnValueOnce(3);
+        vi.mocked($getAtlasAttachmentObjectByIndex).mockImplementationOnce(index =>
+            index === 3 ? queuedPage : activePage);
+
+        execute(device, encoder, null, createMockAttachment(),
+            createMockBufferManager(), createMockFrameBufferManager(),
+            createMockTextureManager(), createMockPipelineManager());
+
+        expect($getAtlasAttachmentObjectByIndex).toHaveBeenCalledWith(3);
+        expect(device.createBindGroup).toHaveBeenCalledWith(expect.objectContaining({
+            "entries": expect.arrayContaining([
+                { "binding": 1, "resource": queuedPage.texture!.view }
+            ])
+        }));
+    });
 
     beforeEach(() =>
     {
@@ -312,14 +335,14 @@ describe("ContextDrawArraysInstancedUseCase", () =>
             );
 
             // AtlasManagerから取得するため、frameBufferManager.getAttachmentは呼ばれない
-            expect($getAtlasAttachmentObject).toHaveBeenCalled();
+            expect($getAtlasAttachmentObjectByIndex).toHaveBeenCalled();
             expect(commandEncoder._mockPassEncoder.draw).toHaveBeenCalled();
         });
 
         it("should return null when atlas attachment not found", () =>
         {
             // AtlasManagerとFrameBufferManager両方からnullを返す
-            ($getAtlasAttachmentObject as ReturnType<typeof vi.fn>).mockReturnValueOnce(null);
+            ($getAtlasAttachmentObjectByIndex as ReturnType<typeof vi.fn>).mockReturnValueOnce(null);
 
             const device = createMockDevice();
             const commandEncoder = createMockCommandEncoder();

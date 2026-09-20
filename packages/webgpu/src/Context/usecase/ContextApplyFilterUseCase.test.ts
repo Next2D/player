@@ -175,6 +175,7 @@ describe("ContextApplyFilterUseCase", () =>
     const createMockBufferManager = () =>
     {
         return {
+            "allocateUniformBinding": vi.fn((data: Float32Array) => ({ "buffer": {} as GPUBuffer, "offset": 256, "size": data.byteLength })),
             "acquireUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" })),
             "acquireAndWriteUniformBuffer": vi.fn(() => ({ "label": "mockUniformBuffer" }))
         } as unknown as BufferManager;
@@ -188,6 +189,31 @@ describe("ContextApplyFilterUseCase", () =>
 
     describe("filter type dispatch", () =>
     {
+        it("stages flip, scale, color transform and output uniforms with explicit sizes", () =>
+        {
+            const device = createMockDevice();
+            const bindings: GPUBufferBinding[] = [];
+            vi.mocked(device.createBindGroup).mockImplementation(descriptor =>
+            {
+                bindings.push({ ...Array.from(descriptor.entries)[0].resource as GPUBufferBinding });
+                return {} as GPUBindGroup;
+            });
+            const bufferManager = createMockBufferManager();
+            execute(createMockNode(), 100, 80, false,
+                new Float32Array([0.8, 0.6, -0.6, 0.8, 0, 0]),
+                new Float32Array([0.8, 1, 1, 0.5, 0, 0, 0, 0]), "normal",
+                new Float32Array([0, 0, 100, 80]), new Float32Array([1, 5, 5, 1]),
+                { device, "commandEncoder": createMockCommandEncoder(), bufferManager,
+                    "frameBufferManager": createMockFrameBufferManager(),
+                    "pipelineManager": createMockPipelineManager(), "textureManager": createMockTextureManager() },
+                {} as GPUTextureView, bufferManager);
+            expect(bindings.map(binding => [binding.offset, binding.size])).toEqual([
+                [256, 16], [256, 48], [256, 32], [256, 16]
+            ]);
+            expect(bufferManager.acquireAndWriteUniformBuffer).not.toHaveBeenCalled();
+            expect(device.queue.writeBuffer).not.toHaveBeenCalled();
+        });
+
         it("should apply blur filter (type 1)", () =>
         {
             const node = createMockNode();

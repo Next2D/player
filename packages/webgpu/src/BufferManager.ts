@@ -1,4 +1,5 @@
 import type { IPooledStorageBuffer } from "./interface/IStorageBufferConfig";
+import { InstanceBufferAllocator } from "./InstanceBufferAllocator";
 import { execute as bufferManagerCreateRectVerticesService } from "./BufferManager/service/BufferManagerCreateRectVerticesService";
 import { execute as bufferManagerAcquireVertexBufferUseCase } from "./BufferManager/usecase/BufferManagerAcquireVertexBufferUseCase";
 import { execute as bufferManagerAcquireUniformBufferUseCase } from "./BufferManager/usecase/BufferManagerAcquireUniformBufferUseCase";
@@ -170,9 +171,12 @@ export class BufferManager
     private frameIndirectBuffers: GPUBuffer[];
     private frameNumber: number;
     private unitRectBuffer: GPUBuffer | null;
+    /** @description 不変の等倍UV。フレームプールに返さずdisposeまで保持 / Immutable identity UV, owned until dispose */
+    private identityUVBuffer: GPUBuffer | null = null;
     private frameVertexPoolBuffers: GPUBuffer[];
     private frameUniformPoolBuffers: GPUBuffer[];
     readonly dynamicUniform: DynamicUniformAllocator;
+    readonly instanceBuffer: InstanceBufferAllocator;
 
     /**
      * @description コンストラクタ。GPUデバイスを設定し、各種バッファプールを初期化
@@ -192,6 +196,7 @@ export class BufferManager
         this.frameVertexPoolBuffers = [];
         this.frameUniformPoolBuffers = [];
         this.dynamicUniform = new DynamicUniformAllocator(device);
+        this.instanceBuffer = new InstanceBufferAllocator(device);
     }
 
     /**
@@ -260,12 +265,46 @@ export class BufferManager
     }
 
     /**
+     * @description フレーム共有Uniformバッファにコピーし、静的オフセット付きのバインディングを返す。
+     *              Stage uniforms in the frame arena and return a binding with a static offset.
+     *              Flush dynamicUniform before submit; reset only after submit.
+     * @param {Float32Array} data
+     * @return {GPUBufferBinding}
+     */
+    allocateUniformBinding (data: Float32Array): GPUBufferBinding
+    {
+        const offset = this.dynamicUniform.allocate(data);
+        return {
+            "buffer": this.dynamicUniform.getBuffer(),
+            "offset": offset,
+            "size": data.byteLength
+        };
+    }
+
+    /** @description 等倍コピー専用の不変Uniformを取得 / Get immutable identity-copy uniform */
+    getIdentityUVBuffer (): GPUBuffer
+    {
+        if (!this.identityUVBuffer) {
+            this.identityUVBuffer = this.device.createBuffer({
+                "size": 16, "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+            });
+            const data = new Float32Array([1, 1, 0, 0]);
+            this.device.queue.writeBuffer(this.identityUVBuffer, 0, data.buffer, 0, data.byteLength);
+        }
+        return this.identityUVBuffer;
+    }
+
+    /**
      * @description 全バッファを破棄してリソースを解放
      *              Dispose all buffers and release resources
      * @return {void}
      */
     dispose (): void
     {
+        if (this.identityUVBuffer) {
+            this.identityUVBuffer.destroy();
+            this.identityUVBuffer = null;
+        }
         for (const bucket of this.vertexBufferBuckets.values()) {
             for (const buffer of bucket) {
                 buffer.destroy();
@@ -304,6 +343,7 @@ export class BufferManager
         this.frameUniformPoolBuffers.length = 0;
 
         this.dynamicUniform.dispose();
+        this.instanceBuffer.dispose();
     }
 
     /**
@@ -333,6 +373,7 @@ export class BufferManager
         this.releaseAllStorageBuffers();
 
         this.dynamicUniform.resetFrame();
+        this.instanceBuffer.resetFrame();
 
         this.frameNumber++;
 

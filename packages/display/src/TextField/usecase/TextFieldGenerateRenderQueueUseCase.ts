@@ -5,7 +5,7 @@ import { execute as displayObjectCalcBoundsMatrixService } from "../../DisplayOb
 import { execute as displayObjectBlendToNumberService } from "../../DisplayObject/service/DisplayObjectBlendToNumberService";
 import { execute as displayObjectGenerateHashService } from "../../DisplayObject/service/DisplayObjectGenerateHashService";
 import { $cacheStore } from "@next2d/cache";
-import { renderQueue } from "@next2d/render-queue";
+import { renderQueue, encodeTextData } from "@next2d/render-queue";
 import { stage } from "../../Stage";
 import {
     $clamp,
@@ -252,12 +252,17 @@ export const execute = (
         ? text_field.$cache.get(`${cacheKey}`)
         : $cacheStore.get(text_field.uniqueKey, `${cacheKey}`);
 
-    if (!cache || text_field.changed) {
+    // Timeline characters can share a raster across instances. Keep their
+    // existing invalidation rule; instance-owned text uses per-entry revisions.
+    const rasterChanged = text_field.characterId && text_field.loaderInfo
+        ? text_field.changed
+        : cache !== text_field.$rasterRevision;
+    if (!cache || rasterChanged) {
 
         // cache none
-        renderQueue.push2(0, +cache);
+        renderQueue.push2(0, +Boolean(cache));
 
-        const buffer = $textEncoder.encode(JSON.stringify(text_field.$textData));
+        const buffer = $textEncoder.encode(encodeTextData(text_field.$textData));
 
         // バイト数をヘッダに書き、本体は4バイト/floatでパックして転送量を1/4にする
         renderQueue.push1(buffer.length);
@@ -306,9 +311,7 @@ export const execute = (
             text_field.defaultTextFormat.size || 0
         );
 
-        if (!cache) {
-            $cacheStore.set(text_field.uniqueKey, `${cacheKey}`, true);
-        }
+        $cacheStore.set(text_field.uniqueKey, `${cacheKey}`, text_field.$rasterRevision);
 
         if (text_field.$cache) {
             text_field.$cache = null;

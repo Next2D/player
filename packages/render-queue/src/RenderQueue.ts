@@ -5,6 +5,11 @@ class RenderQueue
     public buffer: Float32Array;
     public offset: number;
 
+    private _lowUsageFrames: number = 0;
+    private _trimDelay: number = 120;
+    private _trimmedLength: number = 0;
+    private _framesSinceTrim: number = 0;
+
     constructor ()
     {
         this.buffer = new Float32Array(256);
@@ -301,28 +306,31 @@ class RenderQueue
             this.resize(22);
         }
 
-        this.buffer[this.offset++] = a;
-        this.buffer[this.offset++] = b;
-        this.buffer[this.offset++] = c;
-        this.buffer[this.offset++] = d;
-        this.buffer[this.offset++] = e;
-        this.buffer[this.offset++] = f;
-        this.buffer[this.offset++] = g;
-        this.buffer[this.offset++] = h;
-        this.buffer[this.offset++] = i;
-        this.buffer[this.offset++] = j;
-        this.buffer[this.offset++] = k;
-        this.buffer[this.offset++] = l;
-        this.buffer[this.offset++] = m;
-        this.buffer[this.offset++] = n;
-        this.buffer[this.offset++] = o;
-        this.buffer[this.offset++] = p;
-        this.buffer[this.offset++] = q;
-        this.buffer[this.offset++] = r;
-        this.buffer[this.offset++] = s;
-        this.buffer[this.offset++] = t;
-        this.buffer[this.offset++] = u;
-        this.buffer[this.offset++] = v;
+        const buffer = this.buffer;
+        const offset = this.offset;
+        buffer[offset] = a;
+        buffer[offset + 1] = b;
+        buffer[offset + 2] = c;
+        buffer[offset + 3] = d;
+        buffer[offset + 4] = e;
+        buffer[offset + 5] = f;
+        buffer[offset + 6] = g;
+        buffer[offset + 7] = h;
+        buffer[offset + 8] = i;
+        buffer[offset + 9] = j;
+        buffer[offset + 10] = k;
+        buffer[offset + 11] = l;
+        buffer[offset + 12] = m;
+        buffer[offset + 13] = n;
+        buffer[offset + 14] = o;
+        buffer[offset + 15] = p;
+        buffer[offset + 16] = q;
+        buffer[offset + 17] = r;
+        buffer[offset + 18] = s;
+        buffer[offset + 19] = t;
+        buffer[offset + 20] = u;
+        buffer[offset + 21] = v;
+        this.offset = offset + 22;
     }
 
     pushInstanceBuffer (
@@ -375,38 +383,41 @@ class RenderQueue
             this.resize(32);
         }
 
-        this.buffer[this.offset++] = a;
-        this.buffer[this.offset++] = b;
-        this.buffer[this.offset++] = c;
-        this.buffer[this.offset++] = d;
-        this.buffer[this.offset++] = e;
-        this.buffer[this.offset++] = f;
-        this.buffer[this.offset++] = g;
-        this.buffer[this.offset++] = h;
-        this.buffer[this.offset++] = i;
-        this.buffer[this.offset++] = j;
-        this.buffer[this.offset++] = k;
-        this.buffer[this.offset++] = l;
-        this.buffer[this.offset++] = m;
-        this.buffer[this.offset++] = n;
-        this.buffer[this.offset++] = o;
-        this.buffer[this.offset++] = p;
-        this.buffer[this.offset++] = q;
-        this.buffer[this.offset++] = r;
-        this.buffer[this.offset++] = s;
-        this.buffer[this.offset++] = t;
-        this.buffer[this.offset++] = u;
-        this.buffer[this.offset++] = v;
-        this.buffer[this.offset++] = w;
-        this.buffer[this.offset++] = x;
-        this.buffer[this.offset++] = y;
-        this.buffer[this.offset++] = z;
-        this.buffer[this.offset++] = a1;
-        this.buffer[this.offset++] = b1;
-        this.buffer[this.offset++] = c1;
-        this.buffer[this.offset++] = d1;
-        this.buffer[this.offset++] = e1;
-        this.buffer[this.offset++] = f1;
+        const buffer = this.buffer;
+        const offset = this.offset;
+        buffer[offset] = a;
+        buffer[offset + 1] = b;
+        buffer[offset + 2] = c;
+        buffer[offset + 3] = d;
+        buffer[offset + 4] = e;
+        buffer[offset + 5] = f;
+        buffer[offset + 6] = g;
+        buffer[offset + 7] = h;
+        buffer[offset + 8] = i;
+        buffer[offset + 9] = j;
+        buffer[offset + 10] = k;
+        buffer[offset + 11] = l;
+        buffer[offset + 12] = m;
+        buffer[offset + 13] = n;
+        buffer[offset + 14] = o;
+        buffer[offset + 15] = p;
+        buffer[offset + 16] = q;
+        buffer[offset + 17] = r;
+        buffer[offset + 18] = s;
+        buffer[offset + 19] = t;
+        buffer[offset + 20] = u;
+        buffer[offset + 21] = v;
+        buffer[offset + 22] = w;
+        buffer[offset + 23] = x;
+        buffer[offset + 24] = y;
+        buffer[offset + 25] = z;
+        buffer[offset + 26] = a1;
+        buffer[offset + 27] = b1;
+        buffer[offset + 28] = c1;
+        buffer[offset + 29] = d1;
+        buffer[offset + 30] = e1;
+        buffer[offset + 31] = f1;
+        this.offset = offset + 32;
     }
 
     pushTextFieldBuffer (
@@ -495,7 +506,7 @@ class RenderQueue
     set (array: Float32Array | Uint8Array): void
     {
         if (this.buffer.length < this.offset + array.length) {
-            this.resize(array.length);
+            this._resizeForAppend(array.length);
         }
 
         this.buffer.set(array, this.offset);
@@ -510,7 +521,7 @@ class RenderQueue
         // float. The reader reconstructs the bytes with a Uint8Array view.
         const words = Math.ceil(array.length / 4);
         if (this.buffer.length < this.offset + words) {
-            this.resize(words);
+            this._resizeForAppend(words);
         }
 
         new Uint8Array(
@@ -520,6 +531,61 @@ class RenderQueue
         ).set(array);
 
         this.offset += words;
+    }
+
+    trim (): void
+    {
+        const length = this.buffer.length;
+        if (!this.offset || this.offset > length) {
+            return;
+        }
+
+        // A quick regrowth (including a larger returned capture buffer) backs
+        // off the next trim. A stable interval restores the normal delay.
+        if (this._trimmedLength) {
+            if (length > this._trimmedLength) {
+                this._trimDelay = Math.min(this._trimDelay * 2, 1920);
+                this._trimmedLength = 0;
+                this._lowUsageFrames = 0;
+            } else if (++this._framesSinceTrim >= this._trimDelay) {
+                this._trimDelay = 120;
+                this._trimmedLength = 0;
+            }
+        }
+
+        if (this.offset >= length / 4) {
+            this._lowUsageFrames = 0;
+            return;
+        }
+        if (++this._lowUsageFrames < this._trimDelay) {
+            return;
+        }
+        this._lowUsageFrames = 0;
+
+        const target = Math.max(256, $upperPowerOfTwo(this.offset * 2));
+        if (target >= length) {
+            return;
+        }
+        const buffer = new Float32Array(target);
+        new Uint8Array(buffer.buffer, 0, this.offset * 4).set(new Uint8Array(
+            this.buffer.buffer, this.buffer.byteOffset, this.offset * 4
+        ));
+        this.buffer = buffer;
+        this._trimmedLength = target;
+        this._framesSinceTrim = 0;
+    }
+
+    private _resizeForAppend (length: number): void
+    {
+        const buffer = new Float32Array(
+            $upperPowerOfTwo(this.offset + length)
+        );
+        // The following bulk append overwrites the unused suffix. Keep the
+        // public resize method's full-buffer preservation contract unchanged.
+        if (this.buffer.length && this.offset) {
+            buffer.set(this.buffer.subarray(0, this.offset));
+        }
+        this.buffer = buffer;
     }
 
     resize (length: number): void

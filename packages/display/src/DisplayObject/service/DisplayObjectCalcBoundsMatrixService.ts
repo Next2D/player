@@ -9,6 +9,7 @@ import { $getBoundsArray } from "../../DisplayObjectUtil";
  * @param  {number} x_max
  * @param  {number} y_max
  * @param  {Float32Array} matrix
+ * @param  {Float32Array} [output] 呼び出し元所有の出力先 / Caller-owned output
  * @return {array}
  * @method
  * @protected
@@ -18,7 +19,8 @@ export const execute = (
     y_min: number,
     x_max: number,
     y_max: number,
-    matrix: Float32Array
+    matrix: Float32Array,
+    output?: Float32Array
 ): Float32Array => {
 
     const m0 = matrix[0];
@@ -36,6 +38,14 @@ export const execute = (
     const y1 = x_max * m1 + y_min * m3 + m5;
     const y2 = x_min * m1 + y_max * m3 + m5;
     const y3 = x_min * m1 + y_min * m3 + m5;
+
+    if (output) {
+        output[0] = Math.min(x0, x1, x2, x3);
+        output[1] = Math.min(y0, y1, y2, y3);
+        output[2] = Math.max(x0, x1, x2, x3);
+        output[3] = Math.max(y0, y1, y2, y3);
+        return output;
+    }
 
     return $getBoundsArray(
         Math.min(x0, x1, x2, x3),

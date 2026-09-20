@@ -5,21 +5,26 @@ vi.mock("../../Mesh.ts", () => ({
     "$getMeshTempBuffer": (size: number) => new Float32Array(size)
 }));
 
+vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
+{
+    const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
+    return {
+        ...mod,
+        "$context": {
+            "$fillStyle": new Float32Array([0, 0, 0, 1]),
+            "$matrix": new Float32Array([1, 0, 0, 1, 0, 0, 0, 0, 1]),
+        }
+    }
+});
+
+
+
+
 describe("MeshFillGenerateUseCase.js method test", () =>
 {
     it("test case", async () =>
     {
-        vi.mock("../../WebGLUtil.ts", async (importOriginal) =>
-        {
-            const mod = await importOriginal<typeof import("../../WebGLUtil.ts")>();
-            return {
-                ...mod,
-                "$context": {
-                    "$fillStyle": new Float32Array([0, 0, 0, 1]),
-                    "$matrix": new Float32Array([1, 0, 0, 1, 0, 0, 0, 0, 1]),
-                }
-            }
-        });
+
 
         const vertices = [
             -0.75, 0.8999999761581421, false,

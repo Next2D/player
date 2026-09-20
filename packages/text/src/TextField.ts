@@ -30,6 +30,7 @@ import { execute as textFieldSelectAllUseCase } from "./TextField/usecase/TextFi
 import { execute as textFieldBuildFromCharacterUseCase } from "./TextField/usecase/TextFieldBuildFromCharacterUseCase";
 import {
     $clamp,
+    $getNextTextRasterRevision,
     $toColorInt
 } from "./TextUtil";
 import {
@@ -70,6 +71,14 @@ export class TextField extends InteractiveObject
      * @protected
      */
     public $textData: TextData | null;
+
+    /**
+     * @description 文字ラスタの更新番号。位置・回転の変更では更新しない。
+     *              Raster revision, independent of display transform changes.
+     * @type {number}
+     * @protected
+     */
+    public $rasterRevision: number = $getNextTextRasterRevision();
 
     /**
      * @description テキストが HTML であるかどうかを示します。

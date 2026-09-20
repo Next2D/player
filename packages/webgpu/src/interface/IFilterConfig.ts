@@ -22,6 +22,7 @@ export interface IFilterConfig {
     bufferManager?: {
         acquireUniformBuffer(requiredSize: number): GPUBuffer;
         acquireAndWriteUniformBuffer(data: Float32Array, byteLength?: number): GPUBuffer;
+        allocateUniformBinding(data: Float32Array): GPUBufferBinding;
     };
     /**
      * @description フレームバッファの管理インターフェース

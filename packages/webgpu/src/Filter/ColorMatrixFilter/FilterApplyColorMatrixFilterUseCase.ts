@@ -1,5 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
+import { execute as filterAllocateUniformBindingService } from "../service/FilterAllocateUniformBindingService";
 
 /**
  * @description プリアロケートされたFloat32Array
@@ -80,18 +81,12 @@ export const execute = (
     $uniform20[18] = matrix[14] / 255;
     $uniform20[19] = matrix[19] / 255;
 
-    const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform20)
-        : device.createBuffer({
-            "size": $uniform20.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-    if (!config.bufferManager) {
-        device.queue.writeBuffer(uniformBuffer, 0, $uniform20);
-    }
+    const uniformBinding = filterAllocateUniformBindingService(
+        device, $uniform20, config.bufferManager
+    );
 
     // バインドグループを作成
-    ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries3[0].resource = uniformBinding;
     $entries3[1].resource = sampler;
     $entries3[2].resource = source_attachment.texture!.view;
     const bindGroup = device.createBindGroup({

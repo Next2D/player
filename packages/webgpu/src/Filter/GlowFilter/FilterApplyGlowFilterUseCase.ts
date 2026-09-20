@@ -140,18 +140,20 @@ export const execute = (
     $uniform16[14] = knockout ? 1.0 : 0.0;
     $uniform16[15] = 0.0;
 
-    const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform16)
-        : device.createBuffer({
+    let uniformBinding: GPUBufferBinding;
+    if (config.bufferManager) {
+        uniformBinding = config.bufferManager.allocateUniformBinding($uniform16);
+    } else {
+        const uniformBuffer = device.createBuffer({
             "size": $uniform16.byteLength,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    if (!config.bufferManager) {
         device.queue.writeBuffer(uniformBuffer, 0, $uniform16);
+        uniformBinding = { "buffer": uniformBuffer, "offset": 0, "size": $uniform16.byteLength };
     }
 
     // バインドグループを作成（元テクスチャとブラーテクスチャを直接バインド）
-    ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries4[0].resource = uniformBinding;
     $entries4[1].resource = sampler;
     $entries4[2].resource = blurAttachment.texture!.view;
     $entries4[3].resource = source_attachment.texture!.view;

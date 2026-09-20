@@ -1,5 +1,6 @@
 import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { IFilterConfig } from "../../interface/IFilterConfig";
+import { execute as filterAllocateUniformBindingService } from "../service/FilterAllocateUniformBindingService";
 import { $offset } from "../FilterOffset";
 import { DEG_TO_RAD, intToPremultipliedRGBA } from "../FilterUtil";
 import { execute as filterApplyBlurFilterUseCase } from "../BlurFilter/FilterApplyBlurFilterUseCase";
@@ -129,17 +130,11 @@ export const execute = (
         $uniform8[6] = 0;
         $uniform8[7] = 0;
 
-        const eraseUniformBuffer = config.bufferManager
-            ? config.bufferManager.acquireAndWriteUniformBuffer($uniform8)
-            : device.createBuffer({
-                "size": $uniform8.byteLength,
-                "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-            });
-        if (!config.bufferManager) {
-            device.queue.writeBuffer(eraseUniformBuffer, 0, $uniform8);
-        }
+        const eraseUniformBinding = filterAllocateUniformBindingService(
+            device, $uniform8, config.bufferManager
+        );
 
-        ($entries3[0].resource as GPUBufferBinding).buffer = eraseUniformBuffer;
+        $entries3[0].resource = eraseUniformBinding;
         $entries3[1].resource = eraseSampler;
         $entries3[2].resource = source_attachment.texture!.view;
         const eraseBindGroup = device.createBindGroup({
@@ -249,18 +244,12 @@ export const execute = (
     $uniform20[18] = blurOffsetUVX;
     $uniform20[19] = blurOffsetUVY;
 
-    const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform20)
-        : device.createBuffer({
-            "size": $uniform20.byteLength,
-            "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-        });
-    if (!config.bufferManager) {
-        device.queue.writeBuffer(uniformBuffer, 0, $uniform20);
-    }
+    const uniformBinding = filterAllocateUniformBindingService(
+        device, $uniform20, config.bufferManager
+    );
 
     // バインドグループを作成（元テクスチャとブラーテクスチャを直接バインド）
-    ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries4[0].resource = uniformBinding;
     $entries4[1].resource = sampler;
     $entries4[2].resource = blurAttachment.texture!.view;
     $entries4[3].resource = source_attachment.texture!.view;

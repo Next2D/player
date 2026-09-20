@@ -41,6 +41,7 @@ import { renderQueue } from "@next2d/render-queue";
  * @param  {number} x_max
  * @param  {number} y_max
  * @param  {Float32Array} color_transform
+ * @param  {number} color_transform_offset - 要素単位の開始位置 / Start offset in elements
  * @return {void}
  * @method
  * @protected
@@ -51,16 +52,17 @@ export const execute = (
     y_min: number,
     x_max: number,
     y_max: number,
-    color_transform: Float32Array
+    color_transform: Float32Array,
+    color_transform_offset: number = 0
 ): void => {
 
-    const ct0 = color_transform[0];
-    const ct1 = color_transform[1];
-    const ct2 = color_transform[2];
+    const ct0 = color_transform[color_transform_offset];
+    const ct1 = color_transform[color_transform_offset + 1];
+    const ct2 = color_transform[color_transform_offset + 2];
     const ct3 = $context.globalAlpha;
-    const ct4 = color_transform[4] / 255;
-    const ct5 = color_transform[5] / 255;
-    const ct6 = color_transform[6] / 255;
+    const ct4 = color_transform[color_transform_offset + 4] / 255;
+    const ct5 = color_transform[color_transform_offset + 5] / 255;
+    const ct6 = color_transform[color_transform_offset + 6] / 255;
 
     const matrix = $context.$matrix;
     switch ($context.globalCompositeOperation) {

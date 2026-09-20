@@ -11,7 +11,7 @@ import {
     $isMaskTestEnabled,
     $getMaskStencilReference
 } from "../../Mask";
-import { $getAtlasAttachmentObject } from "../../AtlasManager";
+import { $getAtlasAttachmentObjectByIndex, $getCurrentAtlasIndex } from "../../AtlasManager";
 
 /**
  * @description atlasViewをキーにしたBindGroupキャッシュ。複数アトラスを
@@ -168,8 +168,9 @@ export const execute = (
     const vertexBuffer = buffer_manager.getUnitRectBuffer();
 
     // アトラステクスチャをバインド（複数アトラス対応）
-    // AtlasManagerから取得、フォールバックとしてFrameBufferManagerから取得
-    const atlasAttachment = $getAtlasAttachmentObject() || frame_buffer_manager.getAttachment("atlas");
+    // 確保・転送先ではなく、描画キューに積まれたページを参照する。
+    const atlasAttachment = $getAtlasAttachmentObjectByIndex($getCurrentAtlasIndex())
+        || frame_buffer_manager.getAttachment("atlas");
     if (!atlasAttachment) {
         console.error("[WebGPU] Atlas attachment not found");
         passEncoder.end();

@@ -40,12 +40,21 @@ const $message: IRenderMessage = {
  */
 const $options: Transferable[] = [];
 
+let $limitRenderQueue: boolean = false;
+let $pendingRenders: number = 0;
+
 // 受け取りイベントを登録
 $rendererWorker.addEventListener("message", (event: MessageEvent): void =>
 {
+    if (event.data.message === "renderFlowControl") {
+        $limitRenderQueue = Boolean(event.data.enabled);
+        return;
+    }
     if (event.data.message !== "render") {
         return ;
     }
+
+    $pendingRenders = Math.max(0, $pendingRenders - 1);
 
     const buffer = event.data.buffer;
     if (renderQueue.buffer.length > buffer.length) {
@@ -65,6 +74,12 @@ $rendererWorker.addEventListener("message", (event: MessageEvent): void =>
  */
 export const execute = (): void =>
 {
+    // Do not generate/consume cache changes while the renderer is busy.
+    // stage.changed remains set, so the next tick sends the latest display state.
+    if ($limitRenderQueue && $pendingRenders) {
+        return;
+    }
+
     renderQueue.offset   = 0;
     $options.length      = 0;
     $imageBitmaps.length = 0;
@@ -77,6 +92,7 @@ export const execute = (): void =>
     }
 
     // update buffer
+    renderQueue.trim();
     $message.buffer = renderQueue.buffer;
     $message.length = renderQueue.offset;
     $options.push(renderQueue.buffer.buffer);
@@ -89,4 +105,5 @@ export const execute = (): void =>
     }
 
     $rendererWorker.postMessage($message, $options);
+    $pendingRenders++;
 };

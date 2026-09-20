@@ -89,7 +89,102 @@ describe("FilterApplyBlurFilterUseCase", () =>
         } as unknown as IFilterConfig;
     };
 
-    beforeEach(() =>
+    it("binds arena offsets and resets the binding for standalone fallback", () =>
+    {
+        const config = createMockConfig();
+        const source = createMockAttachment();
+        const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
+        const run = () => execute(source, matrix, 10, 10, 1, 1, config);
+        run(); // Warm the constant blur-copy uniform, which is intentionally not staged.
+        vi.clearAllMocks();
+        const shared = {} as GPUBuffer;
+        let offset = 256;
+        const allocate = vi.fn((data: Float32Array) =>
+        {
+            const binding = { "buffer": shared, offset, "size": data.byteLength };
+            offset += 256;
+            return binding;
+        });
+        config.bufferManager = { "allocateUniformBinding": allocate } as NonNullable<IFilterConfig["bufferManager"]>;
+        const bindings: GPUBufferBinding[] = [];
+        vi.mocked(config.device.createBindGroup).mockImplementation(descriptor =>
+        {
+            bindings.push({ ...Array.from(descriptor.entries)[0].resource as GPUBufferBinding });
+            return {} as GPUBindGroup;
+        });
+        run();
+        const staged = bindings.filter(binding => binding.buffer === shared);
+        expect(staged.map(binding => [binding.offset, binding.size])).toEqual([[256, 16], [512, 16]]);
+        expect(config.device.queue.writeBuffer).not.toHaveBeenCalled();
+        config.bufferManager = undefined;
+        bindings.length = 0;
+        run();
+        expect(config.device.queue.writeBuffer).toHaveBeenCalled();
+        expect(bindings.at(-1)?.offset).toBe(0);
+        expect(bindings.at(-1)?.size).toBe(16);
+    });
+
+    it("reuses static bindings but separates offsets and changed resources", () =>
+    {
+        const config = createMockConfig();
+        const source = createMockAttachment();
+        const temporary = createMockAttachment();
+        vi.mocked(config.frameBufferManager.createTemporaryAttachment).mockReturnValue(temporary);
+        let layout = {} as GPUBindGroupLayout;
+        let sampler = {} as GPUSampler;
+        let buffer = {} as GPUBuffer;
+        let offset = 0;
+        let size = 16;
+        vi.mocked(config.pipelineManager.getBindGroupLayout).mockImplementation(() => layout);
+        vi.mocked(config.textureManager.createSampler).mockImplementation(() => sampler);
+        config.bufferManager = {
+            "allocateUniformBinding": () => ({ buffer, offset, size })
+        } as NonNullable<IFilterConfig["bufferManager"]>;
+        const bindings: GPUBindGroup[] = [];
+        const create = vi.mocked(config.device.createBindGroup).mockImplementation(() => {
+            const group = {} as GPUBindGroup;
+            bindings.push(group);
+            return group;
+        });
+        const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
+        const run = () => execute(source, matrix, 10, 0, 1, 1, config);
+        run();
+        const initial = create.mock.calls.length;
+        run();
+        expect(create).toHaveBeenCalledTimes(initial);
+        offset = 256; run();
+        expect(create).toHaveBeenCalledTimes(initial + 1);
+        offset = 0; run();
+        expect(create).toHaveBeenCalledTimes(initial + 1);
+        const pass = vi.mocked(config.commandEncoder.beginRenderPass).mock.results.at(-1)!.value;
+        expect(pass.setBindGroup).toHaveBeenLastCalledWith(0, bindings[initial - 1]);
+        for (const change of [
+            () => { buffer = {} as GPUBuffer; },
+            () => { layout = {} as GPUBindGroupLayout; },
+            () => { sampler = {} as GPUSampler; },
+            () => { config.device = { ...config.device, "createBindGroup": create } as GPUDevice; },
+            () => { size = 32; },
+            () => { temporary.texture!.view = {} as GPUTextureView; }
+        ]) {
+            const before = create.mock.calls.length;
+            change(); run();
+            expect(create).toHaveBeenCalledTimes(before + 1);
+            run();
+            expect(create).toHaveBeenCalledTimes(before + 1);
+        }
+        // Churn is bounded: after the 65th distinct offset, offset zero must miss.
+        for (let i = 1; i <= 64; i++) { offset = i * 256; run(); }
+        const before = create.mock.calls.length;
+        offset = 0; run();
+        expect(create).toHaveBeenCalledTimes(before + 1);
+        config.bufferManager = undefined;
+        const fallback = create.mock.calls.length;
+        run(); run();
+        expect(create).toHaveBeenCalledTimes(fallback + 2);
+        expect(new Set(bindings).size).toBe(bindings.length);
+    });
+
+   beforeEach(() =>
     {
         vi.clearAllMocks();
         $offset.x = 0;

@@ -1,6 +1,43 @@
 import { describe, it, expect } from "vitest";
 import { ShaderSource } from "./ShaderSource";
 
+describe("cached color transform output", () =>
+{
+    it("quantizes only the fused shader before fixed-function blending", () =>
+    {
+        const fused = ShaderSource.getCachedColorTransformFragmentShader();
+        const legacy = ShaderSource.getColorTransformFragmentShader();
+        expect(fused).toContain("return unpack4x8unorm(pack4x8unorm(color));");
+        expect(fused.replace("unpack4x8unorm(pack4x8unorm(color))", "color")).toBe(legacy);
+    });
+});
+
+describe("complex blend backdrop region", () =>
+{
+    it("averages four samples and preserves UNORM8 precision for local MSAA resolve", () =>
+    {
+        const shader = ShaderSource.getUnifiedComplexBlendFragmentShader(true, true);
+        expect(shader).toContain("texture_multisampled_2d<f32>");
+        for (let sample = 0; sample < 4; sample++) {
+            expect(shader).toContain(`textureLoad(dstTexture, dstPixel, ${sample})`);
+        }
+        expect(shader).toContain("* 0.25");
+        expect(shader).toContain("floor(resolved + 0.5) / 255.0");
+    });
+
+    it("uses clamped integer loads only for the region variant", () =>
+    {
+        const region = ShaderSource.getUnifiedComplexBlendFragmentShader(true);
+        expect(region).toContain("textureLoad(dstTexture, dstPixel, 0)");
+        expect(region).toContain("clamp(vec2<i32>(input.position.xy)");
+        expect(region).toContain("dstSize - vec2<i32>(1)");
+        expect(region).not.toContain("textureSample(dstTexture");
+        const standard = ShaderSource.getUnifiedComplexBlendFragmentShader();
+        expect(standard).toContain("textureSample(dstTexture, textureSampler, input.texCoord)");
+        expect(standard).not.toContain("textureLoad(dstTexture");
+    });
+});
+
 describe("ShaderSource", () =>
 {
     describe("getFillVertexShader", () =>

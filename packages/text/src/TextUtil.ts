@@ -273,3 +273,11 @@ export const $mainCanvasPosition: IElementPosition = {
     "x": 0,
     "y": 0
 };
+
+/**
+ * @description 文字ラスタの更新番号。Main側のキャッシュ照合にのみ使用する。
+ *              Unique raster revision, used only by the main-thread cache.
+ */
+let $textRasterRevision: number = 0;
+
+export const $getNextTextRasterRevision = (): number => ++$textRasterRevision;

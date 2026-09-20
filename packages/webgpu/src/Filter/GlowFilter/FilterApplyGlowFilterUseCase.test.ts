@@ -79,7 +79,42 @@ describe("FilterApplyGlowFilterUseCase", () =>
         } as unknown as IFilterConfig;
     };
 
-    beforeEach(() =>
+    it("binds arena offsets and resets the binding for standalone fallback", () =>
+    {
+        const config = createMockConfig();
+        const source = createMockAttachment();
+        const matrix = new Float32Array([1, 0, 0, 1, 0, 0]);
+        const run = () => execute(source, matrix, 0xff0000, 0.5, 10, 10, 1, 1, false, false, 1, config);
+        run(); // Warm the constant blur-copy uniform, which is intentionally not staged.
+        vi.clearAllMocks();
+        const shared = {} as GPUBuffer;
+        let offset = 256;
+        const allocate = vi.fn((data: Float32Array) =>
+        {
+            const binding = { "buffer": shared, offset, "size": data.byteLength };
+            offset += 256;
+            return binding;
+        });
+        config.bufferManager = { "allocateUniformBinding": allocate } as NonNullable<IFilterConfig["bufferManager"]>;
+        const bindings: GPUBufferBinding[] = [];
+        vi.mocked(config.device.createBindGroup).mockImplementation(descriptor =>
+        {
+            bindings.push({ ...Array.from(descriptor.entries)[0].resource as GPUBufferBinding });
+            return {} as GPUBindGroup;
+        });
+        run();
+        const staged = bindings.filter(binding => binding.buffer === shared);
+        expect(staged.map(binding => [binding.offset, binding.size])).toEqual([[256, 64]]);
+        expect(config.device.queue.writeBuffer).not.toHaveBeenCalled();
+        config.bufferManager = undefined;
+        bindings.length = 0;
+        run();
+        expect(config.device.queue.writeBuffer).toHaveBeenCalled();
+        expect(bindings.at(-1)?.offset).toBe(0);
+        expect(bindings.at(-1)?.size).toBe(64);
+    });
+
+   beforeEach(() =>
     {
         vi.clearAllMocks();
         $offset.x = 0;

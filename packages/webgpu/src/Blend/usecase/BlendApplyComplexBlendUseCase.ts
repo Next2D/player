@@ -29,6 +29,8 @@ const $entries4: GPUBindGroupEntry[] = [
  * @param {string} blend_mode - ブレンドモード名 / Blend mode name
  * @param {Float32Array} color_transform - カラートランスフォーム配列 / Color transform array
  * @param {IFilterConfig} config - フィルター設定 / Filter configuration
+ * @param {readonly [number, number]} [dst_origin] - 解決済み背景の整数ピクセル原点。指定時の出力サイズはsrcと同じ。
+ * @param {GPUTextureView} [dst_msaa_view] - 4x MSAA UNORM8背景。指定時は全画面resolveを省略できる。
  * @return {IAttachmentObject}
  */
 export const execute = (
@@ -36,21 +38,22 @@ export const execute = (
     dst_attachment: IAttachmentObject,
     blend_mode: string,
     color_transform: Float32Array,
-    config: IFilterConfig
+    config: IFilterConfig,
+    dst_origin?: readonly [number, number],
+    dst_msaa_view?: GPUTextureView
 ): IAttachmentObject => {
 
     const { device, commandEncoder, frameBufferManager, pipelineManager, textureManager } = config;
 
-    // 出力サイズは両方の大きい方を使用
-    const width = Math.max(src_attachment.width, dst_attachment.width);
-    const height = Math.max(src_attachment.height, dst_attachment.height);
-
-    // 出力アタッチメントを作成
-    const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
+    // 領域参照時は背景全体のサイズに拡張せず、ソースと同じ大きさで出力する。
+    const width = dst_origin ? src_attachment.width : Math.max(src_attachment.width, dst_attachment.width);
+    const height = dst_origin ? src_attachment.height : Math.max(src_attachment.height, dst_attachment.height);
 
     // 統一パイプラインを使用
-    const pipeline = pipelineManager.getPipeline("complex_blend");
-    const bindGroupLayout = pipelineManager.getBindGroupLayout("complex_blend");
+    const useMsaa = !!dst_origin && !!dst_msaa_view;
+    const pipeline = pipelineManager.getPipeline(useMsaa
+        ? "complex_blend_region_msaa" : dst_origin ? "complex_blend_region" : "complex_blend");
+    const bindGroupLayout = pipelineManager.getBindGroupLayout(useMsaa ? "complex_blend_msaa" : "complex_blend");
 
     if (!pipeline || !bindGroupLayout) {
         console.error(`[WebGPU ComplexBlend] Pipeline not found for blend mode: ${blend_mode}`);
@@ -58,13 +61,16 @@ export const execute = (
         return src_attachment;
     }
 
+    // 背景とは別のテクスチャに出力し、同一パスでの読み書き競合を避ける。
+    const destAttachment = frameBufferManager.createTemporaryAttachment(width, height);
+
     // サンプラーを作成
     const sampler = textureManager.createSampler("complex_blend_sampler", true);
 
     // ユニフォームバッファを作成
     // mulColor: vec4<f32> (16 bytes)
     // addColor: vec4<f32> (16 bytes)
-    // blendMode: f32 + padding: vec3<f32> (16 bytes)
+    // blendMode, dstX, dstY, padding: 4 x f32 (16 bytes)
     // Total: 48 bytes
     const blendModeIndex = ShaderSource.getBlendModeIndex(blend_mode);
     $uniform12[0] = color_transform[0];
@@ -76,24 +82,26 @@ export const execute = (
     $uniform12[6] = color_transform[6];
     $uniform12[7] = color_transform[7];
     $uniform12[8] = blendModeIndex;
-    $uniform12[9] = 0;
-    $uniform12[10] = 0;
+    $uniform12[9] = dst_origin?.[0] ?? 0;
+    $uniform12[10] = dst_origin?.[1] ?? 0;
     $uniform12[11] = 0;
 
-    const uniformBuffer = config.bufferManager
-        ? config.bufferManager.acquireAndWriteUniformBuffer($uniform12)
-        : device.createBuffer({
+    let uniformBinding: GPUBufferBinding;
+    if (config.bufferManager) {
+        uniformBinding = config.bufferManager.allocateUniformBinding($uniform12);
+    } else {
+        const uniformBuffer = device.createBuffer({
             "size": 48,
             "usage": GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
-    if (!config.bufferManager) {
         device.queue.writeBuffer(uniformBuffer, 0, $uniform12);
+        uniformBinding = { "buffer": uniformBuffer, "offset": 0, "size": 48 };
     }
 
     // バインドグループを作成
-    ($entries4[0].resource as GPUBufferBinding).buffer = uniformBuffer;
+    $entries4[0].resource = uniformBinding;
     $entries4[1].resource = sampler;
-    $entries4[2].resource = dst_attachment.texture!.view;
+    $entries4[2].resource = useMsaa ? dst_msaa_view! : dst_attachment.texture!.view;
     $entries4[3].resource = src_attachment.texture!.view;
     const bindGroup = device.createBindGroup({
         "layout": bindGroupLayout,

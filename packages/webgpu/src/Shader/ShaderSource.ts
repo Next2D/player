@@ -19,6 +19,7 @@ import {
     BlurTextureCopyFragment,
     FilterOutputFragment,
     ColorTransformFragment,
+    CachedColorTransformFragment,
     YFlipColorTransformFragment,
     ColorMatrixFilterFragment,
     NodeClearFragment,
@@ -42,6 +43,16 @@ import { WgslIsInside, WgslVertexOutput } from "./wgsl/common/SharedWgsl";
  */
 export class ShaderSource
 {
+    /**
+     * @description 中間RGBA8量子化を維持するキャッシュ色変換シェーダー
+     *              Cached color transform retaining intermediate RGBA8 quantization
+     * @return {string}
+     */
+    static getCachedColorTransformFragmentShader (): string
+    {
+        return CachedColorTransformFragment;
+    }
+
     /**
      * @description 塗り用頂点シェーダーを取得する
      *              Get fill vertex shader
@@ -601,9 +612,11 @@ fn fs_main(fragInput: VertexOutput) -> @location(0) vec4<f32> {
      * @description 統合複合ブレンドフラグメントシェーダーを取得する
      *              Get unified complex blend fragment shader
      *
+     * @param {boolean} use_dst_region - 解決済み背景の整数ピクセル領域を直接読むかどうか
+     * @param {boolean} use_dst_msaa - 4x MSAA背景を領域内で解決するかどうか（RGBA8/BGRA8 UNORM用）
      * @return {string}
      */
-    static getUnifiedComplexBlendFragmentShader (): string
+    static getUnifiedComplexBlendFragmentShader (use_dst_region: boolean = false, use_dst_msaa: boolean = false): string
     {
         return /* wgsl */`
 ${WgslVertexOutput}
@@ -612,14 +625,14 @@ struct BlendUniforms {
     mulColor: vec4<f32>,
     addColor: vec4<f32>,
     blendMode: f32,
-    _pad0: f32,
-    _pad1: f32,
+    dstX: f32,
+    dstY: f32,
     _pad2: f32,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: BlendUniforms;
 @group(0) @binding(1) var textureSampler: sampler;
-@group(0) @binding(2) var dstTexture: texture_2d<f32>;
+@group(0) @binding(2) var dstTexture: ${use_dst_region && use_dst_msaa ? "texture_multisampled_2d" : "texture_2d"}<f32>;
 @group(0) @binding(3) var srcTexture: texture_2d<f32>;
 
 fn blend(src: vec4<f32>, dst: vec4<f32>, mode: i32) -> vec4<f32> {
@@ -681,7 +694,19 @@ fn blend(src: vec4<f32>, dst: vec4<f32>, mode: i32) -> vec4<f32> {
 
 @fragment
 fn main(input: VertexOutput) -> @location(0) vec4<f32> {
-    var dst = textureSample(dstTexture, textureSampler, input.texCoord);
+    ${use_dst_region ? `// The old copy and blend each flip Y; the combined backdrop lookup is framebuffer-oriented.
+    let dstSize = vec2<i32>(textureDimensions(dstTexture));
+    let dstPixel = clamp(vec2<i32>(input.position.xy) + vec2<i32>(i32(uniforms.dstX), i32(uniforms.dstY)),
+        vec2<i32>(0), dstSize - vec2<i32>(1));
+    ${use_dst_msaa ? `// Recover exact UNORM8 integers before averaging so floating-point load error
+    // cannot move a half-integer result to the other side of a rounding tie.
+    let resolved = (round(textureLoad(dstTexture, dstPixel, 0) * 255.0)
+        + round(textureLoad(dstTexture, dstPixel, 1) * 255.0)
+        + round(textureLoad(dstTexture, dstPixel, 2) * 255.0)
+        + round(textureLoad(dstTexture, dstPixel, 3) * 255.0)) * 0.25;
+    var dst = floor(resolved + 0.5) / 255.0;`
+        : "var dst = textureLoad(dstTexture, dstPixel, 0);"}`
+        : "var dst = textureSample(dstTexture, textureSampler, input.texCoord);"}
     var src = textureSample(srcTexture, textureSampler, input.texCoord);
     let mul = uniforms.mulColor;
     let add = uniforms.addColor;

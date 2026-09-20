@@ -8,6 +8,7 @@ import { WebGPUUtil, $setContext } from "./WebGPUUtil";
 import { PathCommand } from "./PathCommand";
 import { BufferManager } from "./BufferManager";
 import { TextureManager } from "./TextureManager";
+import { ExternalImageUploadBatch } from "./ExternalImageUploadBatch";
 import { FrameBufferManager } from "./FrameBufferManager";
 import { PipelineManager } from "./Shader/PipelineManager";
 import {
@@ -206,6 +207,8 @@ const $msaaDescriptor: GPURenderPassDescriptor = {
  */
 export class Context
 {
+    private readonly _nodeRoots = new WeakMap<Node, TexturePacker>();
+
     /** @description 変換行列スタック / Transform matrix stack */
     public readonly $stack: Float32Array[];
     /** @description 現在の2D変換行列 / Current 2D transform matrix */
@@ -254,6 +257,12 @@ export class Context
     /** @description レンダーパスエンコーダー / Render pass encoder */
     private renderPassEncoder: GPURenderPassEncoder | null = null;
 
+    /** @description 連続するキャッシュ出力だけで再利用するパスと出力先 / Pass owned by consecutive cached-filter output */
+    private cachedFilterPass: GPURenderPassEncoder | null = null;
+    private cachedFilterPassColorView: GPUTextureView | null = null;
+    /** @description このContextの固定UV・sampler・layoutだけを使う弱参照キャッシュ / Context-owned immutable identity bindings */
+    private readonly cachedFilterBindGroups: WeakMap<GPUTextureView, GPUBindGroup> = new WeakMap();
+
     /**
      * @description 現在openなrenderPassEncoderがインスタンスバッチ用パスかどうか。
      *              インスタンスパスは連続バッチ間で再利用されるが、fill/clip等の
@@ -279,6 +288,8 @@ export class Context
 
     /** @description フレームごとのレンダーテクスチャプール管理（endFrame()でプールに返却） / Per-frame render texture pool (returned to pool in endFrame()) */
     private pooledRenderTextures: GPUTexture[] = [];
+
+    private externalImageUploadBatch: ExternalImageUploadBatch | null = null;
 
     /** @description 現在のレンダーターゲット（メインまたはアトラス） / Current render target (could be main or atlas) */
     private currentRenderTarget: GPUTextureView | null = null;
@@ -565,6 +576,8 @@ export class Context
      */
     resize (width: number, height: number, cache_clear: boolean = true): void
     {
+        this.externalImageUploadBatch?.dispose();
+        this.externalImageUploadBatch = null;
         // インスタンス配列をクリア（WebGL版と同じ）
         this.clearArraysInstanced();
 
@@ -589,6 +602,8 @@ export class Context
         this.frameStarted = false;
         this.commandEncoder = null;
         this.renderPassEncoder = null;
+        this.cachedFilterPass = null;
+        this.cachedFilterPassColorView = null;
         this.currentRenderTarget = null;
 
         // マスク状態をリセット
@@ -637,10 +652,9 @@ export class Context
             $clearFilterLUTCache();
             // アトラスのパッキングデータをリセット（WebGL版と同じ）
             $resetAtlas();
-            // FrameBufferManagerのアトラステクスチャを再作成（古いコンテンツをクリア）
-            // ステンシルバッファを有効にする（2パスステンシルフィル用）
+            // アトラスページはAtlasManagerのcreatorが必要時に生成する。
+            // 予備の4096平方MSAAアトラスを別途確保しない。
             this.frameBufferManager.destroyAttachment("atlas");
-            this.frameBufferManager.createAttachment("atlas", 4096, 4096, false, true);
         }
 
         // アンバインド（WebGL版と同じ）
@@ -913,7 +927,7 @@ export class Context
         // 既存のレンダーパスがある場合はearlyリターン（ノード領域クリアのみ確認）
         // ただしインスタンスバッチ用パスはステンシル構成が異なるため引き継がず閉じる
         if (this.renderPassEncoder) {
-            if (!this.renderPassIsInstanced) {
+            if (!this.renderPassIsInstanced && this.renderPassEncoder !== this.cachedFilterPass) {
                 if (this.currentRenderTarget) {
                     this.ensureNodeAreaCleared();
                 }
@@ -1609,7 +1623,8 @@ export class Context
         }
 
         // インスタンスバッチ用パスはステンシル構成が異なるため引き継がず閉じる
-        if (this.renderPassEncoder && this.renderPassIsInstanced) {
+        if (this.renderPassEncoder && (this.renderPassIsInstanced
+            || this.renderPassEncoder === this.cachedFilterPass)) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
             this.renderPassIsInstanced = false;
@@ -1665,6 +1680,14 @@ export class Context
      */
     bind (attachment_object: IAttachmentObject): void
     {
+        if (this.renderPassEncoder && this.renderPassEncoder === this.cachedFilterPass) {
+            const colorView = attachment_object.msaa && attachment_object.msaaTexture?.view
+                ? attachment_object.msaaTexture.view : attachment_object.texture?.view;
+            if (this.cachedFilterPassColorView !== colorView) {
+                this.renderPassEncoder.end();
+                this.renderPassEncoder = null;
+            }
+        }
         this.frameBufferManager.setCurrentAttachment(attachment_object);
 
         // WebGL版と同じ: ビューポートサイズをアタッチメントのサイズに設定
@@ -1923,6 +1946,7 @@ export class Context
      * @param  {number}       x_max           - バウンディングボックス右端 / Bounding box right
      * @param  {number}       y_max           - バウンディングボックス下端 / Bounding box bottom
      * @param  {Float32Array} color_transform - カラー変換パラメータ / Color transform parameters
+     * @param  {number} color_transform_offset - 要素単位の開始位置 / Start offset in elements
      * @return {void}
      */
     drawDisplayObject (
@@ -1931,7 +1955,8 @@ export class Context
         y_min: number,
         x_max: number,
         y_max: number,
-        color_transform: Float32Array
+        color_transform: Float32Array,
+        color_transform_offset: number = 0
     ): void {
         // WebGPU display object drawing
         // インスタンス配列に追加
@@ -1947,7 +1972,8 @@ export class Context
             this.viewportWidth,
             this.viewportHeight,
             renderMaxSize,
-            this.globalAlpha  // WebGL版と同じ: globalAlphaを渡す
+            this.globalAlpha, // WebGL版と同じ: globalAlphaを渡す
+            color_transform_offset
         );
     }
 
@@ -1955,9 +1981,7 @@ export class Context
      * @description インスタンス配列を描画
      *              Draw instanced arrays
      *
-     *              useOptimizedInstancingがtrueの場合、Storage BufferとIndirect Drawingを使用。
-     *              - Storage Buffer: メモリアロケーション削減、CPU負荷15-25%軽減
-     *              - Indirect Drawing: CPU-GPUオーバーヘッド5-15%削減
+     *              useOptimizedInstancingがtrueの場合、連続バッチの描画パスを再利用する。
      *
      * @return {void}
      */
@@ -2025,7 +2049,7 @@ export class Context
         }
 
         if (this.useOptimizedInstancing) {
-            // 最適化版: Storage Buffer + Indirect Drawing
+            // 連続バッチでレンダーパスを再利用する
             const previousPass = this.renderPassEncoder;
             this.renderPassEncoder = contextDrawIndirectUseCase(
                 this.device,
@@ -2039,8 +2063,9 @@ export class Context
                 // インスタンス数はCPU側で確定しているため間接描画は不要。
                 // indirectバッファ生成+writeBufferのバッチ毎オーバーヘッドを避けて直接draw()する。
                 false, // useIndirect
-                true,  // useStorageBuffer
-                this.renderPassIsInstanced
+                false, // useStorageBuffer
+                this.renderPassIsInstanced,
+                true   // useInstanceBuffer: フレーム内でサブアロケートし一括転送
             );
             // count===0で未変更返却の場合はフラグ維持、新規/再利用パスならinstanced扱い
             this.renderPassIsInstanced = this.renderPassEncoder !== null
@@ -2077,15 +2102,13 @@ export class Context
             return;
         }
 
-        // 複雑ブレンドはリゾルブ済みのメインテクスチャを読むため、
-        // 開いているレンダーパスを終了し、未リゾルブ分を解決する
+        // 背景テクスチャを読む前に書き込みパスを終了する。
+        // 全画面resolveの要否はUseCaseで判定（対応するMSAA背景は領域内で解決）。
         if (this.renderPassEncoder) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
             this.renderPassIsInstanced = false;
         }
-        this.resolveMainAttachment();
-
         // コマンドエンコーダーを確保
         this.ensureCommandEncoder();
 
@@ -2137,7 +2160,9 @@ export class Context
 
         // レンダーパスがアクティブな場合はマージンクリアしてから終了
         if (this.renderPassEncoder) {
-            this.ensureNodeAreaCleared();
+            if (this.renderPassEncoder !== this.cachedFilterPass) {
+                this.ensureNodeAreaCleared();
+            }
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
@@ -2291,15 +2316,28 @@ export class Context
         const width = node.w;
         const height = node.h;
 
-        // レンダーパスがアクティブな場合は終了
-        if (this.renderPassEncoder) {
+        // Clear and upload in the same node pass. Uploaded temporary textures
+        // remain owned by this frame until submission, including consecutive nodes.
+        const reuseNodePass = this.renderPassEncoder
+            && this.renderPassEncoder !== this.cachedFilterPass
+            && node.index >= 0
+            && this.nodeRenderPassAtlasIndex === node.index
+            && this.currentNodeScissor
+            && this.currentRenderTarget === attachment.texture.view;
+        if (reuseNodePass) {
             this.ensureNodeAreaCleared();
+        } else if (this.renderPassEncoder) {
+            if (this.renderPassEncoder !== this.cachedFilterPass) {
+                this.ensureNodeAreaCleared();
+            }
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
         }
         // commandEncoderはsubmitしない — drawElementToMsaa()/drawElementToTexture()内で同じエンコーダを再利用
         // copyExternalImageToTexture()はキュー操作でありエンコーダ不要
-        this.nodeRenderPassAtlasIndex = -1;
+        if (!reuseNodePass) {
+            this.nodeRenderPassAtlasIndex = -1;
+        }
 
         // MSAAが有効な場合は一時テクスチャ経由でMSAAテクスチャに直接描画
         // MSAAが無効な場合もシェーダー経由で描画（WebGLと同じ処理フロー）
@@ -2310,18 +2348,26 @@ export class Context
         }
     }
 
-    /**
-     * @description 一時テクスチャ経由でMSAAテクスチャに直接描画
-     *              Draw to MSAA texture directly via a temporary texture
-     *
-     * @param  {IAttachmentObject}             attachment - アタッチメントオブジェクト / Attachment object
-     * @param  {Node}                          node       - 描画対象ノード / Target node
-     * @param  {OffscreenCanvas | ImageBitmap} element    - 描画要素 / Element to draw
-     * @param  {number}                        width      - 幅 / Width
-     * @param  {number}                        height     - 高さ / Height
-     * @param  {boolean}                       flip_y     - Y軸反転フラグ / Y-axis flip flag
-     * @return {void}
-     */
+    /** Snapshot eligible text canvases into the batch; other images upload directly. */
+    private uploadElementTexture (
+        element: OffscreenCanvas | ImageBitmap, texture: GPUTexture,
+        width: number, height: number, flip_y: boolean
+    ): void
+    {
+        if (!flip_y && typeof OffscreenCanvas !== "undefined" && element instanceof OffscreenCanvas) {
+            this.externalImageUploadBatch ||= new ExternalImageUploadBatch(this.device);
+            if (this.externalImageUploadBatch.append(element, texture, width, height)) {
+                return;
+            }
+        }
+        this.device.queue.copyExternalImageToTexture(
+            { "source": element, "flipY": flip_y },
+            { "texture": texture, "premultipliedAlpha": true },
+            { width, height }
+        );
+    }
+
+    /** Draw to the MSAA atlas through a frame-owned temporary image texture. */
     private drawElementToMsaa (
         attachment: IAttachmentObject,
         node: Node,
@@ -2334,21 +2380,6 @@ export class Context
         // 一時テクスチャをプールから取得
         const tempTexture = $acquireRenderTexture(this.device, width, height);
 
-        this.device.queue.copyExternalImageToTexture(
-            {
-                "source": element as ImageBitmap,
-                "flipY": flip_y
-            },
-            {
-                "texture": tempTexture,
-                "premultipliedAlpha": true
-            },
-            {
-                "width": width,
-                "height": height
-            }
-        );
-
         const pipeline = this.pipelineManager.getPipeline("bitmap_render_msaa");
         if (!pipeline) {
             $releaseRenderTexture(tempTexture);
@@ -2360,6 +2391,8 @@ export class Context
             $releaseRenderTexture(tempTexture);
             return;
         }
+
+        this.uploadElementTexture(element, tempTexture, width, height, flip_y);
 
         const uniformData = this.$uniformData8;
         uniformData[0] = node.x;
@@ -2398,13 +2431,16 @@ export class Context
             $msaaDescriptor.depthStencilAttachment = undefined;
         }
 
-        const renderPass = this.commandEncoder!.beginRenderPass($msaaDescriptor);
+        const renderPass = this.renderPassEncoder
+            || this.commandEncoder!.beginRenderPass($msaaDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
         renderPass.setBindGroup(0, bindGroup);
         renderPass.draw(6);
-        renderPass.end();
+        if (!this.renderPassEncoder) {
+            renderPass.end();
+        }
 
         // endFrame()でプールに返却
         this.pooledRenderTextures.push(tempTexture);
@@ -2434,23 +2470,6 @@ export class Context
         // 一時テクスチャをプールから取得
         const tempTexture = $acquireRenderTexture(this.device, width, height);
 
-        // ImageBitmapを一時テクスチャにコピー
-        // flipYパラメータで画像の上下反転を制御（Videoはtrue、TextFieldはfalse）
-        this.device.queue.copyExternalImageToTexture(
-            {
-                "source": element as ImageBitmap,
-                "flipY": flip_y
-            },
-            {
-                "texture": tempTexture,
-                "premultipliedAlpha": true
-            },
-            {
-                "width": width,
-                "height": height
-            }
-        );
-
         const pipeline = this.pipelineManager.getPipeline("bitmap_render");
         if (!pipeline) {
             $releaseRenderTexture(tempTexture);
@@ -2462,6 +2481,8 @@ export class Context
             $releaseRenderTexture(tempTexture);
             return;
         }
+
+        this.uploadElementTexture(element, tempTexture, width, height, flip_y);
 
         const uniformData = this.$uniformData8;
         uniformData[0] = node.x;
@@ -2498,13 +2519,16 @@ export class Context
             $msaaDescriptor.depthStencilAttachment = undefined;
         }
 
-        const renderPass = this.commandEncoder!.beginRenderPass($msaaDescriptor);
+        const renderPass = this.renderPassEncoder
+            || this.commandEncoder!.beginRenderPass($msaaDescriptor);
         renderPass.setViewport(0, 0, attachment.width, attachment.height, 0, 1);
         renderPass.setScissorRect(node.x, node.y, width, height);
         renderPass.setPipeline(pipeline);
         renderPass.setBindGroup(0, bindGroup);
         renderPass.draw(6);
-        renderPass.end();
+        if (!this.renderPassEncoder) {
+            renderPass.end();
+        }
 
         // endFrame()でプールに返却
         this.pooledRenderTextures.push(tempTexture);
@@ -2880,15 +2904,21 @@ export class Context
             return;
         }
 
-        this.drawArraysInstanced();
+        // Pending ordinary/complex draws are an ordering boundary. With no queued
+        // work, only our own cached-output pass may survive this call.
+        if (!this.renderPassEncoder || this.renderPassEncoder !== this.cachedFilterPass
+            || getInstancedShaderManager().count > 0 || getComplexBlendQueue().length > 0) {
+            this.drawArraysInstanced();
+        }
 
         if (!this.frameStarted) {
             this.beginFrame();
         }
 
-        if (this.renderPassEncoder) {
+        if (this.renderPassEncoder && this.renderPassEncoder !== this.cachedFilterPass) {
             this.renderPassEncoder.end();
             this.renderPassEncoder = null;
+            this.renderPassIsInstanced = false;
         }
 
         this.ensureCommandEncoder();
@@ -2898,28 +2928,43 @@ export class Context
             return;
         }
 
-        // ColorTransformが恒等変換でない場合、キャッシュのコピーにCTを適用
+        // Nonidentity CT can be fused only for integer, 1:1 cached output.
+        // Quantization in the fused shader preserves the intermediate RGBA8 store.
         let drawAttachment = cachedAttachment;
         let ctAttachment: IAttachmentObject | null = null;
         const isIdentityCt = color_transform[0] === 1 && color_transform[1] === 1
             && color_transform[2] === 1 && color_transform[3] === 1
             && color_transform[4] === 0 && color_transform[5] === 0
             && color_transform[6] === 0 && color_transform[7] === 0;
+        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
+        const blendSuffix = blend_mode === "add" || blend_mode === "screen"
+            || blend_mode === "alpha" || blend_mode === "erase" ? `_${blend_mode}` : "";
+        const fusedPipeline = !isIdentityCt
+            && cachedAttachment.width > 0 && cachedAttachment.height > 0
+            && cachedAttachment.width === cachedAttachment.texture.width
+            && cachedAttachment.height === cachedAttachment.texture.height
+            ? this.pipelineManager.getPipeline(`cached_ct${blendSuffix}${useMsaa ? "_msaa" : ""}`) : null;
         if (!isIdentityCt) {
+            for (let idx = 0; idx < 7; idx++) {
+                $ctUniform8[idx] = color_transform[idx];
+            }
+            // Preserve the cached path's existing alpha-offset behavior.
+            $ctUniform8[7] = 0;
+        }
+        if (!isIdentityCt && !fusedPipeline) {
+            // CT reads/writes a separate attachment and cannot be encoded inside
+            // the open output pass. Keep the original CT/output draw order.
+            if (this.renderPassEncoder) {
+                this.renderPassEncoder.end();
+                this.renderPassEncoder = null;
+                this.renderPassIsInstanced = false;
+            }
             ctAttachment = this.frameBufferManager.createTemporaryAttachment(
                 cachedAttachment.width, cachedAttachment.height
             );
             const ctPipeline = this.pipelineManager.getPipeline("color_transform");
             const ctBindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
             if (ctPipeline && ctBindGroupLayout && ctAttachment.texture) {
-                $ctUniform8[0] = color_transform[0];
-                $ctUniform8[1] = color_transform[1];
-                $ctUniform8[2] = color_transform[2];
-                $ctUniform8[3] = color_transform[3];
-                $ctUniform8[4] = color_transform[4];
-                $ctUniform8[5] = color_transform[5];
-                $ctUniform8[6] = color_transform[6];
-                $ctUniform8[7] = 0;
                 const ctUniformData = $ctUniform8;
                 const ctUniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer(ctUniformData);
                 const ctSampler = this.textureManager.createSampler("cached_ct_sampler", false);
@@ -2953,52 +2998,47 @@ export class Context
         const drawY = Math.floor(boundsYMin + matrix[5]);
 
         // シンプルなブレンドモード判定
-        const useMsaa = mainAttachment.msaa && mainAttachment.msaaTexture?.view;
-        let pipelineName: string;
-        switch (blend_mode) {
-            case "add":
-                pipelineName = useMsaa ? "filter_output_add_msaa" : "filter_output_add";
-                break;
-            case "screen":
-                pipelineName = useMsaa ? "filter_output_screen_msaa" : "filter_output_screen";
-                break;
-            case "alpha":
-                pipelineName = useMsaa ? "filter_output_alpha_msaa" : "filter_output_alpha";
-                break;
-            case "erase":
-                pipelineName = useMsaa ? "filter_output_erase_msaa" : "filter_output_erase";
-                break;
-            default:
-                pipelineName = useMsaa ? "filter_output_msaa" : "filter_output";
-                break;
-        }
+        const pipelineName = `filter_output${blendSuffix}${useMsaa ? "_msaa" : ""}`;
 
-        const pipeline = this.pipelineManager.getPipeline(pipelineName);
+        const pipeline = fusedPipeline || this.pipelineManager.getPipeline(pipelineName);
         const bindGroupLayout = this.pipelineManager.getBindGroupLayout("texture_copy");
         if (!pipeline || !bindGroupLayout) {
+            if (ctAttachment) {
+                this.frameBufferManager.releaseTemporaryAttachment(ctAttachment);
+            }
             return;
         }
 
-        const sampler = this.textureManager.createSampler("cached_filter_sampler", true);
-        const uniformBuffer = this.bufferManager.acquireAndWriteUniformBuffer($IDENTITY_UV);
-
-        ($entries3[0].resource as GPUBufferBinding).buffer = uniformBuffer;
-        $entries3[1].resource = sampler;
-        $entries3[2].resource = drawAttachment.texture!.view;
-        const bindGroup = this.device.createBindGroup({
-            "layout": bindGroupLayout,
-            "entries": $entries3
-        });
+        const sourceView = drawAttachment.texture!.view;
+        let bindGroup: GPUBindGroup | undefined;
+        if (fusedPipeline) {
+            // Keep CT on independent buffers: the arena variant regressed GPU time.
+            ($entries3[0].resource as GPUBufferBinding).buffer = this.bufferManager.acquireAndWriteUniformBuffer($ctUniform8);
+            $entries3[1].resource = this.textureManager.createSampler("cached_ct_sampler", false);
+            $entries3[2].resource = sourceView;
+            bindGroup = this.device.createBindGroup({ "layout": bindGroupLayout, "entries": $entries3 });
+        } else {
+            bindGroup = this.cachedFilterBindGroups.get(sourceView);
+        }
+        if (!bindGroup) {
+            const binding: GPUBufferBinding = { "buffer": this.bufferManager.getIdentityUVBuffer(), "offset": 0, "size": 16 };
+            const sampler = this.textureManager.createSampler("cached_filter_sampler", true);
+            bindGroup = this.device.createBindGroup({
+                "layout": bindGroupLayout,
+                "entries": [
+                    { "binding": 0, "resource": binding },
+                    { "binding": 1, "resource": sampler },
+                    { "binding": 2, "resource": sourceView }
+                ]
+            });
+            this.cachedFilterBindGroups.set(sourceView, bindGroup);
+        }
 
         const colorView = useMsaa ? mainAttachment.msaaTexture!.view : mainAttachment.texture.view;
         // リゾルブ遅延: 書き込みパスでは解決しない
         if (useMsaa) {
             mainAttachment.msaaDirty = true;
         }
-        const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
-            colorView, 0, 0, 0, 0, "load", null
-        );
-
         const vpX = Math.max(0, drawX);
         const vpY = Math.max(0, drawY);
         const vpW = Math.max(1, drawAttachment.width);
@@ -3015,13 +3055,27 @@ export class Context
             return;
         }
 
-        const passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+        let passEncoder = this.renderPassEncoder;
+        if (!passEncoder || passEncoder !== this.cachedFilterPass
+            || this.cachedFilterPassColorView !== colorView) {
+            if (passEncoder) {
+                passEncoder.end();
+            }
+            const renderPassDescriptor = this.frameBufferManager.createRenderPassDescriptor(
+                colorView, 0, 0, 0, 0, "load", null
+            );
+            passEncoder = this.commandEncoder!.beginRenderPass(renderPassDescriptor);
+            this.renderPassEncoder = passEncoder;
+            this.cachedFilterPass = passEncoder;
+            this.cachedFilterPassColorView = colorView;
+            this.renderPassIsInstanced = false;
+            this.nodeRenderPassAtlasIndex = -1;
+        }
         passEncoder.setPipeline(pipeline);
         passEncoder.setBindGroup(0, bindGroup);
         passEncoder.setViewport(vpX, vpY, vpW, vpH, 0, 1);
         passEncoder.setScissorRect(vpX, vpY, scissorW, scissorH);
         passEncoder.draw(6, 1, 0, 0);
-        passEncoder.end();
 
         // CT一時アタッチメントを解放
         if (ctAttachment) {
@@ -3121,11 +3175,17 @@ export class Context
     }
 
     /**
-     * @description フレーム終了とコマンド送信（レンダリング完了後に呼ぶ）
-     *              End the frame and submit commands (call after rendering is complete)
+     * @description 提出済みGPU処理の完了を通知する（画面提示の完了ではない）
+     *              Observe submitted GPU work, not presentation completion.
      *
-     * @return {void}
+     * @return {Promise<void>}
      */
+    getRenderCompletion(): Promise<void>
+    {
+        return this.device.queue.onSubmittedWorkDone();
+    }
+
+    /** End the frame and submit commands before returning temporary resources. */
     endFrame(): void
     {
         if (!this.frameStarted) {
@@ -3138,8 +3198,11 @@ export class Context
             this.renderPassEncoder = null;
         }
 
+        this.externalImageUploadBatch?.flush();
+
         // DynamicUniformAllocatorのステージングバッファをGPUに一括書き込み
         this.bufferManager.dynamicUniform.flush();
+        this.bufferManager.instanceBuffer.flush();
 
         // コマンドをsubmit
         if (this.commandEncoder) {
@@ -3186,6 +3249,8 @@ export class Context
         // 次のフレーム用にクリア
         this.commandEncoder = null;
         this.renderPassEncoder = null;
+        this.cachedFilterPass = null;
+        this.cachedFilterPassColorView = null;
         this.currentRenderTarget = null;
         this.nodeRenderPassAtlasIndex = -1;
 
@@ -3234,7 +3299,19 @@ export class Context
             return this.createNode(width, height);
         }
 
+        this._nodeRoots.set(node, rootNode);
         return node;
+    }
+
+    /** Select the page of a live cached node without reallocating its rectangle. */
+    reuseNode (node: Node): boolean
+    {
+        const root = this._nodeRoots.get(node);
+        if (!root || root !== $rootNodes[node.index] || !node.used) {
+            return false;
+        }
+        $setActiveAtlasIndex(node.index);
+        return true;
     }
 
     /**
@@ -3253,6 +3330,7 @@ export class Context
         if (rootNode) {
             rootNode.dispose(node.x, node.y, node.w, node.h);
         }
+        this._nodeRoots.delete(node);
     }
 
     /**
@@ -3277,6 +3355,7 @@ export class Context
             if (rootNode) {
                 rootNode.dispose(node.x, node.y, node.w, node.h);
             }
+            this._nodeRoots.delete(node);
         } else if ("color" in value || "texture" in value) {
             this.frameBufferManager.releaseTemporaryAttachment(value as IAttachmentObject);
         }

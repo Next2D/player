@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"/></head><body>
+<script type="module">
+import { execute as draw } from "/packages/renderer/src/TextField/usecase/TextFieldDrawOffscreenCanvasUseCase.ts";
+try {
+    const compareDefault = new URLSearchParams(location.search).has("readback");
+    let scratch = null;
+    let cases = 0;
+    let maxDelta = 0;
+    let painted = 0;
+    // Alternate dimensions, transparency, clipping, formatting, caret and selection.
+    for (let i = 0; i < 48; i++) {
+        const width = i % 4 < 2 ? 128 : 96;
+        const height = i % 3 ? 48 : 64;
+        const format = { align: "left", bold: Boolean(i & 1), italic: Boolean(i & 2),
+            underline: Boolean(i & 4), color: i & 1 ? 0xFF6600 : 0x0055CC,
+            font: "Arial", size: 16, leftMargin: 0, rightMargin: 0, leading: 0, letterSpacing: 0 };
+        const line = { mode: "wrap", line: 0, text: "", x: 0, y: 16, w: 0, h: 20, textFormat: format };
+        const data = { textTable: [line, ...[..."Raster"].map((text, n) => ({
+            ...line, mode: "text", text, x: n * 10, y: 16, w: 10
+        }))], lineTable: [line], widthTable: [60], heightTable: [20], ascentTable: [16] };
+        const setting = { width, height, autoSize: "none", stopIndex: i % 7 - 1,
+            scrollX: i % 3, scrollY: i % 2, textWidth: 140, textHeight: 70,
+            rawWidth: width, rawHeight: height, focusIndex: i % 7, selectIndex: i & 1 ? 4 : -1,
+            focusVisible: Boolean(i & 2), thickness: i & 4 ? 1 : 0, thicknessColor: 0x00AA55,
+            wordWrap: false, background: Boolean(i & 1), backgroundColor: 0xAABBCC,
+            border: Boolean(i & 2), borderColor: 0x772299, defaultColor: 0, defaultSize: 16 };
+        const source = i % 11 ? data : null;
+        const defaultCanvas = compareDefault ? new OffscreenCanvas(width, height) : null;
+        // Establish the previous default context before the function requests its hint.
+        if (defaultCanvas) defaultCanvas.getContext("2d");
+        const expected = draw(source, setting, 1 + (i % 2) * 0.25, 1, defaultCanvas);
+        scratch = draw(source, setting, 1 + (i % 2) * 0.25, 1, scratch);
+        const a = expected.getContext("2d").getImageData(0, 0, width, height).data;
+        const b = scratch.getContext("2d").getImageData(0, 0, width, height).data;
+        for (let j = 0; j < a.length; j++) {
+            maxDelta = Math.max(maxDelta, Math.abs(a[j] - b[j]));
+            if (j % 4 === 3 && a[j]) painted++;
+        }
+        cases++;
+        // Poison retained state: the next resize must reset all of it, not just pixels.
+        const context = scratch.getContext("2d");
+        context.save();
+        context.setTransform(2, 0, 0, 3, 20, 30);
+        context.beginPath(); context.rect(0, 0, 1, 1); context.clip();
+        context.globalAlpha = 0.2; context.globalCompositeOperation = "xor";
+        context.shadowBlur = 5; context.shadowColor = "red";
+    }
+    window.__SCRATCH_RESULT__ = { cases, maxDelta, painted };
+} catch (error) { window.__SCRATCH_RESULT__ = { error: String(error) }; }
+</script></body></html>
