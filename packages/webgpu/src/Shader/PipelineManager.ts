@@ -155,8 +155,8 @@ export class PipelineManager
         ["filter_output_msaa", "texture_copy"], ["filter_output_add_msaa", "texture_copy"],
         ["filter_output_screen_msaa", "texture_copy"], ["filter_output_alpha_msaa", "texture_copy"],
         ["filter_output_erase_msaa", "texture_copy"],
-        ...["", "_add", "_screen", "_alpha", "_erase"].flatMap(suffix =>
-            ["", "_msaa"].map(msaa => [`cached_ct${suffix}${msaa}`, "cached_ct"] as [string, string])),
+        ...["", "_add", "_screen", "_alpha", "_erase"].flatMap((suffix) =>
+            ["", "_msaa"].map((msaa) => [`cached_ct${suffix}${msaa}`, "cached_ct"] as [string, string])),
         ["filter_output_masked", "texture_copy"], ["filter_output_masked_msaa", "texture_copy"],
         ["positioned_texture", "texture_copy"], ["positioned_texture_rgba", "texture_copy"],
         ["bitmap_render_msaa", "texture_copy"], ["bitmap_render", "texture_copy"],

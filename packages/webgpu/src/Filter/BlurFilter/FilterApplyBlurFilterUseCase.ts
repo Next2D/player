@@ -48,14 +48,18 @@ const $getBlurBindGroup = (
             $blurBindingCache.set(view, cache);
         }
         const existing = cache.groups.get(offset);
-        if (existing) return existing;
+        if (existing) {
+            return existing;
+        }
     }
     $entries3[0].resource = binding;
     $entries3[1].resource = sampler;
     $entries3[2].resource = view;
     const group = device.createBindGroup({ layout, "entries": $entries3 });
     if (cache) {
-        if (cache.groups.size >= 64) cache.groups.clear();
+        if (cache.groups.size >= 64) {
+            cache.groups.clear();
+        }
         cache.groups.set(offset, group);
     }
     return group;

@@ -5,7 +5,9 @@ export class RenderFrameLimiter
 
     constructor (private readonly limit: number = 2)
     {
-        if (!Number.isInteger(limit) || limit < 1) throw new RangeError("Invalid frame limit");
+        if (!Number.isInteger(limit) || limit < 1) {
+            throw new RangeError("Invalid frame limit");
+        }
     }
 
     /** The caller must await the returned capacity before submitting another frame. */
@@ -13,7 +15,9 @@ export class RenderFrameLimiter
     {
         const release = (): void => {
             const index = this.pending.indexOf(settled);
-            if (index >= 0) this.pending.splice(index, 1);
+            if (index >= 0) {
+                this.pending.splice(index, 1);
+            }
         };
         // A failed/lost queue must not leave the renderer's buffer return blocked.
         const settled = completion.then(release, release);
