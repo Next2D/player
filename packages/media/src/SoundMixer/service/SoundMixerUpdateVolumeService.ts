@@ -1,5 +1,6 @@
 import type { Sound } from "../../Sound";
 import type { Video } from "../../Video";
+import { updateVolume } from "../../Sound/StreamSoundRegistry";
 import {
     $setVolume,
     $getPlayingSounds,
@@ -40,4 +41,5 @@ export const execute = (volume: number): void =>
 
         video.volume = volume;
     }
+    updateVolume(volume);
 };

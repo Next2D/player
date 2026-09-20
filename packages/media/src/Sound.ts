@@ -1,6 +1,8 @@
 import type { ISoundCharacter } from "./interface/ISoundCharacter";
+import type { ISoundOptions } from "./interface/ISoundOptions";
 import type { URLRequest } from "@next2d/net";
 import { SoundMixer } from "./SoundMixer";
+import { StreamSound } from "./Sound/StreamSound";
 import { execute as soundEndedEventService } from "./Sound/service/SoundEndedEventService";
 import { execute as soundLoadUseCase } from "./Sound/usecase/SoundLoadUseCase";
 import { execute as soundBuildFromCharacterUseCase } from "./Sound/usecase/SoundBuildFromCharacterUseCase";
@@ -24,6 +26,8 @@ import {
  */
 export class Sound extends EventDispatcher
 {
+    private readonly _$stream: StreamSound | null;
+
     /**
      * @type {AudioBufferSourceNode}
      * @default null
@@ -83,9 +87,11 @@ export class Sound extends EventDispatcher
      * @constructor
      * @public
      */
-    constructor ()
+    constructor (options: ISoundOptions = {})
     {
         super();
+
+        this._$stream = options.mode === "stream" ? new StreamSound(this) : null;
 
         this.loopCount   = 0;
         this.audioBuffer = null;
@@ -96,6 +102,12 @@ export class Sound extends EventDispatcher
         this._$stopFlag     = true;
         this._$source       = null;
         this._$gainNode     = null;
+    }
+
+    /** The backend is selected at construction; existing callers default to buffer. */
+    get mode (): "buffer" | "stream"
+    {
+        return this._$stream ? "stream" : "buffer";
     }
 
     /**
@@ -120,6 +132,7 @@ export class Sound extends EventDispatcher
         if (this._$gainNode) {
             this._$gainNode.gain.value = this._$volume;
         }
+        this._$stream?.setVolume(this._$volume);
     }
 
     /**
@@ -132,6 +145,9 @@ export class Sound extends EventDispatcher
      */
     get canLoop (): boolean
     {
+        if (this._$stream) {
+            return this._$stream.canLoop;
+        }
         return !this._$stopFlag && this.loopCount >= this._$currentCount;
     }
 
@@ -145,6 +161,13 @@ export class Sound extends EventDispatcher
      */
     clone (): Sound
     {
+        if (this._$stream) {
+            const sound = new Sound({ "mode": "stream" });
+            sound.volume = this._$volume;
+            sound.loopCount = this.loopCount;
+            this._$stream.cloneTo(sound._$stream!);
+            return sound;
+        }
         const sound = new Sound();
         sound.volume      = this._$volume;
         sound.loopCount   = this.loopCount;
@@ -163,6 +186,10 @@ export class Sound extends EventDispatcher
      */
     async load (request: URLRequest): Promise<void>
     {
+        if (this._$stream) {
+            await this._$stream.load(request);
+            return;
+        }
         await soundLoadUseCase(this, request);
     }
 
@@ -177,6 +204,10 @@ export class Sound extends EventDispatcher
      */
     play (start_time: number = 0): void
     {
+        if (this._$stream) {
+            this._$stream.play(start_time);
+            return;
+        }
         // 再生中なら終了
         if (!this._$stopFlag) {
             return ;
@@ -220,6 +251,10 @@ export class Sound extends EventDispatcher
      */
     stop (): void
     {
+        if (this._$stream) {
+            this._$stream.stop();
+            return;
+        }
         if (this._$stopFlag) {
             return ;
         }
@@ -245,6 +280,17 @@ export class Sound extends EventDispatcher
         }
     }
 
+    /** Release held resources. Call load() again before reusing this Sound. */
+    dispose (): void
+    {
+        if (this._$stream) {
+            this._$stream.dispose();
+        } else {
+            this.stop();
+        }
+        this.audioBuffer = null;
+    }
+
     /**
      * @description Character DataからSoundを作成
      *              Create Sound from Character Data
@@ -256,6 +302,9 @@ export class Sound extends EventDispatcher
      */
     async $build (character: ISoundCharacter): Promise<void>
     {
+        if (this._$stream) {
+            throw new TypeError("Character audio data requires buffer mode.");
+        }
         await soundBuildFromCharacterUseCase(this, character);
     }
 }

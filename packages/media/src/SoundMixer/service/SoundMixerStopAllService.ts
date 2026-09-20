@@ -1,5 +1,6 @@
 import type { Sound } from "../../Sound";
 import type { Video } from "../../Video";
+import { stopAll } from "../../Sound/StreamSoundRegistry";
 import {
     $getPlayingSounds,
     $getPlayingVideos
@@ -38,4 +39,5 @@ export const execute = (): void =>
     // reset
     playingSounds.length = 0;
     playingVideos.length = 0;
+    stopAll();
 };

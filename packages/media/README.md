@@ -353,3 +353,94 @@ This package requires:
 ## License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) - see the [LICENSE](LICENSE) file for details.
+
+## Opt-in streaming BGM / ストリーミングBGM
+
+`new Sound()` and `new Sound({ mode: "buffer" })` keep the existing AudioBuffer
+backend, including its events, `play(start_time)`, `audioBuffer`, volume rules,
+MovieClip integration and clone behavior. Only an explicit `mode: "stream"`
+selects the new backend; file duration and loop count never switch it automatically.
+
+`new Sound()` は従来の動作を維持します。長いBGMだけ、生成時に `mode: "stream"`
+を指定してください。modeは生成後に変更できません。
+
+```ts
+import { Sound, SoundMixer } from "@next2d/media";
+import { URLRequest } from "@next2d/net";
+
+const bgm = new Sound({ mode: "stream" });
+await bgm.load(new URLRequest("/sounds/bgm.mp3"));
+bgm.loopCount = Infinity;
+bgm.volume = 0.5;
+bgm.play();
+
+bgm.volume = 0.2; // Live GainNode adjustment / 再生中も即時反映
+bgm.stop();       // Releases media data; play() can restart the same sound
+bgm.play();
+SoundMixer.stopAll(); // Includes streams as well as existing sounds/videos
+bgm.dispose();    // Releases owned resources; load() again before reuse
+
+const se = new Sound(); // Existing SE API, unchanged
+await se.load(new URLRequest("/sounds/button.mp3"));
+se.play();
+```
+
+### Stream-specific contract / stream専用の仕様
+
+- BGM plays through `HTMLAudioElement → MediaElementAudioSourceNode → GainNode`.
+  The AudioContext is shared with existing sounds. Element volume stays at 1.
+  `Sound.volume` and `SoundMixer.volume` retain the existing min/overwrite rules;
+  they are not multiplied. Inactive streams receive the current mixer limit on play.
+- The implementation does not call `decodeAudioData()` or fetch the entire BGM
+  into an ArrayBuffer/Blob. Browser buffering still consumes memory. Serve long
+  tracks as separate audio URLs rather than embedding them in JavaScript/data URLs.
+- `load()` resolves and dispatches `Event.COMPLETE` when metadata is available,
+  **not** when the complete file has downloaded. It dispatches `Event.OPEN` at
+  load start. Byte-based `ProgressEvent.PROGRESS` is unavailable in stream mode.
+  `preload="metadata"` is a browser hint, not a strict download limit.
+- Only GET URLs without `request.data` or custom `request.requestHeaders` are
+  supported. Unsupported requests reject with `TypeError`. `withCredentials`
+  selects `crossOrigin="use-credentials"`; otherwise `"anonymous"` is used.
+  Cross-origin servers must allow the relevant CORS request. There is no automatic
+  fallback to full-file decoding. Load errors reject and emit `IOErrorEvent.IO_ERROR`.
+- `play()` starts at the beginning. Nonzero `play(start_time)` throws `RangeError`
+  in stream mode; scheduled starts remain a buffer-only feature. Load before play.
+- Set `loopCount` before play: 0 plays once, N adds N repetitions, and `Infinity`
+  uses native media looping. Finite playback emits one `Event.COMPLETE` at its
+  final end. Stop/dispose and intermediate loops do not emit completion.
+  Sample-accurate gapless looping is not guaranteed by HTML media playback.
+- Autoplay-blocked streams retry on pointer/touch/keyboard gestures. The shared
+  context can also resume after an interruption. Stopped/disposed sounds never
+  retry. Non-autoplay playback failures stop the stream and emit `IO_ERROR`.
+- `stop()` cancels an outstanding metadata load with `AbortError`, disconnects the
+  graph and clears the media source to release inactive data. A successfully
+  loaded stream retains its URL and reuses its element/source node on replay.
+  After cancelling an unfinished load, call `load()` again before playing.
+- `clone()` copies a loaded stream's URL, credential mode, volume and loop count.
+  The clone owns a separate media element/graph, allocated on play. No global
+  unbounded URL cache is used. Reuse BGM instances or dispose them when unused.
+- `audioBuffer` and character `$build()` are buffer-only inputs; stream never uses
+  `audioBuffer`, and `$build()` rejects in stream mode. Embedded MovieClip sounds
+  continue to use the default buffer backend.
+- `dispose()` disconnects/releases owned resources and clears `audioBuffer`.
+  Shared AudioBuffers belonging to other clones are unaffected. The Sound can be
+  explicitly initialized again with `load()`; its mode remains unchanged.
+
+streamでは、`load()`の完了はメタデータ取得完了を表します。全曲のデコードを避け、
+停止時にメディアの読み込みを解除します。既存bufferのループ処理・イベント・
+SoundMixerの音量計算や停止処理の仕様変更は、この機能追加には含めていません。
+音量の永続化やBGM/SEの設定値の管理は、アプリケーション側で行ってください。
+
+### Validation / 検証
+
+```bash
+npx vitest run packages/media
+npx playwright install chromium webkit
+npx playwright test --config=e2e/media.config.ts
+```
+
+The dedicated browser tests use generated WAV fixtures to verify real output
+attenuation, loops, replay/release, clone/mixer behavior and unchanged buffer
+playback in Chromium/WebKit. For shipping iOS apps, additionally measure the
+WebContent process during long-track playback and repeated scene transitions
+on the target devices (JavaScript heap size alone omits native audio buffers).
