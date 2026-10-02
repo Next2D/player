@@ -8,6 +8,8 @@ Next2D Player provides audio functionality for games and applications, supportin
 classDiagram
     EventDispatcher <|-- Sound
     class Sound {
+        +constructor(options)
+        +mode: string
         +audioBuffer: AudioBuffer
         +volume: number
         +loopCount: number
@@ -16,6 +18,7 @@ classDiagram
         +play(startTime): void
         +stop(): void
         +clone(): Sound
+        +dispose(): void
     }
     class SoundMixer {
         +volume: Number
@@ -27,6 +30,16 @@ classDiagram
 
 A class for loading and playing audio files. Extends EventDispatcher.
 
+### Constructor
+
+```javascript
+new Sound(options?: ISoundOptions)
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `mode` | "buffer" \| "stream" | "buffer" | Playback backend. When omitted, the existing AudioBuffer backend (`"buffer"`) is used. Specify `"stream"` for long BGM to enable streaming playback. Cannot be changed after construction |
+
 ### Properties
 
 | Property | Type | Default | Read-only | Description |
@@ -35,6 +48,7 @@ A class for loading and playing audio files. Extends EventDispatcher.
 | `loopCount` | number | 0 | - | Loop count setting. 0 for no loop, 9999 for virtually infinite loop |
 | `volume` | number | 1 | - | Volume, ranging from 0 (silent) to 1 (full volume). Cannot exceed SoundMixer.volume value |
 | `canLoop` | boolean | - | Yes | Indicates whether the sound loops |
+| `mode` | "buffer" \| "stream" | "buffer" | Yes | The playback backend specified at construction |
 
 ### Methods
 
@@ -44,6 +58,57 @@ A class for loading and playing audio files. Extends EventDispatcher.
 | `load(request: URLRequest)` | Promise\<void\> | Initiates loading of an external MP3 file from the specified URL |
 | `play(startTime: number = 0)` | void | Plays a sound. startTime is the playback start time (in seconds). Does nothing if already playing |
 | `stop()` | void | Stops the sound playing in the channel |
+| `dispose()` | void | Releases held resources and clears `audioBuffer`. Call `load()` again before reusing (the mode remains unchanged) |
+
+## Streaming BGM (stream mode)
+
+Only when `new Sound({ mode: "stream" })` is specified, playback is streamed through `HTMLAudioElement → MediaElementAudioSourceNode → GainNode`. Since it neither decodes the whole track with `decodeAudioData()` nor reads the entire file into an ArrayBuffer/Blob, memory usage for long BGM is reduced.
+
+`new Sound()` / `new Sound({ mode: "buffer" })` keep the existing behavior (events, `play(startTime)`, `audioBuffer`, volume rules, MovieClip integration, clone). The mode is never switched automatically based on file duration or loop count.
+
+### Basic Usage
+
+```javascript
+const { Sound, SoundMixer } = next2d.media;
+const { URLRequest } = next2d.net;
+
+const bgm = new Sound({ mode: "stream" });
+await bgm.load(new URLRequest("bgm/stage1.mp3"));
+bgm.loopCount = Infinity;
+bgm.volume = 0.5;
+bgm.play();
+
+bgm.volume = 0.2;     // Applied to the GainNode immediately, even during playback
+bgm.stop();           // Releases media data; play() can restart the same Sound
+bgm.play();
+SoundMixer.stopAll(); // Stream sounds are also stopped
+bgm.dispose();        // Releases resources; load() is required again before reuse
+
+const se = new Sound(); // Use the existing buffer mode for SE
+await se.load(new URLRequest("se/button.mp3"));
+se.play();
+```
+
+### Stream Mode Specification
+
+| Item | Specification |
+|------|---------------|
+| Volume | `Sound.volume` and `SoundMixer.volume` follow the existing rules (the smaller value applies; they are not multiplied). Inactive streams receive the current SoundMixer.volume on play. The HTMLAudioElement volume always stays at 1 |
+| AudioContext | Shared with existing sounds |
+| `load()` | Resolves and dispatches `Event.COMPLETE` **when metadata is available**, not when the whole file has downloaded. Dispatches `Event.OPEN` at load start. Byte-based `ProgressEvent.PROGRESS` is not dispatched |
+| Request restrictions | Only GET URLs without `request.data` or custom `requestHeaders` are supported. Unsupported requests reject with `TypeError`. `withCredentials` selects `crossOrigin="use-credentials"`; otherwise `"anonymous"` is used. Cross-origin servers must allow CORS |
+| Load errors | Rejects and dispatches `IOErrorEvent.IO_ERROR`. There is no automatic fallback to full-file decoding |
+| `play()` | Always starts from the beginning. A nonzero `play(startTime)` throws `RangeError` (scheduled start is buffer-mode only). `play()` before `load()` completes is ignored |
+| `loopCount` | Set before play. 0 plays once, N adds N repetitions, and `Infinity` uses native media looping. Finite playback dispatches `Event.COMPLETE` once at the final end. Stop/dispose and intermediate loops do not dispatch it. Sample-accurate gapless looping is not guaranteed |
+| Autoplay blocking | When autoplay is blocked, playback is retried on pointerdown / touchend / keydown gestures. An interrupted AudioContext is also resumed. Stopped/disposed sounds never retry. Non-autoplay playback failures stop the stream and dispatch `IO_ERROR` |
+| `stop()` | Cancels an outstanding load with `AbortError`, disconnects the audio graph and clears the media source to release inactive data. A loaded stream retains its URL and reuses its element/source node on replay. After cancelling an unfinished load, call `load()` again before playing |
+| `clone()` | Copies a loaded stream's URL, credential mode, volume and loopCount. The clone owns a separate media element/graph, allocated on play. No global URL cache is used, so reuse BGM instances or `dispose()` them when unused |
+| `audioBuffer` / `$build()` | Buffer-mode only. Stream mode never uses `audioBuffer`, and `$build()` throws `TypeError`. Sounds embedded in MovieClips continue to use buffer mode |
+| `dispose()` | Disconnects and releases owned resources and clears `audioBuffer`. AudioBuffers shared with other clones are unaffected |
+
+> **Note:** Browser buffering still consumes memory. Serve long tracks as separate audio file URLs rather than embedding them in JavaScript or data URLs. `preload="metadata"` is a browser hint, not a strict download limit.
+
+> **Note:** Persisting volume and managing BGM/SE settings is the application's responsibility. For iOS apps, measuring the WebContent process memory on target devices during long-track playback and repeated scene transitions is recommended (JavaScript heap size alone does not include native audio buffers).
 
 ## Usage Examples
 
@@ -96,7 +161,8 @@ player.addEventListener("jump", function() {
 const { Sound } = next2d.media;
 const { URLRequest } = next2d.net;
 
-const bgm = new Sound();
+// Stream mode is recommended for long BGM (new Sound() also works)
+const bgm = new Sound({ mode: "stream" });
 
 await bgm.load(new URLRequest("bgm/stage1.mp3"));
 
@@ -275,6 +341,8 @@ SoundMixer.volume = 0.5;
 3. **Sound Effects**: Short sounds can use WAV (lower latency)
 4. **Volume Management**: Manage BGM and SE volumes separately
 5. **Mobile Support**: Start playback after user interaction
+6. **Stream mode for BGM**: Use `new Sound({ mode: "stream" })` for long BGM to avoid full decoding, and the existing buffer mode for SE
+7. **Release resources**: Release unused Sounds with `dispose()`
 
 ## Related
 
