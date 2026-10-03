@@ -26,6 +26,8 @@ describe("FrameBufferManagerCreateAttachmentUseCase", () =>
         };
 
         return {
+            "createShaderModule": vi.fn(() => ({})),
+            "createRenderPipeline": vi.fn(() => ({ getBindGroupLayout: vi.fn() })),
             "createTexture": vi.fn(() => mockTexture),
             "_mockTexture": mockTexture
         } as unknown as GPUDevice;

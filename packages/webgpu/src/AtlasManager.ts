@@ -1,5 +1,6 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import type { TexturePacker } from "@next2d/texture-packer";
+import { resetAtlasScratch } from "./AtlasScratch";
 
 /**
  * @description テクスチャアトラス境界の初期最大値
@@ -212,6 +213,7 @@ export const $getCurrentAtlasIndex = (): number =>
  */
 export const $resetAtlas = (): void =>
 {
+    resetAtlasScratch();
     $rootNodes.length = 0;
 
     $setActiveAtlasIndex(0);

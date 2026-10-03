@@ -2,6 +2,7 @@ import type { IAttachmentObject } from "../../interface/IAttachmentObject";
 import type { ITextureObject } from "../../interface/ITextureObject";
 import type { IStencilBufferObject } from "../../interface/IStencilBufferObject";
 import { $samples } from "../../WebGPUUtil";
+import { atlasScratch } from "../../AtlasScratch";
 
 /**
  * @description アタッチメントオブジェクトを作成
@@ -69,7 +70,7 @@ export const execute = (
     // MSAAテクスチャを作成（sampleCount > 1の場合）
     let msaaTexture: ITextureObject | null = null;
     if (useMsaa) {
-        const msaaGpuTexture = device.createTexture({
+        const msaaGpuTexture = isAtlas ? atlasScratch(device, width, height).color : device.createTexture({
             "size": { width, height },
             "format": textureFormat,
             "sampleCount": sampleCount,
@@ -115,7 +116,7 @@ export const execute = (
 
         // MSAAステンシルテクスチャを作成（sampleCount > 1の場合）
         if (useMsaa) {
-            const msaaStencilTexture = device.createTexture({
+            const msaaStencilTexture = isAtlas ? atlasScratch(device, width, height).stencil : device.createTexture({
                 "size": { width, height },
                 "format": "stencil8",
                 "sampleCount": sampleCount,

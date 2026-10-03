@@ -56,7 +56,7 @@ const mockDevice = {
     createTexture: vi.fn().mockReturnValue(mockTexture),
     createBuffer: vi.fn().mockReturnValue(mockBuffer),
     createCommandEncoder: vi.fn().mockReturnValue(mockCommandEncoder),
-    createRenderPipeline: vi.fn().mockReturnValue({}),
+    createRenderPipeline: vi.fn().mockReturnValue({ getBindGroupLayout: vi.fn().mockReturnValue({}) }),
     createBindGroup: vi.fn().mockReturnValue({}),
     createBindGroupLayout: vi.fn().mockReturnValue({}),
     createPipelineLayout: vi.fn().mockReturnValue({}),

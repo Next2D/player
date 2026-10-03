@@ -44,6 +44,16 @@ export const execute = async (
         if (!device) {
             throw new Error("WebGPU device not available");
         }
+        void device.lost.then((info) => {
+            if (info.reason !== "destroyed") {
+                globalThis.postMessage({ "message": "rendererFailure", "reason": "device-lost" });
+            }
+        });
+        device.addEventListener("uncapturederror", (event) => {
+            if (event.error instanceof GPUOutOfMemoryError) {
+                globalThis.postMessage({ "message": "rendererFailure", "reason": "gpu-memory" });
+            }
+        });
 
         const context = canvas.getContext("webgpu");
         if (!context) {

@@ -1,5 +1,6 @@
 import { execute } from "./ShapeGenerateRenderQueueUseCase";
 import { Shape } from "../../Shape";
+import { renderQueue } from "@next2d/render-queue";
 import { describe, expect, it } from "vitest";
 
 describe("ShapeGenerateRenderQueueUseCase.js test", () =>
@@ -142,5 +143,25 @@ describe("ShapeGenerateRenderQueueUseCase.js test", () =>
         expect(colorTransform).toBeInstanceOf(Float32Array);
         expect(typeof 800).toBe("number");
         expect(typeof 600).toBe("number");
+    });
+    it("execute test case - skips rotated shape whose one axis scale is zero", () =>
+    {
+        const enqueue = (matrix: Float32Array): number =>
+        {
+            const shape = new Shape();
+            shape.graphics.beginFill(0xff0000).drawRect(0, 0, 100, 100).endFill();
+
+            const offset = renderQueue.offset;
+            execute(shape, matrix, new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]), 800, 600);
+            return renderQueue.offset - offset;
+        };
+
+        // 45度回転 + scaleY=0: スクリーンboundsは0にならないが面積は0
+        const r = Math.SQRT1_2;
+        expect(enqueue(new Float32Array([r, r, 0, 0, 100, 100]))).toBe(1);
+        expect(renderQueue.buffer[renderQueue.offset - 1]).toBe(0);
+
+        // スケールが0でなければ描画キューに積まれる
+        expect(enqueue(new Float32Array([r, r, -r, r, 100, 100]))).toBeGreaterThan(1);
     });
 });

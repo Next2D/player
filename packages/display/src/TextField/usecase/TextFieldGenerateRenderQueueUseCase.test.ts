@@ -1,5 +1,6 @@
 import { execute } from "./TextFieldGenerateRenderQueueUseCase";
 import { TextField } from "@next2d/text";
+import { renderQueue } from "@next2d/render-queue";
 import { describe, expect, it } from "vitest";
 
 describe("TextFieldGenerateRenderQueueUseCase.js test", () =>
@@ -213,5 +214,18 @@ describe("TextFieldGenerateRenderQueueUseCase.js test", () =>
         expect(() => {
             execute(textField, combinedMatrix, colorTransform, 800, 600);
         }).not.toThrow();
+    });
+    it("execute test case - skips rotated TextField whose one axis scale is zero", () =>
+    {
+        const textField = new TextField();
+        textField.text = "Hello World";
+
+        // 45度回転 + scaleX=0: スクリーンboundsは0にならないが面積は0
+        const r = Math.SQRT1_2;
+        const offset = renderQueue.offset;
+        execute(textField, new Float32Array([0, 0, -r, r, 100, 100]), new Float32Array([1, 1, 1, 1, 0, 0, 0, 0]), 800, 600);
+
+        expect(renderQueue.offset - offset).toBe(1);
+        expect(renderQueue.buffer[renderQueue.offset - 1]).toBe(0);
     });
 });

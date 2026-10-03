@@ -21,5 +21,5 @@ export const execute = (text_format: ITextFormat): string =>
         fontStyle += "bold ";
     }
 
-    return `${fontStyle}${text_format.size}px '${text_format.font}','sans-serif'`;
+    return `${fontStyle}${text_format.size}px '${text_format.font}',sans-serif`;
 };
