@@ -214,6 +214,19 @@ export const execute = (
         );
     }
 
+    // 回転・スキュー時はスクリーンboundsが0にならなくても、片軸のスケールが0なら
+    // 面積0で描画結果がなく、Worker側のノードサイズも0になるためスキップする
+    if (!renderXScale || !renderYScale) {
+        if (tColorTransform !== color_transform) {
+            ColorTransform.release(tColorTransform);
+        }
+        if (tMatrix !== matrix) {
+            Matrix.release(tMatrix);
+        }
+        renderQueue.push1(0);
+        return;
+    }
+
     const xScaleRounded = Math.round(renderXScale * 100) / 100;
     const yScaleRounded = Math.round(renderYScale * 100) / 100;
 

@@ -37,9 +37,13 @@ describe("Shape bounds precision before culling", () =>
         const expected = calcBounds(...rect as [number, number, number, number], matrix, new Float32Array(4));
         const width = Math.ceil(Math.abs(expected[2] - expected[0]));
         const height = Math.ceil(Math.abs(expected[3] - expected[1]));
+        // 片軸のスケールが0またはNaNの場合も面積0としてスキップされる
+        const xScale = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const yScale = Math.sqrt(matrix[2] * matrix[2] + matrix[3] * matrix[3]);
         const culled = width === 0 || height === 0 || width === Infinity || height === Infinity
             || expected[0] + width < 0 || expected[1] + height < 0
-            || expected[0] > viewport || expected[1] > viewport;
+            || expected[0] > viewport || expected[1] > viewport
+            || !xScale || !yScale;
         renderQueue.offset = 0;
         execute(shape, matrix, color, viewport, viewport);
         expect(renderQueue.buffer[0]).toBe(culled ? 0 : 1);

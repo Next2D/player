@@ -12,6 +12,6 @@ describe("TextFieldGenerateFontStyleService.js test", () =>
             size: 12,
             font: "Arial",
         } as ITextFormat;
-        expect(execute(mockTextFormat)).toBe("italic bold 12px 'Arial','sans-serif'");
+        expect(execute(mockTextFormat)).toBe("italic bold 12px 'Arial',sans-serif");
     });
 });

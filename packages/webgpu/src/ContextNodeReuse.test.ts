@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Context } from "./Context";
 import { Node, TexturePacker } from "@next2d/texture-packer";
 import { $rootNodes, $setActiveAtlasIndex, $getActiveAtlasIndex } from "./AtlasManager";
+import { WebGPUUtil } from "./WebGPUUtil";
 const makeContext = (): Context => {
     const context = Object.create(Context.prototype) as Context;
     Reflect.set(context, "_nodeRoots", new WeakMap<Node, TexturePacker>());
@@ -13,8 +14,32 @@ beforeEach(() => {
     $rootNodes[1] = new TexturePacker(1, 256, 256);
     $setActiveAtlasIndex(0);
     vi.clearAllMocks();
+    WebGPUUtil.setRenderMaxSize(256);
 });
 describe("cached atlas node reuse", () => {
+    it("reuses freed earlier pages over repeated full-page allocations", () => {
+        const context = makeContext();
+        let first = context.createNode(256, 256);
+        $setActiveAtlasIndex(1);
+        const second = context.createNode(256, 256);
+        for (let i = 0; i < 100; i++) {
+            context.removeNode(first);
+            $setActiveAtlasIndex(1);
+            first = context.createNode(256, 256);
+            expect(first.index).toBe(0);
+            expect($rootNodes.length).toBe(2);
+            expect(second.used).toBe(true);
+        }
+    });
+    it("rejects oversized nodes without allocating endless pages", () => {
+        expect(() => makeContext().createNode(257, 256)).toThrow(RangeError);
+        expect($rootNodes.length).toBe(2);
+    });
+    it("allocates zero-sized nodes as 1px instead of throwing", () => {
+        const node = makeContext().createNode(0, 0);
+        expect(node.w).toBeGreaterThanOrEqual(1);
+        expect(node.h).toBeGreaterThanOrEqual(1);
+    });
     it("selects an owned node's page while keeping both allocations", () => {
         const context = makeContext();
         const first = context.createNode(17, 19);

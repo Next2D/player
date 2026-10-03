@@ -176,6 +176,11 @@ export class FrameBufferManager
             if (attachment.stencil) {
                 attachment.stencil.resource.destroy();
             }
+            // Atlas scratch is shared and released by AtlasManager as a group.
+            if (name !== "atlas" && !name.startsWith("atlas_")) {
+                attachment.msaaTexture?.resource.destroy();
+                attachment.msaaStencil?.resource.destroy();
+            }
             this.attachments.delete(name);
         }
     }

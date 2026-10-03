@@ -1,4 +1,5 @@
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
+import { needsAtlasRestore, restoreAtlas } from "./AtlasScratch";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
 import type { Node } from "@next2d/texture-packer";
@@ -944,6 +945,11 @@ export class Context
             const textureView = this.getCurrentTextureView();
             const attachment = $getAtlasAttachmentObject();
 
+            // アトラスへ描画する場合は共有MSAAスクラッチを対象ページの内容に揃える
+            if (this.currentRenderTarget && attachment) {
+                this.prepareAtlasScratch(attachment);
+            }
+
             // MSAAテクスチャを使用するかどうか
             const useMsaa = attachment?.msaa && attachment?.msaaTexture?.view;
             const colorView = useMsaa ? attachment!.msaaTexture!.view : textureView;
@@ -1735,6 +1741,27 @@ export class Context
     }
 
     /**
+     * @description 共有MSAAスクラッチが別ページの内容を保持している場合、対象アトラスの解決済みテクスチャから復元
+     *              Restore the shared MSAA scratch from the target atlas when it holds another page
+     *
+     * @param  {IAttachmentObject} attachment - 描画対象のアトラス / Target atlas attachment
+     * @return {void}
+     */
+    private prepareAtlasScratch (attachment: IAttachmentObject): void
+    {
+        if (!needsAtlasRestore(this.device, attachment)) {
+            return;
+        }
+        if (this.renderPassEncoder) {
+            this.renderPassEncoder.end();
+            this.renderPassEncoder = null;
+        }
+        this.nodeRenderPassAtlasIndex = -1;
+        this.ensureCommandEncoder();
+        restoreAtlas(this.device, this.commandEncoder!, attachment);
+    }
+
+    /**
      * @description 指定のノード範囲で描画を開始（アトラステクスチャへの描画）
      *              Begin rendering for the specified node region (drawing to atlas texture)
      *              2パスステンシルフィル対応: ステンシルバッファ付きレンダーパスを使用
@@ -1755,6 +1782,7 @@ export class Context
         // アトラステクスチャの該当箇所をレンダーターゲットに設定
         const attachment = $getAtlasAttachmentObjectByIndex(node.index) || $getAtlasAttachmentObject();
         if (attachment && attachment.texture) {
+            this.prepareAtlasScratch(attachment);
 
             // 同一アトラスへの連続描画ならレンダーパスを再利用
             if (this.renderPassEncoder && this.nodeRenderPassAtlasIndex === node.index) {
@@ -2215,6 +2243,7 @@ export class Context
         height: number
     ): void
     {
+        this.prepareAtlasScratch(attachment);
         // 一時テクスチャをプールから取得
         const tempTexture = $acquireRenderTexture(this.device, width, height);
 
@@ -2377,6 +2406,7 @@ export class Context
         flip_y: boolean
     ): void
     {
+        this.prepareAtlasScratch(attachment);
         // 一時テクスチャをプールから取得
         const tempTexture = $acquireRenderTexture(this.device, width, height);
 
@@ -2805,6 +2835,7 @@ export class Context
         if (!atlas || !atlas.texture || !temp_attachment.texture) {
             return;
         }
+        this.prepareAtlasScratch(atlas);
 
         // アトラスはrgba8unormフォーマット（FrameBufferManagerCreateAttachmentUseCase参照）
         // atlas_*テクスチャはcopyExternalImageToTextureとの互換性のためrgba8unormで作成される
@@ -3282,23 +3313,33 @@ export class Context
      */
     createNode (width: number, height: number): Node
     {
-        // WebGPU node creation implementation using texture-packer
-        const index = $getActiveAtlasIndex();
-
-        if (!$rootNodes[index]) {
-            const maxSize = WebGPUUtil.getRenderMaxSize();
-            $rootNodes[index] = new TexturePacker(index, maxSize, maxSize);
+        const maxSize = WebGPUUtil.getRenderMaxSize();
+        if (!Number.isFinite(width) || !Number.isFinite(height)
+            || width > maxSize || height > maxSize
+        ) {
+            throw new RangeError("Invalid texture atlas allocation size");
         }
 
-        const rootNode = $rootNodes[index];
-        const node = rootNode.insert(width, height);
+        // サイズ0の要素でも描画処理を止めないよう最小1pxで確保
+        width  = Math.max(1, width);
+        height = Math.max(1, height);
 
-        if (!node) {
-            // アトラスがいっぱいの場合、新しいアトラスインデックスに切り替えて再試行
-            $setActiveAtlasIndex(index + 1);
-            return this.createNode(width, height);
+        const count = $rootNodes.length;
+        const start = count ? $getActiveAtlasIndex() % count : 0;
+        // Search all existing pages before growing; freed earlier pages remain reusable.
+        for (let offset = 0; offset < count; offset++) {
+            const index = (start + offset) % count;
+            const root = $rootNodes[index];
+            const reused = root?.insert(width, height);
+            if (!reused) { continue }
+            $setActiveAtlasIndex(index);
+            this._nodeRoots.set(reused, root);
+            return reused;
         }
-
+        const rootNode = new TexturePacker(count, maxSize, maxSize);
+        $rootNodes[count] = rootNode;
+        $setActiveAtlasIndex(count);
+        const node = rootNode.insert(width, height)!;
         this._nodeRoots.set(node, rootNode);
         return node;
     }

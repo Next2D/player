@@ -335,6 +335,22 @@ describe("FrameBufferManager", () =>
 
     describe("destroyAttachment", () =>
     {
+        it("releases main multisample textures on resize without destroying shared atlas scratch", () =>
+        {
+            const manager = new FrameBufferManager(createMockDevice(), "bgra8unorm");
+            for (const name of ["main", "atlas_0"]) {
+                const attachment = manager.createAttachment(name, 100, 100, true, true);
+                const colorDestroy = vi.fn(), stencilDestroy = vi.fn();
+                attachment.msaaTexture = { ...attachment.texture!,
+                    resource: { destroy: colorDestroy } as unknown as GPUTexture };
+                attachment.msaaStencil = { ...attachment.stencil!,
+                    resource: { destroy: stencilDestroy } as unknown as GPUTexture };
+                manager.destroyAttachment(name);
+                expect(colorDestroy).toHaveBeenCalledTimes(name === "main" ? 1 : 0);
+                expect(stencilDestroy).toHaveBeenCalledTimes(name === "main" ? 1 : 0);
+            }
+        });
+
         it("should destroy attachment and remove from map", () =>
         {
             const device = createMockDevice();
