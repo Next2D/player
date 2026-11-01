@@ -122,6 +122,39 @@ movieClip.addEventListener("enterFrame", (event) => {
 });
 ```
 
+### Broadcast Events and removeChild
+
+`enterFrame` (`Event.ENTER_FRAME`), `keyDown` (`KeyboardEvent.KEY_DOWN`) and `keyUp` (`KeyboardEvent.KEY_UP`) are broadcast events. Their listeners are managed by the Player as a whole, not per registered object.
+
+When a display object is removed with `removeChild` / `removeChildAt` / `removeChildren`, these listeners are removed. This is not limited to listeners on the removed object: listeners registered on `stage` or on other display objects are removed as well, even when the removed child had no listeners. For these event types, `hasEventListener` / `removeAllEventListener` also operate on the Player-wide registrations.
+
+```typescript
+const { Sprite, stage } = next2d.display;
+const { Event } = next2d.events;
+
+stage.addEventListener(Event.ENTER_FRAME, update);
+stage.hasEventListener(Event.ENTER_FRAME); // true
+
+const child = new Sprite();
+container.addChild(child);
+container.removeChild(child);
+
+stage.hasEventListener(Event.ENTER_FRAME); // false (the stage listener is removed too)
+```
+
+To keep per-frame processing running while you repeatedly call `removeChild` (for example, when rebuilding part of the screen), register the listener again after removing, or drive it with the browser's `requestAnimationFrame`. For key input, `keydown` / `keyup` on `window` can be used in the same way.
+
+```typescript
+let last = 0;
+const tick = (time: number): void => {
+    const dt = last ? (time - last) / 1000 : 0;
+    last = time;
+    update(dt);
+    requestAnimationFrame(tick);
+};
+requestAnimationFrame(tick);
+```
+
 ### Load Related
 
 | Event | Description |
@@ -186,6 +219,8 @@ sprite.addEventListener(PointerEvent.DOUBLE_CLICK, (event) => {
 |-------|----------|-------------|
 | `keyDown` | `KeyboardEvent.KEY_DOWN` | Key pressed |
 | `keyUp` | `KeyboardEvent.KEY_UP` | Key released |
+
+For how listeners are handled on `removeChild`, see [Broadcast Events and removeChild](#broadcast-events-and-removechild).
 
 ```typescript
 const { KeyboardEvent } = next2d.events;

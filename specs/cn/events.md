@@ -122,6 +122,39 @@ movieClip.addEventListener("enterFrame", (event) => {
 });
 ```
 
+### 广播事件与 removeChild
+
+`enterFrame`（`Event.ENTER_FRAME`）、`keyDown`（`KeyboardEvent.KEY_DOWN`）和 `keyUp`（`KeyboardEvent.KEY_UP`）是广播事件，其监听器由 Player 统一管理，而不是按注册对象分别管理。
+
+使用 `removeChild` / `removeChildAt` / `removeChildren` 移除显示对象时，这些监听器会被移除。被移除的不仅是注册在该对象上的监听器，注册在 `stage` 或其他显示对象上的监听器也会一并移除，即使被移除的子对象没有任何监听器也是如此。对于这些事件类型，`hasEventListener` / `removeAllEventListener` 同样以 Player 全局的注册为对象。
+
+```typescript
+const { Sprite, stage } = next2d.display;
+const { Event } = next2d.events;
+
+stage.addEventListener(Event.ENTER_FRAME, update);
+stage.hasEventListener(Event.ENTER_FRAME); // true
+
+const child = new Sprite();
+container.addChild(child);
+container.removeChild(child);
+
+stage.hasEventListener(Event.ENTER_FRAME); // false（stage 的监听器也会被移除）
+```
+
+如需在反复调用 `removeChild`（例如重建部分画面）时保持每帧处理，请在移除后重新注册监听器，或使用浏览器的 `requestAnimationFrame` 驱动。键盘输入也可以同样使用 `window` 的 `keydown` / `keyup`。
+
+```typescript
+let last = 0;
+const tick = (time: number): void => {
+    const dt = last ? (time - last) / 1000 : 0;
+    last = time;
+    update(dt);
+    requestAnimationFrame(tick);
+};
+requestAnimationFrame(tick);
+```
+
 ### 加载相关
 
 | 事件 | 说明 |
@@ -186,6 +219,8 @@ sprite.addEventListener(PointerEvent.DOUBLE_CLICK, (event) => {
 |------|------|------|
 | `keyDown` | `KeyboardEvent.KEY_DOWN` | 按键按下 |
 | `keyUp` | `KeyboardEvent.KEY_UP` | 按键释放 |
+
+关于 `removeChild` 时监听器的处理，请参阅「[广播事件与 removeChild](#广播事件与-removechild)」。
 
 ```typescript
 const { KeyboardEvent } = next2d.events;

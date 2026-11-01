@@ -122,6 +122,39 @@ movieClip.addEventListener("enterFrame", (event) => {
 });
 ```
 
+### ブロードキャストイベントと removeChild
+
+`enterFrame`（`Event.ENTER_FRAME`）・`keyDown`（`KeyboardEvent.KEY_DOWN`）・`keyUp`（`KeyboardEvent.KEY_UP`）は、登録先のオブジェクトごとではなく Player 全体でまとめて管理されるブロードキャストイベントです。
+
+`removeChild` / `removeChildAt` / `removeChildren` で表示オブジェクトを外すと、これらのリスナーは外されます。対象は外したオブジェクトに登録したものに限らず、`stage` や他の表示オブジェクトに登録したものも含みます。リスナーを持たない子を外した場合も同じです。`hasEventListener` / `removeAllEventListener` も、これらのイベントタイプでは Player 全体の登録を対象にします。
+
+```typescript
+const { Sprite, stage } = next2d.display;
+const { Event } = next2d.events;
+
+stage.addEventListener(Event.ENTER_FRAME, update);
+stage.hasEventListener(Event.ENTER_FRAME); // true
+
+const child = new Sprite();
+container.addChild(child);
+container.removeChild(child);
+
+stage.hasEventListener(Event.ENTER_FRAME); // false（stage のリスナーも外れる）
+```
+
+画面の一部を作り直すなど `removeChild` を繰り返す場合に毎フレームの処理を続けたいときは、外した後にリスナーを登録し直すか、ブラウザの `requestAnimationFrame` で駆動します。キー入力も同様に、`window` の `keydown` / `keyup` を使えます。
+
+```typescript
+let last = 0;
+const tick = (time: number): void => {
+    const dt = last ? (time - last) / 1000 : 0;
+    last = time;
+    update(dt);
+    requestAnimationFrame(tick);
+};
+requestAnimationFrame(tick);
+```
+
 ### ロード関連
 
 | イベント | 説明 |
@@ -186,6 +219,8 @@ sprite.addEventListener(PointerEvent.DOUBLE_CLICK, (event) => {
 |----------|------|------|
 | `keyDown` | `KeyboardEvent.KEY_DOWN` | キー押下 |
 | `keyUp` | `KeyboardEvent.KEY_UP` | キー解放 |
+
+`removeChild` 時のリスナーの扱いは「[ブロードキャストイベントと removeChild](#ブロードキャストイベントと-removechild)」を参照してください。
 
 ```typescript
 const { KeyboardEvent } = next2d.events;
