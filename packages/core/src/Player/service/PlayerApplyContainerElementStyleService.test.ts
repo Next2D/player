@@ -31,7 +31,7 @@ describe("PlayerApplyContainerElementStyleService.js test", () =>
         expect(div.style.padding).toBe("");
         expect(div.style.margin).toBe("");
         expect(div.style.userSelect).toBe("");
-        expect(div.style.outline).toBe("");
+        expect(div.style.outlineStyle).toBe("");
 
         execute(div);
 
@@ -43,7 +43,7 @@ describe("PlayerApplyContainerElementStyleService.js test", () =>
         expect(div.style.padding).toBe("0px");
         expect(div.style.margin).toBe("0px");
         expect(div.style.userSelect).toBe("none");
-        expect(div.style.outline).toBe("none");
+        expect(div.style.outlineStyle).toBe("none");
     });
 
     it("execute test case3", () =>
