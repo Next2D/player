@@ -60,160 +60,92 @@ const $calculateNormalVector = (x: number, y: number, thickness: number): IPoint
 };
 
 /**
- * @description 線形補間（lerp）
- *              Linear interpolation between two points
- *
- * @param  {IPoint} p0 - 始点 / Start point
- * @param  {IPoint} p1 - 終点 / End point
- * @param  {number} t - 補間パラメータ（0〜1） / Interpolation parameter (0-1)
- * @return {IPoint} 補間された点 / Interpolated point
+ * @description 2次ベジェ曲線を半分に分割する回数（WebGL版と同じ。分割後は 32 セグメント）
+ *              Number of times a quadratic Bezier curve is halved (same as WebGL; 32 segments)
  */
-const $lerp = (p0: IPoint, p1: IPoint, t: number): IPoint => ({
-    "x": p0.x + (p1.x - p0.x) * t,
-    "y": p0.y + (p1.y - p0.y) * t
-});
+const SPLIT_COUNT: number = 5;
 
 /**
- * @description ベクトルの正規化
- *              Normalize a vector to unit length
- *
- * @param  {IPoint} point - 正規化する点 / Point to normalize
- * @return {IPoint} 正規化された点 / Normalized point
+ * @description 分割後のセグメント数
+ *              Number of segments after splitting
  */
-const $normalize = (point: IPoint): IPoint => {
-    const length = Math.sqrt(point.x * point.x + point.y * point.y);
-    return length === 0
-        ? { "x": 0, "y": 0 }
-        : { "x": point.x / length, "y": point.y / length };
-};
+const SEGMENT_COUNT: number = 1 << SPLIT_COUNT;
 
 /**
- * @description 二次ベジェ曲線上の座標を計算
- *              Calculate a point on a quadratic Bezier curve
+ * @description 分割中のセグメント（1セグメント = 始点・制御点・終点の x, y で 6 要素）。2 本を交互に使う（GC回避）
+ *              Segments being split (six values each: x, y of start, control and end points).
+ *              Two buffers used alternately to avoid GC overhead
+ */
+let $segments: Float64Array = new Float64Array(SEGMENT_COUNT * 6);
+let $nextSegments: Float64Array = new Float64Array(SEGMENT_COUNT * 6);
+
+/**
+ * @description 右サイドの点（1セグメント = t=0, 0.5, 1 の x, y で 6 要素）。逆順に出力するため一旦ためる（GC回避）
+ *              Points of the right side (six values each: x, y at t = 0, 0.5 and 1),
+ *              kept until the end because they are emitted in reverse order
+ */
+const $rightPoints: Float64Array = new Float64Array(SEGMENT_COUNT * 6);
+
+/**
+ * @description $offsetPoint の結果
+ *              Result of $offsetPoint
+ */
+let $offsetX: number = 0;
+let $offsetY: number = 0;
+
+/**
+ * @description 2次ベジェ曲線上の t の点を、法線方向へ offset だけずらした点を $offsetX / $offsetY に求める
+ *              （曲線上の座標・接線・正規化の計算を、オブジェクトを生成せずに行う）
+ *              Computes into $offsetX / $offsetY the point at t on a quadratic Bezier curve, moved by
+ *              offset along the normal (position, tangent and normalization without allocating objects)
  *
  * @param  {number} t - 曲線パラメータ（0〜1） / Curve parameter (0-1)
- * @param  {IPoint} s0 - 始点 / Start point
- * @param  {IPoint} s1 - 制御点 / Control point
- * @param  {IPoint} s2 - 終点 / End point
- * @return {IPoint} 曲線上の座標 / Point on the curve
- */
-const $getQuadraticBezierPoint = (
-    t: number,
-    s0: IPoint,
-    s1: IPoint,
-    s2: IPoint
-): IPoint => ({
-    "x": (1 - t) ** 2 * s0.x + 2 * (1 - t) * t * s1.x + t ** 2 * s2.x,
-    "y": (1 - t) ** 2 * s0.y + 2 * (1 - t) * t * s1.y + t ** 2 * s2.y
-});
-
-/**
- * @description 二次ベジェ曲線上の接線ベクトルを計算
- *              Calculate the tangent vector on a quadratic Bezier curve
- *
- * @param  {number} t - 曲線パラメータ（0〜1） / Curve parameter (0-1)
- * @param  {IPoint} s0 - 始点 / Start point
- * @param  {IPoint} s1 - 制御点 / Control point
- * @param  {IPoint} s2 - 終点 / End point
- * @return {IPoint} 接線ベクトル / Tangent vector
- */
-const $getQuadraticBezierTangent = (
-    t: number,
-    s0: IPoint,
-    s1: IPoint,
-    s2: IPoint
-): IPoint => ({
-    "x": 2 * (1 - t) * (s1.x - s0.x) + 2 * t * (s2.x - s1.x),
-    "y": 2 * (1 - t) * (s1.y - s0.y) + 2 * t * (s2.y - s1.y)
-});
-
-/**
- * @description 二次ベジェ曲線を分割
- *              Split a quadratic Bezier curve at a given parameter
- *
- * @param  {IPoint} s0 - 始点 / Start point
- * @param  {IPoint} s1 - 制御点 / Control point
- * @param  {IPoint} s2 - 終点 / End point
- * @param  {number} t - 分割パラメータ / Split parameter
- * @return {Array<IPoint[]>} 分割された2つの曲線 / Two split curves
- */
-const $splitQuadraticBezier = (
-    s0: IPoint,
-    s1: IPoint,
-    s2: IPoint,
-    t: number = 0.5
-): Array<IPoint[]> => {
-    const M0 = $lerp(s0, s1, t);
-    const M1 = $lerp(s1, s2, t);
-    const M01 = $lerp(M0, M1, t);
-    return [
-        [s0, M0, M01],
-        [M01, M1, s2]
-    ];
-};
-
-/**
- * @description ベジェ曲線を複数回分割
- *              Split a Bezier curve multiple times
- *
- * @param  {IPoint} s0 - 始点 / Start point
- * @param  {IPoint} s1 - 制御点 / Control point
- * @param  {IPoint} s2 - 終点 / End point
- * @param  {number} n - 分割回数 / Number of splits
- * @return {Array<IPoint[]>} 分割されたセグメント配列 / Array of split segments
- */
-const $splitBezierMultipleTimes = (
-    s0: IPoint,
-    s1: IPoint,
-    s2: IPoint,
-    n: number = 4
-): Array<IPoint[]> => {
-    let segments: Array<IPoint[]> = [[s0, s1, s2]];
-    for (let i = 0; i < n; i++) {
-        const newSegments: Array<IPoint[]> = [];
-        for (const seg of segments) {
-            const splitted = $splitQuadraticBezier(seg[0], seg[1], seg[2], 0.5);
-            newSegments.push(splitted[0], splitted[1]);
-        }
-        segments = newSegments;
-    }
-    return segments;
-};
-
-/**
- * @description 2次ベジェのオフセットを計算
- *              Calculate offset of a quadratic Bezier curve
- *
- * @param  {IPoint} s0 - 始点 / Start point
- * @param  {IPoint} s1 - 制御点 / Control point
- * @param  {IPoint} s2 - 終点 / End point
+ * @param  {number} x0 - 始点のx / Start point x
+ * @param  {number} y0 - 始点のy / Start point y
+ * @param  {number} x1 - 制御点のx / Control point x
+ * @param  {number} y1 - 制御点のy / Control point y
+ * @param  {number} x2 - 終点のx / End point x
+ * @param  {number} y2 - 終点のy / End point y
  * @param  {number} offset - オフセット距離 / Offset distance
- * @return {IPoint[]} オフセットされた点配列 / Array of offset points
+ * @return {void}
  */
-const $approximateOffsetQuadratic = (
-    s0: IPoint,
-    s1: IPoint,
-    s2: IPoint,
+const $offsetPoint = (
+    t: number,
+    x0: number, y0: number,
+    x1: number, y1: number,
+    x2: number, y2: number,
     offset: number
-): IPoint[] => {
-    const tValues = [0, 0.5, 1];
-    const newPoints: IPoint[] = [];
+): void => {
 
-    for (const t of tValues) {
-        const pos = $getQuadraticBezierPoint(t, s0, s1, s2);
-        const tan = $getQuadraticBezierTangent(t, s0, s1, s2);
-        const n = $normalize({ "x": -tan.y, "y": tan.x });
-        newPoints.push({
-            "x": pos.x + n.x * offset,
-            "y": pos.y + n.y * offset
-        });
+    const positionX = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * x1 + t ** 2 * x2;
+    const positionY = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * y1 + t ** 2 * y2;
+
+    const tangentX = 2 * (1 - t) * (x1 - x0) + 2 * t * (x2 - x1);
+    const tangentY = 2 * (1 - t) * (y1 - y0) + 2 * t * (y2 - y1);
+
+    // 接線を 90 度回した法線を正規化
+    const normalX = -tangentY;
+    const normalY = tangentX;
+    const length  = Math.sqrt(normalX * normalX + normalY * normalY);
+    if (length === 0) {
+        $offsetX = positionX + 0 * offset;
+        $offsetY = positionY + 0 * offset;
+    } else {
+        $offsetX = positionX + normalX / length * offset;
+        $offsetY = positionY + normalY / length * offset;
     }
-    return newPoints;
 };
 
 /**
  * @description カーブの矩形を計算（WebGL版のMeshCalculateCurveRectangleUseCaseと同じ）
  *              Calculate curve rectangle (same as WebGL MeshCalculateCurveRectangleUseCase)
+ *
+ *              ストロークの輪郭は図形を初めて描くときに曲線ごとに計算されるため、点やセグメントごとに
+ *              オブジェクトや配列を生成すると、その確保と回収が描画の停止として現れる。
+ *              作業領域を使い回し、結果の配列だけを生成する。
+ *              Outlines are computed per curve the first time a shape is drawn, so allocating an object or
+ *              an array per point or segment shows up as a stall. Work buffers are reused and only the
+ *              result array is allocated.
  *
  * @param  {IPoint} start_point - 始点 / Start point
  * @param  {IPoint} control_point - 制御点 / Control point
@@ -221,62 +153,126 @@ const $approximateOffsetQuadratic = (
  * @param  {number} thickness - 線の太さ（半分の値） / Half line thickness
  * @return {IPath} カーブ矩形パス / Curve rectangle path
  */
-const $calculateCurveRectangle = (
+export const calculateCurveRectangle = (
     start_point: IPoint,
     control_point: IPoint,
     end_point: IPoint,
     thickness: number
 ): IPath => {
-    // WebGL版と同じ分割数（5回分割 = 32セグメント）
-    const segments = $splitBezierMultipleTimes(start_point, control_point, end_point, 5);
 
-    const leftCurves: Array<IPoint[]> = [];
-    const rightCurves: Array<IPoint[]> = [];
+    // WebGL版と同じ分割数（5回分割 = 32セグメント）。De Casteljau で t = 0.5 の分割を繰り返す
+    let segments = $segments;
+    let nextSegments = $nextSegments;
+    segments[0] = start_point.x;
+    segments[1] = start_point.y;
+    segments[2] = control_point.x;
+    segments[3] = control_point.y;
+    segments[4] = end_point.x;
+    segments[5] = end_point.y;
 
-    for (const seg of segments) {
-        leftCurves.push($approximateOffsetQuadratic(seg[0], seg[1], seg[2], +thickness));
-        rightCurves.push($approximateOffsetQuadratic(seg[0], seg[1], seg[2], -thickness));
-    }
+    let count = 1;
+    for (let split = 0; split < SPLIT_COUNT; ++split) {
+        for (let idx = 0; idx < count; ++idx) {
+            const source = idx * 6;
+            const x0 = segments[source];
+            const y0 = segments[source + 1];
+            const x1 = segments[source + 2];
+            const y1 = segments[source + 3];
+            const x2 = segments[source + 4];
+            const y2 = segments[source + 5];
 
-    // セグメント間の連続性を確保：各セグメントの終点を次のセグメントの始点に強制一致
-    // これにより内側の曲線のつなぎめの隙間を解消
-    for (let idx = 0; idx < leftCurves.length - 1; ++idx) {
-        leftCurves[idx + 1][0] = leftCurves[idx][2];
+            const m0x  = x0 + (x1 - x0) * 0.5;
+            const m0y  = y0 + (y1 - y0) * 0.5;
+            const m1x  = x1 + (x2 - x1) * 0.5;
+            const m1y  = y1 + (y2 - y1) * 0.5;
+            const m01x = m0x + (m1x - m0x) * 0.5;
+            const m01y = m0y + (m1y - m0y) * 0.5;
+
+            const target = idx * 12;
+            nextSegments[target]      = x0;
+            nextSegments[target + 1]  = y0;
+            nextSegments[target + 2]  = m0x;
+            nextSegments[target + 3]  = m0y;
+            nextSegments[target + 4]  = m01x;
+            nextSegments[target + 5]  = m01y;
+            nextSegments[target + 6]  = m01x;
+            nextSegments[target + 7]  = m01y;
+            nextSegments[target + 8]  = m1x;
+            nextSegments[target + 9]  = m1y;
+            nextSegments[target + 10] = x2;
+            nextSegments[target + 11] = y2;
+        }
+        const swap = segments;
+        segments = nextSegments;
+        nextSegments = swap;
+        count *= 2;
     }
-    for (let idx = 0; idx < rightCurves.length - 1; ++idx) {
-        rightCurves[idx + 1][0] = rightCurves[idx][2];
-    }
+    $segments = segments;
+    $nextSegments = nextSegments;
 
     // 左サイドの最初のサブカーブ始点
-    const leftStart = leftCurves[0][0];
-    const paths: IPath = [leftStart.x, leftStart.y, false];
+    $offsetPoint(
+        0,
+        segments[0], segments[1], segments[2], segments[3], segments[4], segments[5],
+        +thickness
+    );
+    const paths: IPath = [$offsetX, $offsetY, false];
 
-    // 左サイド: WebGL版と同じく曲線フラグをtrueに設定（Loop-Blinn法で処理）
-    for (let idx = 0; idx < leftCurves.length; ++idx) {
-        const curves = leftCurves[idx];
+    const rightPoints = $rightPoints;
+    for (let idx = 0; idx < count; ++idx) {
+        const source = idx * 6;
+        const x0 = segments[source];
+        const y0 = segments[source + 1];
+        const x1 = segments[source + 2];
+        const y1 = segments[source + 3];
+        const x2 = segments[source + 4];
+        const y2 = segments[source + 5];
+
+        // 左サイド: WebGL版と同じく曲線フラグをtrueに設定（Loop-Blinn法で処理）
+        $offsetPoint(0.5, x0, y0, x1, y1, x2, y2, +thickness);
+        const controlX = $offsetX;
+        const controlY = $offsetY;
+        $offsetPoint(1, x0, y0, x1, y1, x2, y2, +thickness);
         paths.push(
-            curves[1].x, curves[1].y, true,
-            curves[2].x, curves[2].y, false
+            controlX, controlY, true,
+            $offsetX, $offsetY, false
         );
+
+        // 右サイドは逆順に出力するので、ここではためておく。
+        // セグメント間の連続性を確保するため、各セグメントの始点には前のセグメントの終点を使う
+        // （内側の曲線のつなぎめの隙間を解消）。最初のセグメントだけ自身の始点（t=0）を使う。
+        if (idx === 0) {
+            $offsetPoint(0, x0, y0, x1, y1, x2, y2, -thickness);
+            rightPoints[source]     = $offsetX;
+            rightPoints[source + 1] = $offsetY;
+        }
+        $offsetPoint(0.5, x0, y0, x1, y1, x2, y2, -thickness);
+        rightPoints[source + 2] = $offsetX;
+        rightPoints[source + 3] = $offsetY;
+        $offsetPoint(1, x0, y0, x1, y1, x2, y2, -thickness);
+        rightPoints[source + 4] = $offsetX;
+        rightPoints[source + 5] = $offsetY;
     }
 
-    const reversedRight = [...rightCurves].reverse();
-    for (let idx = 0; idx < reversedRight.length; ++idx) {
-        const [q0, q1, q2] = reversedRight[idx];
-        reversedRight[idx] = [q2, q1, q0]; // [Q2, Q1, Q0]
-    }
-
-    // 右サイドの最初のサブカーブ始点
-    const rightEnd = reversedRight[0][0];
-    paths.push(rightEnd.x, rightEnd.y, false);
+    // 右サイドの最初のサブカーブ始点（最後のセグメントの終点）
+    const last = (count - 1) * 6;
+    paths.push(rightPoints[last + 4], rightPoints[last + 5], false);
 
     // 右サイド: WebGL版と同じく曲線フラグをtrueに設定（Loop-Blinn法で処理）
-    for (let idx = 0; idx < reversedRight.length; ++idx) {
-        const curves = reversedRight[idx];
-        paths.push(
-            curves[1].x, curves[1].y, true,
-            curves[2].x, curves[2].y, false
-        );
+    for (let idx = count - 1; idx >= 0; --idx) {
+        const source = idx * 6;
+        if (idx > 0) {
+            // このセグメントの始点 = 前のセグメントの終点
+            paths.push(
+                rightPoints[source + 2], rightPoints[source + 3], true,
+                rightPoints[source - 2], rightPoints[source - 1], false
+            );
+        } else {
+            paths.push(
+                rightPoints[source + 2], rightPoints[source + 3], true,
+                rightPoints[source], rightPoints[source + 1], false
+            );
+        }
     }
 
     return paths;
@@ -787,7 +783,7 @@ export const generateStrokeOutline = (vertices: IPath, thickness: number): IPath
         endPoint.y = y;
         if (vertices[idx - 1] as boolean) {
             rectangles.push(
-                $calculateCurveRectangle(startPoint, controlPoint, endPoint, thickness)
+                calculateCurveRectangle(startPoint, controlPoint, endPoint, thickness)
             );
         } else {
             rectangles.push(
