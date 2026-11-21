@@ -10,7 +10,6 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "strictFunctionTypes": false,
-    "esModuleInterop": true,
     "declaration": true,
     "isolatedModules": true,
 
@@ -20,8 +19,11 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
+    /* TS7 では rootDir の既定値が tsconfig のディレクトリになるため明示する */
+    "rootDir": "./",
     "outDir": "./dist",
-    
+
+    /* TS7 では types の既定値が [] のため、必要な型を明示する */
     "types": [
       "vitest/globals",
       "@webgpu/types"
@@ -39,6 +41,6 @@
     "scripts",
     "dist",
     "**/*.test.ts",
-    "**/.github",
+    "**/.github"
   ]
 }

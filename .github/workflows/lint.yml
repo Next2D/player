@@ -24,6 +24,7 @@ jobs:
       - run: npm install -g npm@latest
       - run: npm ci
       - run: npm run lint
+      - run: npm run typecheck
 
   windows-browser-test:
     runs-on: windows-latest
@@ -38,3 +39,4 @@ jobs:
       - run: npm install -g npm@latest
       - run: npm ci
       - run: npm run lint
+      - run: npm run typecheck
