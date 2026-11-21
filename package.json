@@ -1,6 +1,6 @@
 {
   "name": "@next2d/player",
-  "version": "3.15.0",
+  "version": "3.15.1",
   "description": "Experience the fast and beautiful anti-aliased rendering of WebGL/WebGPU. You can create rich, interactive graphics, cross-platform applications and games without worrying about browser or device compatibility.",
   "author": "Toshiyuki Ienaga<ienaga@next2d.app> (https://github.com/ienaga/)",
   "license": "MIT",
@@ -30,6 +30,7 @@
   "scripts": {
     "start": "vite --host",
     "lint": "eslint src/**/*.ts packages/**/*.ts",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:e2e": "playwright test --config=e2e/playwright.config.ts",
     "test:e2e:webgl": "playwright test --config=e2e/playwright.config.ts --project=webgl",
@@ -42,7 +43,7 @@
     "test:e2e:perf:webgl": "PERF=1 playwright test --config=e2e/playwright.config.ts tests/perf.spec.ts --project=webgl --workers=1",
     "test:e2e:perf:webgpu": "PERF=1 playwright test --config=e2e/playwright.config.ts tests/perf.spec.ts --project=webgpu --workers=1",
     "clean": "node ./scripts/clean.js",
-    "build:worker": "rollup -c rollup.renderer.worker.config.js && rollup -c rollup.unzip.worker.config.js",
+    "build:worker": "vite build -c vite.worker.config.ts --mode renderer && vite build -c vite.worker.config.ts --mode unzip",
     "build:vite": "node ./scripts/version.js && vite build",
     "publish:dist": "npm run clean && node ./scripts/version.js && npm run build:worker && tsc && node ./scripts/worker.js && vite build && node ./scripts/publish.js"
   },
@@ -51,23 +52,14 @@
     "url": "https://github.com/sponsors/Next2D"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.7",
-    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
-    "@rollup/plugin-commonjs": "^29.0.3",
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-terser": "^1.0.2",
-    "@rollup/plugin-typescript": "^12.3.1",
-    "@typescript-eslint/eslint-plugin": "^8.73.0",
-    "@typescript-eslint/parser": "^8.73.0",
     "@webgpu/types": "^0.1.74",
     "eslint": "^10.15.0",
+    "eslint-parser-oxc": "^0.1.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.14.0",
     "jsdom": "^31.0.1",
-    "rollup": "^4.68.7",
-    "tslib": "^2.9.1",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vitest": "^5.1.1",
     "vitest-webgl-canvas-mock": "^1.1.0"

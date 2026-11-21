@@ -26,7 +26,9 @@ vi.mock("@next2d/cache", () => ({
     $cacheStore: {
         $removeIds: [],
         $removeCache: false,
-        removeTimerScheduledCache: vi.fn()
+        $overLimit: false,
+        removeTimerScheduledCache: vi.fn(),
+        evictOverLimit: vi.fn()
     }
 }));
 
@@ -60,6 +62,7 @@ describe("PlayerTickerUseCase.js test", () =>
         stage.changed = false;
         $cacheStore.$removeIds = [];
         $cacheStore.$removeCache = false;
+        $cacheStore.$overLimit = false;
         
         global.requestAnimationFrame = vi.fn((callback) => {
             return 1;
@@ -143,6 +146,45 @@ describe("PlayerTickerUseCase.js test", () =>
         execute(20);
 
         expect($cacheStore.removeTimerScheduledCache).toHaveBeenCalled();
+    });
+
+    it("execute test case7-2 - evict caches over the limit after posting the render queue", async () =>
+    {
+        const { execute: playerRenderingPostMessageService } = await import("../service/PlayerRenderingPostMessageService");
+        const { execute: playerRemoveCachePostMessageService } = await import("../service/PlayerRemoveCachePostMessageService");
+
+        $player.stopFlag = false;
+        $player.startTime = 0;
+        stage.changed = true;
+        $cacheStore.$overLimit = true;
+
+        // 描画情報の生成より前には、削除も削除の通知も行われていないこと
+        vi.mocked(playerRenderingPostMessageService).mockImplementation(() =>
+        {
+            expect($cacheStore.evictOverLimit).not.toHaveBeenCalled();
+            expect(playerRemoveCachePostMessageService).not.toHaveBeenCalled();
+        });
+        vi.mocked($cacheStore.evictOverLimit).mockImplementation(() =>
+        {
+            $cacheStore.$removeIds.push(100);
+        });
+
+        execute(20);
+
+        expect(playerRenderingPostMessageService).toHaveBeenCalled();
+        expect($cacheStore.evictOverLimit).toHaveBeenCalled();
+        expect(playerRemoveCachePostMessageService).toHaveBeenCalled();
+    });
+
+    it("execute test case7-3 - no eviction while the store is within the limit", () =>
+    {
+        $player.stopFlag = false;
+        $player.startTime = 0;
+        stage.changed = true;
+
+        execute(20);
+
+        expect($cacheStore.evictOverLimit).not.toHaveBeenCalled();
     });
 
     it("execute test case8 - request next frame", () =>
