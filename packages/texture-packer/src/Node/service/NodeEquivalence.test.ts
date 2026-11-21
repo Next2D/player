@@ -37,6 +37,40 @@ const disposeAll = (node: Node, x: number, y: number, width: number, height: num
     return false;
 };
 
+// 入らない枝を飛ばさない、以前の確保ロジック (照合用)
+const insertAll = (node: Node, width: number, height: number): Node | null =>
+{
+    if (node.used) {
+        const newNode = node.left ? insertAll(node.left, width, height) : null;
+        return newNode ? newNode : node.right ? insertAll(node.right, width, height) : null;
+    }
+
+    if (width > node.w || height > node.h) {
+        return null;
+    }
+
+    if (width === node.w && height === node.h) {
+        node.used = true;
+        return node;
+    }
+
+    const requiredWidth  = width  + 1;
+    const requiredHeight = height + 1;
+    const dw = node.w - requiredWidth;
+    const dh = node.h - requiredHeight;
+
+    if (dw > dh) {
+        node.left  = node.create(node.index, node.x, node.y, width, node.h);
+        node.right = node.create(node.index, node.x + requiredWidth, node.y, dw, node.h);
+    } else {
+        node.left  = node.create(node.index, node.x, node.y, node.w, height);
+        node.right = node.create(node.index, node.x, node.y + requiredHeight, node.w, dh);
+    }
+
+    node.used = true;
+    return insertAll(node.left, width, height);
+};
+
 const serialize = (node: Node | null): string =>
 {
     if (!node) {
@@ -53,7 +87,7 @@ const count = (node: Node | null): number =>
 
 describe("NodeDisposeService equivalence test", () =>
 {
-    it("releases the same nodes as walking the whole tree", () =>
+    it("allocates and releases the same nodes as walking the whole tree", () =>
     {
         // 再現できる乱数
         let seed = 12345;
@@ -87,10 +121,12 @@ describe("NodeDisposeService equivalence test", () =>
                             .toBe(disposeAll(rootB, rect[0], rect[1], rect[2], rect[3]));
                     }
                 } else {
-                    const width  = 1 + (random() * 60 | 0);
-                    const height = 1 + (random() * 60 | 0);
+                    // たまに、どこにも入らない大きさも渡す
+                    const large  = random() < 0.05 ? 500 : 0;
+                    const width  = 1 + large + (random() * 60 | 0);
+                    const height = 1 + large + (random() * 60 | 0);
                     const a = rootA.insert(width, height);
-                    const b = rootB.insert(width, height);
+                    const b = insertAll(rootB, width, height);
                     expect(!!a).toBe(!!b);
                     if (a && b) {
                         expect([a.x, a.y, a.w, a.h]).toEqual([b.x, b.y, b.w, b.h]);
