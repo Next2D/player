@@ -128,6 +128,18 @@ export const $getAdaptiveSubdivisionCount = (
 const CUBIC_TOLERANCE: number = 0.05;
 
 /**
+ * @description 3次ベジェ曲線が 1 本の2次ベジェ曲線で足りるかどうかを、平方根を取らずに判定するための上限。
+ *              |P3 - 3 * P2 + 3 * P1 - P0|² * scale² がこの値以下なら 1 本で足りる。
+ *              (CUBIC_TOLERANCE / (√3 / 36))² = (0.05 * 36 / √3)² = 1.08
+ *              Limit for deciding without square roots whether one quadratic curve is enough:
+ *              one is enough when |P3 - 3 * P2 + 3 * P1 - P0|² * scale² is at most this value.
+ *
+ * @type {number}
+ * @const
+ */
+export const $CUBIC_SINGLE_SEGMENT_LIMIT: number = 1.08;
+
+/**
  * @description 3次ベジェ曲線を何本の2次ベジェ曲線で近似するかを、画面上の誤差から求める。
  *
  *              3次ベジェ曲線を 1 本の2次ベジェ曲線 (制御点 = (3 * P1 + 3 * P2 - P0 - P3) / 4) で近似した
