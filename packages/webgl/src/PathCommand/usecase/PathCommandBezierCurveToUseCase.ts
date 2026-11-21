@@ -3,6 +3,7 @@ import { execute as pathCommandEqualsToLastPointService } from "../service/PathC
 import { execute as pathCommandQuadraticCurveToUseCase } from "./PathCommandQuadraticCurveToUseCase";
 import { execute as bezierConverterAdaptiveCubicToQuadUseCase } from "../../BezierConverter/usecase/BezierConverterAdaptiveCubicToQuadUseCase";
 import { $currentPath } from "../../PathCommand";
+import { $context } from "../../WebGLUtil";
 
 /**
  * @description 3次ベジェ曲線を描画します。適応的テッセレーションにより曲率に応じた分割を行います。
@@ -38,7 +39,20 @@ export const execute = (
 
     // 適応的テッセレーション: 曲率に基づいて分割数を動的に決定
     // Adaptive tessellation: dynamically determine subdivision count based on curvature
-    const result = bezierConverterAdaptiveCubicToQuadUseCase(fromX, fromY, cx1, cy1, cx2, cy2, x, y);
+    // 曲線の座標 1 単位が画面上で何ピクセルになるか (描画行列の x 軸 / y 軸方向の拡大率の大きい方)。
+    // 2次ベジェ曲線で近似するときの本数を、画面上の誤差から決めるのに使う。
+    // 描画コンテキストが無い場合 (経路だけを組み立てる場合) は 0 とし、従来の分割数になる。
+    let pixelScale = 0;
+    if ($context) {
+        const matrix = $context.$matrix;
+        const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const scaleY = Math.sqrt(matrix[3] * matrix[3] + matrix[4] * matrix[4]);
+        pixelScale = scaleX > scaleY ? scaleX : scaleY;
+    }
+
+    const result = bezierConverterAdaptiveCubicToQuadUseCase(
+        fromX, fromY, cx1, cy1, cx2, cy2, x, y, pixelScale
+    );
     const buffer = result.buffer;
     const count = result.count;
 

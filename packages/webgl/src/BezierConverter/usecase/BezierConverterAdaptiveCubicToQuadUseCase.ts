@@ -3,6 +3,7 @@ import {
     $adaptiveBuffer,
     $adaptiveSegmentCount,
     $getAdaptiveSubdivisionCount,
+    $getCubicSegmentCount,
     $ensureAdaptiveBufferSize,
     $setAdaptiveSegmentCount,
     $resetSplitBufferPool,
@@ -111,6 +112,18 @@ const cubicToQuad = (
 const $tempLeft: Float32Array = new Float32Array(8);
 const $tempRight: Float32Array = new Float32Array(8);
 
+// 戻り値のオブジェクト。曲線 1 本ごとに作ると、その確保と回収が描画の停止として現れるので使い回す。
+// The returned object. Reused because allocating one per curve shows up as a stall.
+const $result: ICubicConverterReturnObject = {
+    "buffer": $adaptiveBuffer,
+    "count": 0
+};
+
+// n 等分するときの作業用バッファ (残りの曲線を 2 本で交互に持つ)
+// Work buffers for splitting into n equal parts (the remaining curve alternates between the two)
+const $restA: Float32Array = new Float32Array(8);
+const $restB: Float32Array = new Float32Array(8);
+
 /**
  * @description 3次ベジェ曲線を適応的に2次ベジェ曲線に分割
  *              Adaptively split cubic Bezier curve into quadratic Bezier curves
@@ -131,8 +144,57 @@ export const execute = (
     from_x: number, from_y: number,
     cx1: number, cy1: number,
     cx2: number, cy2: number,
-    x: number, y: number
+    x: number, y: number,
+    pixel_scale: number = 0
 ): ICubicConverterReturnObject => {
+
+    // 画面上の拡大率が分かるときは、近似の誤差から必要な本数を決め、その本数に等分する
+    if (pixel_scale > 0) {
+
+        const count = $getCubicSegmentCount(
+            from_x, from_y, cx1, cy1, cx2, cy2, x, y, pixel_scale
+        );
+        $ensureAdaptiveBufferSize(count * 4);
+
+        let offset = 0;
+        if (count === 1) {
+            cubicToQuad(from_x, from_y, cx1, cy1, cx2, cy2, x, y, $adaptiveBuffer, offset);
+            offset += 4;
+        } else {
+            // 残りの曲線の先頭 1 / (残りの本数) を切り出すことを繰り返す
+            let rest = $restA;
+            let next = $restB;
+            rest[0] = from_x; rest[1] = from_y;
+            rest[2] = cx1;    rest[3] = cy1;
+            rest[4] = cx2;    rest[5] = cy2;
+            rest[6] = x;      rest[7] = y;
+            for (let idx = 0; idx < count - 1; ++idx) {
+                splitCubicAt(
+                    rest[0], rest[1], rest[2], rest[3], rest[4], rest[5], rest[6], rest[7],
+                    1 / (count - idx), $tempLeft, next
+                );
+                cubicToQuad(
+                    $tempLeft[0], $tempLeft[1], $tempLeft[2], $tempLeft[3],
+                    $tempLeft[4], $tempLeft[5], $tempLeft[6], $tempLeft[7],
+                    $adaptiveBuffer, offset
+                );
+                offset += 4;
+                const swap = rest;
+                rest = next;
+                next = swap;
+            }
+            cubicToQuad(
+                rest[0], rest[1], rest[2], rest[3], rest[4], rest[5], rest[6], rest[7],
+                $adaptiveBuffer, offset
+            );
+            offset += 4;
+        }
+
+        $setAdaptiveSegmentCount(count);
+        $result.buffer = $adaptiveBuffer;
+        $result.count  = count;
+        return $result;
+    }
 
     // 曲率に基づいて分割数を決定
     const subdivisions = $getAdaptiveSubdivisionCount(
@@ -240,9 +302,7 @@ export const execute = (
     }
 
     $setAdaptiveSegmentCount(offset / 4);
-
-    return {
-        "buffer": $adaptiveBuffer,
-        "count": $adaptiveSegmentCount
-    };
+    $result.buffer = $adaptiveBuffer;
+    $result.count  = $adaptiveSegmentCount;
+    return $result;
 };
