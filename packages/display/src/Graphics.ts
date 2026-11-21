@@ -8,6 +8,23 @@ import type { Matrix } from "@next2d/geom";
 import { GraphicsBitmapFill } from "./GraphicsBitmapFill";
 import { GraphicsGradientFill } from "./GraphicsGradientFill";
 import { execute as graphicsCalcBoundsUseCase } from "./Graphics/usecase/GraphicsCalcBoundsUseCase";
+import {
+    $MOVE_TO,
+    $CURVE_TO,
+    $LINE_TO,
+    $CUBIC,
+    $ARC,
+    $FILL_STYLE,
+    $STROKE_STYLE,
+    $END_FILL,
+    $END_STROKE,
+    $BEGIN_PATH,
+    $GRADIENT_FILL,
+    $GRADIENT_STROKE,
+    $CLOSE_PATH,
+    $BITMAP_FILL,
+    $BITMAP_STROKE
+} from "./Graphics/GraphicsCommand";
 import { execute as graphicsMargePathService } from "./Graphics/service/GraphicsMargePathService";
 import { execute as graphicsDrawEllipseService } from "./Graphics/service/GraphicsDrawEllipseService";
 import { execute as graphicsDrawRectService } from "./Graphics/service/GraphicsDrawRectService";
@@ -289,7 +306,7 @@ export class Graphics
      */
     static get MOVE_TO (): number
     {
-        return 0;
+        return $MOVE_TO;
     }
 
     /**
@@ -302,7 +319,7 @@ export class Graphics
      */
     static get CURVE_TO (): number
     {
-        return 1;
+        return $CURVE_TO;
     }
 
     /**
@@ -315,7 +332,7 @@ export class Graphics
      */
     static get LINE_TO (): number
     {
-        return 2;
+        return $LINE_TO;
     }
 
     /**
@@ -328,7 +345,7 @@ export class Graphics
      */
     static get CUBIC (): number
     {
-        return 3;
+        return $CUBIC;
     }
 
     /**
@@ -341,7 +358,7 @@ export class Graphics
      */
     static get ARC (): number
     {
-        return 4;
+        return $ARC;
     }
 
     /**
@@ -354,7 +371,7 @@ export class Graphics
      */
     static get FILL_STYLE (): number
     {
-        return 5;
+        return $FILL_STYLE;
     }
 
     /**
@@ -367,7 +384,7 @@ export class Graphics
      */
     static get STROKE_STYLE (): number
     {
-        return 6;
+        return $STROKE_STYLE;
     }
 
     /**
@@ -380,7 +397,7 @@ export class Graphics
      */
     static get END_FILL (): number
     {
-        return 7;
+        return $END_FILL;
     }
 
     /**
@@ -393,7 +410,7 @@ export class Graphics
      */
     static get END_STROKE (): number
     {
-        return 8;
+        return $END_STROKE;
     }
 
     /**
@@ -406,7 +423,7 @@ export class Graphics
      */
     static get BEGIN_PATH (): number
     {
-        return 9;
+        return $BEGIN_PATH;
     }
 
     /**
@@ -419,7 +436,7 @@ export class Graphics
      */
     static get GRADIENT_FILL (): number
     {
-        return 10;
+        return $GRADIENT_FILL;
     }
 
     /**
@@ -432,7 +449,7 @@ export class Graphics
      */
     static get GRADIENT_STROKE (): number
     {
-        return 11;
+        return $GRADIENT_STROKE;
     }
 
     /**
@@ -445,7 +462,7 @@ export class Graphics
      */
     static get CLOSE_PATH (): number
     {
-        return 12;
+        return $CLOSE_PATH;
     }
 
     /**
@@ -458,7 +475,7 @@ export class Graphics
      */
     static get BITMAP_FILL (): number
     {
-        return 13;
+        return $BITMAP_FILL;
     }
 
     /**
@@ -471,7 +488,7 @@ export class Graphics
      */
     static get BITMAP_STROKE (): number
     {
-        return 14;
+        return $BITMAP_STROKE;
     }
 
     /**
@@ -825,25 +842,63 @@ export class Graphics
         control_y2 = +control_y2 || 0;
 
         // calc bounds
-        graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled,
-            this._$positionX, this._$positionY,
-            this._$lineWidth, this._$caps,
-            control_x1, control_y1,
-            control_x2, control_y2,
-            anchor_x, anchor_y
-        );
+        // 線が無いときは、塗りの範囲だけをその場で広げる (関数呼び出しと Math.min / Math.max を避ける)
+        if (this._$hasLineEnabled) {
+            graphicsCalcBoundsUseCase(
+                this, this._$hasLineEnabled,
+                this._$positionX, this._$positionY,
+                this._$lineWidth, this._$caps,
+                control_x1, control_y1,
+                control_x2, control_y2,
+                anchor_x, anchor_y
+            );
+        } else {
+            if (control_x1 < this.xMin) {
+                this.xMin = control_x1;
+            }
+            if (control_x1 > this.xMax) {
+                this.xMax = control_x1;
+            }
+            if (control_y1 < this.yMin) {
+                this.yMin = control_y1;
+            }
+            if (control_y1 > this.yMax) {
+                this.yMax = control_y1;
+            }
+            if (control_x2 < this.xMin) {
+                this.xMin = control_x2;
+            }
+            if (control_x2 > this.xMax) {
+                this.xMax = control_x2;
+            }
+            if (control_y2 < this.yMin) {
+                this.yMin = control_y2;
+            }
+            if (control_y2 > this.yMax) {
+                this.yMax = control_y2;
+            }
+            if (anchor_x < this.xMin) {
+                this.xMin = anchor_x;
+            }
+            if (anchor_x > this.xMax) {
+                this.xMax = anchor_x;
+            }
+            if (anchor_y < this.yMin) {
+                this.yMin = anchor_y;
+            }
+            if (anchor_y > this.yMax) {
+                this.yMax = anchor_y;
+            }
+        }
 
         // marge path
-        graphicsMargePathService(
-            this,
-            this._$hasFillEnabled, this._$hasLineEnabled,
-            this._$fills, this._$lines,
-            Graphics.CUBIC,
-            control_x1, control_y1,
-            control_x2, control_y2,
-            anchor_x, anchor_y
-        );
+        this.isConfirmed = false;
+        if (this._$hasFillEnabled && this._$fills) {
+            this._$fills.push($CUBIC, control_x1, control_y1, control_x2, control_y2, anchor_x, anchor_y);
+        }
+        if (this._$hasLineEnabled && this._$lines) {
+            this._$lines.push($CUBIC, control_x1, control_y1, control_x2, control_y2, anchor_x, anchor_y);
+        }
 
         this._$positionX = anchor_x;
         this._$positionY = anchor_y;
@@ -884,23 +939,50 @@ export class Graphics
         control_y = +control_y || 0;
 
         // calc bounds
-        graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled,
-            this._$positionX, this._$positionY,
-            this._$lineWidth, this._$caps,
-            control_x, control_y,
-            anchor_x,  anchor_y
-        );
+        // 線が無いときは、塗りの範囲だけをその場で広げる (関数呼び出しと Math.min / Math.max を避ける)
+        if (this._$hasLineEnabled) {
+            graphicsCalcBoundsUseCase(
+                this, this._$hasLineEnabled,
+                this._$positionX, this._$positionY,
+                this._$lineWidth, this._$caps,
+                control_x, control_y,
+                anchor_x,  anchor_y
+            );
+        } else {
+            if (control_x < this.xMin) {
+                this.xMin = control_x;
+            }
+            if (control_x > this.xMax) {
+                this.xMax = control_x;
+            }
+            if (control_y < this.yMin) {
+                this.yMin = control_y;
+            }
+            if (control_y > this.yMax) {
+                this.yMax = control_y;
+            }
+            if (anchor_x < this.xMin) {
+                this.xMin = anchor_x;
+            }
+            if (anchor_x > this.xMax) {
+                this.xMax = anchor_x;
+            }
+            if (anchor_y < this.yMin) {
+                this.yMin = anchor_y;
+            }
+            if (anchor_y > this.yMax) {
+                this.yMax = anchor_y;
+            }
+        }
 
         // marge path
-        graphicsMargePathService(
-            this,
-            this._$hasFillEnabled, this._$hasLineEnabled,
-            this._$fills, this._$lines,
-            Graphics.CURVE_TO,
-            control_x, control_y,
-            anchor_x, anchor_y
-        );
+        this.isConfirmed = false;
+        if (this._$hasFillEnabled && this._$fills) {
+            this._$fills.push($CURVE_TO, control_x, control_y, anchor_x, anchor_y);
+        }
+        if (this._$hasLineEnabled && this._$lines) {
+            this._$lines.push($CURVE_TO, control_x, control_y, anchor_x, anchor_y);
+        }
 
         this._$positionX = anchor_x;
         this._$positionY = anchor_y;
@@ -1367,21 +1449,37 @@ export class Graphics
         }
 
         // calc bounds
-        graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled,
-            this._$positionX, this._$positionY,
-            this._$lineWidth, this._$caps,
-            x, y
-        );
+        // 線が無いときは、塗りの範囲だけをその場で広げる (関数呼び出しと Math.min / Math.max を避ける)
+        if (this._$hasLineEnabled) {
+            graphicsCalcBoundsUseCase(
+                this, this._$hasLineEnabled,
+                this._$positionX, this._$positionY,
+                this._$lineWidth, this._$caps,
+                x, y
+            );
+        } else {
+            if (x < this.xMin) {
+                this.xMin = x;
+            }
+            if (x > this.xMax) {
+                this.xMax = x;
+            }
+            if (y < this.yMin) {
+                this.yMin = y;
+            }
+            if (y > this.yMax) {
+                this.yMax = y;
+            }
+        }
 
         // marge path
-        graphicsMargePathService(
-            this,
-            this._$hasFillEnabled, this._$hasLineEnabled,
-            this._$fills, this._$lines,
-            Graphics.LINE_TO,
-            x, y
-        );
+        this.isConfirmed = false;
+        if (this._$hasFillEnabled && this._$fills) {
+            this._$fills.push($LINE_TO, x, y);
+        }
+        if (this._$hasLineEnabled && this._$lines) {
+            this._$lines.push($LINE_TO, x, y);
+        }
 
         this._$positionX = x;
         this._$positionY = y;
@@ -1408,12 +1506,28 @@ export class Graphics
         this._$positionY = y;
 
         // calc bounds
-        graphicsCalcBoundsUseCase(
-            this, this._$hasLineEnabled,
-            this._$positionX, this._$positionY,
-            this._$lineWidth, this._$caps,
-            x, y
-        );
+        // 線が無いときは、塗りの範囲だけをその場で広げる (関数呼び出しと Math.min / Math.max を避ける)
+        if (this._$hasLineEnabled) {
+            graphicsCalcBoundsUseCase(
+                this, this._$hasLineEnabled,
+                this._$positionX, this._$positionY,
+                this._$lineWidth, this._$caps,
+                x, y
+            );
+        } else {
+            if (x < this.xMin) {
+                this.xMin = x;
+            }
+            if (x > this.xMax) {
+                this.xMax = x;
+            }
+            if (y < this.yMin) {
+                this.yMin = y;
+            }
+            if (y > this.yMax) {
+                this.yMax = y;
+            }
+        }
 
         let duplication = false;
         if (this._$hasFillEnabled && this._$fills) {
@@ -1436,13 +1550,13 @@ export class Graphics
 
         // marge path
         if (!duplication) {
-            graphicsMargePathService(
-                this,
-                this._$hasFillEnabled, this._$hasLineEnabled,
-                this._$fills, this._$lines,
-                Graphics.MOVE_TO,
-                x, y
-            );
+            this.isConfirmed = false;
+            if (this._$hasFillEnabled && this._$fills) {
+                this._$fills.push($MOVE_TO, x, y);
+            }
+            if (this._$hasLineEnabled && this._$lines) {
+                this._$lines.push($MOVE_TO, x, y);
+            }
         }
 
         return this;

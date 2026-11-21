@@ -13,8 +13,17 @@ import type { Graphics } from "../../Graphics";
  */
 export const execute = (graphics: Graphics, x: number = 0, y: number = 0): void =>
 {
-    graphics.xMin = Math.min(graphics.xMin, x);
-    graphics.xMax = Math.max(graphics.xMax, x);
-    graphics.yMin = Math.min(graphics.yMin, y);
-    graphics.yMax = Math.max(graphics.yMax, y);
+    // 経路の点ごとに呼ばれるので、Math.min / Math.max の呼び出しを避けて比較で広げる
+    if (x < graphics.xMin) {
+        graphics.xMin = x;
+    }
+    if (x > graphics.xMax) {
+        graphics.xMax = x;
+    }
+    if (y < graphics.yMin) {
+        graphics.yMin = y;
+    }
+    if (y > graphics.yMax) {
+        graphics.yMax = y;
+    }
 };

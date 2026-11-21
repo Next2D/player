@@ -6,7 +6,23 @@ import type { ICapsStyle } from "../../interface/ICapsStyle";
 import type { IJointStyle } from "../../interface/IJointStyle";
 import type { Matrix } from "@next2d/geom";
 import { $getArray } from "../../DisplayObjectUtil";
-import { Graphics } from "../../Graphics";
+import {
+    $MOVE_TO,
+    $CURVE_TO,
+    $LINE_TO,
+    $CUBIC,
+    $ARC,
+    $FILL_STYLE,
+    $STROKE_STYLE,
+    $END_FILL,
+    $END_STROKE,
+    $BEGIN_PATH,
+    $GRADIENT_FILL,
+    $GRADIENT_STROKE,
+    $CLOSE_PATH,
+    $BITMAP_FILL,
+    $BITMAP_STROKE
+} from "../GraphicsCommand";
 import { BitmapData } from "../../BitmapData";
 
 /**
@@ -32,26 +48,26 @@ export const execute = (recodes : any[] | null): any[] =>
 
         switch (type) {
 
-            case Graphics.BEGIN_PATH:
-            case Graphics.END_FILL:
-            case Graphics.END_STROKE:
-            case Graphics.CLOSE_PATH:
+            case $BEGIN_PATH:
+            case $END_FILL:
+            case $END_STROKE:
+            case $CLOSE_PATH:
                 break;
 
-            case Graphics.MOVE_TO:
-            case Graphics.LINE_TO:
+            case $MOVE_TO:
+            case $LINE_TO:
                 array.push(recodes[idx++], recodes[idx++]);
                 break;
 
-            case Graphics.CURVE_TO:
-            case Graphics.FILL_STYLE:
+            case $CURVE_TO:
+            case $FILL_STYLE:
                 array.push(
                     recodes[idx++], recodes[idx++],
                     recodes[idx++], recodes[idx++]
                 );
                 break;
 
-            case Graphics.CUBIC:
+            case $CUBIC:
                 array.push(
                     recodes[idx++], recodes[idx++],
                     recodes[idx++], recodes[idx++],
@@ -59,7 +75,7 @@ export const execute = (recodes : any[] | null): any[] =>
                 );
                 break;
 
-            case Graphics.STROKE_STYLE:
+            case $STROKE_STYLE:
                 {
                     array.push(recodes[idx++]);
 
@@ -115,11 +131,11 @@ export const execute = (recodes : any[] | null): any[] =>
                 }
                 break;
 
-            case Graphics.ARC:
+            case $ARC:
                 array.push(recodes[idx++], recodes[idx++], recodes[idx++]);
                 break;
 
-            case Graphics.GRADIENT_FILL:
+            case $GRADIENT_FILL:
                 {
                     const type: IGradientType = recodes[idx++];
                     const stops: IColorStop[] = recodes[idx++];
@@ -177,7 +193,7 @@ export const execute = (recodes : any[] | null): any[] =>
                 }
                 break;
 
-            case Graphics.GRADIENT_STROKE:
+            case $GRADIENT_STROKE:
                 {
                     array.push(recodes[idx++]);
 
@@ -280,7 +296,7 @@ export const execute = (recodes : any[] | null): any[] =>
                 }
                 break;
 
-            case Graphics.BITMAP_FILL:
+            case $BITMAP_FILL:
                 {
                     const bitmapData: BitmapData = recodes[idx++];
                     const buffer = bitmapData.buffer;
@@ -315,7 +331,7 @@ export const execute = (recodes : any[] | null): any[] =>
                 }
                 break;
 
-            case Graphics.BITMAP_STROKE:
+            case $BITMAP_STROKE:
                 {
                     array.push(recodes[idx++]);
 
