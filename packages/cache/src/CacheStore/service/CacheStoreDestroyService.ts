@@ -20,12 +20,12 @@ export const execute = (
     if ("canvas" in object) {
 
         const canvas: HTMLCanvasElement = object.canvas;
-        const width  = canvas.width;
-        const height = canvas.height;
-
-        object.clearRect(0, 0, width + 1, height + 1);
 
         // canvas reset
+        // 大きさを設定するとキャンバスの内容と描画状態は初期化されるので、先に clearRect で
+        // 全面を消す必要は無い (消すと、捨てる直前のキャンバス全体をもう 1 度書き換えることになる)。
+        // Setting the size resets the bitmap and the drawing state, so clearing the whole
+        // canvas first is not needed (it would rewrite the entire canvas right before discarding it).
         canvas.width = canvas.height = 1;
 
         // pool
