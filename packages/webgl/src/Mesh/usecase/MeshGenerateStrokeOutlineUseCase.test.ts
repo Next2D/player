@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("../../WebGLUtil.ts", () => ({
     "$context": {
         "joints": 0,
+        // 描画行列 (等倍)。線の曲線の分割数を決めるのに使われる
+        "$matrix": new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
         "caps": 0
     }
 }));
