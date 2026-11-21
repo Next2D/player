@@ -10,6 +10,7 @@ import { execute as cacheStoreGenerateFilterKeysService } from "./CacheStore/ser
 import { execute as cacheStoreRemoveTimerService } from "./CacheStore/service/CacheStoreRemoveTimerService";
 import { execute as cacheStoreRemoveTimerScheduledCacheService } from "./CacheStore/service/CacheStoreRemoveTimerScheduledCacheService";
 import { execute as cacheStoreCancelRemoveTimerService } from "./CacheStore/service/CacheStoreCancelRemoveTimerService";
+import { execute as cacheStoreEvictOverLimitService } from "./CacheStore/service/CacheStoreEvictOverLimitService";
 
 /**
  * @description キャッシュ管理クラス
@@ -91,6 +92,20 @@ export class CacheStore
     public $maxStoreSize: number;
 
     /**
+     * @description エントリ数がLRU上限($maxStoreSize)を超えているかどうか。
+     *              毎フレーム参照されるため、関数を介さず直接参照する。
+     *              trueのとき、描画情報をworkerに送ったあとで evictOverLimit() を呼ぶ。
+     *              Whether the number of entries exceeds the LRU limit ($maxStoreSize).
+     *              Read directly (not through a function) because it is checked every frame.
+     *              When true, call evictOverLimit() after posting the render queue.
+     *
+     * @type {boolean}
+     * @default false
+     * @public
+     */
+    public $overLimit: boolean;
+
+    /**
      * @constructor
      */
     constructor ()
@@ -102,6 +117,7 @@ export class CacheStore
         this.$removeIds   = [];
         this.$removeCache = false;
         this.$maxStoreSize = 0;
+        this.$overLimit    = false;
     }
 
     /**
@@ -198,6 +214,21 @@ export class CacheStore
     removeTimerScheduledCache () : void
     {
         cacheStoreRemoveTimerScheduledCacheService(this, this._$trash);
+    }
+
+    /**
+     * @description LRU上限を超えた分のキャッシュを、参照が古い順に削除する。
+     *              描画情報をworkerに送ったあとに呼ぶこと。
+     *              Removes caches beyond the LRU limit, least recently used first.
+     *              Call this after the render queue has been posted to the worker.
+     *
+     * @returns {void}
+     * @method
+     * @public
+     */
+    evictOverLimit () : void
+    {
+        cacheStoreEvictOverLimitService(this, this._$store);
     }
 
     /**

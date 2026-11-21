@@ -87,8 +87,13 @@ describe("CacheStore trash flow integration", () =>
         // "100" を参照して最新化
         expect(store.get("100", "0")).toBe(true);
 
-        // 追加で "200" が最古になり evict される
+        // 追加で "200" が最古になる。削除は evictOverLimit() が行う
         store.set("300", "0", true);
+        expect(store.$overLimit).toBe(true);
+        expect(store.has("200")).toBe(true);
+
+        store.evictOverLimit();
+        expect(store.$overLimit).toBe(false);
 
         expect(store.has("100")).toBe(true);
         expect(store.has("200")).toBe(false);

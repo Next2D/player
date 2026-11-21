@@ -54,6 +54,16 @@ export const execute = (timestamp: number): void =>
             playerRenderingPostMessageService();
         }
 
+        // LRU上限を超えたキャッシュを削除する。描画情報を送ったあとに行うことで、
+        // worker には必ず「描画」→「削除」の順で届く(生成の途中で削除すると、
+        // 作り直したキャッシュがあとから届いた削除で消えてしまう)。
+        if ($cacheStore.$overLimit) {
+            $cacheStore.evictOverLimit();
+            if ($cacheStore.$removeIds.length) {
+                playerRemoveCachePostMessageService();
+            }
+        }
+
         // タイマーにセットされたキャッシュを削除
         if ($cacheStore.$removeCache) {
             $cacheStore.removeTimerScheduledCache();
