@@ -142,3 +142,75 @@ describe("FrameBufferManagerBindAttachmentObjectService.js method test", () =>
         expect($activeTextureUnit).toBe(-1);
     });
 });
+describe("FrameBufferManagerBindAttachmentObjectService attach calls", () =>
+{
+    it("attaches without binding renderbuffers and skips resources that are already attached", async () =>
+    {
+        const { $gl } = await import("../../WebGLUtil");
+        const {
+            $setAttachedColor,
+            $setAttachedStencil
+        } = await import("../../FrameBufferManager");
+
+        const stencil = {
+            "id": 1,
+            "resource": {} as WebGLRenderbuffer,
+            "width": 0,
+            "height": 0,
+            "area": 0,
+            "dirty": false
+        };
+
+        const create = (color: WebGLRenderbuffer): IAttachmentObject =>
+        {
+            return {
+                "id": 0,
+                "width": 100,
+                "height": 120,
+                "msaa": true,
+                "mask": false,
+                "clipLevel": 0,
+                "color": {
+                    "resource": color,
+                    "stencil": stencil,
+                    "width": 256,
+                    "height": 256,
+                    "area": 256 * 256,
+                    "dirty": false
+                },
+                "texture": null,
+                "stencil": stencil
+            };
+        };
+
+        const colorA = {} as WebGLRenderbuffer;
+        const colorB = {} as WebGLRenderbuffer;
+
+        $setAttachedColor(null);
+        $setAttachedStencil(null);
+
+        const attach = $gl.framebufferRenderbuffer as ReturnType<typeof vi.fn>;
+        const bind   = $gl.bindRenderbuffer as ReturnType<typeof vi.fn>;
+        attach.mockClear();
+        bind.mockClear();
+
+        // 1 回目: 色とステンシルの 2 つをアタッチする
+        execute(create(colorA));
+        expect(attach).toHaveBeenCalledTimes(2);
+
+        // 同じリソース: 付け直さない
+        execute(create(colorA));
+        expect(attach).toHaveBeenCalledTimes(2);
+
+        // 色だけ違う: 色だけ付け直す (ステンシルは同じ)
+        execute(create(colorB));
+        expect(attach).toHaveBeenCalledTimes(3);
+        expect(attach.mock.calls[2][3]).toBe(colorB);
+
+        // bindRenderbuffer は呼ばない
+        expect(bind).not.toHaveBeenCalled();
+
+        $setAttachedColor(null);
+        $setAttachedStencil(null);
+    });
+});
