@@ -2,8 +2,9 @@ import type { IPath } from "../../interface/IPath";
 import type { IPoint } from "../../interface/IPoint";
 
 /**
- * @description 2次ベジェ曲線を半分に分割する回数。分割後の区間数は 2 の SPLIT_COUNT 乗。
- *              Number of times a quadratic Bezier curve is halved. The curve ends up in 2 ** SPLIT_COUNT segments.
+ * @description 2次ベジェ曲線を半分に分割する回数の上限。分割後の区間数は最大で 2 の SPLIT_COUNT 乗。
+ *              Maximum number of times a quadratic Bezier curve is halved. The curve ends up in at most
+ *              2 ** SPLIT_COUNT segments.
  *
  * @type {number}
  * @const
@@ -97,15 +98,109 @@ const $offsetPoint = (
 };
 
 /**
+ * @description 画面上の誤差の許容値 (ピクセル)。輪郭の近似がこの距離以内に収まる分割回数を選ぶ。
+ *              Allowed on-screen error in pixels. The split count is chosen so that the outline
+ *              approximation stays within this distance.
+ *
+ * @type {number}
+ * @const
+ */
+const STROKE_TOLERANCE: number = 0.05;
+
+/**
+ * @description 2次ベジェ曲線の線の輪郭を作るときに、曲線を半分に分割する回数を求める。
+ *
+ *              輪郭は、分割した各区間を「t = 0, 0.5, 1 の点を法線方向へずらした 3 点」の 2 次ベジェで
+ *              近似する。区間 1 つの弦からのふくらみは (D + thickness * θ² / 8) / 4^n、近似の誤差は
+ *              その約半分になる (D = |P0 - 2 * P1 + P2| / 4、θ = 始点と終点の接線がなす角、n = 分割回数)。
+ *              見積もりに 1.5 倍の余裕を持たせ、画面上の誤差が STROKE_TOLERANCE 以内になる最小の n を返す。
+ *              折り返しに近い曲線 (θ が 2 ラジアンを超える) は見積もりが甘くなるので、最大回数にする。
+ *              pixel_scale が 0 以下のとき (画面上の拡大率が分からない) も最大回数にする。
+ *
+ *              Returns how many times a quadratic Bezier curve is halved when building a stroke outline.
+ *              Each resulting segment is approximated by the quadratic through the points at t = 0, 0.5
+ *              and 1 moved along the normal. The sagitta of one segment is
+ *              (D + thickness * θ² / 8) / 4^n and the approximation error is about half of it
+ *              (D = |P0 - 2 * P1 + P2| / 4, θ = angle between the end tangents, n = split count).
+ *              With a 1.5x margin, the smallest n keeping the on-screen error within STROKE_TOLERANCE is
+ *              returned. Curves that nearly fold back (θ above 2 radians) and an unknown scale
+ *              (pixel_scale <= 0) use the maximum.
+ *
+ * @param  {number} x0
+ * @param  {number} y0
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
+ * @param  {number} thickness
+ * @param  {number} pixel_scale
+ * @return {number}
+ * @method
+ * @private
+ */
+const $strokeSplitCount = (
+    x0: number, y0: number,
+    x1: number, y1: number,
+    x2: number, y2: number,
+    thickness: number,
+    pixel_scale: number
+): number => {
+
+    if (!(pixel_scale > 0)) {
+        return SPLIT_COUNT;
+    }
+
+    const ax = x1 - x0;
+    const ay = y1 - y0;
+    const bx = x2 - x1;
+    const by = y2 - y1;
+    const lengthA = Math.sqrt(ax * ax + ay * ay);
+    const lengthB = Math.sqrt(bx * bx + by * by);
+    if (lengthA === 0 || lengthB === 0) {
+        return SPLIT_COUNT;
+    }
+
+    let cosine = (ax * bx + ay * by) / (lengthA * lengthB);
+    if (cosine > 1) {
+        cosine = 1;
+    } else if (cosine < -1) {
+        cosine = -1;
+    }
+    const theta = Math.acos(cosine);
+    if (theta > 2) {
+        return SPLIT_COUNT;
+    }
+
+    const dx = x0 - 2 * x1 + x2;
+    const dy = y0 - 2 * y1 + y2;
+    const sagitta = Math.sqrt(dx * dx + dy * dy) / 4
+        + Math.abs(thickness) * theta * theta / 8;
+
+    // 誤差 (ピクセル) = sagitta / 2 * 1.5 (余裕) * pixel_scale / 4^n <= STROKE_TOLERANCE
+    let error = sagitta * 0.75 * pixel_scale;
+    let count = 0;
+    while (error > STROKE_TOLERANCE && count < SPLIT_COUNT) {
+        error *= 0.25;
+        ++count;
+    }
+    return count;
+};
+
+/**
  * @description カーブの矩形を計算する
  *              Calculate curve rectangle
  *
- *              曲線を 32 区間に分割し、各区間を左右へ thickness だけずらした輪郭を返す。
+ *              曲線を分割し、各区間を左右へ thickness だけずらした輪郭を返す。分割数は、画面上の拡大率
+ *              (pixel_scale) が分かれば必要な分だけ (1〜32 区間)、分からなければ 32 区間にする。
+ *              小さな図形の輪郭 (文字や数字の縁取りなど) は 1〜2 区間で足りることが多く、常に 32 区間に
+ *              分けると、輪郭の計算と、そのあとの頂点の生成がそれだけ重くなる。
  *              線の輪郭は図形を初めて描くときに曲線ごとに計算されるため、点や区間ごとに
  *              オブジェクトや配列を作ると、その確保と回収が描画の停止として現れる。
  *              ここでは作業領域を使い回し、結果の配列だけを作る。
  *
- *              Splits the curve into 32 segments and returns the outline offset by thickness on both sides.
+ *              Splits the curve and returns the outline offset by thickness on both sides. With a known
+ *              on-screen scale (pixel_scale) only as many segments as needed are used (1 to 32);
+ *              otherwise 32. Outlines of small shapes usually need one or two segments.
  *              Outlines are computed per curve the first time a shape is drawn, so allocating an object or
  *              an array per point or segment shows up as a stall. Work buffers are reused here and only
  *              the result array is allocated.
@@ -114,6 +209,9 @@ const $offsetPoint = (
  * @param  {IPoint} control_point
  * @param  {IPoint} end_point
  * @param  {number} thickness
+ * @param  {number} [pixel_scale=0] 曲線の座標 1 単位が画面上で何ピクセルになるか。0 以下なら最大数で分割する。
+ *                                  On-screen pixels per unit of the curve's coordinates. 0 or less splits
+ *                                  into the maximum number of segments.
  * @return {IPath}
  * @memthod
  * @protected
@@ -122,10 +220,18 @@ export const execute = (
     start_point: IPoint,
     control_point: IPoint,
     end_point: IPoint,
-    thickness: number
+    thickness: number,
+    pixel_scale: number = 0
 ): IPath => {
 
-    // 曲線を半分に分割することを SPLIT_COUNT 回繰り返す (De Casteljau、t = 0.5)
+    const splitCount = $strokeSplitCount(
+        start_point.x, start_point.y,
+        control_point.x, control_point.y,
+        end_point.x, end_point.y,
+        thickness, pixel_scale
+    );
+
+    // 曲線を半分に分割することを splitCount 回繰り返す (De Casteljau、t = 0.5)
     let segments = $segments;
     let nextSegments = $nextSegments;
     segments[0] = start_point.x;
@@ -136,7 +242,7 @@ export const execute = (
     segments[5] = end_point.y;
 
     let count = 1;
-    for (let split = 0; split < SPLIT_COUNT; ++split) {
+    for (let split = 0; split < splitCount; ++split) {
         for (let idx = 0; idx < count; ++idx) {
             const source = idx * 6;
             const x0 = segments[source];
