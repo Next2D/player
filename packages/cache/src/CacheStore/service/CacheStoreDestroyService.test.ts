@@ -33,7 +33,8 @@ describe("CacheStoreDestroyService.js test", () =>
         execute(pool, mockContext);
 
         expect(pool.length).toBe(1);
-        expect(state).toBe("clear");
+        // 大きさの設定で初期化されるので、全面の消去は行わない
+        expect(state).toBe("");
         expect(mockContext.canvas.width).toBe(1);
         expect(mockContext.canvas.height).toBe(1);
     });
