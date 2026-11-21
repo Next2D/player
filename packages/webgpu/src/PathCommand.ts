@@ -153,12 +153,15 @@ export class PathCommand
      * @param {number} cy2
      * @param {number} x
      * @param {number} y
+     * @param {number} [pixel_scale=0] 曲線の座標 1 単位が画面上で何ピクセルになるか。渡すと、近似の誤差から
+     *                                 2次ベジェ曲線の本数を決める。0 以下なら従来の分割。
      * @return {void}
      */
     bezierCurveTo(
         cx1: number, cy1: number,
         cx2: number, cy2: number,
-        x: number, y: number
+        x: number, y: number,
+        pixel_scale: number = 0
     ): void {
         // 適応的テッセレーションで三次ベジェを二次ベジェ群に変換
         const p0: IPoint = { "x": this.$currentX, "y": this.$currentY };
@@ -168,7 +171,8 @@ export class PathCommand
 
         const segments = adaptiveCubicToQuad(
             p0, p1, p2, p3,
-            this.$flatnessThreshold
+            this.$flatnessThreshold,
+            pixel_scale
         );
 
         // 各二次ベジェセグメントをパスに追加

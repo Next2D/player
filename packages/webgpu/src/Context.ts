@@ -905,7 +905,16 @@ export class Context
      */
     bezierCurveTo (cx1: number, cy1: number, cx2: number, cy2: number, x: number, y: number): void
     {
-        this.pathCommand.bezierCurveTo(cx1, cy1, cx2, cy2, x, y);
+        // 曲線の座標 1 単位が画面上で何ピクセルになるか (描画行列の x 軸 / y 軸方向の拡大率の大きい方)。
+        // 2次ベジェ曲線で近似するときの本数を、画面上の誤差から決めるのに使う。
+        const matrix = this.$matrix;
+        const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const scaleY = Math.sqrt(matrix[3] * matrix[3] + matrix[4] * matrix[4]);
+
+        this.pathCommand.bezierCurveTo(
+            cx1, cy1, cx2, cy2, x, y,
+            scaleX > scaleY ? scaleX : scaleY
+        );
     }
 
     /**
