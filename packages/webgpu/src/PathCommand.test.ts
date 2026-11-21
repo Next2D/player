@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { PathCommand } from "./PathCommand";
+import { adaptiveCubicToQuad } from "./BezierConverter/BezierConverter";
 
 describe("PathCommand", () =>
 {
@@ -113,6 +114,54 @@ describe("PathCommand", () =>
             const vertices = pathCommand.getVerticesForStroke();
             // Should have at least start point and some segments
             expect(vertices[0].length).toBeGreaterThan(3);
+        });
+
+        it("adds a curve that fits one quadratic directly, with the same result as the general conversion", () =>
+        {
+            const curves = [
+                [17.28, 0, 16.91, 0, 16.48, 0.02, 16.01, 0.07],
+                [0, 0, 20, 40, 40, 40, 60, 0],
+                [50, 0, 50, 27.6, 27.6, 50, 0, 50],
+                [200, 0, 200, 110.4, 110.4, 200, 0, 200]
+            ];
+
+            let single = 0;
+            for (const scale of [0.25, 0.5, 1, 2.5]) {
+                for (const curve of curves) {
+                    const expected = adaptiveCubicToQuad(
+                        { "x": curve[0], "y": curve[1] },
+                        { "x": curve[2], "y": curve[3] },
+                        { "x": curve[4], "y": curve[5] },
+                        { "x": curve[6], "y": curve[7] },
+                        0.25, scale
+                    );
+                    if (expected.length === 1) {
+                        ++single;
+                    }
+
+                    const command = new PathCommand();
+                    command.moveTo(curve[0], curve[1]);
+                    command.bezierCurveTo(
+                        curve[2], curve[3], curve[4], curve[5], curve[6], curve[7], scale
+                    );
+
+                    const path = command.getVerticesForStroke()[0];
+                    expect(path.length).toBe(3 + expected.length * 6);
+                    for (let idx = 0; idx < expected.length; ++idx) {
+                        const offset = 3 + idx * 6;
+                        expect(path[offset]).toBeCloseTo(expected[idx].ctrl.x, 10);
+                        expect(path[offset + 1]).toBeCloseTo(expected[idx].ctrl.y, 10);
+                        expect(path[offset + 2]).toBe(true);
+                        expect(path[offset + 3]).toBeCloseTo(expected[idx].end.x, 10);
+                        expect(path[offset + 4]).toBeCloseTo(expected[idx].end.y, 10);
+                        expect(path[offset + 5]).toBe(false);
+                    }
+                }
+            }
+
+            // 1 本で足りる場合と、複数本に分かれる場合の両方を通っていること
+            expect(single).toBeGreaterThan(0);
+            expect(single).toBeLessThan(16);
         });
     });
 
