@@ -7,6 +7,58 @@ export let $readFrameBuffer: WebGLFramebuffer;
 export const $setReadFrameBuffer = (gl: WebGL2RenderingContext): void =>
 {
     $readFrameBuffer = gl.createFramebuffer() as NonNullable<WebGLFramebuffer>;
+    $attachedColor   = null;
+    $attachedStencil = null;
+};
+
+/**
+ * @description $readFrameBuffer の COLOR_ATTACHMENT0 に現在アタッチしているリソース
+ *              (WebGLRenderbuffer または WebGLTexture)。同じものの付け直しを省くために覚えておく。
+ *              $readFrameBuffer のアタッチメントを変えるのは
+ *              FrameBufferManagerBindAttachmentObjectService だけ。
+ *              The resource currently attached to COLOR_ATTACHMENT0 of $readFrameBuffer, kept so that
+ *              re-attaching the same one can be skipped.
+ *
+ * @type {WebGLRenderbuffer | WebGLTexture | null}
+ * @protected
+ */
+export let $attachedColor: WebGLRenderbuffer | WebGLTexture | null = null;
+
+/**
+ * @description $attachedColor を更新
+ *              Update $attachedColor
+ *
+ * @param  {WebGLRenderbuffer | WebGLTexture | null} resource
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setAttachedColor = (resource: WebGLRenderbuffer | WebGLTexture | null): void =>
+{
+    $attachedColor = resource;
+};
+
+/**
+ * @description $readFrameBuffer の STENCIL_ATTACHMENT に現在アタッチしている WebGLRenderbuffer
+ *              The WebGLRenderbuffer currently attached to STENCIL_ATTACHMENT of $readFrameBuffer
+ *
+ * @type {WebGLRenderbuffer | null}
+ * @protected
+ */
+export let $attachedStencil: WebGLRenderbuffer | null = null;
+
+/**
+ * @description $attachedStencil を更新
+ *              Update $attachedStencil
+ *
+ * @param  {WebGLRenderbuffer | null} resource
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $setAttachedStencil = (resource: WebGLRenderbuffer | null): void =>
+{
+    $attachedStencil = resource;
 };
 
 export let $drawFrameBuffer: WebGLFramebuffer | null = null;

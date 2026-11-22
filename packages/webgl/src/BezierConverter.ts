@@ -119,6 +119,80 @@ export const $getAdaptiveSubdivisionCount = (
 };
 
 /**
+ * @description 3次ベジェ曲線を2次ベジェ曲線で近似するときの、画面上の誤差の許容値 (ピクセル)
+ *              Allowed on-screen error in pixels when approximating a cubic Bezier curve with quadratic ones
+ *
+ * @type {number}
+ * @const
+ */
+const CUBIC_TOLERANCE: number = 0.05;
+
+/**
+ * @description 3次ベジェ曲線が 1 本の2次ベジェ曲線で足りるかどうかを、平方根を取らずに判定するための上限。
+ *              |P3 - 3 * P2 + 3 * P1 - P0|² * scale² がこの値以下なら 1 本で足りる。
+ *              (CUBIC_TOLERANCE / (√3 / 36))² = (0.05 * 36 / √3)² = 1.08
+ *              Limit for deciding without square roots whether one quadratic curve is enough:
+ *              one is enough when |P3 - 3 * P2 + 3 * P1 - P0|² * scale² is at most this value.
+ *
+ * @type {number}
+ * @const
+ */
+export const $CUBIC_SINGLE_SEGMENT_LIMIT: number = 1.08;
+
+/**
+ * @description 3次ベジェ曲線を何本の2次ベジェ曲線で近似するかを、画面上の誤差から求める。
+ *
+ *              3次ベジェ曲線を 1 本の2次ベジェ曲線 (制御点 = (3 * P1 + 3 * P2 - P0 - P3) / 4) で近似した
+ *              ときの誤差の上限は √3 / 36 * |P3 - 3 * P2 + 3 * P1 - P0|。曲線を n 等分してから近似すると、
+ *              誤差は 1 / n³ になる。画面上の誤差が CUBIC_TOLERANCE 以内になる最小の n を返す
+ *              (1 以上 MAX_SUBDIVISIONS 以下)。
+ *
+ *              制御点と弦の離れ具合 ($calculateFlatness) は「直線からどれだけ離れているか」であって、
+ *              2次曲線で近似したときの誤差とは対応しない。大きく曲がっていても2次曲線に近い曲線は
+ *              1 本で足り、小さな図形 (文字や数字の輪郭など) の曲線の多くがこれに当たる。
+ *
+ *              Returns how many quadratic Bezier curves are needed to approximate a cubic one, from the
+ *              on-screen error. Approximating a cubic with a single quadratic (control point
+ *              (3 * P1 + 3 * P2 - P0 - P3) / 4) has an error of at most √3 / 36 * |P3 - 3 * P2 + 3 * P1 - P0|,
+ *              and splitting the curve into n equal parts first divides the error by n³. The smallest n
+ *              keeping the on-screen error within CUBIC_TOLERANCE is returned (1 to MAX_SUBDIVISIONS).
+ *
+ * @param  {number} p0x
+ * @param  {number} p0y
+ * @param  {number} p1x
+ * @param  {number} p1y
+ * @param  {number} p2x
+ * @param  {number} p2y
+ * @param  {number} p3x
+ * @param  {number} p3y
+ * @param  {number} pixel_scale 曲線の座標 1 単位が画面上で何ピクセルになるか
+ *                              On-screen pixels per unit of the curve's coordinates
+ * @return {number}
+ * @method
+ * @protected
+ */
+export const $getCubicSegmentCount = (
+    p0x: number, p0y: number,
+    p1x: number, p1y: number,
+    p2x: number, p2y: number,
+    p3x: number, p3y: number,
+    pixel_scale: number
+): number => {
+
+    const dx = p3x - 3 * p2x + 3 * p1x - p0x;
+    const dy = p3y - 3 * p2y + 3 * p1y - p0y;
+
+    // √3 / 36 = 0.048112522432468816
+    const error = 0.048112522432468816 * Math.sqrt(dx * dx + dy * dy) * pixel_scale;
+
+    let count = 1;
+    while (count < MAX_SUBDIVISIONS && error > CUBIC_TOLERANCE * count * count * count) {
+        ++count;
+    }
+    return count;
+};
+
+/**
  * @description 適応的バッファのサイズを確保
  *              Ensure adaptive buffer size
  *

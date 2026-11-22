@@ -30,7 +30,10 @@ export const execute = (shape: Shape, src: string): void =>
         const context = canvas.getContext("2d", { "willReadFrequently": true }) as CanvasRenderingContext2D;
         context.drawImage(image, 0, 0, width, height);
 
-        const buffer = new Uint8Array(context.getImageData(0, 0, width, height).data);
+        // getImageData が返す配列は呼び出しごとに新しく作られるので、複写せずにそのまま参照する
+        // (複写すると、画像 1 枚につき全ピクセルの複写が 1 回増える)
+        const data   = context.getImageData(0, 0, width, height).data;
+        const buffer = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
         shapeSetBitmapBufferUseCase(shape, width, height, buffer);
 
         // 読み込み元のURLから uniqueKey を決める。未設定のままだと、描画時に全ピクセルを

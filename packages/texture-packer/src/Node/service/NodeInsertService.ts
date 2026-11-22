@@ -13,13 +13,22 @@ import type { Node } from "../../Node";
  */
 export const execute = (node: Node, width: number, height: number): Node | null =>
 {
-    if (node.used) {
-        const newNode = node.left?.insert(width, height);
-        return newNode ? newNode : node.right?.insert(width, height) || null;
-    }
-
+    // 子ノードは必ずこのノードの矩形の中にあるので、このノードに入らない大きさは子孫にも入らない。
+    // 使用中のノードでも先に判定して、入らない枝をたどらない。
     if (width > node.w || height > node.h) {
         return null;
+    }
+
+    if (node.used) {
+        const left = node.left;
+        if (left) {
+            const newNode = execute(left, width, height);
+            if (newNode) {
+                return newNode;
+            }
+        }
+        const right = node.right;
+        return right ? execute(right, width, height) : null;
     }
 
     if (width === node.w && height === node.h) {

@@ -50,6 +50,13 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
     prevPoint.x = 0;
     prevPoint.y = 0;
 
+    // 曲線の座標 1 単位が画面上で何ピクセルになるか (曲線の分割数を決めるのに使う)。
+    // 描画行列の x 軸 / y 軸方向の拡大率の大きい方。
+    const matrix = $context.$matrix;
+    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+    const scaleY = Math.sqrt(matrix[3] * matrix[3] + matrix[4] * matrix[4]);
+    const pixelScale = scaleX > scaleY ? scaleX : scaleY;
+
     const rectangles: IPath[] = [];
     for (let idx = 3; idx < vertices.length; idx += 3) {
 
@@ -66,7 +73,7 @@ export const execute = (vertices: IPath, thickness: number): IPath[] =>
         endPoint.y = y;
         if (vertices[idx - 1] as boolean) {
             rectangles.push(
-                meshCalculateCurveRectangleUseCase(startPoint, controlPoint, endPoint, thickness)
+                meshCalculateCurveRectangleUseCase(startPoint, controlPoint, endPoint, thickness, pixelScale)
             );
         } else {
             rectangles.push(

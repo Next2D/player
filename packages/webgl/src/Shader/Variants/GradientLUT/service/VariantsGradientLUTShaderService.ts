@@ -5,6 +5,7 @@ import {
 import { ShaderManager } from "../../../ShaderManager";
 import { TEXTURE_TEMPLATE } from "../../../Vertex/VertexShaderSource";
 import { GRADIENT_LUT_TEMPLATE } from "../../../Fragment/FragmentShaderSourceGradientLUT";
+import { $GRADIENT_LUT_SHARED_STOPS } from "../../../GradientLUTGenerator";
 
 /**
  * @description グラデーションLUTのシェーダーを返却（LRUキャッシュ使用）
@@ -20,6 +21,12 @@ export const execute = (
     stops_length: number,
     is_linear_space: boolean
 ): ShaderManager => {
+
+    // 共用するストップ数以下は、すべて同じシェーダーを使う (ストップ数ごとのリンクを避ける)。
+    // uniform を設定する側が、足りないストップを最後のストップで埋める。
+    if (stops_length < $GRADIENT_LUT_SHARED_STOPS) {
+        stops_length = $GRADIENT_LUT_SHARED_STOPS;
+    }
 
     const key1 = ("00" + stops_length).slice(-3);
     const key2 = is_linear_space ? "y" : "n";

@@ -3,6 +3,14 @@ import type { IPath } from "./interface/IPath";
 import { adaptiveCubicToQuad } from "./BezierConverter/BezierConverter";
 
 /**
+ * @description 3次ベジェ曲線を 1 本の2次ベジェ曲線で近似できる上限。
+ *              (許容誤差 0.05 ピクセル * 36 / √3)² = 1.08。WebGL版と同じ。
+ *              Upper limit for approximating a cubic Bezier curve with a single quadratic one.
+ *              (0.05 px tolerance * 36 / √3)² = 1.08. Same as the WebGL renderer.
+ */
+const CUBIC_SINGLE_SEGMENT_LIMIT: number = 1.08;
+
+/**
  * @description WebGPU用パスコマンド（WebGL互換形式）
  *              Path commands for WebGPU (WebGL compatible format)
  *
@@ -153,13 +161,39 @@ export class PathCommand
      * @param {number} cy2
      * @param {number} x
      * @param {number} y
+     * @param {number} [pixel_scale=0] 曲線の座標 1 単位が画面上で何ピクセルになるか。渡すと、近似の誤差から
+     *                                 2次ベジェ曲線の本数を決める。0 以下なら従来の分割。
      * @return {void}
      */
     bezierCurveTo(
         cx1: number, cy1: number,
         cx2: number, cy2: number,
-        x: number, y: number
+        x: number, y: number,
+        pixel_scale: number = 0
     ): void {
+        // 1 本の2次ベジェ曲線で足りる曲線 (小さな図形の曲線の大半) は、その場で経路へ追加する。
+        // 汎用の変換は点と区間のオブジェクトを曲線ごとに作るので、その確保を避ける。
+        // 判定と制御点は汎用の変換 (getCubicSegmentCount が 1 を返す場合) と同じ式:
+        //   誤差 = √3 / 36 * |P3 - 3 * P2 + 3 * P1 - P0| * pixel_scale <= 0.05
+        //   ⇔ |P3 - 3 * P2 + 3 * P1 - P0|² * pixel_scale² <= 1.08
+        if (pixel_scale > 0) {
+            const fromX = this.$currentX;
+            const fromY = this.$currentY;
+            const dx = x - 3 * cx2 + 3 * cx1 - fromX;
+            const dy = y - 3 * cy2 + 3 * cy1 - fromY;
+            if ((dx * dx + dy * dy) * pixel_scale * pixel_scale <= CUBIC_SINGLE_SEGMENT_LIMIT) {
+                this.$currentPath.push(
+                    (3 * cx1 + 3 * cx2 - fromX - x) * 0.25,
+                    (3 * cy1 + 3 * cy2 - fromY - y) * 0.25,
+                    true,
+                    x, y, false
+                );
+                this.$currentX = x;
+                this.$currentY = y;
+                return;
+            }
+        }
+
         // 適応的テッセレーションで三次ベジェを二次ベジェ群に変換
         const p0: IPoint = { "x": this.$currentX, "y": this.$currentY };
         const p1: IPoint = { "x": cx1, "y": cy1 };
@@ -168,7 +202,8 @@ export class PathCommand
 
         const segments = adaptiveCubicToQuad(
             p0, p1, p2, p3,
-            this.$flatnessThreshold
+            this.$flatnessThreshold,
+            pixel_scale
         );
 
         // 各二次ベジェセグメントをパスに追加

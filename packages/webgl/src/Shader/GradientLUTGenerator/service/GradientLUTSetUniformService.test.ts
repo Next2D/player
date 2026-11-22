@@ -97,3 +97,59 @@ describe("GradientLUTSetUniformService.ts method test", () =>
         expect(mediump[4]).toBe(128);  // ratio
     });
 });
+
+describe("GradientLUTSetUniformService.ts shared shader padding", () =>
+{
+    it("pads missing stops with the last stop when the shader is the shared 8-stop one", () =>
+    {
+        // 共用のシェーダー (8 ストップ用): vec4 が 10 個 (色 8 + 位置 2)
+        const mediump = new Float32Array(10 * 4).fill(-1);
+        const mockShaderManager = {
+            "mediump": mediump
+        } as unknown as ShaderManager;
+
+        const stops = [
+            0,   0, 1, 2, 3,
+            127, 4, 5, 6, 7,
+            255, 8, 9, 10, 11
+        ];
+        const table = new Float32Array(12);
+        for (let idx = 0; idx < 12; ++idx) {
+            table[idx] = idx / 16;
+        }
+
+        execute(mockShaderManager, stops, 0, 3, table);
+
+        // 色: 3 個 + 最後の色で 5 個分を埋める
+        for (let idx = 0; idx < 12; ++idx) {
+            expect(mediump[idx]).toBe(idx / 16);
+        }
+        for (let stop = 3; stop < 8; ++stop) {
+            expect(mediump[stop * 4]).toBe(8 / 16);
+            expect(mediump[stop * 4 + 1]).toBe(9 / 16);
+            expect(mediump[stop * 4 + 2]).toBe(10 / 16);
+            expect(mediump[stop * 4 + 3]).toBe(11 / 16);
+        }
+
+        // 位置: 色 8 個の後ろから。足りない分は最後の位置
+        expect(Array.from(mediump.subarray(32, 40))).toEqual([0, 127, 255, 255, 255, 255, 255, 255]);
+    });
+
+    it("does not pad when all 8 stops are given", () =>
+    {
+        const mediump = new Float32Array(10 * 4).fill(-1);
+        const mockShaderManager = {
+            "mediump": mediump
+        } as unknown as ShaderManager;
+
+        const stops: number[] = [];
+        for (let idx = 0; idx < 8; ++idx) {
+            stops.push(idx * 30, 0, 0, 0, 0);
+        }
+
+        execute(mockShaderManager, stops, 0, 8, new Float32Array([0.5]));
+
+        expect(Array.from(mediump.subarray(0, 32))).toEqual(new Array(32).fill(0.5));
+        expect(Array.from(mediump.subarray(32, 40))).toEqual([0, 30, 60, 90, 120, 150, 180, 210]);
+    });
+});

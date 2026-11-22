@@ -9,7 +9,11 @@ import {
     $setFramebufferBound,
     $setCurrentAttachment,
     $readFrameBuffer,
-    $isFramebufferBound
+    $isFramebufferBound,
+    $attachedColor,
+    $setAttachedColor,
+    $attachedStencil,
+    $setAttachedStencil
 } from "../../FrameBufferManager";
 
 /**
@@ -30,19 +34,28 @@ export const execute = (attachment_object: IAttachmentObject): void =>
         $gl.bindFramebuffer($gl.FRAMEBUFFER, $readFrameBuffer);
     }
 
+    // 描画先の切り替えは図形ごとに起きるので、GL の呼び出しを必要な分だけにする:
+    // - framebufferRenderbuffer はレンダーバッファを引数で受け取るので、bindRenderbuffer は要らない
+    // - すでに同じリソースがアタッチされていれば、付け直さない
     if (attachment_object.msaa) {
-        $gl.bindRenderbuffer($gl.RENDERBUFFER, (attachment_object.color as IColorBufferObject).resource);
-        $gl.framebufferRenderbuffer(
-            $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
-            $gl.RENDERBUFFER, (attachment_object.color as IColorBufferObject).resource
-        );
+        const color = (attachment_object.color as IColorBufferObject).resource;
+        if ($attachedColor !== color) {
+            $setAttachedColor(color);
+            $gl.framebufferRenderbuffer(
+                $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
+                $gl.RENDERBUFFER, color
+            );
+        }
     } else {
         textureManagerBind0UseCase(attachment_object.texture as ITextureObject);
-
-        $gl.framebufferTexture2D(
-            $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
-            $gl.TEXTURE_2D, (attachment_object.texture as ITextureObject).resource, 0
-        );
+        const texture = (attachment_object.texture as ITextureObject).resource;
+        if ($attachedColor !== texture) {
+            $setAttachedColor(texture);
+            $gl.framebufferTexture2D(
+                $gl.FRAMEBUFFER, $gl.COLOR_ATTACHMENT0,
+                $gl.TEXTURE_2D, texture, 0
+            );
+        }
 
         // テクスチャフィードバックループを防止:
         // WebGL2ではテクスチャユニットにバインドされたテクスチャが描画フレームバッファにも
@@ -51,9 +64,12 @@ export const execute = (attachment_object: IAttachmentObject): void =>
         textureManagerBindService(0, $gl.TEXTURE0, null);
     }
 
-    $gl.bindRenderbuffer($gl.RENDERBUFFER, (attachment_object.stencil as IStencilBufferObject).resource);
-    $gl.framebufferRenderbuffer(
-        $gl.FRAMEBUFFER, $gl.STENCIL_ATTACHMENT,
-        $gl.RENDERBUFFER, (attachment_object.stencil as IStencilBufferObject).resource
-    );
+    const stencil = (attachment_object.stencil as IStencilBufferObject).resource;
+    if ($attachedStencil !== stencil) {
+        $setAttachedStencil(stencil);
+        $gl.framebufferRenderbuffer(
+            $gl.FRAMEBUFFER, $gl.STENCIL_ATTACHMENT,
+            $gl.RENDERBUFFER, stencil
+        );
+    }
 };

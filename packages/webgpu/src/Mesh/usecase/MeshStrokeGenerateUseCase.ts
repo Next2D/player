@@ -137,6 +137,95 @@ const $offsetPoint = (
 };
 
 /**
+ * @description 画面上の誤差の許容値 (ピクセル)。輪郭の近似がこの距離以内に収まる分割回数を選ぶ。
+ *              Allowed on-screen error in pixels. The split count is chosen so that the outline
+ *              approximation stays within this distance.
+ *
+ * @type {number}
+ * @const
+ */
+const STROKE_TOLERANCE: number = 0.05;
+
+/**
+ * @description 2次ベジェ曲線の線の輪郭を作るときに、曲線を半分に分割する回数を求める。
+ *
+ *              輪郭は、分割した各区間を「t = 0, 0.5, 1 の点を法線方向へずらした 3 点」の 2 次ベジェで
+ *              近似する。区間 1 つの弦からのふくらみは (D + thickness * θ² / 8) / 4^n、近似の誤差は
+ *              その約半分になる (D = |P0 - 2 * P1 + P2| / 4、θ = 始点と終点の接線がなす角、n = 分割回数)。
+ *              見積もりに 1.5 倍の余裕を持たせ、画面上の誤差が STROKE_TOLERANCE 以内になる最小の n を返す。
+ *              折り返しに近い曲線 (θ が 2 ラジアンを超える) は見積もりが甘くなるので、最大回数にする。
+ *              pixel_scale が 0 以下のとき (画面上の拡大率が分からない) も最大回数にする。
+ *
+ *              Returns how many times a quadratic Bezier curve is halved when building a stroke outline.
+ *              Each resulting segment is approximated by the quadratic through the points at t = 0, 0.5
+ *              and 1 moved along the normal. The sagitta of one segment is
+ *              (D + thickness * θ² / 8) / 4^n and the approximation error is about half of it
+ *              (D = |P0 - 2 * P1 + P2| / 4, θ = angle between the end tangents, n = split count).
+ *              With a 1.5x margin, the smallest n keeping the on-screen error within STROKE_TOLERANCE is
+ *              returned. Curves that nearly fold back (θ above 2 radians) and an unknown scale
+ *              (pixel_scale <= 0) use the maximum.
+ *
+ * @param  {number} x0
+ * @param  {number} y0
+ * @param  {number} x1
+ * @param  {number} y1
+ * @param  {number} x2
+ * @param  {number} y2
+ * @param  {number} thickness
+ * @param  {number} pixel_scale
+ * @return {number}
+ * @method
+ * @private
+ */
+const $strokeSplitCount = (
+    x0: number, y0: number,
+    x1: number, y1: number,
+    x2: number, y2: number,
+    thickness: number,
+    pixel_scale: number
+): number => {
+
+    if (!(pixel_scale > 0)) {
+        return SPLIT_COUNT;
+    }
+
+    const ax = x1 - x0;
+    const ay = y1 - y0;
+    const bx = x2 - x1;
+    const by = y2 - y1;
+    const lengthA = Math.sqrt(ax * ax + ay * ay);
+    const lengthB = Math.sqrt(bx * bx + by * by);
+    if (lengthA === 0 || lengthB === 0) {
+        return SPLIT_COUNT;
+    }
+
+    let cosine = (ax * bx + ay * by) / (lengthA * lengthB);
+    if (cosine > 1) {
+        cosine = 1;
+    } else if (cosine < -1) {
+        cosine = -1;
+    }
+    const theta = Math.acos(cosine);
+    if (theta > 2) {
+        return SPLIT_COUNT;
+    }
+
+    const dx = x0 - 2 * x1 + x2;
+    const dy = y0 - 2 * y1 + y2;
+    const sagitta = Math.sqrt(dx * dx + dy * dy) / 4
+        + Math.abs(thickness) * theta * theta / 8;
+
+    // 誤差 (ピクセル) = sagitta / 2 * 1.5 (余裕) * pixel_scale / 4^n <= STROKE_TOLERANCE
+    let error = sagitta * 0.75 * pixel_scale;
+    let count = 0;
+    while (error > STROKE_TOLERANCE && count < SPLIT_COUNT) {
+        error *= 0.25;
+        ++count;
+    }
+    return count;
+};
+
+/**
  * @description カーブの矩形を計算（WebGL版のMeshCalculateCurveRectangleUseCaseと同じ）
  *              Calculate curve rectangle (same as WebGL MeshCalculateCurveRectangleUseCase)
  *
@@ -151,16 +240,28 @@ const $offsetPoint = (
  * @param  {IPoint} control_point - 制御点 / Control point
  * @param  {IPoint} end_point - 終点 / End point
  * @param  {number} thickness - 線の太さ（半分の値） / Half line thickness
+ * @param  {number} [pixel_scale=0] - 曲線の座標 1 単位が画面上で何ピクセルになるか。0 以下なら最大数で分割する
+ *                                    / On-screen pixels per unit of the curve's coordinates. 0 or less splits
+ *                                    into the maximum number of segments
  * @return {IPath} カーブ矩形パス / Curve rectangle path
  */
 export const calculateCurveRectangle = (
     start_point: IPoint,
     control_point: IPoint,
     end_point: IPoint,
-    thickness: number
+    thickness: number,
+    pixel_scale: number = 0
 ): IPath => {
 
-    // WebGL版と同じ分割数（5回分割 = 32セグメント）。De Casteljau で t = 0.5 の分割を繰り返す
+    // 画面上の誤差から必要な分割回数を決める (WebGL版と同じ)。拡大率が分からなければ最大 (32セグメント)
+    const splitCount = $strokeSplitCount(
+        start_point.x, start_point.y,
+        control_point.x, control_point.y,
+        end_point.x, end_point.y,
+        thickness, pixel_scale
+    );
+
+    // De Casteljau で t = 0.5 の分割を splitCount 回繰り返す
     let segments = $segments;
     let nextSegments = $nextSegments;
     segments[0] = start_point.x;
@@ -171,7 +272,7 @@ export const calculateCurveRectangle = (
     segments[5] = end_point.y;
 
     let count = 1;
-    for (let split = 0; split < SPLIT_COUNT; ++split) {
+    for (let split = 0; split < splitCount; ++split) {
         for (let idx = 0; idx < count; ++idx) {
             const source = idx * 6;
             const x0 = segments[source];
@@ -767,6 +868,13 @@ export const generateStrokeOutline = (vertices: IPath, thickness: number): IPath
     prevPoint.x = 0;
     prevPoint.y = 0;
 
+    // 曲線の座標 1 単位が画面上で何ピクセルになるか (曲線の分割数を決めるのに使う)。
+    // 描画行列の x 軸 / y 軸方向の拡大率の大きい方。
+    const matrix = $context.$matrix;
+    const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+    const scaleY = Math.sqrt(matrix[3] * matrix[3] + matrix[4] * matrix[4]);
+    const pixelScale = scaleX > scaleY ? scaleX : scaleY;
+
     const rectangles: IPath[] = [];
     for (let idx = 3; idx < vertices.length; idx += 3) {
 
@@ -783,7 +891,7 @@ export const generateStrokeOutline = (vertices: IPath, thickness: number): IPath
         endPoint.y = y;
         if (vertices[idx - 1] as boolean) {
             rectangles.push(
-                calculateCurveRectangle(startPoint, controlPoint, endPoint, thickness)
+                calculateCurveRectangle(startPoint, controlPoint, endPoint, thickness, pixelScale)
             );
         } else {
             rectangles.push(
