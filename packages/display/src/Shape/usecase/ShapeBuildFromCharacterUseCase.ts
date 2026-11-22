@@ -1,7 +1,7 @@
 import type { Shape } from "../../Shape";
 import type { IShapeCharacter } from "../../interface/IShapeCharacter";
 import type { LoaderInfo } from "../../LoaderInfo";
-import { execute as graphicsToNumberArrayService } from "../../Graphics/service/GraphicsToNumberArrayService";
+import { execute as graphicsToBufferService } from "../../Graphics/service/GraphicsToBufferService";
 import { $poolArray } from "../../DisplayObjectUtil";
 import { BitmapData } from "../../BitmapData";
 import { Graphics } from "../../Graphics";
@@ -62,11 +62,9 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                             9
                         );
 
-                        const numberArray = graphicsToNumberArrayService(recodes);
-                        graphics.buffer = new Float32Array(numberArray);
+                        graphics.buffer = graphicsToBufferService(recodes);
 
                         $poolArray(recodes);
-                        $poolArray(numberArray);
                     }
 
                 } else {
@@ -95,11 +93,9 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
                                     bitmapData, null, true, false
                                 );
 
-                                const numberArray = graphicsToNumberArrayService(recodes);
-                                graphics.buffer = new Float32Array(numberArray);
+                                graphics.buffer = graphicsToBufferService(recodes);
 
                                 $poolArray(recodes);
-                                $poolArray(numberArray);
 
                             } else {
 
@@ -151,9 +147,7 @@ export const execute = (shape: Shape, character: IShapeCharacter): void =>
 
         default: // normal shape
             if (character.recodes) {
-                character.recodeBuffer = new Float32Array(
-                    graphicsToNumberArrayService(character.recodes)
-                );
+                character.recodeBuffer = graphicsToBufferService(character.recodes);
                 $poolArray(character.recodes);
                 character.recodes = null;
             }
