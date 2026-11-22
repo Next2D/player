@@ -1,8 +1,6 @@
 import type { IFillType } from "../../interface/IFillType";
-import { $getVertices } from "../../PathCommand";
-import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
+import { execute as meshFillCurrentPathUseCase } from "../../Mesh/usecase/MeshFillCurrentPathUseCase";
 import {
-    $addFillBuffer,
     $fillTypes,
     $fillBufferIndexes
 } from "../../Mesh";
@@ -17,17 +15,15 @@ import {
  */
 export const execute = (type: IFillType): void =>
 {
-    const vertices = $getVertices();
-    if (!vertices.length) {
+    // いまの経路を塗りのメッシュにして、塗りのバッファへ追加する
+    const indexCount = meshFillCurrentPathUseCase();
+    if (indexCount < 0) {
         return ;
     }
 
     // 塗りの種類を追加
     $fillTypes.push(type);
 
-    const mesh = meshFillGenerateUseCase(vertices);
-    $addFillBuffer(mesh.buffer);
-
     // 塗りのインデックスを追加
-    $fillBufferIndexes.push(mesh.indexCount);
+    $fillBufferIndexes.push(indexCount);
 };

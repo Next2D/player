@@ -108,8 +108,28 @@ export const execute = (
     is_clip: boolean = false
 ): void => {
 
+    // 実行環境が経路の実装を提供していれば (WebGL のみ)、経路の命令の並びをまとめて渡す
+    let pathCommands: boolean = "pathCommands" in $context;
+
     let index = 0;
     while (commands.length > index) {
+
+        if (pathCommands) {
+            const code = commands[index];
+            if (code === MOVE_TO || code === LINE_TO || code === CURVE_TO
+                || code === CUBIC || code === ARC || code === CLOSE_PATH
+            ) {
+                const next = ($context as unknown as {
+                    pathCommands: (commands: Float32Array, index: number) => number
+                }).pathCommands(commands, index);
+                if (next > index) {
+                    index = next;
+                    continue;
+                }
+                // この図形では使えない: 以降は 1 つずつ処理する
+                pathCommands = false;
+            }
+        }
 
         switch (commands[index++]) {
 
