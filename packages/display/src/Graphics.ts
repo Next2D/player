@@ -29,7 +29,7 @@ import { execute as graphicsMargePathService } from "./Graphics/service/Graphics
 import { execute as graphicsDrawEllipseService } from "./Graphics/service/GraphicsDrawEllipseService";
 import { execute as graphicsDrawRectService } from "./Graphics/service/GraphicsDrawRectService";
 import { execute as graphicsDrawRoundRectService } from "./Graphics/service/GraphicsDrawRoundRectService";
-import { execute as graphicsToNumberArrayService } from "./Graphics/service/GraphicsToNumberArrayService";
+import { execute as graphicsToBufferService } from "./Graphics/service/GraphicsToBufferService";
 import { execute as graphicsInvalidateOwnerCacheUseCase } from "./Graphics/usecase/GraphicsInvalidateOwnerCacheUseCase";
 import {
     $getArray,
@@ -1586,9 +1586,7 @@ export class Graphics
             this.endFill();
         }
 
-        const array = graphicsToNumberArrayService(this.$recodes);
-        this._$buffer = new Float32Array(array);
-        $poolArray(array);
+        this._$buffer = graphicsToBufferService(this.$recodes);
 
         // レコードの確定フラグを更新
         this.isConfirmed = true;

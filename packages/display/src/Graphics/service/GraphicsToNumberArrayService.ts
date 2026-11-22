@@ -26,21 +26,17 @@ import {
 import { BitmapData } from "../../BitmapData";
 
 /**
- * @description Graphicsのrecodesを解析して数値配列を生成します。
- *              Parses Graphics recodes and generates a numerical array.
+ * @description Graphicsのrecodesを解析して、数値を array へ追加します。
+ *              Parses Graphics recodes and appends the numbers to the array.
  *
  * @param  {array} recodes
- * @return {any[]}
+ * @param  {number[]} array
+ * @return {void}
  * @method
  * @public
  */
-export const execute = (recodes : any[] | null): any[] =>
+export const write = (recodes: any[], array: number[]): void =>
 {
-    if (!recodes) {
-        return [];
-    }
-
-    const array: number[] = $getArray();
     for (let idx = 0; idx < recodes.length;) {
 
         const type = recodes[idx++];
@@ -419,6 +415,24 @@ export const execute = (recodes : any[] | null): any[] =>
 
         }
     }
+};
 
+/**
+ * @description Graphicsのrecodesを解析して数値配列を生成します。
+ *              Parses Graphics recodes and generates a numerical array.
+ *
+ * @param  {array} recodes
+ * @return {any[]}
+ * @method
+ * @public
+ */
+export const execute = (recodes : any[] | null): any[] =>
+{
+    if (!recodes) {
+        return [];
+    }
+
+    const array: number[] = $getArray();
+    write(recodes, array);
     return array;
 };
