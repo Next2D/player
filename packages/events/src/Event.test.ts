@@ -24,6 +24,11 @@ describe("Event.js property test", () =>
         expect(Event.ENDED).toBe("ended");
     });
 
+    it("EXIT_FRAME test", () =>
+    {
+        expect(Event.EXIT_FRAME).toBe("exitFrame");
+    });
+
     it("ENTER_FRAME test", () =>
     {
         expect(Event.ENTER_FRAME).toBe("enterFrame");

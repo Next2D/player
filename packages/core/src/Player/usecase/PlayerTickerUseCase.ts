@@ -14,6 +14,13 @@ import { execute as playerGamepadTickerService } from "../service/PlayerGamepadT
 const enterFrameEvent: Event = new Event(Event.ENTER_FRAME);
 
 /**
+ * @private
+ * @constant
+ * @type {Event}
+ */
+const exitFrameEvent: Event = new Event(Event.EXIT_FRAME);
+
+/**
  * @description Playerの定期処理
  *              Regular processing of Player
  *
@@ -71,6 +78,11 @@ export const execute = (timestamp: number): void =>
             if ($cacheStore.$removeIds.length) {
                 playerRemoveCachePostMessageService();
             }
+        }
+
+        // フレーム処理終了イベント
+        if (stage.hasEventListener(Event.EXIT_FRAME)) {
+            stage.dispatchEvent(exitFrameEvent);
         }
     }
 
