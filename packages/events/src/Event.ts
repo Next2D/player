@@ -227,6 +227,19 @@ export class Event
     }
 
     /**
+     * @description MovieClip のフレーム処理が終了する度に発生します。
+     *              Occurs when the frame processing of a MovieClip ends.
+     *
+     * @return {string}
+     * @const
+     * @static
+     */
+    static get EXIT_FRAME (): string
+    {
+        return "exitFrame";
+    }
+
+    /**
      * @description MovieClip のフレームが変更される度に発生します。
      *              Occurs when the frame of a MovieClip changes.
      *

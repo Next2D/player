@@ -72,6 +72,11 @@ export const execute = (timestamp: number): void =>
                 playerRemoveCachePostMessageService();
             }
         }
+
+        // フレーム処理終了イベント
+        if (stage.hasEventListener(Event.EXIT_FRAME)) {
+            stage.dispatchEvent(enterFrameEvent);
+        }
     }
 
     // next frame
