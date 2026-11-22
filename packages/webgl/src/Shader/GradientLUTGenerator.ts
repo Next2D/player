@@ -68,6 +68,33 @@ export const $getGradientAttachmentObject = (): IAttachmentObject =>
 let $maxLength: number = 0;
 
 /**
+ * @description LUT 生成シェーダーを共用するストップ数。これ以下のストップ数のグラデーションは、
+ *              すべてこのストップ数用のシェーダーで処理する。
+ *
+ *              LUT 生成シェーダーはストップ数ごとに別のプログラムになるので、新しいストップ数の
+ *              グラデーションが初めて出るたびに、コンパイルとリンクが走る (画面が一瞬止まる)。
+ *              足りないストップを最後のストップ (同じ色・同じ位置) で埋めれば、埋めた区間は
+ *              通らないので、結果はストップ数ごとのシェーダーと同じになる。
+ *
+ *              The stop count whose LUT generator shader is shared. Gradients with this many stops
+ *              or fewer all use that one shader. The generator is a separate program per stop count,
+ *              so a program is compiled and linked whenever a new stop count first appears (a visible
+ *              stall). Padding the missing stops with the last stop (same color, same position) never
+ *              takes the padded segments, so the result equals the per-count shader's.
+ *
+ *              8 個にしているのは、シェーダーのコンパイルとリンクの時間がストップ数に対して急に
+ *              増えるため (16 個用は 8 個用の数十倍かかるドライバがある)。9 個以上は従来どおり
+ *              ストップ数ごとのシェーダーを使う。
+ *              It is 8 because compile and link time grows steeply with the stop count (on some
+ *              drivers the 16-stop shader takes tens of times longer than the 8-stop one). Nine or
+ *              more stops keep using a shader per stop count.
+ *
+ * @type {number}
+ * @const
+ */
+export const $GRADIENT_LUT_SHARED_STOPS: number = 8;
+
+/**
  * @description 最大長を返却
  *              Returns the maximum length
  *

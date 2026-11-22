@@ -57,4 +57,19 @@ describe("VariantsGradientLUTShaderService.ts method test", () =>
 
         expect($getFromCache).toHaveBeenCalled();
     });
+
+    it("test case - stop counts up to 8 share one shader per color space", () =>
+    {
+        const a = execute(2, false);
+        expect(execute(5, false)).toBe(a);
+        expect(execute(8, false)).toBe(a);
+
+        // 色空間が違えば別のシェーダー
+        expect(execute(2, true)).not.toBe(a);
+
+        // 9 個以上はストップ数ごと
+        const b = execute(9, false);
+        expect(b).not.toBe(a);
+        expect(execute(10, false)).not.toBe(b);
+    });
 });

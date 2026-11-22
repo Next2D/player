@@ -87,3 +87,28 @@ describe("GradientLUTSetFilterUniformService.ts method test", () =>
         expect(mediump[4]).toBeCloseTo(128 / 255, 5);
     });
 });
+
+describe("GradientLUTSetFilterUniformService.ts shared shader padding", () =>
+{
+    it("pads missing stops with the last stop when the shader is the shared 8-stop one", () =>
+    {
+        const mediump = new Float32Array(10 * 4).fill(-1);
+        const mockShaderManager = {
+            "mediump": mediump
+        } as unknown as Parameters<typeof execute>[0];
+
+        execute(
+            mockShaderManager,
+            new Float32Array([0, 255]),
+            new Float32Array([0xff0000, 0x0000ff]),
+            new Float32Array([1, 0.5]),
+            0, 2
+        );
+
+        expect(Array.from(mediump.subarray(0, 8))).toEqual([1, 0, 0, 1, 0, 0, 1, 0.5]);
+        for (let stop = 2; stop < 8; ++stop) {
+            expect(Array.from(mediump.subarray(stop * 4, stop * 4 + 4))).toEqual([0, 0, 1, 0.5]);
+        }
+        expect(Array.from(mediump.subarray(32, 40))).toEqual([0, 1, 1, 1, 1, 1, 1, 1]);
+    });
+});
