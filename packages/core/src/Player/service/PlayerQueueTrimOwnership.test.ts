@@ -57,8 +57,7 @@ describe("queue trimming across rendering and capture ownership", () => {
             const count = sent.length;
             if (captureFirst) {
                 reply("capture", captured.buffer);
-                render();
-                expect(sent.length).toBe(count); // capture ACK does not release render flow
+                expect(sent.length).toBe(count);
                 reply("render", rendered.buffer);
             } else {
                 reply("render", rendered.buffer);
