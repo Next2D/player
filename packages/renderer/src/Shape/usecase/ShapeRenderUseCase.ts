@@ -128,7 +128,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             $context.endNodeRendering();
 
             if (currentAttachment) {
-                $context.bind(currentAttachment as any);
+                // 元の描画先へ戻す。GL の切り替えは、次に GL で描く時点まで保留される
+                // (未キャッシュの描画が続く間は、アトラスに切り替えたままになる)
+                $context.deferBind(currentAttachment as any);
             }
 
         } else {
@@ -179,7 +181,9 @@ export const execute = (render_queue: Float32Array, index: number): number =>
             $context.endNodeRendering();
 
             if (currentAttachment) {
-                $context.bind(currentAttachment as any);
+                // 元の描画先へ戻す。GL の切り替えは、次に GL で描く時点まで保留される
+                // (未キャッシュの描画が続く間は、アトラスに切り替えたままになる)
+                $context.deferBind(currentAttachment as any);
             }
         }
 
