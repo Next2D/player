@@ -3,6 +3,7 @@ import type { IPath } from "./interface/IPath";
 import { adaptiveCubicToQuad } from "./BezierConverter/BezierConverter";
 import {
     $nativeShape,
+    $nativeStroke,
     $NATIVE_FILL_PATH,
     $setNativeFillSize
 } from "./NativeShape";
@@ -397,6 +398,37 @@ export class PathCommand
             vertices.push(this.$currentPath);
         }
         return vertices;
+    }
+
+    /**
+     * @description 線のメッシュの元になる経路を取得する。
+     *              経路が実行環境の側にあり、実行環境が線の外周の計算を提供していれば、経路を線の外周へ
+     *              置き換えて目印 ($NATIVE_FILL_PATH) を返す (メッシュも実行環境の側で作る)。
+     *              それ以外は getVerticesForStroke と同じ経路を返すので、呼び出し側が線の外周を計算する。
+     *              Returns the paths a stroke mesh is built from. When the path lives on the runtime
+     *              side and the runtime provides the stroke outline computation, the path is replaced
+     *              by its outline and the marker ($NATIVE_FILL_PATH) is returned (the mesh is built on
+     *              the runtime side as well). Otherwise the same paths as getVerticesForStroke are
+     *              returned and the caller computes the outline.
+     *
+     * @param  {number} half_thickness 線の太さの半分
+     * @param  {number} joints
+     * @param  {number} caps
+     * @param  {number} pixel_scale 座標 1 単位が画面上で何ピクセルになるか
+     * @return {IPath[]}
+     */
+    getStrokeSource(half_thickness: number, joints: number, caps: number, pixel_scale: number): IPath[]
+    {
+        if (this.$native && $nativeStroke) {
+            const size = ($nativeShape as { strokeSize: (t: number, j: number, c: number, p: number) => number })
+                .strokeSize(half_thickness, joints, caps, pixel_scale);
+            if (!size) {
+                return $EMPTY_VERTICES;
+            }
+            $setNativeFillSize(size);
+            return $NATIVE_FILL_PATH;
+        }
+        return this.getVerticesForStroke();
     }
 
     /**

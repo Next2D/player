@@ -2,6 +2,11 @@ import type { IPath } from "../../interface/IPath";
 import type { IMeshResult } from "../../interface/IMeshResult";
 import { generateStrokeOutline } from "./MeshStrokeGenerateUseCase";
 import { execute as meshStrokeFillGenerateService } from "../service/MeshStrokeFillGenerateService";
+import {
+    $nativeShape,
+    $nativeFillSize,
+    $NATIVE_FILL_PATH
+} from "../../NativeShape";
 
 /**
  * @description メッシュ生成用の再利用可能な一時バッファ（GC回避）
@@ -41,6 +46,18 @@ export const execute = (
     vertices: IPath[],
     thickness: number
 ): IMeshResult => {
+
+    // 経路が実行環境の側にあるときは、線の外周はすでに計算済みで、メッシュもそちらで作る
+    if (vertices === $NATIVE_FILL_PATH && $nativeShape) {
+        if ($meshTempBuffer.length < $nativeFillSize) {
+            $meshTempBuffer = new Float32Array($upperPowerOfTwo($nativeFillSize));
+        }
+        const indexCount = $nativeShape.fill($meshTempBuffer, true);
+        return {
+            "buffer": $meshTempBuffer.subarray(0, indexCount * 4),
+            "indexCount": indexCount
+        };
+    }
 
     const halfThickness = thickness / 2;
 
