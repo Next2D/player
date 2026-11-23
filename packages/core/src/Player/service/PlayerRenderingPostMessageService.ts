@@ -43,6 +43,24 @@ const $options: Transferable[] = [];
 let $limitRenderQueue: boolean = false;
 let $pendingRenders: number = 0;
 
+/**
+ * @description レンダラーに処理中のまま預けておける描画の数の上限。
+ *              1 にすると、返事が届くまで次の描画を送れず、メインとレンダラーが順番待ちになる:
+ *              メインが描画を送るまでの時間とレンダラーの 1 回の処理時間の合計が画面の更新 1 回分を
+ *              超えると、どちらも単独では間に合っていても 1 コマ抜ける。2 なら、レンダラーが前の描画を
+ *              処理している間にメインが次の描画を作って送れる。溜まり続けることはない (上限で止まる)。
+ *              The maximum number of renders left with the renderer at a time. With 1, the next
+ *              render cannot be sent until the reply arrives, which serializes the two threads: a
+ *              frame is dropped whenever the main thread's time before sending plus the renderer's
+ *              time for one render exceeds one display refresh, even though each fits on its own.
+ *              With 2, the main thread can build and send the next render while the renderer works
+ *              on the previous one. The backlog stays bounded by this limit.
+ *
+ * @type {number}
+ * @const
+ */
+const $MAX_PENDING_RENDERS: number = 2;
+
 // 受け取りイベントを登録
 $rendererWorker.addEventListener("message", (event: MessageEvent): void =>
 {
@@ -74,9 +92,9 @@ $rendererWorker.addEventListener("message", (event: MessageEvent): void =>
  */
 export const execute = (): void =>
 {
-    // Do not generate/consume cache changes while the renderer is busy.
+    // Do not generate/consume cache changes while the renderer has a backlog.
     // stage.changed remains set, so the next tick sends the latest display state.
-    if ($limitRenderQueue && $pendingRenders) {
+    if ($limitRenderQueue && $pendingRenders >= $MAX_PENDING_RENDERS) {
         return;
     }
 

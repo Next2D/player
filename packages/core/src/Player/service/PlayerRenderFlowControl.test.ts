@@ -25,11 +25,23 @@ describe("Renderer request flow control", () => {
         execute(); execute();
         expect(mocks.post).toHaveBeenCalledTimes(2);
         receive({ message: "renderFlowControl", enabled: true });
-        execute(); expect(mocks.generate).toHaveBeenCalledTimes(2);
-        receive({ message: "render", buffer: new Float32Array(32) });
+        // Two requests are already with the renderer: the limit is reached.
         execute(); expect(mocks.generate).toHaveBeenCalledTimes(2);
         receive({ message: "render", buffer: new Float32Array(32) });
         execute(); expect(mocks.generate).toHaveBeenCalledTimes(3);
+        execute(); expect(mocks.generate).toHaveBeenCalledTimes(3);
+        receive({ message: "render", buffer: new Float32Array(32) });
+        execute(); expect(mocks.generate).toHaveBeenCalledTimes(4);
+    });
+    it("sends one more request while the renderer still works on the previous one", async () => {
+        const { execute } = await import("./PlayerRenderingPostMessageService");
+        receive({ message: "renderFlowControl", enabled: true });
+        execute(); execute();
+        expect(mocks.post).toHaveBeenCalledTimes(2);
+        expect(mocks.generate).toHaveBeenCalledTimes(2);
+        execute();
+        expect(mocks.post).toHaveBeenCalledTimes(2);
+        expect(mocks.generate).toHaveBeenCalledTimes(2);
     });
     it("does not consume intermediate changes and generates the latest state after ACK", async () => {
         const { execute } = await import("./PlayerRenderingPostMessageService");
@@ -43,28 +55,30 @@ describe("Renderer request flow control", () => {
         });
         receive({ message: "renderFlowControl", enabled: true });
         execute();
-        for (revision = 1; revision <= 20; revision++) {
+        revision = 1;
+        execute();
+        for (revision = 2; revision <= 20; revision++) {
             changed = true;
             execute();
             expect(changed).toBe(true);
-            expect(consumed).toEqual([0]);
+            expect(consumed).toEqual([0, 1]);
         }
         revision = 99;
         receive({ message: "render", buffer: new Float32Array(32) });
         execute();
-        expect(consumed).toEqual([0, 99]);
+        expect(consumed).toEqual([0, 1, 99]);
         expect(changed).toBe(false);
-        expect(mocks.post).toHaveBeenCalledTimes(2);
+        expect(mocks.post).toHaveBeenCalledTimes(3);
     });
     it("a discarded smaller returned buffer still releases capacity", async () => {
         const { execute } = await import("./PlayerRenderingPostMessageService");
         receive({ message: "renderFlowControl", enabled: true });
-        execute(); execute();
-        expect(mocks.generate).toHaveBeenCalledTimes(1);
+        execute(); execute(); execute();
+        expect(mocks.generate).toHaveBeenCalledTimes(2);
         const owned = mocks.queue.buffer;
         receive({ message: "render", buffer: new Float32Array(1) });
         expect(mocks.queue.buffer).toBe(owned);
-        execute(); expect(mocks.generate).toHaveBeenCalledTimes(2);
+        execute(); expect(mocks.generate).toHaveBeenCalledTimes(3);
     });
     it("empty queues and failed sends do not consume capacity", async () => {
         const { execute } = await import("./PlayerRenderingPostMessageService");
@@ -78,10 +92,10 @@ describe("Renderer request flow control", () => {
     it("capture acknowledgements do not release rendering capacity; disabling restores immediate sends", async () => {
         const { execute } = await import("./PlayerRenderingPostMessageService");
         receive({ message: "renderFlowControl", enabled: true });
-        execute();
+        execute(); execute();
         receive({ message: "capture", buffer: new Float32Array(32) });
-        execute(); expect(mocks.post).toHaveBeenCalledTimes(1);
-        receive({ message: "renderFlowControl", enabled: false });
         execute(); expect(mocks.post).toHaveBeenCalledTimes(2);
+        receive({ message: "renderFlowControl", enabled: false });
+        execute(); expect(mocks.post).toHaveBeenCalledTimes(3);
     });
 });
