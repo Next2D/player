@@ -14,7 +14,10 @@ test("WebGPU flow control bounds real RAF submissions and drains after updates",
     expect(result.updates).toBe(45);
     expect(result.sent).toBeGreaterThan(2);
     expect(result.ack).toBe(result.sent);
-    expect(result.maxPending).toBe(1);
+    // The core keeps at most 2 renders with the renderer (PlayerRenderingPostMessageService
+    // $MAX_PENDING_RENDERS): one being processed and the next one already sent.
+    expect(result.maxPending).toBeGreaterThan(0);
+    expect(result.maxPending).toBeLessThanOrEqual(2);
     // No queued commands should arrive after the source stops changing.
     await page.waitForTimeout(300);
     const drained = await page.evaluate(() => Reflect.get(window, "__FLOW__"));

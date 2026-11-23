@@ -892,6 +892,32 @@ export class Context
     }
 
     /**
+     * @description 描画命令の並びのうち、index から続く経路の命令をまとめて処理する。
+     *              実行環境が経路の実装を提供していればそれを使い、次に処理する命令の位置を返す。
+     *              使えないときは -1 を返すので、呼び出し側が moveTo などを 1 つずつ呼ぶ。
+     *              Processes the run of path commands starting at index in one go. Uses the
+     *              runtime's path implementation when it provides one and returns the position of
+     *              the next command. Returns -1 when unavailable, in which case the caller issues
+     *              moveTo and the like one by one.
+     *
+     * @param  {Float32Array} commands
+     * @param  {number} index
+     * @return {number}
+     */
+    pathCommands (commands: Float32Array, index: number): number
+    {
+        // 曲線の座標 1 単位が画面上で何ピクセルになるか (bezierCurveTo と同じ計算)
+        const matrix = this.$matrix;
+        const scaleX = matrix[0] * matrix[0] + matrix[1] * matrix[1];
+        const scaleY = matrix[3] * matrix[3] + matrix[4] * matrix[4];
+
+        return this.pathCommand.pathCommands(
+            commands, index,
+            Math.sqrt(scaleX > scaleY ? scaleX : scaleY)
+        );
+    }
+
+    /**
      * @description 3次ベジェ曲線を描画
      *              Draw a cubic Bézier curve
      *

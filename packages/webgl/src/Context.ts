@@ -1,3 +1,12 @@
+import {
+    $nativeShape,
+    $nativePathActive,
+    $setNativePathActive
+} from "./NativeShape";
+import {
+    $currentPath,
+    $vertices
+} from "./PathCommand";
 import { queueTextUpload, flushTextUploads, flushTextUploadsForNode, disposeTextUploads } from "./TextUploadBatch";
 import { execute as contextGetRenderCompletionService } from "./Context/service/ContextGetRenderCompletionService";
 import type { IAttachmentObject } from "./interface/IAttachmentObject";
@@ -255,6 +264,35 @@ export class Context
     {
         flushTextUploads();
         contextResetService(this);
+    }
+
+    // 描画命令の並びのうち、index から続く経路の命令をまとめて処理する。実行環境が経路の実装を
+    // 提供していればそれを使い、次に処理する命令の位置を返す。使えないときは -1 を返すので、
+    // 呼び出し側が moveTo などを 1 つずつ呼ぶ。
+    pathCommands (commands: Float32Array, index: number): number
+    {
+        if (!$nativeShape) {
+            return -1;
+        }
+
+        // 3 次ベジェ曲線の分割数は画面上の拡大率で決まる (PathCommandBezierCurveToUseCase と同じ計算)
+        const matrix = this.$matrix;
+        const scaleX = matrix[0] * matrix[0] + matrix[1] * matrix[1];
+        const scaleY = matrix[3] * matrix[3] + matrix[4] * matrix[4];
+        const scaleSquared = scaleX > scaleY ? scaleX : scaleY;
+        if (!(scaleSquared > 0)) {
+            return -1;
+        }
+
+        if (!$nativePathActive) {
+            // JavaScript 側で経路を作り始めていたら、混ぜない
+            if ($currentPath.length || $vertices.length) {
+                return -1;
+            }
+            $setNativePathActive(true);
+        }
+
+        return $nativeShape.path(commands, index, scaleSquared);
     }
 
     beginPath (): void

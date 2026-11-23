@@ -19,7 +19,10 @@ test("real RAF flow stays bounded and renders the latest masked/filter/text stat
     await testInfo.attach("renderer-flow", { body: JSON.stringify(flow), contentType: "application/json" });
     expect(flow.error).toBeUndefined();
     expect(flow.enabled).toBe(true);
-    expect(flow.maxPending).toBe(1);
+    // The core keeps at most 2 renders with the renderer (PlayerRenderingPostMessageService
+    // $MAX_PENDING_RENDERS): one being processed and the next one already sent.
+    expect(flow.maxPending).toBeGreaterThan(0);
+    expect(flow.maxPending).toBeLessThanOrEqual(2);
     expect(flow.updates).toBe(45);
     expect(flow.updatesWhilePending).toBeGreaterThan(0);
     expect(flow.enterFrames).toBeGreaterThan(0);
