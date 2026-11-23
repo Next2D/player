@@ -14,7 +14,7 @@
         }
         if (message.command === "render") {
             flow.sent++; flow.pending++;
-            if (flow.enabled) flow.maxPending = Math.max(flow.maxPending, flow.pending);
+            if (flow.ready) flow.maxPending = Math.max(flow.maxPending, flow.pending);
         }
         return Reflect.apply(post, this, [message, ...args]);
     };
@@ -31,6 +31,15 @@ window.addEventListener("DOMContentLoaded", async () => {
             field.autoSize = "left"; field.x = i % 20 * 45; field.y = Math.floor(i / 20) * 14;
             field.text = "start"; root.addChild(field); fields.push(field);
         }
+        // Renders sent before the renderer finishes initializing are not flow controlled.
+        // Wait until flow control is enabled and that startup backlog drains, otherwise
+        // (slow WebGPU init) every update below can be sent before flow control exists.
+        for (let count = 0; ; count++) {
+            await new Promise(requestAnimationFrame);
+            if (window.__FLOW__.enabled && window.__FLOW__.sent && !window.__FLOW__.pending) break;
+            if (count >= 1200) throw new Error("Flow did not initialize/drain");
+        }
+        window.__FLOW__.ready = true;
         // Real RAF updates: unlike the benchmark, these do not wait for worker ACKs.
         for (let frame = 0; frame < 45; frame++) {
             await new Promise(requestAnimationFrame);
