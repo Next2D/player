@@ -8,6 +8,8 @@ import { execute as textureManagerBindService } from "../../TextureManager/servi
 import {
     $setFramebufferBound,
     $setCurrentAttachment,
+    $setPhysicalAttachment,
+    $setAttachmentDeferred,
     $readFrameBuffer,
     $isFramebufferBound,
     $attachedColor,
@@ -28,6 +30,8 @@ import {
 export const execute = (attachment_object: IAttachmentObject): void =>
 {
     $setCurrentAttachment(attachment_object);
+    $setPhysicalAttachment(attachment_object);
+    $setAttachmentDeferred(false);
 
     if (!$isFramebufferBound) {
         $setFramebufferBound(true);
