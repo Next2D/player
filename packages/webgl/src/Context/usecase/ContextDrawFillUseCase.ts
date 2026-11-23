@@ -5,6 +5,8 @@ import { execute as contextLinearGradientFillUseCase } from "./ContextLinearGrad
 import { execute as contextRadialGradientFillUseCase } from "./ContextRadialGradientFillUseCase";
 import { execute as contextPatternBitmapFillUseCase } from "./ContextPatternBitmapFillUseCase";
 import { execute as stencilResetService } from "../../Stencil/service/StencilResetService";
+import { execute as gradientLUTPrepareShapeTexturesUseCase } from "../../Shader/GradientLUTGenerator/usecase/GradientLUTPrepareShapeTexturesUseCase";
+import { $gradientData } from "../../Gradient";
 import {
     $gl,
     $enableStencilTest,
@@ -38,6 +40,14 @@ export const execute = (): void =>
 
     // Reset stencil cache at the start of fill processing
     stencilResetService();
+
+    // グラデーションの LUT は、塗りごとではなく、ここでまとめて先に描く
+    // (LUT を描いた場合はステンシルテストが無効になっているので、戻す)
+    if ($gradientData.length && gradientLUTPrepareShapeTexturesUseCase()) {
+        $enableStencilTest();
+        $gl.stencilMask(0xff);
+        stencilResetService();
+    }
 
     let fillOffset = 0;
     let gridData: Float32Array | null = null;

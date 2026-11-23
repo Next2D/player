@@ -107,6 +107,14 @@ vi.mock("../../GradientLUTGenerator.ts", async (importOriginal) =>
     };
 });
 
+vi.mock("../../../FrameBufferManager/usecase/FrameBufferManagerGetAttachmentObjectUseCase.ts", () => ({
+    execute: vi.fn(() => mockAttachmentObject)
+}));
+
+vi.mock("../../../TextureManager/usecase/TextureManagerGetTextureUseCase.ts", () => ({
+    execute: vi.fn(() => "mockTexture")
+}));
+
 vi.mock("../../../Blend/service/BlendOneZeroService.ts", () => ({
     execute: vi.fn()
 }));
@@ -131,12 +139,14 @@ vi.mock("./GradientLUTGeneratorFillTextureUseCase.ts", () => ({
 }));
 
 import { execute } from "./GradientLUTGenerateShapeTextureUseCase";
+import { $clearGradientLUTSlots, $GRADIENT_LUT_SLOT_COUNT } from "../../GradientLUTCache";
 
 describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
 {
     beforeEach(() =>
     {
         vi.clearAllMocks();
+        $clearGradientLUTSlots();
         scissorTestEnabled = false;
         currentScissor = [0, 0, 0, 0];
         bindCallCount = 0;
@@ -220,5 +230,55 @@ describe("GradientLUTGenerateShapeTextureUseCase.js method test", () =>
         // シザーボックスが元の値で復元されることを確認
         const lastScissorCall = scissorCalls[scissorCalls.length - 1];
         expect(lastScissorCall).toEqual([...mockScissorBox]);
+    });
+
+    it("test case - the same gradient is not drawn again", () =>
+    {
+        currentAttachment = mockAttachmentObject;
+
+        const stops = [0, 255, 0, 0, 255, 255, 0, 255, 0, 255];
+        execute(stops, 0);
+        expect(bindCallCount).toBe(2);
+
+        // 同じ stops・補間方法 (配列は別物) なら、描画先を切り替えない
+        bindCallCount = 0;
+        disableCalls = [];
+        expect(execute(stops.slice(), 0)).toBe("mockTexture");
+        expect(bindCallCount).toBe(0);
+        expect(disableCalls).toEqual([]);
+
+        // 補間方法が違えば描く
+        execute(stops, 1);
+        expect(bindCallCount).toBe(2);
+
+        // 色が違えば描く
+        bindCallCount = 0;
+        execute([0, 255, 0, 0, 255, 255, 0, 254, 0, 255], 0);
+        expect(bindCallCount).toBe(2);
+
+        // stops の数が違えば描く
+        bindCallCount = 0;
+        execute([0, 255, 0, 0, 255, 128, 0, 0, 0, 255, 255, 0, 255, 0, 255], 0);
+        expect(bindCallCount).toBe(2);
+    });
+
+    it("test case - old gradients are overwritten when the slots run out", () =>
+    {
+        currentAttachment = mockAttachmentObject;
+
+        const stopsOf = (value: number): number[] => [0, value, 0, 0, 255, 255, 0, 255, 0, 255];
+
+        for (let idx = 0; idx <= $GRADIENT_LUT_SLOT_COUNT; ++idx) {
+            execute(stopsOf(idx), 0);
+        }
+
+        // 最後に描いたものは残っている
+        bindCallCount = 0;
+        execute(stopsOf($GRADIENT_LUT_SLOT_COUNT), 0);
+        expect(bindCallCount).toBe(0);
+
+        // 最初に描いたものは上書きされたので、描き直す
+        execute(stopsOf(0), 0);
+        expect(bindCallCount).toBe(2);
     });
 });
