@@ -1,6 +1,11 @@
 import type { IPath } from "../../interface/IPath";
 import type { IMeshResult } from "../../interface/IMeshResult";
 import { execute as meshFillGenerateService } from "../service/MeshFillGenerateService";
+import {
+    $nativeShape,
+    $nativeFillSize,
+    $NATIVE_FILL_PATH
+} from "../../NativeShape";
 
 /**
  * @description メッシュ生成用の再利用可能な一時バッファ（GC回避）
@@ -38,6 +43,18 @@ const $upperPowerOfTwo = (v: number): number =>
 export const execute = (
     vertices: IPath[]
 ): IMeshResult => {
+
+    // 経路が実行環境の側にあるときは、メッシュもそちらで作る
+    if (vertices === $NATIVE_FILL_PATH && $nativeShape) {
+        if ($meshTempBuffer.length < $nativeFillSize) {
+            $meshTempBuffer = new Float32Array($upperPowerOfTwo($nativeFillSize));
+        }
+        const indexCount = $nativeShape.fill($meshTempBuffer);
+        return {
+            "buffer": $meshTempBuffer.subarray(0, indexCount * 4),
+            "indexCount": indexCount
+        };
+    }
 
     // 頂点数を計算（各パスの三角形数 × 3）
     let totalVertices = 0;

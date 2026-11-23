@@ -87,6 +87,45 @@ export const $addFillBuffer = (buffer: Float32Array): void =>
 };
 
 /**
+ * @description 塗りのバッファに、あと size 要素を書けるだけの領域を確保する (内容は保つ)。
+ *              確保した後、$getFillBuffer() の $getFillBufferOffset() の位置から直接書き、
+ *              $advanceFillBuffer(size) で位置を進める。
+ *              Reserves room for `size` more elements in the fill buffer, keeping its content.
+ *              Then write directly from $getFillBufferOffset() of $getFillBuffer() and advance
+ *              the position with $advanceFillBuffer(size).
+ *
+ * @param  {number} size
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $reserveFillBuffer = (size: number): void =>
+{
+    const length = size + $fillBufferOffset;
+    if (length > $fillBuffer.length) {
+        const newBuffer = new Float32Array($upperPowerOfTwo(length));
+        if ($fillBufferOffset > 0) {
+            newBuffer.set($fillBuffer.subarray(0, $fillBufferOffset));
+        }
+        $fillBuffer = newBuffer;
+    }
+};
+
+/**
+ * @description 塗りのバッファの書き込み位置を size 要素だけ進める
+ *              Advances the write position of the fill buffer by `size` elements
+ *
+ * @param  {number} size
+ * @return {void}
+ * @method
+ * @protected
+ */
+export const $advanceFillBuffer = (size: number): void =>
+{
+    $fillBufferOffset += size;
+};
+
+/**
  * @description バッファを頂点数の配列
  *              Array of the number of vertices in the buffer
  *

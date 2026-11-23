@@ -1,8 +1,6 @@
-import { $getVertices } from "../../PathCommand";
-import { execute as meshFillGenerateUseCase } from "../../Mesh/usecase/MeshFillGenerateUseCase";
+import { execute as meshFillCurrentPathUseCase } from "../../Mesh/usecase/MeshFillCurrentPathUseCase";
 import { $bitmapData } from "../../Bitmap";
 import {
-    $addFillBuffer,
     $fillTypes,
     $fillBufferIndexes
 } from "../../Mesh";
@@ -30,19 +28,17 @@ export const execute = (
     smooth: boolean
 ): void => {
 
-    const vertices = $getVertices();
-    if (!vertices.length) {
+    // いまの経路を塗りのメッシュにして、塗りのバッファへ追加する
+    const indexCount = meshFillCurrentPathUseCase();
+    if (indexCount < 0) {
         return ;
     }
 
     // 塗りの種類を追加
     $fillTypes.push("bitmap");
 
-    const fillMesh = meshFillGenerateUseCase(vertices);
-    $addFillBuffer(fillMesh.buffer);
-
     // 塗りのインデックスを追加
-    $fillBufferIndexes.push(fillMesh.indexCount);
+    $fillBufferIndexes.push(indexCount);
 
     $bitmapData.push(
         pixels, matrix, width, height, repeat, smooth

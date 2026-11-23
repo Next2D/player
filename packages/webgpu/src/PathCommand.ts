@@ -1,6 +1,17 @@
 import type { IPoint } from "./interface/IPoint";
 import type { IPath } from "./interface/IPath";
 import { adaptiveCubicToQuad } from "./BezierConverter/BezierConverter";
+import {
+    $nativeShape,
+    $NATIVE_FILL_PATH,
+    $setNativeFillSize
+} from "./NativeShape";
+
+/**
+ * @description 経路が 1 本も無いときに返す配列
+ *              The array returned when there is no path at all
+ */
+const $EMPTY_VERTICES: IPath[] = [];
 
 /**
  * @description 3次ベジェ曲線を 1 本の2次ベジェ曲線で近似できる上限。
@@ -57,6 +68,13 @@ export class PathCommand
     private $startY: number;
 
     /**
+     * @description 経路を実行環境の側で組み立てているかどうか。true の間、こちらの経路は空。
+     *              Whether the path is being built on the runtime side. While true, the path held
+     *              here is empty.
+     */
+    private $native: boolean = false;
+
+    /**
      * @constructor
      */
     constructor()
@@ -75,12 +93,47 @@ export class PathCommand
      */
     beginPath(): void
     {
+        if (this.$native) {
+            this.$native = false;
+            ($nativeShape as NonNullable<typeof $nativeShape>).reset();
+        }
         this.$currentPath = [];
         this.$vertices = [];
         this.$currentX = 0;
         this.$currentY = 0;
         this.$startX = 0;
         this.$startY = 0;
+    }
+
+    /**
+     * @description 描画命令の並びのうち、index から続く経路の命令をまとめて処理する。
+     *              実行環境が経路の実装を提供していればそれを使い、次に処理する命令の位置を返す。
+     *              使えないときは -1 を返すので、呼び出し側が moveTo などを 1 つずつ呼ぶ。
+     *              Processes the run of path commands starting at index in one go. Uses the
+     *              runtime's path implementation when it provides one and returns the position of
+     *              the next command. Returns -1 when unavailable, in which case the caller issues
+     *              moveTo and the like one by one.
+     *
+     * @param {Float32Array} commands
+     * @param {number} index
+     * @param {number} pixel_scale 曲線の座標 1 単位が画面上で何ピクセルになるか (bezierCurveTo と同じ)
+     * @return {number}
+     */
+    pathCommands(commands: Float32Array, index: number, pixel_scale: number): number
+    {
+        if (!$nativeShape) {
+            return -1;
+        }
+
+        if (!this.$native) {
+            // こちらで経路を作り始めていたら、混ぜない
+            if (this.$currentPath.length || this.$vertices.length) {
+                return -1;
+            }
+            this.$native = true;
+        }
+
+        return $nativeShape.path(commands, index, pixel_scale);
     }
 
     /**
@@ -292,6 +345,16 @@ export class PathCommand
      */
     get $getVertices(): IPath[]
     {
+        // 経路が実行環境の側にあるときは、目印を返す (メッシュは MeshFillGenerateUseCase が実行環境の側で作る)
+        if (this.$native) {
+            const size = ($nativeShape as NonNullable<typeof $nativeShape>).fillSize();
+            if (size < 0) {
+                return $EMPTY_VERTICES;
+            }
+            $setNativeFillSize(size);
+            return $NATIVE_FILL_PATH;
+        }
+
         const vertices = [...this.$vertices];
         // fill用は3点以上（9要素）が必要
         if (this.$currentPath.length >= 9) {
@@ -307,6 +370,28 @@ export class PathCommand
      */
     getVerticesForStroke(): IPath[]
     {
+        // 線の生成はこちらで行うので、実行環境の側の経路を取り出す
+        if (this.$native) {
+            const data = ($nativeShape as NonNullable<typeof $nativeShape>).exportPath(true);
+            const paths: IPath[] = [];
+            const count = data[0];
+            let offset = 1;
+            for (let idx = 0; idx < count; ++idx) {
+                const size = data[offset++];
+                const path: IPath = [];
+                for (let position = 0; position < size; position += 3) {
+                    path.push(
+                        data[offset + position],
+                        data[offset + position + 1],
+                        data[offset + position + 2] !== 0
+                    );
+                }
+                offset += size;
+                paths.push(path);
+            }
+            return paths;
+        }
+
         const vertices = [...this.$vertices];
         if (this.$currentPath.length >= 6) {
             vertices.push(this.$currentPath);
@@ -320,6 +405,10 @@ export class PathCommand
      */
     reset(): void
     {
+        if (this.$native) {
+            this.$native = false;
+            ($nativeShape as NonNullable<typeof $nativeShape>).reset();
+        }
         this.$currentPath = [];
         this.$vertices = [];
         this.$currentX = 0;
