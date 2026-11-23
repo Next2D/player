@@ -1,8 +1,6 @@
-import { $getVertices } from "../../PathCommand";
-import { execute as meshStrokeGenerateUseCase } from "../../Mesh/usecase/MeshStrokeGenerateUseCase";
+import { execute as meshStrokeCurrentPathUseCase } from "../../Mesh/usecase/MeshStrokeCurrentPathUseCase";
 import { $gradientData } from "../../Gradient";
 import {
-    $addFillBuffer,
     $fillTypes,
     $fillBufferIndexes
 } from "../../Mesh";
@@ -30,19 +28,17 @@ export const execute = (
     focal: number
 ): void => {
 
-    const vertices = $getVertices(true);
-    if (!vertices.length) {
-        return;
+    // いまの経路を線のメッシュにして、塗りのバッファへ追加する
+    const indexCount = meshStrokeCurrentPathUseCase();
+    if (indexCount < 0) {
+        return ;
     }
 
     // 塗りの種類を追加
     $fillTypes.push(type === 0 ? "linear" : "radial");
 
-    const mesh = meshStrokeGenerateUseCase(vertices);
-    $addFillBuffer(mesh.buffer);
-
     // 塗りのインデックスを追加
-    $fillBufferIndexes.push(mesh.indexCount);
+    $fillBufferIndexes.push(indexCount);
 
     $gradientData.push(stops, matrix, spread, interpolation);
     if (type === 1) {
