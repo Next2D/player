@@ -1,9 +1,8 @@
 import type { ITextureObject } from "../../../interface/ITextureObject";
-import { execute as variantsGradientLUTShaderService } from "../../Variants/GradientLUT/service/VariantsGradientLUTShaderService";
+import type { IGradientLUTSlot } from "../../../interface/IGradientLUTSlot";
 import { execute as blendOneZeroService } from "../../../Blend/service/BlendOneZeroService";
 import { execute as blendResetService } from "../../../Blend/service/BlendResetService";
-import { execute as gradientLUTSetUniformService } from "../service/GradientLUTSetUniformService";
-import { execute as gradientLUTGeneratorFillTextureUseCase } from "./GradientLUTGeneratorFillTextureUseCase";
+import { execute as gradientLUTDrawShapeTextureUseCase } from "./GradientLUTDrawShapeTextureUseCase";
 import {
     $context,
     $enableScissorTest,
@@ -11,21 +10,21 @@ import {
     $scissorBox,
     $setScissorBox
 } from "../../../WebGLUtil";
+import { $getAdaptiveResolution } from "../../GradientLUTGenerator";
 import {
-    $getGradientAttachmentObjectWithResolution,
-    $getAdaptiveResolution,
-    $getGradientLUTGeneratorMaxLength,
-    $rgbIdentityTable,
-    $rgbToLinearTable
-} from "../../GradientLUTGenerator";
+    $findGradientLUTSlot,
+    $hashGradientStops,
+    $storeGradientLUTSlot,
+    $takeGradientLUTSlot
+} from "../../GradientLUTCache";
 
 /**
- * @description グラデーションのテクスチャを生成します。
- *              Generates a texture of the gradient.
- *              注意: グラデーションLUTは共有テクスチャに描画されるため、
- *              キャッシュは使用しません。各フレームで再描画が必要です。
- *              Note: Gradient LUT is drawn to a shared texture, so caching
- *              is not used. Re-drawing is required each frame.
+ * @description グラデーションのテクスチャを返却します。
+ *              同じ stops・補間方法の LUT が枠に残っていれば、描かずにそれを返します。
+ *              無ければ、枠の 1 つへ描いてから返します (描画先を切り替えて、元へ戻す)。
+ *              Return the texture of the gradient. When a LUT of the same stops and interpolation
+ *              is still in a slot it is returned without drawing. Otherwise it is drawn into a slot
+ *              first (switching the render target and back).
  *
  * @param  {array} stops
  * @param  {number} interpolation
@@ -35,6 +34,18 @@ import {
  */
 export const execute = (stops: number[], interpolation: number): ITextureObject =>
 {
+    const resolution = $getAdaptiveResolution(stops.length / 5);
+    const hash = $hashGradientStops(stops, interpolation);
+
+    let slot = $findGradientLUTSlot(resolution, stops, interpolation, hash);
+    if (slot) {
+        return slot.attachment.texture as NonNullable<ITextureObject>;
+    }
+
+    // 直後に使うので、どの枠を上書きしてもよい
+    slot = $takeGradientLUTSlot(resolution, -1) as IGradientLUTSlot;
+    $storeGradientLUTSlot(slot, stops, interpolation, hash, 0);
+
     const currentAttachment = $context.currentAttachmentObject;
 
     // JS側で追跡しているscissor矩形を退避（getParameterの同期クエリを回避）
@@ -44,42 +55,8 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     const scissorH = $scissorBox[3];
     $disableScissorTest();
 
-    const isLinearSpace = interpolation === 0;
-    const stopsLength = stops.length / 5;
-
-    // 適応的解像度を使用
-    const resolution = $getAdaptiveResolution(stopsLength);
-    const gradientAttachmentObject = $getGradientAttachmentObjectWithResolution(resolution);
-    $context.bind(gradientAttachmentObject);
-
-    const table: Float32Array = isLinearSpace
-        ? $rgbToLinearTable
-        : $rgbIdentityTable;
-
     blendOneZeroService();
-
-    const maxLength = $getGradientLUTGeneratorMaxLength();
-    for (let begin = 0; begin < stopsLength; begin += maxLength - 1) {
-
-        const end: number = Math.min(begin + maxLength, stopsLength);
-
-        const shaderManager = variantsGradientLUTShaderService(
-            end - begin, isLinearSpace
-        );
-
-        gradientLUTSetUniformService(
-            shaderManager, stops, begin, end, table
-        );
-
-        // 先頭チャンクは0、末尾チャンクは1まで矩形を拡張して描画する。
-        // シェーダー側が最初/最後のストップ色でパディングするため、
-        // ストップ範囲外のtexelが未描画(前回内容のまま)になるのを防ぐ。
-        gradientLUTGeneratorFillTextureUseCase(
-            shaderManager,
-            begin === 0 ? 0 : stops[begin * 5],
-            end === stopsLength ? 1 : stops[(end - 1) * 5]
-        );
-    }
+    gradientLUTDrawShapeTextureUseCase(slot.attachment, stops, interpolation);
     blendResetService();
 
     if (currentAttachment) {
@@ -90,5 +67,5 @@ export const execute = (stops: number[], interpolation: number): ITextureObject 
     $enableScissorTest();
     $setScissorBox(scissorX, scissorY, scissorW, scissorH);
 
-    return gradientAttachmentObject.texture as NonNullable<ITextureObject>;
+    return slot.attachment.texture as NonNullable<ITextureObject>;
 };
