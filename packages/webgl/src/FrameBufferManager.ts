@@ -87,6 +87,53 @@ export const $setCurrentAttachment = (attachment_object: IAttachmentObject | nul
     $currentAttachment = attachment_object;
 };
 
+/**
+ * @description GL のフレームバッファに実際に付いているアタッチメントオブジェクト。
+ *              通常は $currentAttachment と同じ。$attachmentDeferred が true の間だけ違う。
+ *              The attachment object actually attached to the GL framebuffer. Normally the same as
+ *              $currentAttachment; they differ only while $attachmentDeferred is true.
+ *
+ * @type {IAttachmentObject | null}
+ * @public
+ */
+export let $physicalAttachment: IAttachmentObject | null = null;
+
+/**
+ * @param  {IAttachmentObject | null} attachment_object
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $setPhysicalAttachment = (attachment_object: IAttachmentObject | null): void =>
+{
+    $physicalAttachment = attachment_object;
+};
+
+/**
+ * @description 描画先の切り替えを保留しているかどうか。true の間、$currentAttachment (とビューポートの
+ *              大きさ) は切り替え後の値だが、GL のフレームバッファは $physicalAttachment のまま。
+ *              GL で描く前に ContextSyncAttachmentUseCase で実際に切り替える。
+ *              Whether a render target switch is pending. While true, $currentAttachment (and the
+ *              viewport size) already hold the new target but the GL framebuffer still has
+ *              $physicalAttachment. ContextSyncAttachmentUseCase performs the switch before
+ *              anything is drawn with GL.
+ *
+ * @type {boolean}
+ * @public
+ */
+export let $attachmentDeferred: boolean = false;
+
+/**
+ * @param  {boolean} state
+ * @return {void}
+ * @method
+ * @public
+ */
+export const $setAttachmentDeferred = (state: boolean): void =>
+{
+    $attachmentDeferred = state;
+};
+
 export let $isFramebufferBound: boolean = false;
 
 export const $setFramebufferBound = (state: boolean): void =>

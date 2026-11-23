@@ -26,6 +26,8 @@ import { execute as contextFillBackgroundColorService } from "./Context/service/
 import { execute as contextResizeUseCase } from "./Context/usecase/ContextResizeUseCase";
 import { execute as contextClearRectUseCase } from "./Context/usecase/ContextClearRectUseCase";
 import { execute as contextBindUseCase } from "./Context/usecase/ContextBindUseCase";
+import { execute as contextDeferBindUseCase } from "./Context/usecase/ContextDeferBindUseCase";
+import { execute as contextSyncAttachmentUseCase } from "./Context/usecase/ContextSyncAttachmentUseCase";
 import { execute as contextSaveService } from "./Context/service/ContextSaveService";
 import { execute as contextRestoreService } from "./Context/service/ContextRestoreService";
 import { execute as contextSetTransformService } from "./Context/service/ContextSetTransformService";
@@ -78,6 +80,7 @@ import {
     $setReadFrameBuffer,
     $setDrawFrameBuffer,
     $currentAttachment,
+    $attachmentDeferred,
     $setAtlasFrameBuffer,
     $setBitmapFrameBuffer
 } from "./FrameBufferManager";
@@ -204,6 +207,9 @@ export class Context
 
     fillBackgroundColor (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextFillBackgroundColorService(
             this.$clearColorR,
@@ -215,12 +221,19 @@ export class Context
 
     resize (width: number, height: number, cache_clear: boolean = true): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
+
         disposeTextUploads();
         contextResizeUseCase(this, width, height, cache_clear);
     }
 
     clearRect (x: number, y: number, w: number, h: number): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextClearRectUseCase(x, y, w, h);
     }
@@ -229,6 +242,25 @@ export class Context
     {
         flushTextUploads();
         contextBindUseCase(this, attachment_object);
+    }
+
+    /**
+     * @description 描画先を attachment_object に戻す。GL のフレームバッファの切り替えは、次に GL で描く時点まで
+     *              保留する (すぐ次の処理が同じ描画先へ切り替え直す場合、切り替えそのものを省ける)。
+     *              アトラスへ描いた後に、元の描画先へ戻すときに使う。
+     *              Go back to attachment_object as the render target. Switching the GL framebuffer is
+     *              postponed until the next GL draw (and skipped altogether when the next operation
+     *              switches straight back). Use it to return to the previous target after drawing
+     *              into the atlas.
+     *
+     * @param  {IAttachmentObject} attachment_object
+     * @return {void}
+     * @method
+     * @public
+     */
+    deferBind (attachment_object: IAttachmentObject): void
+    {
+        contextDeferBindUseCase(attachment_object);
     }
 
     queueTextElement (node: Node, canvas: OffscreenCanvas): boolean
@@ -262,6 +294,9 @@ export class Context
 
     reset (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextResetService(this);
     }
@@ -352,6 +387,9 @@ export class Context
 
     fill (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextFillUseCase("fill");
     }
@@ -364,6 +402,9 @@ export class Context
         interpolation: number,
         focal: number
     ): void {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextGradientFillUseCase(
             type, stops, matrix,
@@ -379,6 +420,9 @@ export class Context
         repeat: boolean,
         smooth: boolean
     ): void {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextBitmapFillUseCase(
             pixels, matrix, width, height, repeat, smooth
@@ -387,6 +431,9 @@ export class Context
 
     stroke (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextStrokeUseCase();
     }
@@ -399,6 +446,9 @@ export class Context
         interpolation: number,
         focal: number
     ): void {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextGradientStrokeUseCase(
             type, stops, matrix,
@@ -414,6 +464,9 @@ export class Context
         repeat: boolean,
         smooth: boolean
     ): void {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextBitmapStrokeUseCase(
             pixels, matrix, width, height, repeat, smooth
@@ -422,6 +475,9 @@ export class Context
 
     clip (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextClipUseCase();
     }
@@ -490,6 +546,9 @@ export class Context
 
     beginNodeRendering (node: Node): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         this.newDrawState = true;
 
@@ -502,12 +561,18 @@ export class Context
 
     endNodeRendering (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextEndNodeRenderingService();
     }
 
     drawFill (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextDrawFillUseCase();
     }
@@ -529,6 +594,9 @@ export class Context
 
     drawArraysInstanced (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         blnedDrawArraysInstancedUseCase();
     }
@@ -540,24 +608,36 @@ export class Context
 
     transferMainCanvas (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         frameBufferManagerTransferMainCanvasService();
     }
 
     drawPixels (node: Node, pixels: Uint8Array): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextDrawPixelsUseCase(node, pixels);
     }
 
     drawElement (node: Node, element: OffscreenCanvas | ImageBitmap, _flipY: boolean = false): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         contextDrawElementUseCase(node, element);
     }
 
     beginMask (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         maskBeginMaskService();
     }
@@ -568,12 +648,18 @@ export class Context
         x_max: number,
         y_max: number
     ): void {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         maskSetMaskBoundsService(x_min, y_min, x_max, y_max);
     }
 
     endMask (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         maskEndMaskService();
     }
@@ -629,6 +715,10 @@ export class Context
         layer_scale_x: number = 1,
         layer_scale_y: number = 1
     ): void {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
+
         contextContainerEndLayerUseCase(
             blend_mode, matrix, color_transform,
             use_filter, filter_bounds, filter_params,
@@ -653,6 +743,10 @@ export class Context
 
     containerEndAtlasNode (): void
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
+
         const node = this._pendingAtlasNodes.pop()!;
         contextContainerEndAtlasNodeUseCase(node);
     }
@@ -665,6 +759,10 @@ export class Context
         unique_key: string,
         filter_key: string
     ): void {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
+
         contextContainerDrawCachedFilterUseCase(
             blend_mode, matrix, color_transform,
             filter_bounds, unique_key, filter_key
@@ -673,11 +771,17 @@ export class Context
 
     async createImageBitmap (width: number, height: number): Promise<ImageBitmap>
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         return await contextCreateImageBitmapService(width, height);
     }
     getRenderCompletion (): Promise<void>
     {
+        if ($attachmentDeferred) {
+            contextSyncAttachmentUseCase(this);
+        }
         flushTextUploads();
         return contextGetRenderCompletionService();
     }

@@ -1,6 +1,8 @@
 import { $gl } from "../../WebGLUtil";
 import {
     $setCurrentAttachment,
+    $setPhysicalAttachment,
+    $setAttachmentDeferred,
     $isFramebufferBound,
     $setFramebufferBound
 } from "../../FrameBufferManager";
@@ -16,6 +18,8 @@ import {
 export const execute = (): void =>
 {
     $setCurrentAttachment(null);
+    $setPhysicalAttachment(null);
+    $setAttachmentDeferred(false);
 
     if ($isFramebufferBound) {
         $setFramebufferBound(false);

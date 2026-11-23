@@ -1714,6 +1714,21 @@ export class Context
     }
 
     /**
+     * @description 描画先を attachment_object に戻す (WebGL 版と同じ呼び出し口)。
+     *              WebGPU では描画先の切り替えはレンダーパスの開始時に反映されるので、bind と同じ。
+     *              Go back to attachment_object as the render target (same entry point as the WebGL
+     *              context). In WebGPU a target switch only takes effect when a render pass begins,
+     *              so this is the same as bind.
+     *
+     * @param  {IAttachmentObject} attachment_object
+     * @return {void}
+     */
+    deferBind (attachment_object: IAttachmentObject): void
+    {
+        this.bind(attachment_object);
+    }
+
+    /**
      * @description アタッチメントオブジェクトをバインド
      *              Bind an attachment object
      *
