@@ -1,4 +1,26 @@
 /**
+ * @description 実行環境が提供するハッシュ値の計算。JIT が使えない実行環境 (ゲーム機向けのホスト) が、
+ *              グローバルの __next2dShape.hash に置く。無い環境 (ブラウザ) では null で、
+ *              JavaScript で計算する。結果はどちらも同じ。
+ *
+ *              The hash computation provided by the runtime. Runtimes without a JIT (hosts for
+ *              game consoles) put it on the global as __next2dShape.hash. Where it is absent
+ *              (browsers) this is null and the hash is computed in JavaScript. Both produce the
+ *              same value.
+ *
+ * @type {Function | null}
+ * @private
+ */
+const $nativeHash: ((buffer: Float32Array) => number) | null = ((): ((buffer: Float32Array) => number) | null =>
+{
+    const shape = (globalThis as unknown as {
+        __next2dShape?: { hash?: (buffer: Float32Array) => number }
+    }).__next2dShape;
+
+    return shape && typeof shape.hash === "function" ? shape.hash : null;
+})();
+
+/**
  * @description 描画で利用するFloat32Arrayからハッシュ値を生成します。
  *              Generates a hash value from the Float32Array used for drawing.
  *
@@ -7,6 +29,7 @@
  *              時間を取っていた。1 要素 (32bit) につき乗算 1 回にし、乗算では上位ビットの違いが
  *              下位へ伝わらないので、毎回上位ビットを下位へ折り返して混ぜる。
  *              (折り返しが無いと、符号ビットだけが 2 か所で異なるデータ = 反転した図形 が同じ値になる)
+ *              実行環境が同じ計算を提供していれば、そちらを使う。
  *
  *              Called over the whole drawing data the first time a shape is drawn. Byte-wise FNV-1a
  *              costs four multiplications per element, which took a noticeable share of the frame
@@ -14,6 +37,7 @@
  *              folds the high bits down after each one, because a multiplication never carries
  *              differences in high bits downwards (without the fold, data differing only in the sign
  *              bit at two places, i.e. mirrored shapes, would produce the same value).
+ *              The runtime's implementation of the same computation is used when it provides one.
  *
  * @param  {Float32Array} buffer
  * @return {number}
@@ -22,6 +46,10 @@
  */
 export const execute = (buffer: Float32Array): number =>
 {
+    if ($nativeHash) {
+        return $nativeHash(buffer);
+    }
+
     // Float32ArrayのバッファをUint32Arrayとして直接参照（DataView不要）
     const bits = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.length);
     const len = bits.length;
