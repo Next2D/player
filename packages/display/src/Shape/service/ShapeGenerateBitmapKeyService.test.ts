@@ -82,4 +82,58 @@ describe("ShapeGenerateBitmapKeyService.js test", () =>
         expect(key).toBeGreaterThanOrEqual(0);
         expect(key).toBeLessThanOrEqual(0xffffff);
     });
+
+    it("returns the same value as byte-wise FNV-1a over every input", () =>
+    {
+        const mix = (hash: number, value: number): number =>
+        {
+            hash = Math.imul(hash ^ value & 0xff, 16777619);
+            hash = Math.imul(hash ^ value >> 8 & 0xff, 16777619);
+            hash = Math.imul(hash ^ value >> 16 & 0xff, 16777619);
+            return Math.imul(hash ^ value >>> 24, 16777619);
+        };
+        const reference = (src: string, width: number, height: number, buffer: Uint8Array): number =>
+        {
+            let hash = mix(2166136261, src.length);
+            if (src.length <= 4096) {
+                for (let idx = 0; idx < src.length; ++idx) {
+                    hash = mix(hash, src.charCodeAt(idx));
+                }
+            } else {
+                const step = src.length / 4096;
+                for (let idx = 0; idx < 4096; ++idx) {
+                    hash = mix(hash, src.charCodeAt(Math.floor(idx * step)));
+                }
+                hash = mix(hash, src.charCodeAt(src.length - 1));
+            }
+            hash = mix(hash, width);
+            hash = mix(hash, height);
+            const count = buffer.length >>> 2;
+            hash = mix(hash, count);
+            if (count > 0) {
+                const samples = Math.min(count, 256);
+                const step = count / samples;
+                for (let idx = 0; idx < samples; ++idx) {
+                    const offset = Math.floor(idx * step) << 2;
+                    hash = mix(hash,
+                        buffer[offset]
+                        | buffer[offset + 1] << 8
+                        | buffer[offset + 2] << 16
+                        | buffer[offset + 3] << 24
+                    );
+                }
+            }
+            return (hash >>> 8 ^ hash & 0xff) & 0xffffff;
+        };
+
+        // 短い URL、16bit の文字を含む URL、間引かれる長さの URL (data URL)
+        let long = "data:image/png;base64,";
+        for (let idx = 0; idx < 9000; ++idx) {
+            long += String.fromCharCode(48 + idx * 7 % 75);
+        }
+        for (const src of ["", "a", "./image.png", "https://example.com/画像.png?v=1", long]) {
+            const buffer = pixels(700, src.length);
+            expect(execute(src, 20, 35, buffer)).toBe(reference(src, 20, 35, buffer));
+        }
+    });
 });

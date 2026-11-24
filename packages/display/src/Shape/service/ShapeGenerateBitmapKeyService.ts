@@ -65,17 +65,27 @@ export const execute = (
 
     let hash = 2166136261; // FNV-1aオフセット basis
 
+    // 文字の数だけ繰り返すので、mix を呼ばずにその場で混ぜる (文字コードは 16bit なので、
+    // mix の 4 バイトのうち上位 2 バイトは常に 0。結果は mix を呼んだ場合と同じ)
     const length = src.length;
     hash = mix(hash, length);
     if (length <= MAX_URL_SAMPLES) {
         for (let idx = 0; idx < length; ++idx) {
-            hash = mix(hash, src.charCodeAt(idx));
+            const code = src.charCodeAt(idx);
+            hash = Math.imul(hash ^ code & 0xff, 16777619);
+            hash = Math.imul(hash ^ code >> 8, 16777619);
+            hash = Math.imul(hash, 16777619);
+            hash = Math.imul(hash, 16777619);
         }
     } else {
         // 等間隔に間引き、末尾の文字は必ず含める
         const step = length / MAX_URL_SAMPLES;
         for (let idx = 0; idx < MAX_URL_SAMPLES; ++idx) {
-            hash = mix(hash, src.charCodeAt(Math.floor(idx * step)));
+            const code = src.charCodeAt(Math.floor(idx * step));
+            hash = Math.imul(hash ^ code & 0xff, 16777619);
+            hash = Math.imul(hash ^ code >> 8, 16777619);
+            hash = Math.imul(hash, 16777619);
+            hash = Math.imul(hash, 16777619);
         }
         hash = mix(hash, src.charCodeAt(length - 1));
     }

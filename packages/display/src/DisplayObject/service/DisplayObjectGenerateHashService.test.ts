@@ -209,4 +209,28 @@ describe("DisplayObjectGenerateHashService.js test", () =>
 
         expect(collisions).toBeLessThanOrEqual(3);
     });
+
+    it("should match the reference values shared with the runtime implementation", () =>
+    {
+        // 実行環境 (ホスト) の同じ計算のテストも、この値で確かめている
+        const ramp = (length: number): Float32Array =>
+        {
+            const buffer = new Float32Array(length);
+            for (let idx = 0; idx < length; ++idx) {
+                buffer[idx] = idx * 0.375 - 100;
+            }
+            return buffer;
+        };
+
+        expect(execute(new Float32Array(0))).toBe(6141092);
+        expect(execute(new Float32Array(1))).toBe(15990438);
+        expect(execute(new Float32Array(2))).toBe(9344940);
+        expect(execute(new Float32Array([1.5, -2.25, 3]))).toBe(7875761);
+        expect(execute(new Float32Array([-1.5, 2.25, 3]))).toBe(10177548);
+        expect(execute(ramp(4))).toBe(16577691);
+        expect(execute(ramp(5))).toBe(5381896);
+        expect(execute(ramp(7))).toBe(11206304);
+        expect(execute(ramp(1000))).toBe(3711294);
+        expect(execute(ramp(4097))).toBe(15450031);
+    });
 });

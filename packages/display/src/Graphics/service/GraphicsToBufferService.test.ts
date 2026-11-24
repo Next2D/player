@@ -210,4 +210,39 @@ describe("GraphicsToBufferService.js test", () =>
             expectSame(() => commands.flatMap((command) => command()));
         }
     });
+
+    it("execute test case - the work buffer grows and each result is independent", () =>
+    {
+        // 作業用のバッファ (最初は 1024 要素) より長い内容
+        const build = (): any[] =>
+        {
+            const recodes: any[] = [Graphics.BEGIN_PATH, Graphics.MOVE_TO, 0, 0];
+            for (let idx = 0; idx < 2000; ++idx) {
+                recodes.push(Graphics.CUBIC, idx, idx + 0.5, idx + 1, idx + 1.5, idx + 2, idx + 2.5);
+            }
+            recodes.push(Graphics.FILL_STYLE, 1, 2, 3, 4, Graphics.END_FILL);
+            return recodes;
+        };
+        const long = expectSame(build);
+        expect(long.length).toBe(4 + 2000 * 7 + 6);
+
+        // 途中で広がる場合 (グラデーションの色の数は、元の要素数からは分からない)
+        const stops: any[] = [];
+        for (let idx = 0; idx < 3000; ++idx) {
+            stops.push(stop(idx / 3000, idx & 255, 1, 2, 3));
+        }
+        const gradient = expectSame(() => [
+            Graphics.MOVE_TO, 1, 2,
+            Graphics.GRADIENT_FILL, "linear", stops.slice(), [1, 0, 0, 1, 0, 0], "pad", "rgb", 0,
+            Graphics.LINE_TO, 3, 4
+        ]);
+        expect(gradient.length).toBe(3 + 1 + 2 + 3000 * 5 + 6 + 3 + 3);
+
+        // 返した配列は、次の呼び出しで書き換わらない
+        const first = execute([Graphics.MOVE_TO, 1, 2]);
+        const second = execute([Graphics.MOVE_TO, 3, 4]);
+        expect(Array.from(first)).toEqual([Graphics.MOVE_TO, 1, 2]);
+        expect(Array.from(second)).toEqual([Graphics.MOVE_TO, 3, 4]);
+        expect(first.buffer).not.toBe(second.buffer);
+    });
 });

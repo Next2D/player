@@ -59,11 +59,20 @@ export const execute = (shape: Shape, matrix: Float32Array | null = null): Float
         return rawBounds;
     }
 
+    // 親の行列と掛け合わせた行列は、ここでだけ使う (すぐにプールへ返す)
+    const multiplied: Float32Array | null = matrix
+        ? Matrix.multiply(matrix, rawMatrix)
+        : null;
+
     const calcBounds = displayObjectCalcBoundsMatrixService(
         rawBounds[0], rawBounds[1],
         rawBounds[2], rawBounds[3],
-        matrix ? Matrix.multiply(matrix, rawMatrix) : rawMatrix
+        multiplied || rawMatrix
     );
+
+    if (multiplied) {
+        Matrix.release(multiplied);
+    }
 
     if (scaledMatrix) {
         $poolFloat32Array6(scaledMatrix);
