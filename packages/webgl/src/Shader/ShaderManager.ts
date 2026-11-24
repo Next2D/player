@@ -13,10 +13,21 @@ export class ShaderManager
     public readonly mediump: Int32Array | Float32Array;
     public readonly textures: Int32Array | Float32Array;
 
+    /**
+     * @description リンク済みのプログラム
+     *              The linked program
+     *
+     * @type {WebGLProgram}
+     * @readonly
+     * @public
+     */
+    public readonly program: WebGLProgram;
+
     constructor (vertex_source: string, fragment_source: string, atlas: boolean = false)
     {
         this._$programObject = shaderManagerCreateProgramService(vertex_source, fragment_source);
         this._$uniformMap    = new Map();
+        this.program         = this._$programObject.resource;
 
         shaderManagerInitializeUniformService(
             this._$programObject.resource,
