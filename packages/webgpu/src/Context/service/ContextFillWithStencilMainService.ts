@@ -1,4 +1,9 @@
 import type { PipelineManager } from "../../Shader/PipelineManager";
+import type { INativeStencilFillPass } from "../../NativeStencilFill";
+import {
+    $nativeStencilFill,
+    $detectNativeStencilFill
+} from "../../NativeStencilFill";
 
 /**
  * @description メインキャンバス向けのステンシル書き込みとフィル描画を2パスで実行する
@@ -21,6 +26,22 @@ export const execute = (
 ): void => {
     // === Pass 1: ステンシル書き込み（両面を1回で処理） ===
     const stencilWritePipeline = pipeline_manager.getPipeline("stencil_write_main");
+
+    // 実行環境が持つ場合は、2 回の描画を 1 回の呼び出しで行う (結果は下の手順と同じ)
+    if ($nativeStencilFill === 0) {
+        $detectNativeStencilFill(render_pass_encoder);
+    }
+    if ($nativeStencilFill === 1 && stencilWritePipeline) {
+        const nativeFillPipeline = pipeline_manager.getPipeline("stencil_fill_main");
+        if (nativeFillPipeline) {
+            (render_pass_encoder as unknown as INativeStencilFillPass).__next2dStencilFill(
+                stencilWritePipeline, nativeFillPipeline,
+                vertex_buffer, bind_group, uniform_offset, vertex_count
+            );
+            return;
+        }
+    }
+
     if (stencilWritePipeline) {
         render_pass_encoder.setPipeline(stencilWritePipeline);
         render_pass_encoder.setStencilReference(0);
