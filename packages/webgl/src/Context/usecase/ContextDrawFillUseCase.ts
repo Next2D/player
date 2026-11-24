@@ -1,6 +1,7 @@
 import { execute as vertexArrayObjectBindFillMeshUseCase } from "../../VertexArrayObject/usecase/VertexArrayObjectBindFillMeshUseCase";
 import { execute as vertexArrayObjectReleaseVertexArrayObjectService } from "../../VertexArrayObject/service/VertexArrayObjectReleaseVertexArrayObjectService";
 import { execute as contextNormalFillUseCase } from "./ContextNormalFillUseCase";
+import { execute as contextNormalFillRunUseCase } from "./ContextNormalFillRunUseCase";
 import { execute as contextLinearGradientFillUseCase } from "./ContextLinearGradientFillUseCase";
 import { execute as contextRadialGradientFillUseCase } from "./ContextRadialGradientFillUseCase";
 import { execute as contextPatternBitmapFillUseCase } from "./ContextPatternBitmapFillUseCase";
@@ -9,6 +10,7 @@ import { execute as gradientLUTPrepareShapeTexturesUseCase } from "../../Shader/
 import { $gradientData } from "../../Gradient";
 import {
     $gl,
+    $nativeSolidFills,
     $enableStencilTest,
     $disableStencilTest
 } from "../../WebGLUtil";
@@ -21,6 +23,15 @@ import {
     $fillTypes,
     $clearFillBufferSetting
 } from "../../Mesh";
+
+/**
+ * @description まとめて実行する塗りの、塗りごとの頂点数 (足りなくなったら広げる)
+ *              Vertex counts of the fills executed in one run (grown when it runs short)
+ *
+ * @type {Int32Array}
+ * @private
+ */
+let $runCounts: Int32Array = new Int32Array(256);
 
 /**
  * @description Contextのパスコマンドの塗り実行します。
@@ -61,7 +72,34 @@ export const execute = (): void =>
         switch (type) {
 
             case "fill": // 通常のShapeの塗り
-                {
+                if ($nativeSolidFills && !gridData) {
+                    // 単色の塗りが続く範囲 (9スライスの設定が変わる手前まで) を、まとめて実行する
+                    let length = 0;
+                    let total  = 0;
+                    for (;;) {
+                        const count = $fillBufferIndexes.shift() as number;
+                        if (length === $runCounts.length) {
+                            const counts = new Int32Array(length * 2);
+                            counts.set($runCounts);
+                            $runCounts = counts;
+                        }
+                        $runCounts[length++] = count;
+                        total += count;
+
+                        const next = idx + 1;
+                        if (next >= $fillTypes.length
+                            || $fillTypes[next] !== "fill"
+                            || $gridDataMap.has(next)
+                        ) {
+                            break;
+                        }
+                        idx = next;
+                    }
+                    contextNormalFillRunUseCase(
+                        fillVertexArrayObject, fillOffset, $runCounts, length
+                    );
+                    fillOffset += total;
+                } else {
                     const count = $fillBufferIndexes.shift() as number;
                     contextNormalFillUseCase(
                         fillVertexArrayObject, fillOffset, count, gridData

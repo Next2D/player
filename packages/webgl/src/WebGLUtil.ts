@@ -16,9 +16,32 @@ export const $setSamples = (samples: number): void =>
 
 export let $gl: WebGL2RenderingContext;
 
+/**
+ * @description 単色の塗りが続く範囲をまとめて実行する、実行環境の関数。
+ *              ブラウザには無く、JavaScript の実行が遅い環境 (ゲーム機など) の実行環境が
+ *              WebGL のコンテキストに __next2dSolidFills として置く。無い環境では null で、
+ *              塗りは 1 つずつ JavaScript から実行する。
+ *              A function of the runtime that executes a run of consecutive solid fills.
+ *              Browsers do not have it; runtimes where JavaScript runs slowly (such as game
+ *              consoles) put it on the WebGL context as __next2dSolidFills. Where it is
+ *              absent this is null and each fill is executed from JavaScript.
+ *
+ * @type {function | null}
+ * @protected
+ */
+export let $nativeSolidFills: ((
+    mask_program: WebGLProgram, color_program: WebGLProgram,
+    first: number, length: number, counts: Int32Array
+) => void) | null = null;
+
 export const $setWebGL2RenderingContext = (gl: WebGL2RenderingContext): void =>
 {
     $gl = gl;
+
+    const solidFills = (gl as unknown as { __next2dSolidFills?: unknown }).__next2dSolidFills;
+    $nativeSolidFills = typeof solidFills === "function"
+        ? solidFills as typeof $nativeSolidFills
+        : null;
 
     // 現在のscissor矩形をJS側で追跡して同期クエリ(getParameter)を排除する。
     // 初期値のみGLから取得して整合させる。
