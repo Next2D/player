@@ -55,11 +55,12 @@ export const execute = <C extends DisplayObjectContainer>(
         rawMatrix = scaledMatrix;
     }
 
-    const tMatrix = rawMatrix
-        ? matrix
-            ? Matrix.multiply(matrix, rawMatrix)
-            : rawMatrix
-        : matrix;
+    // 親の行列と掛け合わせた行列は、この呼び出しの中でだけ使う (最後にプールへ返す)
+    const multiplied: Float32Array | null = rawMatrix && matrix
+        ? Matrix.multiply(matrix, rawMatrix)
+        : null;
+
+    const tMatrix = multiplied || rawMatrix || matrix;
 
     const no = Number.MAX_VALUE;
     let xMin = no;
@@ -73,28 +74,16 @@ export const execute = <C extends DisplayObjectContainer>(
             continue;
         }
 
-        let bounds: Float32Array | null = null;
-        switch (true) {
-
-            case child.isContainerEnabled:
-                bounds = execute(child as DisplayObjectContainer, tMatrix);
-                break;
-
-            case child.isShape:
-                bounds = shapeCalcBoundsMatrixUseCase(child as Shape, tMatrix);
-                break;
-
-            case child.isText:
-                bounds = textFieldCalcBoundsMatrixUseCase(child as TextField, tMatrix);
-                break;
-
-            case child.isVideo:
-                bounds = videoCalcBoundsMatrixUseCase(child as Video, tMatrix);
-                break;
-
-        }
-
-        if (!bounds) {
+        let bounds: Float32Array;
+        if (child.isShape) {
+            bounds = shapeCalcBoundsMatrixUseCase(child as Shape, tMatrix);
+        } else if (child.isContainerEnabled) {
+            bounds = execute(child as DisplayObjectContainer, tMatrix);
+        } else if (child.isText) {
+            bounds = textFieldCalcBoundsMatrixUseCase(child as TextField, tMatrix);
+        } else if (child.isVideo) {
+            bounds = videoCalcBoundsMatrixUseCase(child as Video, tMatrix);
+        } else {
             continue;
         }
 
@@ -104,6 +93,10 @@ export const execute = <C extends DisplayObjectContainer>(
         yMax = Math.max(yMax, bounds[3]);
 
         $poolBoundsArray(bounds);
+    }
+
+    if (multiplied) {
+        Matrix.release(multiplied);
     }
 
     if (scaledMatrix) {
