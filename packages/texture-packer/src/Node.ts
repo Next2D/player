@@ -92,6 +92,33 @@ export class Node
     public used: boolean;
 
     /**
+     * @description このノード以下にある空き領域の、幅の最大値 (空きが無ければ 0)
+     *              Largest width among the free regions at or below this node (0 when none)
+     *
+     * @type {number}
+     * @public
+     */
+    public freeW: number;
+
+    /**
+     * @description このノード以下にある空き領域の、高さの最大値 (空きが無ければ 0)
+     *              Largest height among the free regions at or below this node (0 when none)
+     *
+     * @type {number}
+     * @public
+     */
+    public freeH: number;
+
+    /**
+     * @description このノード以下にある空き領域の、短い辺の最大値 (空きが無ければ 0)
+     *              Largest shorter side among the free regions at or below this node (0 when none)
+     *
+     * @type {number}
+     * @public
+     */
+    public freeSide: number;
+
+    /**
      * @param {number} x
      * @param {number} y
      * @param {number} w
@@ -110,6 +137,10 @@ export class Node
         this.left  = null;
         this.right = null;
         this.used  = false;
+
+        this.freeW    = w;
+        this.freeH    = h;
+        this.freeSide = w < h ? w : h;
     }
 
     /**
@@ -167,6 +198,10 @@ export class Node
         node.left  = null;
         node.right = null;
         node.used  = false;
+
+        node.freeW    = w;
+        node.freeH    = h;
+        node.freeSide = w < h ? w : h;
 
         return node;
     }
