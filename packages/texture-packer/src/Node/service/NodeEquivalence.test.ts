@@ -80,6 +80,40 @@ const serialize = (node: Node | null): string =>
         + `${serialize(node.left)}${serialize(node.right)})`;
 };
 
+// 空き領域の最大値 (幅・高さ・短い辺) が、木の状態から求めた値と食い違うノードの数を返す
+const $free: number[] = [0, 0, 0];
+const countWrongFree = (node: Node | null): number =>
+{
+    if (!node) {
+        $free[0] = $free[1] = $free[2] = 0;
+        return 0;
+    }
+
+    let wrong = 0;
+    let w = node.w;
+    let h = node.h;
+    let side = Math.min(node.w, node.h);
+    if (node.used) {
+        wrong += countWrongFree(node.left);
+        const leftW = $free[0];
+        const leftH = $free[1];
+        const leftSide = $free[2];
+        wrong += countWrongFree(node.right);
+        w = Math.max(leftW, $free[0]);
+        h = Math.max(leftH, $free[1]);
+        side = Math.max(leftSide, $free[2]);
+    }
+
+    if (node.freeW !== w || node.freeH !== h || node.freeSide !== side) {
+        ++wrong;
+    }
+
+    $free[0] = w;
+    $free[1] = h;
+    $free[2] = side;
+    return wrong;
+};
+
 const count = (node: Node | null): number =>
 {
     return node ? 1 + count(node.left) + count(node.right) : 0;
@@ -135,6 +169,7 @@ describe("NodeDisposeService equivalence test", () =>
                 }
 
                 expect(serialize(rootA)).toBe(serialize(rootB));
+                expect(countWrongFree(rootA)).toBe(0);
             }
 
             // 残りを全部解放すると、木は根だけに戻る
@@ -143,6 +178,7 @@ describe("NodeDisposeService equivalence test", () =>
             }
             expect(count(rootA)).toBe(1);
             expect(rootA.used).toBe(false);
+            expect([rootA.freeW, rootA.freeH, rootA.freeSide]).toEqual([512, 512, 512]);
         }
     });
 });

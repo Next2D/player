@@ -1,6 +1,45 @@
 import type { Node } from "../../Node";
 
 /**
+ * @description ノード以下にある空き領域の最大値 (幅・高さ・短い辺) を、いまの状態から求め直す。
+ *              未使用のノードは全体が空き領域、使用中のノードは子の最大値 (子が無ければ空きなし)。
+ *              NodeInsertService が、入らない枝をたどらないために使う。
+ *
+ *              Recompute the largest width, height and shorter side among the free regions at or
+ *              below the node. An unused node is free as a whole; a used node takes the larger of
+ *              its children (nothing free without children). NodeInsertService uses these to skip
+ *              branches that cannot hold the requested size.
+ *
+ * @param  {Node} node
+ * @return {void}
+ * @method
+ * @private
+ */
+const $updateFree = (node: Node): void =>
+{
+    if (!node.used) {
+        node.freeW    = node.w;
+        node.freeH    = node.h;
+        node.freeSide = node.w < node.h ? node.w : node.h;
+        return ;
+    }
+
+    const left  = node.left;
+    const right = node.right;
+
+    const leftW     = left  ? left.freeW     : 0;
+    const rightW    = right ? right.freeW    : 0;
+    const leftH     = left  ? left.freeH     : 0;
+    const rightH    = right ? right.freeH    : 0;
+    const leftSide  = left  ? left.freeSide  : 0;
+    const rightSide = right ? right.freeSide : 0;
+
+    node.freeW    = leftW    > rightW    ? leftW    : rightW;
+    node.freeH    = leftH    > rightH    ? leftH    : rightH;
+    node.freeSide = leftSide > rightSide ? leftSide : rightSide;
+};
+
+/**
  * @description ノード解放ロジック
  *              Node release logic
  *
@@ -53,6 +92,7 @@ export const execute = (
             node.left = node.right = null;
             node.used = false;
         }
+        $updateFree(node);
         return true;
     }
 
@@ -66,6 +106,7 @@ export const execute = (
             node.left = node.right = null;
             node.used = false;
         }
+        $updateFree(node);
         return true;
     }
 
@@ -75,6 +116,7 @@ export const execute = (
         && height === node.h
     ) {
         node.used = false;
+        $updateFree(node);
         return true;
     }
 
