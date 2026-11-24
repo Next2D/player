@@ -23,6 +23,10 @@ export interface INativeShape {
     exportPath (stroke: boolean): Float64Array;
     // 経路を空にする
     reset (): void;
+    // いまの経路を「線の外周をなぞる経路」に置き換え、それを塗りのメッシュにしたときの要素数を返す
+    // (0 なら描く線が無い)。続けて fill を呼ぶと線のメッシュが得られる。thickness は太さの半分。
+    // この関数を持たない実行環境もある (その場合、線は JavaScript で処理する)
+    strokeSize? (thickness: number, joints: number, caps: number, pixel_scale: number): number;
 }
 
 /**
@@ -31,6 +35,16 @@ export interface INativeShape {
  */
 export const $nativeShape: INativeShape | null =
     (globalThis as unknown as { __next2dShape?: INativeShape }).__next2dShape || null;
+
+/**
+ * @description 実行環境が線の外周の計算 (strokeSize) も提供しているかどうか
+ *              Whether the runtime also provides the stroke outline computation (strokeSize)
+ *
+ * @type {boolean}
+ * @public
+ */
+export const $nativeStroke: boolean =
+    $nativeShape !== null && typeof $nativeShape.strokeSize === "function";
 
 /**
  * @description 経路を実行環境の側で組み立てている最中かどうか。

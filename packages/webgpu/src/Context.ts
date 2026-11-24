@@ -2,6 +2,7 @@ import type { IAttachmentObject } from "./interface/IAttachmentObject";
 import { needsAtlasRestore, restoreAtlas } from "./AtlasScratch";
 import type { IBlendMode } from "./interface/IBlendMode";
 import type { IBounds } from "./interface/IBounds";
+import type { IPath } from "./interface/IPath";
 import type { Node } from "@next2d/texture-packer";
 import { TexturePacker } from "@next2d/texture-packer";
 import { $cacheStore } from "@next2d/cache";
@@ -34,6 +35,7 @@ import {
 } from "./Mask";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
 import { generateStrokeMesh } from "./Mesh/usecase/MeshStrokeGenerateUseCase";
+import { $NATIVE_FILL_PATH } from "./NativeShape";
 import {
     $gridDataMap,
     $fillBufferIndex,
@@ -1311,6 +1313,28 @@ export class Context
     }
 
     /**
+     * @description 線のメッシュの元になる経路を取得する。実行環境が線の外周の計算を提供していれば、
+     *              外周の計算もメッシュの生成も実行環境の側で行う ($NATIVE_FILL_PATH が返る)。
+     *              Returns the paths a stroke mesh is built from. When the runtime provides the stroke
+     *              outline computation, both the outline and the mesh are built on the runtime side
+     *              ($NATIVE_FILL_PATH is returned).
+     *
+     * @return {IPath[]}
+     */
+    private getStrokeSource (): IPath[]
+    {
+        // 曲線の座標 1 単位が画面上で何ピクセルになるか (generateStrokeOutline と同じ)
+        const matrix = this.$matrix;
+        const scaleX = Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]);
+        const scaleY = Math.sqrt(matrix[3] * matrix[3] + matrix[4] * matrix[4]);
+
+        return this.pathCommand.getStrokeSource(
+            this.thickness / 2, this.joints, this.caps,
+            scaleX > scaleY ? scaleX : scaleY
+        );
+    }
+
+    /**
      * @description 線の描画を実行（WebGL版と同じ仕様）
      *              Execute stroke drawing (same specification as WebGL version)
      *              WebGL版と同様に、ストロークを塗りとして描画する
@@ -1320,7 +1344,7 @@ export class Context
     stroke (): void
     {
         // WebGL版と同じ: IPath[]形式で頂点を取得
-        const vertices = this.pathCommand.getVerticesForStroke();
+        const vertices = this.getStrokeSource();
         if (vertices.length === 0) { return }
 
         this.ensureFillRenderPass();
@@ -1328,7 +1352,10 @@ export class Context
         const viewportWidth = this.viewportWidth;
         const viewportHeight = this.viewportHeight;
 
-        const strokeOutlines = generateStrokeMesh(vertices, this.thickness);
+        // 経路が実行環境の側にあれば、線の外周はすでにそちらで計算済み
+        const strokeOutlines = vertices === $NATIVE_FILL_PATH
+            ? vertices
+            : generateStrokeMesh(vertices, this.thickness);
         if (strokeOutlines.length === 0) { return }
 
         // ストロークもmeshFillGenerateUseCaseを使用（4 floats/vertex）
@@ -1520,7 +1547,7 @@ export class Context
         focal: number
     ): void {
         // WebGL版と同じ: IPath[]形式で頂点を取得
-        const vertices = this.pathCommand.getVerticesForStroke();
+        const vertices = this.getStrokeSource();
         if (vertices.length === 0) { return }
 
         this.ensureFillRenderPass();
@@ -1586,7 +1613,7 @@ export class Context
         smooth: boolean
     ): void {
         // WebGL版と同じ: IPath[]形式で頂点を取得
-        const vertices = this.pathCommand.getVerticesForStroke();
+        const vertices = this.getStrokeSource();
         if (vertices.length === 0) { return }
 
         this.ensureFillRenderPass();

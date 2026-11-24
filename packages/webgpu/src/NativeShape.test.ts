@@ -39,7 +39,7 @@ const fake = vi.hoisted(() =>
     return fake;
 });
 
-import { $nativeShape, $NATIVE_FILL_PATH } from "./NativeShape";
+import { $nativeShape, $nativeStroke, $NATIVE_FILL_PATH } from "./NativeShape";
 import { PathCommand } from "./PathCommand";
 import { execute as meshFillGenerateUseCase } from "./Mesh/usecase/MeshFillGenerateUseCase";
 
@@ -138,6 +138,14 @@ describe("NativeShape.js test (the runtime provides __next2dShape.webgpu)", () =
             [7, 8, false, 9, 10, false]
         ]);
         expect(fake.calls).toEqual(["path:0:1", "exportPath:true"]);
+
+        // 線の外周の計算を持たない実行環境では、線の元になる経路もこの方法で取り出す
+        expect($nativeStroke).toBe(false);
+        expect(path.getStrokeSource(1, 0, 0, 1)).toEqual([
+            [1, 2, false, 3, 4, true, 5, 6, false],
+            [7, 8, false, 9, 10, false]
+        ]);
+        expect(fake.calls).toEqual(["path:0:1", "exportPath:true", "exportPath:true"]);
     });
 
     it("test case - beginPath and reset clear the path on the runtime side", () =>
