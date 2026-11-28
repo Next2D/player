@@ -22,6 +22,7 @@ import { text } from "./Text";
 import { ui } from "./UI";
 import { execute as loadService } from "./Next2D/usecase/LoadUseCase";
 import { execute as createRootMovieClipUseCase } from "./Next2D/usecase/CreateRootMovieClipUseCase";
+import { $rendererReady } from "./Player/service/PlayerRenderingPostMessageService";
 import { execute as captureToCanvasUseCase } from "./Next2D/usecase/CaptureToCanvasUseCase";
 
 /**
@@ -181,9 +182,15 @@ export class Next2D
         options: IPlayerOptions | null = null
     ): Promise<Sprite> {
         await Promise.all([this._$promise]);
-        return createRootMovieClipUseCase(
+        const root = createRootMovieClipUseCase(
             width, height, fps, options
         );
+
+        // 描画側の準備が終わってから root を返す。準備の間は何も描けないので、
+        // その間に表示内容の演出を始めると、最初の絵が出た時点で演出が進んでしまう。
+        await $rendererReady;
+
+        return root;
     }
 
     /**
