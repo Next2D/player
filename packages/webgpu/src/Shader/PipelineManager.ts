@@ -132,6 +132,25 @@ export class PipelineManager
         this.createBitmapFillPipeline();
         this.createBlendPipeline();
         this.createNodeClearPipeline();
+        this.prewarmGradientVariants();
+    }
+
+    /**
+     * @description 既定の組み合わせ (線形・放射状、spread は pad) のグラデーションのパイプラインを先に作る。
+     *              グラデーションのパイプラインは種類と spread ごとの特殊化で、初めて使うときに作られる。
+     *              既定の組み合わせだけ起動時に済ませて、最初の画面の描画の途中で作らないようにする
+     *              (WebGL 版の ShaderPrewarmUseCase と同じ方針)。ほかの組み合わせは、使うときに作る。
+     *              Create the gradient pipelines for the default combinations (linear / radial with
+     *              pad spread) up front. Gradient pipelines are specialized per type and spread and
+     *              are created on first use; doing the default ones at start-up keeps that out of the
+     *              first screen draw (same policy as ShaderPrewarmUseCase in the WebGL backend).
+     *              Other combinations are still created on demand.
+     */
+    private prewarmGradientVariants(): void
+    {
+        // gradient_type: 0 = linear, 1 = radial / spread_mode: 2 = pad
+        this.getGradientPipeline("gradient_fill_stencil_atlas", 0, 2);
+        this.getGradientPipeline("gradient_fill_stencil_atlas", 1, 2);
     }
 
     /**

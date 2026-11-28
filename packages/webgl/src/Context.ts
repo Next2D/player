@@ -68,6 +68,7 @@ import { execute as contextUpdateTransferBoundsService } from "./Context/service
 import { execute as contextDrawFillUseCase } from "./Context/usecase/ContextDrawFillUseCase";
 import { execute as contextCreateImageBitmapService } from "./Context/service/ContextCreateImageBitmapService";
 import { $setGradientLUTGeneratorMaxLength } from "./Shader/GradientLUTGenerator";
+import { execute as shaderPrewarmUseCase } from "./Shader/usecase/ShaderPrewarmUseCase";
 import {
     $getAtlasAttachmentObject,
     $clearTransferBounds,
@@ -190,6 +191,9 @@ export class Context
 
         // グラデーションの最大長を設定
         $setGradientLUTGeneratorMaxLength(gl);
+
+        // 基本の描画で使うシェーダーを、最初の描画より前に作っておく
+        shaderPrewarmUseCase();
 
         // コンテキストをセット
         $setContext(this);
