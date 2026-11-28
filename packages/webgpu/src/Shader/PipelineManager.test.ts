@@ -124,6 +124,27 @@ describe("PipelineManager", () =>
         expect(descriptors.size - initialCount).toBe(10);
     });
 
+    it("creates the default gradient variants at start-up, not on first use", () =>
+    {
+        const device = createMockDevice();
+        vi.stubGlobal("GPUColorWrite", { "ALL": 15 });
+        vi.mocked(device.createRenderPipeline).mockImplementation(() => ({} as GPURenderPipeline));
+        const manager = new PipelineManager(device, "bgra8unorm");
+        const initialCount = vi.mocked(device.createRenderPipeline).mock.calls.length;
+
+        // 線形・放射状 (spread は pad) は起動時に作ってあるので、使うときには作らない
+        const linear = manager.getGradientPipeline("gradient_fill_stencil_atlas", 0, 2);
+        const radial = manager.getGradientPipeline("gradient_fill_stencil_atlas", 1, 2);
+        expect(linear).toBeDefined();
+        expect(radial).toBeDefined();
+        expect(linear).not.toBe(radial);
+        expect(vi.mocked(device.createRenderPipeline).mock.calls.length).toBe(initialCount);
+
+        // ほかの組み合わせは、使うときに作る
+        manager.getGradientPipeline("gradient_fill_stencil_atlas", 0, 0);
+        expect(vi.mocked(device.createRenderPipeline).mock.calls.length).toBe(initialCount + 1);
+    });
+
     describe("constructor", () =>
     {
         it("should create instance with device and format", () =>
