@@ -2,6 +2,9 @@ import { Context } from "../../Context";
 import { execute } from "./ContextRestoreService";
 import { describe, expect, it, vi } from "vitest";
 
+// 起動時のシェーダー作成は、このテストの対象外
+vi.mock("../../Shader/usecase/ShaderPrewarmUseCase", () => ({ "execute": vi.fn() }));
+
 describe("ContextRestoreService.js method test", () =>
 {
     it("test case", () =>
