@@ -1,4 +1,4 @@
-import { execute, $COLOR_ARRAY_IDENTITY } from "./PlayerRenderingPostMessageService";
+import { execute, $COLOR_ARRAY_IDENTITY, $rendererReady } from "./PlayerRenderingPostMessageService";
 import { $rendererWorker } from "../../RendererWorker";
 import { stage } from "@next2d/display";
 import { renderQueue } from "@next2d/render-queue";
@@ -31,6 +31,29 @@ vi.mock("../../CoreUtil", () => ({
 
 describe("PlayerRenderingPostMessageService.js test", () =>
 {
+    // モジュールの読み込み時に登録された、ワーカーからの受け取り
+    const onMessage = vi.mocked($rendererWorker.addEventListener).mock.calls[0][1] as (event: MessageEvent) => void;
+
+    it("$rendererReady resolves when the renderer reports that its initialization finished", async () =>
+    {
+        let ready = false;
+        const promise = $rendererReady.then((): void => { ready = true; });
+
+        // 描画の返事では解決しない
+        onMessage({ "data": { "message": "render", "buffer": new Float32Array(1) } } as MessageEvent);
+        await Promise.resolve();
+        expect(ready).toBe(false);
+
+        // 初期化の最後に届く合図で解決する
+        onMessage({ "data": { "message": "renderFlowControl", "enabled": true } } as MessageEvent);
+        await promise;
+        expect(ready).toBe(true);
+
+        // 2 回目の合図でも問題ない
+        onMessage({ "data": { "message": "renderFlowControl", "enabled": true } } as MessageEvent);
+        await $rendererReady;
+    });
+
     beforeEach(() => {
         vi.clearAllMocks();
         renderQueue.offset = 0;

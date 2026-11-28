@@ -61,11 +61,41 @@ let $pendingRenders: number = 0;
  */
 const $MAX_PENDING_RENDERS: number = 2;
 
+/**
+ * @description 描画側の準備が終わったことを伝える関数（伝えた後は null）
+ *              The function that reports the renderer is ready (null after it was called)
+ *
+ * @type {Function | null}
+ * @private
+ */
+let $resolveRendererReady: (() => void) | null = null;
+
+/**
+ * @description 描画側 (レンダラーのワーカー) の準備が終わったら解決する Promise。
+ *              ワーカーは初期化の最後に renderFlowControl を送るので、それを合図にする。
+ *              準備 (描画コンテキストの作成、シェーダーのコンパイルなど) の間は何も描けない。
+ *              A promise resolved when the renderer worker has finished its initialization.
+ *              The worker posts renderFlowControl at the end of its initialization, which is
+ *              used as the signal. Nothing can be drawn during the setup
+ *              (creating the context, compiling shaders, ...).
+ *
+ * @type {Promise<void>}
+ * @protected
+ */
+export const $rendererReady: Promise<void> = new Promise<void>((resolve): void =>
+{
+    $resolveRendererReady = resolve;
+});
+
 // 受け取りイベントを登録
 $rendererWorker.addEventListener("message", (event: MessageEvent): void =>
 {
     if (event.data.message === "renderFlowControl") {
         $limitRenderQueue = Boolean(event.data.enabled);
+        if ($resolveRendererReady) {
+            $resolveRendererReady();
+            $resolveRendererReady = null;
+        }
         return;
     }
     if (event.data.message !== "render") {
