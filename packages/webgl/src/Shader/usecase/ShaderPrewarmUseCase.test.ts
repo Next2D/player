@@ -34,10 +34,11 @@ describe("ShaderPrewarmUseCase.js method test", () =>
 
         execute();
 
-        // 塗り・マスク・アトラスへの合成・インスタンス描画
+        // 塗り・マスク・アトラスへの合成・インスタンス描画・文字
         expect($blendCollection.has("i")).toBe(true);
         expect($blendCollection.has("pp")).toBe(true);
         expect($blendCollection.has("mn")).toBe(true);
+        expect($blendCollection.has("text-batch")).toBe(true);
         expect($shapeCollection.has("mn")).toBe(true);
         expect($shapeCollection.has("sn")).toBe(true);
 
@@ -47,7 +48,7 @@ describe("ShaderPrewarmUseCase.js method test", () =>
         expect($getFromCache("l008n")).not.toBeNull();
 
         const linked = (mockGL.linkProgram as ReturnType<typeof vi.fn>).mock.calls.length;
-        expect(linked).toBe(8);
+        expect(linked).toBe(9);
 
         // 2 回目は作り直さない
         execute();
